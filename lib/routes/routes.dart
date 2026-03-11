@@ -1,6 +1,3 @@
-import 'dart:math';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:luminous/pages/Login/login.dart';
 import 'package:luminous/pages/Main/main.dart';
