@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:luminous/utils/popup_utils.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -167,7 +168,9 @@ class _SearchViewState extends State<SearchView> {
                         _keyword = value.trim();
                       });
                     },
-                    onSubmitted: (_) => _commitSearch(),
+                    onSubmitted: (_) {
+                      _commitSearch();
+                    },
                     decoration: InputDecoration(
                       hintText: '请输入药名/症状/成分',
                       hintStyle: const TextStyle(
@@ -203,7 +206,9 @@ class _SearchViewState extends State<SearchView> {
                 ),
                 const SizedBox(width: 8),
                 FilledButton(
-                  onPressed: _commitSearch,
+                  onPressed: () {
+                    _commitSearch();
+                  },
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF0EA5E9),
                     foregroundColor: Colors.white,
@@ -295,7 +300,11 @@ class _SearchViewState extends State<SearchView> {
                     ),
                     const Spacer(),
                     TextButton(
-                      onPressed: _recentKeywords.isEmpty ? null : _clearHistory,
+                      onPressed: _recentKeywords.isEmpty
+                          ? null
+                          : () {
+                              _clearHistory();
+                            },
                       style: TextButton.styleFrom(
                         minimumSize: const Size(48, 30),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -404,93 +413,105 @@ class _SearchViewState extends State<SearchView> {
             ),
             child: DecoratedBox(
               decoration: _sectionDecoration(),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0EA5E9).withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(12),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () {
+                  PopupUtils.instance.showToast(
+                    context,
+                    '${item.name} 详情功能开发中',
+                    mode: PopupMode.info,
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: const Color(
+                            0xFF0EA5E9,
+                          ).withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.medication_liquid_rounded,
+                          size: 22,
+                          color: Color(0xFF0EA5E9),
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.medication_liquid_rounded,
-                        size: 22,
-                        color: Color(0xFF0EA5E9),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  item.name,
-                                  style: const TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF0F172A),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    item.name,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF0F172A),
+                                    ),
                                   ),
                                 ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFEFF6FF),
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: Text(
-                                  item.badge,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF0369A1),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFEFF6FF),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    item.badge,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF0369A1),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            item.subtitle,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: Color(0xFF475569),
+                              ],
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.info_outline_rounded,
-                                size: 14,
-                                color: Color(0xFF64748B),
+                            const SizedBox(height: 4),
+                            Text(
+                              item.subtitle,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF475569),
                               ),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  item.tips,
-                                  style: const TextStyle(
-                                    fontSize: 12.5,
-                                    color: Color(0xFF64748B),
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.info_outline_rounded,
+                                  size: 14,
+                                  color: Color(0xFF64748B),
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    item.tips,
+                                    style: const TextStyle(
+                                      fontSize: 12.5,
+                                      color: Color(0xFF64748B),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -559,6 +580,11 @@ class _SearchViewState extends State<SearchView> {
   void _commitSearch() {
     final keyword = _searchController.text.trim();
     if (keyword.isEmpty) {
+      PopupUtils.instance.showToast(
+        context,
+        '请输入药名、成分或症状后再搜索',
+        mode: PopupMode.warning,
+      );
       return;
     }
     setState(() {
@@ -579,6 +605,7 @@ class _SearchViewState extends State<SearchView> {
     setState(() {
       _recentKeywords.clear();
     });
+    PopupUtils.instance.showToast(context, '最近搜索已清空', mode: PopupMode.success);
   }
 
   void _updateRecentKeywords(String keyword) {

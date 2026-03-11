@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:luminous/utils/popup_utils.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -306,9 +307,7 @@ class _HomeViewState extends State<HomeView> {
       Navigator.pushNamed(context, '/search');
       return;
     }
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('功能开发中')));
+    PopupUtils.instance.showToast(context, '功能开发中', mode: PopupMode.info);
   }
 
   Widget _buildReminderItem({
