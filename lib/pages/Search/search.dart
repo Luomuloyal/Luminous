@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:luminous/utils/popup_utils.dart';
+import 'package:luminous/utils/toast_utils.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -416,11 +416,7 @@ class _SearchViewState extends State<SearchView> {
               child: InkWell(
                 borderRadius: BorderRadius.circular(16),
                 onTap: () {
-                  PopupUtils.instance.showToast(
-                    context,
-                    '${item.name} 详情功能开发中',
-                    mode: PopupMode.info,
-                  );
+                  ToastUtils.instance.show(context, '${item.name} 详情功能开发中');
                 },
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
@@ -580,11 +576,7 @@ class _SearchViewState extends State<SearchView> {
   void _commitSearch() {
     final keyword = _searchController.text.trim();
     if (keyword.isEmpty) {
-      PopupUtils.instance.showToast(
-        context,
-        '请输入药名、成分或症状后再搜索',
-        mode: PopupMode.warning,
-      );
+      ToastUtils.instance.show(context, '请输入药名、成分或症状后再搜索');
       return;
     }
     setState(() {
@@ -605,7 +597,7 @@ class _SearchViewState extends State<SearchView> {
     setState(() {
       _recentKeywords.clear();
     });
-    PopupUtils.instance.showToast(context, '最近搜索已清空', mode: PopupMode.success);
+    ToastUtils.instance.show(context, '最近搜索已清空');
   }
 
   void _updateRecentKeywords(String keyword) {
