@@ -8,7 +8,7 @@ class ToastUtils {
   void show(
     BuildContext context,
     String msg, {
-    Duration duration = const Duration(milliseconds: 1200),
+    Duration toastduration = const Duration(milliseconds: 1200),
   }) {
     final message = msg.trim();
     if (message.isEmpty) {
@@ -25,10 +25,10 @@ class ToastUtils {
       ..showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-          duration: duration,
+          margin: const EdgeInsets.fromLTRB(56, 0, 56, 20),
+          duration: toastduration,
           elevation: 0,
-          backgroundColor: const Color(0xE6000000),
+          backgroundColor: const Color.fromARGB(230, 51, 113, 113),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),

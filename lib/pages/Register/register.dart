@@ -1,23 +1,27 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:luminous/utils/toast_utils.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class RegisterView extends StatefulWidget {
+  const RegisterView({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<RegisterView> createState() => _RegisterViewState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _RegisterViewState extends State<RegisterView> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _codeController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmController = TextEditingController();
 
   bool _agreed = false;
   bool _obscurePassword = true;
+  bool _obscureConfirm = true;
+
   late final TapGestureRecognizer _agreementRecognizer;
   late final TapGestureRecognizer _privacyRecognizer;
 
@@ -36,8 +40,14 @@ class _LoginPageState extends State<LoginPage> {
     _agreementRecognizer.dispose();
     _privacyRecognizer.dispose();
     _phoneController.dispose();
+    _codeController.dispose();
     _passwordController.dispose();
+    _confirmController.dispose();
     super.dispose();
+  }
+
+  void _onTapAgreement() {
+    ToastUtils.instance.show(context, '功能开发中');
   }
 
   String? _phoneValidator(String? value) {
@@ -47,6 +57,17 @@ class _LoginPageState extends State<LoginPage> {
     }
     if (!_phoneRegExp.hasMatch(phone)) {
       return '手机号格式不正确';
+    }
+    return null;
+  }
+
+  String? _codeValidator(String? value) {
+    final code = (value ?? '').trim();
+    if (code.isEmpty) {
+      return '请输入验证码';
+    }
+    if (code.length < 4) {
+      return '验证码格式不正确';
     }
     return null;
   }
@@ -62,7 +83,30 @@ class _LoginPageState extends State<LoginPage> {
     return null;
   }
 
-  void _onLoginPressed() {
+  String? _confirmValidator(String? value) {
+    final confirm = value ?? '';
+    if (confirm.isEmpty) {
+      return '请再次输入密码';
+    }
+    if (confirm != _passwordController.text) {
+      return '两次输入的密码不一致';
+    }
+    return null;
+  }
+
+  void _onSendCode() {
+    FocusScope.of(context).unfocus();
+
+    final phoneError = _phoneValidator(_phoneController.text);
+    if (phoneError != null) {
+      ToastUtils.instance.show(context, phoneError);
+      return;
+    }
+
+    ToastUtils.instance.show(context, '验证码已发送（模拟）');
+  }
+
+  void _onRegisterPressed() {
     FocusScope.of(context).unfocus();
     _formKey.currentState?.validate();
 
@@ -72,9 +116,21 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
+    final codeError = _codeValidator(_codeController.text);
+    if (codeError != null) {
+      ToastUtils.instance.show(context, codeError);
+      return;
+    }
+
     final passwordError = _passwordValidator(_passwordController.text);
     if (passwordError != null) {
       ToastUtils.instance.show(context, passwordError);
+      return;
+    }
+
+    final confirmError = _confirmValidator(_confirmController.text);
+    if (confirmError != null) {
+      ToastUtils.instance.show(context, confirmError);
       return;
     }
 
@@ -83,11 +139,8 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    ToastUtils.instance.show(context, '登录成功');
-  }
-
-  void _onTapAgreement() {
-    ToastUtils.instance.show(context, '功能开发中');
+    ToastUtils.instance.show(context, '注册成功');
+    Navigator.maybePop(context);
   }
 
   @override
@@ -126,7 +179,7 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 14),
                       _buildAgreementRow(),
                       const SizedBox(height: 18),
-                      _buildLoginButton(),
+                      _buildRegisterButton(),
                       const SizedBox(height: 10),
                       _buildHelperText(),
                     ],
@@ -160,20 +213,16 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
         ),
-        const Spacer(),
-        TextButton(
-          onPressed: () {
-            Navigator.pushNamed(context, '/register');
-          },
-          style: TextButton.styleFrom(
-            minimumSize: const Size(56, 34),
-            foregroundColor: const Color(0xFF0369A1),
-            textStyle: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
+        const SizedBox(width: 10),
+        const Expanded(
+          child: Text(
+            '注册',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF0F172A),
             ),
           ),
-          child: const Text('注册'),
         ),
       ],
     );
@@ -207,9 +256,9 @@ class _LoginPageState extends State<LoginPage> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: const Icon(
-              Icons.health_and_safety_rounded,
+              Icons.person_add_alt_1_rounded,
               color: Colors.white,
-              size: 28,
+              size: 26,
             ),
           ),
           const SizedBox(width: 12),
@@ -218,7 +267,7 @@ class _LoginPageState extends State<LoginPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '健康助手',
+                  '创建账号',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -227,7 +276,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 SizedBox(height: 2),
                 Text(
-                  '手机号密码登录',
+                  '完善信息即可完成注册',
                   style: TextStyle(
                     color: Color(0xE6FFFFFF),
                     fontSize: 13,
@@ -285,10 +334,51 @@ class _LoginPageState extends State<LoginPage> {
                 validator: _phoneValidator,
               ),
               const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _codeController,
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.next,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(6),
+                      ],
+                      decoration: InputDecoration(
+                        labelText: '验证码',
+                        hintText: '请输入验证码',
+                        prefixIcon: const Icon(Icons.verified_user_rounded),
+                        filled: true,
+                        fillColor: const Color(0xFFF8FAFC),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      validator: _codeValidator,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  FilledButton(
+                    onPressed: _onSendCode,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF0EA5E9),
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(92, 48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: const Text('获取验证码'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
-                textInputAction: TextInputAction.done,
+                textInputAction: TextInputAction.next,
                 inputFormatters: [LengthLimitingTextInputFormatter(12)],
                 decoration: InputDecoration(
                   labelText: '密码',
@@ -314,6 +404,37 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 validator: _passwordValidator,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _confirmController,
+                obscureText: _obscureConfirm,
+                textInputAction: TextInputAction.done,
+                inputFormatters: [LengthLimitingTextInputFormatter(12)],
+                decoration: InputDecoration(
+                  labelText: '确认密码',
+                  hintText: '请再次输入密码',
+                  prefixIcon: const Icon(Icons.lock_outline_rounded),
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _obscureConfirm = !_obscureConfirm;
+                      });
+                    },
+                    icon: Icon(
+                      _obscureConfirm
+                          ? Icons.visibility_rounded
+                          : Icons.visibility_off_rounded,
+                    ),
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                validator: _confirmValidator,
                 onFieldSubmitted: (_) => FocusScope.of(context).unfocus(),
               ),
             ],
@@ -379,11 +500,11 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildLoginButton() {
+  Widget _buildRegisterButton() {
     return SizedBox(
       height: 48,
       child: FilledButton(
-        onPressed: _onLoginPressed,
+        onPressed: _onRegisterPressed,
         style: FilledButton.styleFrom(
           backgroundColor: const Color(0xFF0EA5E9),
           shape: RoundedRectangleBorder(
@@ -391,7 +512,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
         child: const Text(
-          '登录',
+          '注册',
           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
         ),
       ),
@@ -400,7 +521,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _buildHelperText() {
     return const Text(
-      '提示：本页面仅实现本地表单校验与轻提示，不会发起真实登录请求。',
+      '提示：本页面仅实现本地表单校验与轻提示，不会发起真实注册请求。',
       textAlign: TextAlign.center,
       style: TextStyle(
         color: Color(0xFF64748B),
