@@ -3,11 +3,13 @@ import 'package:luminous/pages/Login/login.dart';
 import 'package:luminous/pages/Main/main.dart';
 import 'package:luminous/pages/Register/register.dart';
 import 'package:luminous/pages/Search/search.dart';
+import 'package:luminous/utils/loading_utils.dart';
 
 // 返回APP根级组件
 Widget getRootWidget() {
   return MaterialApp(
     // 命名路由
+    navigatorKey: LoadingUtils.navigatorKey,
     initialRoute: "/",
     routes: getRootRoutes(),
   );

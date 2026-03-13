@@ -4,16 +4,17 @@ import 'package:luminous/pages/Login/login.dart';
 
 void main() {
   Widget createWidget() {
-    return const MaterialApp(home: LoginPage());
+    return const MaterialApp(home: LoginPage(autoLoadSvg: false));
   }
 
-  testWidgets('tap login with empty fields shows phone error', (tester) async {
+  testWidgets('tap login with empty fields shows email error', (tester) async {
     await tester.pumpWidget(createWidget());
 
+    await tester.ensureVisible(find.text('登录'));
     await tester.tap(find.text('登录'));
     await tester.pump();
 
-    expect(find.text('请输入手机号'), findsWidgets);
+    expect(find.text('请输入邮箱'), findsWidgets);
   });
 
   testWidgets('valid form without agreement shows agreement toast', (
@@ -22,27 +23,29 @@ void main() {
     await tester.pumpWidget(createWidget());
 
     final fields = find.byType(TextFormField);
-    await tester.enterText(fields.at(0), '13800138000');
+    await tester.enterText(fields.at(0), 'test@example.com');
     await tester.enterText(fields.at(1), 'Abc123');
 
+    await tester.ensureVisible(find.text('登录'));
     await tester.tap(find.text('登录'));
     await tester.pump();
 
     expect(find.text('请先阅读并勾选《用户协议》《隐私政策》'), findsOneWidget);
   });
 
-  testWidgets('valid form with agreement shows success toast', (tester) async {
+  testWidgets('invalid email shows email format error before network', (
+    tester,
+  ) async {
     await tester.pumpWidget(createWidget());
 
     final fields = find.byType(TextFormField);
-    await tester.enterText(fields.at(0), '13800138000');
+    await tester.enterText(fields.at(0), 'test@');
     await tester.enterText(fields.at(1), 'Abc123');
-    await tester.tap(find.byType(Checkbox));
-    await tester.pump();
 
+    await tester.ensureVisible(find.text('登录'));
     await tester.tap(find.text('登录'));
     await tester.pump();
 
-    expect(find.text('登录成功'), findsOneWidget);
+    expect(find.text('邮箱格式不正确'), findsWidgets);
   });
 }
