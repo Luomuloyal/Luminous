@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
 import 'package:luminous/pages/Login/login.dart';
+import 'package:luminous/stores/user_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUpAll(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    Get.testMode = true;
+    final controller = Get.put(UserController(), permanent: true);
+    await controller.init();
+  });
+
   Widget createWidget() {
-    return const MaterialApp(home: LoginPage(autoLoadSvg: false));
+    return const MaterialApp(home: LoginPage());
   }
 
   testWidgets('tap login with empty fields shows email error', (tester) async {

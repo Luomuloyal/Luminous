@@ -7,6 +7,18 @@ import 'package:flutter/foundation.dart';
 import 'package:luminous/constants/constants.dart';
 import 'package:luminous/utils/loading_utils.dart';
 
+class ApiResult<T> {
+  final String code;
+  final String msg;
+  final T result;
+
+  const ApiResult({
+    required this.code,
+    required this.msg,
+    required this.result,
+  });
+}
+
 class ApiException implements Exception {
   final String message;
 
@@ -21,9 +33,9 @@ class DioRequest {
     _dio = Dio(
       BaseOptions(
         baseUrl: GlobalConstants.BASE_URL,
-        connectTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 15),
-        sendTimeout: const Duration(seconds: 15),
+        connectTimeout: const Duration(seconds: GlobalConstants.TIME_OUT),
+        receiveTimeout: const Duration(seconds: GlobalConstants.TIME_OUT),
+        sendTimeout: const Duration(seconds: GlobalConstants.TIME_OUT),
         responseType: ResponseType.json,
         headers: const {'Content-Type': 'application/json'},
       ),
@@ -68,17 +80,19 @@ class DioRequest {
   static final DioRequest instance = DioRequest._internal();
   late final Dio _dio;
 
-  Future<Map<String, dynamic>> get(
+  Future<ApiResult<T>> get<T>(
     String path, {
+    required T Function(dynamic json) decoder,
     Map<String, dynamic>? queryParameters,
     bool showLoading = false,
     String loadingText = '加载中...',
     Options? options,
     CancelToken? cancelToken,
   }) {
-    return _request(
+    return _request<T>(
       'GET',
       path,
+      decoder: decoder,
       queryParameters: queryParameters,
       showLoading: showLoading,
       loadingText: loadingText,
@@ -87,8 +101,9 @@ class DioRequest {
     );
   }
 
-  Future<Map<String, dynamic>> post(
+  Future<ApiResult<T>> post<T>(
     String path, {
+    required T Function(dynamic json) decoder,
     Object? data,
     Map<String, dynamic>? queryParameters,
     bool showLoading = false,
@@ -96,9 +111,10 @@ class DioRequest {
     Options? options,
     CancelToken? cancelToken,
   }) {
-    return _request(
+    return _request<T>(
       'POST',
       path,
+      decoder: decoder,
       data: data,
       queryParameters: queryParameters,
       showLoading: showLoading,
@@ -108,9 +124,10 @@ class DioRequest {
     );
   }
 
-  Future<Map<String, dynamic>> _request(
+  Future<ApiResult<T>> _request<T>(
     String method,
     String path, {
+    required T Function(dynamic json) decoder,
     Object? data,
     Map<String, dynamic>? queryParameters,
     bool showLoading = false,
@@ -134,9 +151,19 @@ class DioRequest {
         cancelToken: cancelToken,
       );
 
-      final map = _coerceToMap(response.data);
-      _throwIfApiError(map);
-      return map;
+      final rawData = _coerceToMap(response.data);
+      final code = (rawData['code'] ?? '').toString();
+      final msg = (rawData['msg'] ?? '').toString();
+
+      if (code != GlobalConstants.SUCCESS_CODE) {
+        throw ApiException(msg.isEmpty ? '请求失败' : msg);
+      }
+
+      return ApiResult<T>(
+        code: code,
+        msg: msg,
+        result: decoder(rawData['result']),
+      );
     } on DioException catch (e) {
       throw ApiException(_parseDioError(e));
     }
@@ -146,42 +173,22 @@ class DioRequest {
     if (data is Map<String, dynamic>) {
       return data;
     }
+    if (data is Map) {
+      return data.map((key, value) => MapEntry(key.toString(), value));
+    }
     if (data is String) {
-      final decoded = jsonDecode(data);
-      if (decoded is Map<String, dynamic>) {
-        return decoded;
-      }
+      return _coerceToMap(jsonDecode(data));
     }
     throw Exception('响应格式异常：${data.runtimeType}');
-  }
-
-  void _throwIfApiError(Map<String, dynamic> map) {
-    if (map['error'] != null) {
-      throw ApiException(map['error'].toString());
-    }
-    final ok = map['ok'];
-    if (ok is bool && ok == false) {
-      throw ApiException(map['msg']?.toString() ?? '请求失败');
-    }
   }
 
   String _parseDioError(DioException error) {
     final statusCode = error.response?.statusCode;
     final serverData = error.response?.data;
 
-    if (serverData is Map<String, dynamic>) {
-      final msg =
-          serverData['msg']?.toString() ?? serverData['error']?.toString();
-      if (msg != null && msg.trim().isNotEmpty) {
-        return msg;
-      }
-    }
-
-    if (serverData is String && serverData.trim().isNotEmpty) {
-      if (serverData.contains('Function Not Found')) {
-        return '接口不存在，请检查云函数名称或部署状态';
-      }
-      return serverData.trim();
+    final serverMessage = _extractServerMessage(serverData);
+    if (serverMessage != null && serverMessage.trim().isNotEmpty) {
+      return serverMessage;
     }
 
     if (statusCode == 404) {
@@ -189,6 +196,32 @@ class DioRequest {
     }
 
     return '网络请求失败${statusCode == null ? '' : '($statusCode)'}：${error.message}';
+  }
+
+  String? _extractServerMessage(dynamic serverData) {
+    if (serverData is Map<String, dynamic>) {
+      return serverData['msg']?.toString() ?? serverData['error']?.toString();
+    }
+
+    if (serverData is Map) {
+      return serverData['msg']?.toString() ?? serverData['error']?.toString();
+    }
+
+    if (serverData is String && serverData.trim().isNotEmpty) {
+      try {
+        final decoded = jsonDecode(serverData);
+        if (decoded is Map<String, dynamic>) {
+          return decoded['msg']?.toString() ?? decoded['error']?.toString();
+        }
+      } catch (_) {
+        if (serverData.contains('Function Not Found')) {
+          return '接口不存在，请检查云函数名称或部署状态';
+        }
+        return serverData.trim();
+      }
+    }
+
+    return null;
   }
 }
 

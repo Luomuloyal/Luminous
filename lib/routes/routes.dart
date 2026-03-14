@@ -8,18 +8,18 @@ import 'package:luminous/utils/loading_utils.dart';
 // 返回APP根级组件
 Widget getRootWidget() {
   return MaterialApp(
-    // 命名路由
+    debugShowCheckedModeBanner: false,
     navigatorKey: LoadingUtils.navigatorKey,
-    initialRoute: "/",
+    initialRoute: '/',
     routes: getRootRoutes(),
   );
 }
 
 Map<String, Widget Function(BuildContext)> getRootRoutes() {
   return {
-    "/": (context) => MainPage(),
-    "/login": (context) => LoginPage(),
-    "/register": (context) => RegisterView(),
-    "/search": (context) => SearchView(),
+    '/': (context) => const MainPage(),
+    '/login': (context) => const LoginPage(),
+    '/register': (context) => const RegisterView(),
+    '/search': (context) => const SearchView(),
   };
 }

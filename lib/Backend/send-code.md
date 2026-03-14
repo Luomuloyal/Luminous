@@ -1,14 +1,15 @@
 访问地址: https://wty10hv6az.sealosbja.site
 函数路径: POST /send-code
+公网访问地址: https://wty10hv6az.sealosbja.site/send-code
 
 请求体:
 - type: 1 (SVG验证码) 或 2 (邮箱验证码)
 - value: 邮箱地址 (当 type=2 时必填)
 
 返回体:
-- ok: boolean
+- code: string
 - msg: string
-- data:
+- result:
   - type=1: { id: string, svg: string }
   - type=2: { id: string }
 
@@ -19,20 +20,27 @@ import nodemailer from 'nodemailer'
 
 const db = cloud.database()
 
+function success(result: any, msg = '') {
+  return { code: '1', msg, result }
+}
+
+function fail(msg: string, code = '0') {
+  return { code, msg, result: null }
+}
+
 export async function main(ctx: FunctionContext) {
   if (!ctx.body || typeof ctx.body !== 'object') {
-    return { ok: false, msg: '请求参数格式错误' }
+    return fail('请求参数格式错误')
   }
 
   const type = Number(ctx.body.type)
   const value = ctx.body.value
 
   if (type === 2) {
-    if (!value) return { ok: false, msg: '邮箱地址不能为空' }
+    if (!value) return fail('邮箱地址不能为空')
     return await codeEmail(String(value))
   }
 
-  // 默认返回 SVG 验证码(type=1)
   return await codeSvg()
 }
 
@@ -50,22 +58,22 @@ export async function codeSvg() {
   try {
     const { id } = await db.collection('codes').add({
       type: 1,
-      // 统一存数字，前端也只允许输入 4 位数字
       code: Number(captchaData.text),
       createdAt: new Date(),
       expiredAt: new Date(Date.now() + 5 * 60 * 1000),
     })
-    return { ok: true, msg: '', data: { id, svg: captchaData.data } }
+
+    return success({ id, svg: captchaData.data })
   } catch (e) {
     console.error('数据库写入失败:', e)
-    return { ok: false, msg: '生成验证码失败，请重试' }
+    return fail('生成验证码失败，请重试')
   }
 }
 
 export async function codeEmail(email: string) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(email)) {
-    return { ok: false, msg: '邮箱地址格式错误!' }
+    return fail('邮箱地址格式错误!')
   }
 
   const code = Math.floor(100000 + Math.random() * 900000)
@@ -90,7 +98,7 @@ export async function codeEmail(email: string) {
   try {
     const transporter = nodemailer.createTransport(transportConfig)
     const { messageId } = await transporter.sendMail(mailOptions)
-    if (!messageId) return { ok: false, msg: '邮件发送异常，请稍后重试' }
+    if (!messageId) return fail('邮件发送异常，请稍后重试')
 
     const { id } = await db.collection('codes').add({
       type: 2,
@@ -100,10 +108,10 @@ export async function codeEmail(email: string) {
       expiredAt: new Date(Date.now() + 5 * 60 * 1000),
     })
 
-    return { ok: true, msg: '验证码已发送到邮箱，请注意查收!', data: { id } }
+    return success({ id }, '验证码已发送到邮箱，请注意查收!')
   } catch (error) {
     console.error('邮件发送失败:', error)
-    return { ok: false, msg: '邮件发送失败，请检查邮箱地址或稍后重试' }
+    return fail('邮件发送失败，请检查邮箱地址或稍后重试')
   }
 }
 ```

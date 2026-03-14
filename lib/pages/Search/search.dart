@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:luminous/components/search.dart';
 import 'package:luminous/utils/toast_utils.dart';
 
 class SearchView extends StatefulWidget {
@@ -13,32 +14,32 @@ class _SearchViewState extends State<SearchView> {
 
   final List<String> _quickTags = const ['退烧', '抗生素', '止咳', '过敏', '胃药', '维生素'];
 
-  final List<_SearchResultItem> _allResults = const [
-    _SearchResultItem(
+  final List<SearchResultItemData> _allResults = const [
+    SearchResultItemData(
       name: '阿莫西林胶囊',
       subtitle: '抗感染类 · 0.25g*24粒',
       tips: '青霉素过敏者禁用',
       badge: '抗生素',
     ),
-    _SearchResultItem(
+    SearchResultItemData(
       name: '布洛芬缓释胶囊',
       subtitle: '解热镇痛类 · 0.3g*20粒',
       tips: '饭后服用，避免空腹',
       badge: '退烧止痛',
     ),
-    _SearchResultItem(
+    SearchResultItemData(
       name: '氯雷他定片',
       subtitle: '抗过敏类 · 10mg*12片',
       tips: '服药后避免饮酒',
       badge: '过敏',
     ),
-    _SearchResultItem(
+    SearchResultItemData(
       name: '奥美拉唑肠溶胶囊',
       subtitle: '胃药类 · 20mg*14粒',
       tips: '建议早餐前服用',
       badge: '胃药',
     ),
-    _SearchResultItem(
+    SearchResultItemData(
       name: '维生素C片',
       subtitle: '维矿补充类 · 100mg*60片',
       tips: '长期补充请遵医嘱',
@@ -50,7 +51,7 @@ class _SearchViewState extends State<SearchView> {
 
   String _keyword = '';
 
-  List<_SearchResultItem> get _filteredResults {
+  List<SearchResultItemData> get _filteredResults {
     if (_keyword.isEmpty) {
       return _allResults.take(3).toList();
     }
@@ -144,18 +145,7 @@ class _SearchViewState extends State<SearchView> {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x10000000),
-                blurRadius: 10,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
+        child: SearchSurfaceCard(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
             child: Row(
@@ -168,9 +158,7 @@ class _SearchViewState extends State<SearchView> {
                         _keyword = value.trim();
                       });
                     },
-                    onSubmitted: (_) {
-                      _commitSearch();
-                    },
+                    onSubmitted: (_) => _commitSearch(),
                     decoration: InputDecoration(
                       hintText: '请输入药名/症状/成分',
                       hintStyle: const TextStyle(
@@ -206,9 +194,7 @@ class _SearchViewState extends State<SearchView> {
                 ),
                 const SizedBox(width: 8),
                 FilledButton(
-                  onPressed: () {
-                    _commitSearch();
-                  },
+                  onPressed: _commitSearch,
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF0EA5E9),
                     foregroundColor: Colors.white,
@@ -231,10 +217,9 @@ class _SearchViewState extends State<SearchView> {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
-        child: DecoratedBox(
-          decoration: _sectionDecoration(),
+        child: SearchSurfaceCard(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -282,8 +267,7 @@ class _SearchViewState extends State<SearchView> {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
-        child: DecoratedBox(
-          decoration: _sectionDecoration(),
+        child: SearchSurfaceCard(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
             child: Column(
@@ -300,11 +284,7 @@ class _SearchViewState extends State<SearchView> {
                     ),
                     const Spacer(),
                     TextButton(
-                      onPressed: _recentKeywords.isEmpty
-                          ? null
-                          : () {
-                              _clearHistory();
-                            },
+                      onPressed: _recentKeywords.isEmpty ? null : _clearHistory,
                       style: TextButton.styleFrom(
                         minimumSize: const Size(48, 30),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -411,105 +391,11 @@ class _SearchViewState extends State<SearchView> {
             padding: EdgeInsets.only(
               bottom: index == _filteredResults.length - 1 ? 0 : 10,
             ),
-            child: DecoratedBox(
-              decoration: _sectionDecoration(),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(16),
-                onTap: () {
-                  ToastUtils.instance.show(context, '${item.name} 详情功能开发中');
-                },
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: const Color(
-                            0xFF0EA5E9,
-                          ).withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.medication_liquid_rounded,
-                          size: 22,
-                          color: Color(0xFF0EA5E9),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    item.name,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w700,
-                                      color: Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFEFF6FF),
-                                    borderRadius: BorderRadius.circular(999),
-                                  ),
-                                  child: Text(
-                                    item.badge,
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF0369A1),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              item.subtitle,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: Color(0xFF475569),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.info_outline_rounded,
-                                  size: 14,
-                                  color: Color(0xFF64748B),
-                                ),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    item.tips,
-                                    style: const TextStyle(
-                                      fontSize: 12.5,
-                                      color: Color(0xFF64748B),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            child: SearchResultCard(
+              item: item,
+              onTap: () {
+                ToastUtils.instance.show(context, '${item.name} 详情功能开发中');
+              },
             ),
           );
         },
@@ -547,20 +433,6 @@ class _SearchViewState extends State<SearchView> {
           ),
         ),
       ),
-    );
-  }
-
-  BoxDecoration _sectionDecoration() {
-    return BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x10000000),
-          blurRadius: 10,
-          offset: Offset(0, 4),
-        ),
-      ],
     );
   }
 
@@ -607,18 +479,4 @@ class _SearchViewState extends State<SearchView> {
       _recentKeywords.removeLast();
     }
   }
-}
-
-class _SearchResultItem {
-  final String name;
-  final String subtitle;
-  final String tips;
-  final String badge;
-
-  const _SearchResultItem({
-    required this.name,
-    required this.subtitle,
-    required this.tips,
-    required this.badge,
-  });
 }
