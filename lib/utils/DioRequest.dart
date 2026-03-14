@@ -4,7 +4,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:luminous/utils/api_config.dart';
+import 'package:luminous/constants/constants.dart';
 import 'package:luminous/utils/loading_utils.dart';
 
 class ApiException implements Exception {
@@ -20,7 +20,7 @@ class DioRequest {
   DioRequest._internal() {
     _dio = Dio(
       BaseOptions(
-        baseUrl: ApiConfig.baseUrl,
+        baseUrl: GlobalConstants.BASE_URL,
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
         sendTimeout: const Duration(seconds: 15),

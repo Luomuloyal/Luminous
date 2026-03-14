@@ -8,7 +8,7 @@ class ToastUtils {
   void show(
     BuildContext context,
     String msg, {
-    Duration toastduration = const Duration(milliseconds: 1200),
+    Duration toastduration = const Duration(seconds: 2),
   }) {
     final message = msg.trim();
     if (message.isEmpty) {

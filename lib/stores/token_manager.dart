@@ -12,17 +12,17 @@ class TokenManager {
 
   Future<void> setToken(String token) async {
     final prefs = await _prefs;
-    await prefs.setString(GlobalConstants.tokenKey, token);
+    await prefs.setString(GlobalConstants.TOKEN_KEY, token);
   }
 
   Future<String> getToken() async {
     final prefs = await _prefs;
-    return prefs.getString(GlobalConstants.tokenKey) ?? '';
+    return prefs.getString(GlobalConstants.TOKEN_KEY) ?? '';
   }
 
   Future<void> deleteToken() async {
     final prefs = await _prefs;
-    await prefs.remove(GlobalConstants.tokenKey);
+    await prefs.remove(GlobalConstants.TOKEN_KEY);
   }
 }
 
