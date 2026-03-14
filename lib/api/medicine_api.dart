@@ -2,6 +2,12 @@ import 'package:luminous/constants/constants.dart';
 import 'package:luminous/utils/DioRequest.dart';
 import 'package:luminous/viewmodels/medicine.dart';
 
+// MedicineApi：药品服务接口封装层
+//
+// 设计原则：
+// - 页面不直接拼路径/字段名，只调用这里的方法
+// - 统一使用 ApiResult<T> + decoder，把 result 解析为强类型对象
+// - Loading 由页面自行控制（搜索与分页更适合局部 loading，而非全屏弹窗）
 class MedicineApi {
   MedicineApi._();
 

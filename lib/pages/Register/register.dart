@@ -3,6 +3,12 @@ import 'package:luminous/api/auth_api.dart';
 import 'package:luminous/components/auth.dart';
 import 'package:luminous/utils/toast_utils.dart';
 
+// 注册页
+//
+// 设计要点：
+// - 邮箱注册：send-code(type=2) 发送 6 位验证码，再 register-user(type=2)
+// - SVG 注册：send-code(type=1) 获取 4 位 SVG 验证码，再 register-user(type=1)
+// - 可复用组件抽取到 components/auth.dart（协议行、切换器、SVG验证码卡、Hero 卡）
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
 

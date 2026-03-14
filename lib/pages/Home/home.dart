@@ -4,6 +4,12 @@ import 'package:luminous/components/home.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/home.dart';
 
+// 首页
+//
+// 设计要点：
+// - “常用功能”是本地静态入口（纯 UI）
+// - “今日提醒”来自后端接口 today-reminders（便于后续按 userId/date 落库）
+// - 为了保证 UI 稳定：接口失败时回退到本地 _fallbackReminders
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
 

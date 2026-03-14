@@ -26,11 +26,17 @@ MedicineItem 字段:
 - drugCodeRemark: string
 
 依赖:
-- mysql2 (云函数依赖中需要安装)
+- mysql2 (云函数依赖中需要安装，推荐版本: mysql2@3.11.0)
+- 如果你看到报错：Cannot find module 'mysql2/promise'...
+  - 通常是 mysql2 没有安装成功（不是版本不兼容）
+  - 请先在后端平台的“依赖/Dependencies”里安装 mysql2
+  - 如果安装后仍提示找不到模块，可把 import 改为 `mysql2/promise.js`（见下方代码）
 
 ```typescript
 import cloud from '@lafjs/cloud'
-import mysql from 'mysql2/promise'
+// 注意：某些环境对 exports 子路径解析更严格，推荐使用 promise.js 写法
+// 前提：你已经在依赖中安装 mysql2 (推荐 mysql2@3.11.0)
+import mysql from 'mysql2/promise.js'
 
 const MYSQL_HOST = process.env.MYSQL_HOST || 'healthdev-mysql.ns-w0d0n49n.svc'
 const MYSQL_PORT = Number(process.env.MYSQL_PORT || 3306)
@@ -100,6 +106,17 @@ export async function main(ctx: FunctionContext) {
     return success(item)
   } catch (e) {
     console.error('mysql query failed:', e)
+    const message = String((e as any)?.message || e || '')
+    if (message.includes('Cannot find module') && message.includes('mysql2')) {
+      return fail('缺少依赖 mysql2：请在依赖中安装 mysql2@3.11.0 后再重试')
+    }
+    if (
+      message.includes('ECONNREFUSED') ||
+      message.includes('ETIMEDOUT') ||
+      message.includes('EHOSTUNREACH')
+    ) {
+      return fail('MySQL 连接失败：请检查 MYSQL_HOST/MYSQL_PORT/白名单/网络策略')
+    }
     return fail('查询失败，请稍后重试')
   }
 }

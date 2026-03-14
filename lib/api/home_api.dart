@@ -2,6 +2,11 @@ import 'package:luminous/constants/constants.dart';
 import 'package:luminous/utils/DioRequest.dart';
 import 'package:luminous/viewmodels/home.dart';
 
+// HomeApi：首页相关接口封装
+//
+// 当前只实现 today-reminders：
+// - 先返回 demo 数据保证联调
+// - 后续可按 userId/date 落库，接口协议无需变更
 class HomeApi {
   HomeApi._();
 

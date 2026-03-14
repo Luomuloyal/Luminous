@@ -4,6 +4,12 @@ import 'package:luminous/components/mine.dart';
 import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/toast_utils.dart';
 
+// 我的页
+//
+// 设计要点：
+// - 顶部资料卡（MineProfileCard）是可复用组件，页面只负责布局/交互
+// - 不再让“资料卡撑满整屏”（你截图的问题），改用 ListView + 卡片分区
+// - QuickActions/Menu 目前是预留入口，后续接入真实功能时替换 onTap 即可
 class MineView extends StatefulWidget {
   const MineView({super.key});
 

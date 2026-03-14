@@ -3,6 +3,15 @@ import 'package:luminous/api/medicine_api.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/medicine.dart';
 
+// 药品详情页
+//
+// 页面职责：
+// - 展示基础信息（来自 MySQL 查询）
+// - 预留 AI 详细信息 UI：点击“获取详细信息”调用后端 /medicine-ai-detail
+//
+// 设计注意：
+// - 详情与 AI 是两个请求：detail 用于补齐基础信息，ai-detail 用于后续扩展
+// - AI 内容是高风险区域：后续接入时应加免责声明、过滤与超时策略（后端更关键）
 class MedicineDetailPage extends StatefulWidget {
   const MedicineDetailPage({super.key, required this.initialItem});
 

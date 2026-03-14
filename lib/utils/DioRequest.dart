@@ -7,6 +7,18 @@ import 'package:flutter/foundation.dart';
 import 'package:luminous/constants/constants.dart';
 import 'package:luminous/utils/loading_utils.dart';
 
+// DioRequest：全站唯一网络入口（页面不要直接使用 Dio）。
+//
+// 设计目标：
+// - 统一 baseUrl/超时/请求头
+// - 统一 Loading（通过 options.extra 传 showLoading/loadingText）
+// - 统一错误：后端 code!=SUCCESS_CODE 或 DioException 都抛 ApiException
+// - 强类型解码：通过 decoder 把 result 转为业务对象，避免页面拿 dynamic/Map
+//
+// 约定的后端返回结构（必须统一，否则前端无法通用解析）：
+//   { "code": "1", "msg": "...", "result": ... }
+//
+// 更多架构说明见：lib/project_guide.dart
 class ApiResult<T> {
   final String code;
   final String msg;
@@ -143,6 +155,7 @@ class DioRequest {
         _loadingTextKey: loadingText,
       };
 
+      // 统一请求入口：这里是唯一发起 HTTP 的地方
       final response = await _dio.request<dynamic>(
         path,
         data: data,
@@ -151,11 +164,19 @@ class DioRequest {
         cancelToken: cancelToken,
       );
 
+      // response.data 可能是 Map，也可能是 String(JSON)，这里统一转 Map<String, dynamic>
       final rawData = _coerceToMap(response.data);
       final code = (rawData['code'] ?? '').toString();
       final msg = (rawData['msg'] ?? '').toString();
 
+      if (kDebugMode) {
+        debugPrint(
+          '[DIO][BIZ] code=$code msg=${msg.isEmpty ? '<empty>' : msg} uri=${response.requestOptions.uri}',
+        );
+      }
+
       if (code != GlobalConstants.SUCCESS_CODE) {
+        // 业务失败：统一抛出 ApiException，页面只需要 try/catch 并提示 msg
         throw ApiException(msg.isEmpty ? '请求失败' : msg);
       }
 
@@ -165,6 +186,7 @@ class DioRequest {
         result: decoder(rawData['result']),
       );
     } on DioException catch (e) {
+      // 网络失败/超时/非 2xx：统一包装成 ApiException
       throw ApiException(_parseDioError(e));
     }
   }
@@ -177,6 +199,7 @@ class DioRequest {
       return data.map((key, value) => MapEntry(key.toString(), value));
     }
     if (data is String) {
+      // 后端或网关可能返回 string，这里尝试 jsonDecode
       return _coerceToMap(jsonDecode(data));
     }
     throw Exception('响应格式异常：${data.runtimeType}');

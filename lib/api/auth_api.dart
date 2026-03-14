@@ -2,6 +2,12 @@ import 'package:luminous/constants/constants.dart';
 import 'package:luminous/utils/DioRequest.dart';
 import 'package:luminous/viewmodels/auth.dart';
 
+// AuthApi：认证接口封装层
+//
+// 设计原则：
+// - 统一用 ApiResult<T> 返回（code/msg/result）
+// - result 解析在 decoder 内完成，页面只拿强类型对象
+// - 认证接口字段（type/codeType/uuid 等）集中维护，避免散落在页面里
 class AuthApi {
   AuthApi._();
 

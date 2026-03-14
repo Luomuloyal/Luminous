@@ -4,6 +4,11 @@ import 'package:luminous/pages/Drug/drug.dart';
 import 'package:luminous/pages/Home/home.dart';
 import 'package:luminous/pages/Mine/mine.dart';
 
+// 主页面：底部 Tab 容器
+//
+// 注意：
+// - 这里用 IndexedStack 保持每个 Tab 的状态（避免切换时重复 initState）
+// - 不要在这里再包 SafeArea（单页自己负责），否则容易出现双重 padding
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
 

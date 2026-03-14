@@ -5,6 +5,10 @@ import 'package:luminous/pages/Register/register.dart';
 import 'package:luminous/pages/Search/search.dart';
 import 'package:luminous/utils/loading_utils.dart';
 
+// routes.dart：应用路由表
+//
+// 当前使用原生 MaterialApp 路由（不依赖 GetMaterialApp），GetX 仅用于状态/依赖注入。
+// 这样做的好处：路由体系清晰，后续如果要引入更复杂的路由方案也容易替换。
 // 返回APP根级组件
 Widget getRootWidget() {
   return MaterialApp(

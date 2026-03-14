@@ -5,6 +5,15 @@ import 'package:luminous/pages/Drug/medicine_detail.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/medicine.dart';
 
+// 手动搜索页（对接 MySQL 药品库）
+//
+// 设计要点：
+// - _draftKeyword：输入框实时内容（用户还没“确认搜索”）
+// - _keyword：当前已提交的搜索关键词（真正触发请求的关键词）
+//   这样做的好处：避免用户每输入一个字符就请求一次接口（减少后端压力与费用）
+//
+// - 分页加载：滚动接近底部时触发 _search(reset:false) 拉下一页
+// - 点击结果进入 MedicineDetailPage，并预留 AI 详细信息入口
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
 
@@ -22,6 +31,7 @@ class _SearchViewState extends State<SearchView> {
 
   String _keyword = '';
   String _draftKeyword = '';
+  String? _lastError;
 
   final List<MedicineItem> _results = [];
   bool _loading = false;
@@ -74,6 +84,8 @@ class _SearchViewState extends State<SearchView> {
               _buildReadySliver()
             else if (_loading && _results.isEmpty)
               _buildLoadingSliver()
+            else if (_lastError != null && _results.isEmpty)
+              _buildErrorSliver(_lastError!)
             else if (_results.isEmpty)
               _buildEmptySliver()
             else
@@ -526,10 +538,75 @@ class _SearchViewState extends State<SearchView> {
     );
   }
 
+  Widget _buildErrorSliver(String message) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 26, 16, 10),
+        child: SearchSurfaceCard(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: Color(0xFFEF4444),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '查询失败',
+                        style: TextStyle(
+                          color: Color(0xFF0F172A),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        message,
+                        style: const TextStyle(
+                          color: Color(0xFF475569),
+                          fontSize: 13,
+                          height: 1.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: FilledButton.tonal(
+                          onPressed: () => _search(reset: true),
+                          style: FilledButton.styleFrom(
+                            foregroundColor: const Color(0xFF0F172A),
+                            backgroundColor: const Color(0xFFF1F5F9),
+                            minimumSize: const Size(88, 40),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text('重试'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _applyQuickTag(String tag) {
     _searchController.text = tag;
     _searchController.selection = TextSelection.collapsed(offset: tag.length);
     setState(() {
+      _lastError = null;
       _draftKeyword = tag;
       _keyword = tag;
       _updateRecentKeywords(tag);
@@ -544,6 +621,7 @@ class _SearchViewState extends State<SearchView> {
       return;
     }
     setState(() {
+      _lastError = null;
       _draftKeyword = keyword;
       _keyword = keyword;
       _updateRecentKeywords(keyword);
@@ -557,6 +635,7 @@ class _SearchViewState extends State<SearchView> {
     setState(() {
       _keyword = '';
       _draftKeyword = '';
+      _lastError = null;
       _results.clear();
       _hasMore = false;
       _page = 1;
@@ -603,6 +682,7 @@ class _SearchViewState extends State<SearchView> {
       setState(() {
         _loading = true;
         _loadingMore = false;
+        _lastError = null;
         _page = 1;
         _hasMore = false;
         _results.clear();
@@ -617,6 +697,7 @@ class _SearchViewState extends State<SearchView> {
     }
 
     try {
+      // 约定：后端返回 code/msg/result，result 为分页结构 {items,total,page,pageSize}
       final response = await MedicineApi.search(
         keyword: keyword,
         page: _page,
@@ -637,10 +718,13 @@ class _SearchViewState extends State<SearchView> {
       if (!mounted) {
         return;
       }
-      ToastUtils.instance.show(
-        context,
-        e.toString().replaceFirst('Exception: ', ''),
-      );
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      ToastUtils.instance.show(context, msg);
+      if (reset) {
+        setState(() {
+          _lastError = msg;
+        });
+      }
     } finally {
       if (mounted) {
         setState(() {

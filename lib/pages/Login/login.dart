@@ -5,6 +5,12 @@ import 'package:luminous/components/auth.dart';
 import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/toast_utils.dart';
 
+// 登录页
+//
+// 设计要点：
+// - 邮箱登录：只校验邮箱 + 密码（不要求 SVG 验证码）
+// - SVG 测试登录：用于联调验证码流程（type=1，需要 uuid + code）
+// - 用户态写入：登录成功后写入 UserController 并持久化（shared_preferences）
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
