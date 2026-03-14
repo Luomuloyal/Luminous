@@ -86,6 +86,7 @@ class SearchResultCard extends StatelessWidget {
                           ),
                         ),
                         Container(
+                          constraints: const BoxConstraints(maxWidth: 110),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
                             vertical: 4,
@@ -96,6 +97,8 @@ class SearchResultCard extends StatelessWidget {
                           ),
                           child: Text(
                             item.badge,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,

@@ -11,4 +11,10 @@ class HttpConstants {
   static const String SEND_CODE = '/send-code';
   static const String REGISTER_USER = '/register-user';
   static const String LOGIN_USER = '/login-user';
+
+  static const String TODAY_REMINDERS = '/today-reminders';
+
+  static const String MEDICINE_SEARCH = '/medicine-search';
+  static const String MEDICINE_DETAIL = '/medicine-detail';
+  static const String MEDICINE_AI_DETAIL = '/medicine-ai-detail';
 }

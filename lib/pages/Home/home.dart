@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:luminous/api/home_api.dart';
 import 'package:luminous/components/home.dart';
 import 'package:luminous/utils/toast_utils.dart';
+import 'package:luminous/viewmodels/home.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -55,7 +57,7 @@ class _HomeViewState extends State<HomeView> {
     ),
   ];
 
-  final List<HomeReminderItemData> _reminders = const [
+  static const List<HomeReminderItemData> _fallbackReminders = [
     HomeReminderItemData(
       icon: Icons.access_time_rounded,
       title: '08:30 维生素D',
@@ -75,6 +77,17 @@ class _HomeViewState extends State<HomeView> {
       done: false,
     ),
   ];
+
+  late List<HomeReminderItemData> _reminders = List<HomeReminderItemData>.from(
+    _fallbackReminders,
+  );
+  bool _loadingReminders = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTodayReminders();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,6 +109,14 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _buildTopSliver() {
+    final next = _reminders.cast<HomeReminderItemData?>().firstWhere(
+      (e) => e != null && e.done == false,
+      orElse: () => null,
+    );
+    final nextText = next == null
+        ? '暂无提醒'
+        : '下一次提醒: ${next.title} · ${next.subtitle}';
+
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -157,16 +178,20 @@ class _HomeViewState extends State<HomeView> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                '下一次提醒: 19:30 · 阿莫西林 1 粒',
+              Text(
+                nextText,
                 style: TextStyle(color: Color(0xE6FFFFFF), fontSize: 14),
               ),
               const SizedBox(height: 14),
               Row(
                 children: [
-                  _buildInfoPill('今日打卡 2/3'),
+                  _buildInfoPill(
+                    _loadingReminders
+                        ? '提醒加载中...'
+                        : '今日提醒 ${_reminders.length} 条',
+                  ),
                   const SizedBox(width: 8),
-                  _buildInfoPill('连续 7 天'),
+                  _buildInfoPill('功能持续完善中'),
                 ],
               ),
             ],
@@ -217,6 +242,56 @@ class _HomeViewState extends State<HomeView> {
           fontWeight: FontWeight.w600,
         ),
       ),
+    );
+  }
+
+  Future<void> _fetchTodayReminders() async {
+    if (_loadingReminders) {
+      return;
+    }
+    setState(() {
+      _loadingReminders = true;
+    });
+
+    try {
+      final response = await HomeApi.fetchTodayReminders();
+      if (!mounted) {
+        return;
+      }
+      final items = response.result.items;
+      if (items.isEmpty) {
+        return;
+      }
+      setState(() {
+        _reminders = items.map(_toReminderUi).toList();
+      });
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ToastUtils.instance.show(
+        context,
+        e.toString().replaceFirst('Exception: ', ''),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingReminders = false;
+        });
+      }
+    }
+  }
+
+  HomeReminderItemData _toReminderUi(ReminderItem item) {
+    final time = item.time.trim();
+    final title = item.title.trim();
+    final combinedTitle = time.isEmpty ? title : '$time $title';
+
+    return HomeReminderItemData(
+      icon: Icons.access_time_rounded,
+      title: combinedTitle,
+      subtitle: item.subtitle.trim(),
+      done: item.done,
     );
   }
 }

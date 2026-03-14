@@ -1,0 +1,464 @@
+import 'package:flutter/material.dart';
+import 'package:luminous/api/medicine_api.dart';
+import 'package:luminous/utils/toast_utils.dart';
+import 'package:luminous/viewmodels/medicine.dart';
+
+class MedicineDetailPage extends StatefulWidget {
+  const MedicineDetailPage({super.key, required this.initialItem});
+
+  final MedicineItem initialItem;
+
+  @override
+  State<MedicineDetailPage> createState() => _MedicineDetailPageState();
+}
+
+class _MedicineDetailPageState extends State<MedicineDetailPage> {
+  late MedicineItem _item;
+  bool _loadingDetail = false;
+
+  MedicineAiDetailResult? _aiResult;
+  bool _loadingAi = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _item = widget.initialItem;
+    _loadDetail();
+  }
+
+  Future<void> _loadDetail() async {
+    if (_loadingDetail || !_item.hasIdentity) {
+      return;
+    }
+    setState(() {
+      _loadingDetail = true;
+    });
+    try {
+      final response = await MedicineApi.fetchDetail(
+        drugCode: _item.drugCode,
+        approvalNo: _item.approvalNo,
+      );
+      if (!mounted) {
+        return;
+      }
+      if (response.result.productName.isNotEmpty) {
+        setState(() {
+          _item = response.result;
+        });
+      }
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ToastUtils.instance.show(
+        context,
+        e.toString().replaceFirst('Exception: ', ''),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingDetail = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadAiDetail() async {
+    if (_loadingAi || !_item.hasIdentity) {
+      return;
+    }
+    setState(() {
+      _loadingAi = true;
+    });
+    try {
+      final response = await MedicineApi.fetchAiDetail(
+        drugCode: _item.drugCode,
+        approvalNo: _item.approvalNo,
+      );
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _aiResult = response.result;
+      });
+      if (!_aiResult!.hasText) {
+        ToastUtils.instance.show(context, 'AI接口暂无返回内容');
+      }
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ToastUtils.instance.show(
+        context,
+        e.toString().replaceFirst('Exception: ', ''),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingAi = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final title = _item.displayName;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF3F7FB),
+      appBar: AppBar(
+        title: Text(title),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        children: [
+          _HeaderCard(
+            item: _item,
+            loading: _loadingDetail,
+            onRefresh: _loadDetail,
+          ),
+          const SizedBox(height: 12),
+          _InfoCard(item: _item),
+          const SizedBox(height: 12),
+          _AiCard(
+            hasIdentity: _item.hasIdentity,
+            loading: _loadingAi,
+            result: _aiResult,
+            onFetch: _loadAiDetail,
+          ),
+          const SizedBox(height: 12),
+          const _DisclaimerCard(),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeaderCard extends StatelessWidget {
+  const _HeaderCard({
+    required this.item,
+    required this.loading,
+    required this.onRefresh,
+  });
+
+  final MedicineItem item;
+  final bool loading;
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0EA5E9), Color(0xFF06B6D4)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1A0EA5E9),
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.22),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(
+              Icons.medication_rounded,
+              color: Colors.white,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.displayName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  item.displaySubtitle,
+                  style: const TextStyle(
+                    color: Color(0xE6FFFFFF),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if (item.approvalNo.isNotEmpty)
+                      _pill(label: '批准文号', value: item.approvalNo),
+                    if (item.drugCode.isNotEmpty)
+                      _pill(label: '药品编码', value: item.drugCode),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          FilledButton.tonalIcon(
+            onPressed: loading ? null : onRefresh,
+            icon: loading
+                ? const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh_rounded, size: 16),
+            label: const Text('刷新'),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.white.withValues(alpha: 0.18),
+              foregroundColor: Colors.white,
+              minimumSize: const Size(86, 40),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _pill({required String label, required String value}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0x33FFFFFF),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        '$label: $value',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoCard extends StatelessWidget {
+  const _InfoCard({required this.item});
+
+  final MedicineItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    return _SurfaceCard(
+      title: '基础信息',
+      child: Column(
+        children: [
+          _InfoRow(label: '产品名称', value: item.productName),
+          _InfoRow(label: '剂型', value: item.dosageForm),
+          _InfoRow(label: '规格', value: item.specification),
+          _InfoRow(label: '批准文号', value: item.approvalNo),
+          _InfoRow(label: '上市许可持有人', value: item.marketingAuthorizationHolder),
+          _InfoRow(label: '生产单位', value: item.manufacturer),
+          _InfoRow(label: '药品编码', value: item.drugCode),
+          _InfoRow(label: '药品编码备注', value: item.drugCodeRemark),
+        ],
+      ),
+    );
+  }
+}
+
+class _AiCard extends StatelessWidget {
+  const _AiCard({
+    required this.hasIdentity,
+    required this.loading,
+    required this.result,
+    required this.onFetch,
+  });
+
+  final bool hasIdentity;
+  final bool loading;
+  final MedicineAiDetailResult? result;
+  final VoidCallback onFetch;
+
+  @override
+  Widget build(BuildContext context) {
+    return _SurfaceCard(
+      title: 'AI 智能解读',
+      trailing: FilledButton(
+        onPressed: !hasIdentity || loading ? null : onFetch,
+        style: FilledButton.styleFrom(
+          backgroundColor: const Color(0xFF0EA5E9),
+          foregroundColor: Colors.white,
+          minimumSize: const Size(110, 40),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: loading
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Text('获取详细信息'),
+      ),
+      child: result == null || !result!.hasText
+          ? const Text(
+              '即将接入 AI：点击“获取详细信息”后将由后端调用 AI 查询更详细的用法用量、禁忌、相互作用等内容。',
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.55,
+                color: Color(0xFF475569),
+                fontWeight: FontWeight.w600,
+              ),
+            )
+          : Text(
+              result!.text,
+              style: const TextStyle(
+                fontSize: 13,
+                height: 1.6,
+                color: Color(0xFF0F172A),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+    );
+  }
+}
+
+class _DisclaimerCard extends StatelessWidget {
+  const _DisclaimerCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return _SurfaceCard(
+      title: '安全提示',
+      child: const Text(
+        '本应用信息仅用于健康科普与辅助查询，不能替代医生诊断与处方。'
+        '如有不适或正在用药，请遵医嘱并咨询专业人士。',
+        style: TextStyle(
+          fontSize: 12.5,
+          height: 1.55,
+          color: Color(0xFF64748B),
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _SurfaceCard extends StatelessWidget {
+  const _SurfaceCard({required this.title, required this.child, this.trailing});
+
+  final String title;
+  final Widget child;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0F000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+                const Spacer(),
+                ...?(trailing == null ? null : <Widget>[trailing!]),
+              ],
+            ),
+            const SizedBox(height: 10),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = value.trim().isEmpty ? '-' : value.trim();
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 108,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12.5,
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 12.5,
+                height: 1.45,
+                color: Color(0xFF0F172A),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:luminous/api/medicine_api.dart';
 import 'package:luminous/components/search.dart';
+import 'package:luminous/pages/Drug/medicine_detail.dart';
 import 'package:luminous/utils/toast_utils.dart';
+import 'package:luminous/viewmodels/medicine.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -11,60 +14,44 @@ class SearchView extends StatefulWidget {
 
 class _SearchViewState extends State<SearchView> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   final List<String> _quickTags = const ['退烧', '抗生素', '止咳', '过敏', '胃药', '维生素'];
-
-  final List<SearchResultItemData> _allResults = const [
-    SearchResultItemData(
-      name: '阿莫西林胶囊',
-      subtitle: '抗感染类 · 0.25g*24粒',
-      tips: '青霉素过敏者禁用',
-      badge: '抗生素',
-    ),
-    SearchResultItemData(
-      name: '布洛芬缓释胶囊',
-      subtitle: '解热镇痛类 · 0.3g*20粒',
-      tips: '饭后服用，避免空腹',
-      badge: '退烧止痛',
-    ),
-    SearchResultItemData(
-      name: '氯雷他定片',
-      subtitle: '抗过敏类 · 10mg*12片',
-      tips: '服药后避免饮酒',
-      badge: '过敏',
-    ),
-    SearchResultItemData(
-      name: '奥美拉唑肠溶胶囊',
-      subtitle: '胃药类 · 20mg*14粒',
-      tips: '建议早餐前服用',
-      badge: '胃药',
-    ),
-    SearchResultItemData(
-      name: '维生素C片',
-      subtitle: '维矿补充类 · 100mg*60片',
-      tips: '长期补充请遵医嘱',
-      badge: '维生素',
-    ),
-  ];
 
   final List<String> _recentKeywords = ['阿莫西林', '布洛芬', '维生素D'];
 
   String _keyword = '';
+  String _draftKeyword = '';
 
-  List<SearchResultItemData> get _filteredResults {
-    if (_keyword.isEmpty) {
-      return _allResults.take(3).toList();
-    }
-    return _allResults.where((item) {
-      return item.name.contains(_keyword) ||
-          item.subtitle.contains(_keyword) ||
-          item.badge.contains(_keyword);
-    }).toList();
+  final List<MedicineItem> _results = [];
+  bool _loading = false;
+  bool _loadingMore = false;
+  bool _hasMore = false;
+  int _page = 1;
+  static const int _pageSize = 20;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(() {
+      if (!_scrollController.hasClients) {
+        return;
+      }
+      if (_keyword.isEmpty || !_hasMore || _loadingMore || _loading) {
+        return;
+      }
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final current = _scrollController.offset;
+      if (current >= maxScroll - 120) {
+        _search(reset: false);
+      }
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -74,16 +61,24 @@ class _SearchViewState extends State<SearchView> {
       backgroundColor: const Color(0xFFF3F7FB),
       body: SafeArea(
         child: CustomScrollView(
+          controller: _scrollController,
           slivers: [
             _buildHeaderSliver(),
             _buildSearchBarSliver(),
             _buildQuickTagsSliver(),
             _buildHistorySliver(),
             _buildResultTitleSliver(),
-            if (_filteredResults.isEmpty)
+            if (_keyword.isEmpty && _draftKeyword.isEmpty)
+              _buildGuideSliver()
+            else if (_keyword.isEmpty && _draftKeyword.isNotEmpty)
+              _buildReadySliver()
+            else if (_loading && _results.isEmpty)
+              _buildLoadingSliver()
+            else if (_results.isEmpty)
               _buildEmptySliver()
             else
               _buildResultListSliver(),
+            if (_keyword.isNotEmpty && _loadingMore) _buildLoadingMoreSliver(),
             const SliverToBoxAdapter(child: SizedBox(height: 20)),
           ],
         ),
@@ -155,7 +150,7 @@ class _SearchViewState extends State<SearchView> {
                     controller: _searchController,
                     onChanged: (value) {
                       setState(() {
-                        _keyword = value.trim();
+                        _draftKeyword = value.trim();
                       });
                     },
                     onSubmitted: (_) => _commitSearch(),
@@ -169,7 +164,7 @@ class _SearchViewState extends State<SearchView> {
                         Icons.search_rounded,
                         color: Color(0xFF0EA5E9),
                       ),
-                      suffixIcon: _keyword.isEmpty
+                      suffixIcon: _draftKeyword.isEmpty
                           ? null
                           : IconButton(
                               onPressed: _clearKeyword,
@@ -367,7 +362,7 @@ class _SearchViewState extends State<SearchView> {
             ),
             const SizedBox(width: 6),
             Text(
-              '(${_filteredResults.length})',
+              '(${_keyword.isEmpty ? 0 : _results.length})',
               style: const TextStyle(
                 fontSize: 13,
                 color: Color(0xFF64748B),
@@ -384,21 +379,116 @@ class _SearchViewState extends State<SearchView> {
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       sliver: SliverList.builder(
-        itemCount: _filteredResults.length,
+        itemCount: _results.length,
         itemBuilder: (context, index) {
-          final item = _filteredResults[index];
+          final item = _results[index];
+          final cardData = _toCardData(item);
           return Padding(
             padding: EdgeInsets.only(
-              bottom: index == _filteredResults.length - 1 ? 0 : 10,
+              bottom: index == _results.length - 1 ? 0 : 10,
             ),
             child: SearchResultCard(
-              item: item,
+              item: cardData,
               onTap: () {
-                ToastUtils.instance.show(context, '${item.name} 详情功能开发中');
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => MedicineDetailPage(initialItem: item),
+                  ),
+                );
               },
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildGuideSliver() {
+    return const SliverToBoxAdapter(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(16, 26, 16, 10),
+        child: SearchSurfaceCard(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(14, 14, 14, 14),
+            child: Row(
+              children: [
+                Icon(Icons.tips_and_updates_rounded, color: Color(0xFF0EA5E9)),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '输入药品名称、批准文号或生产单位后点击搜索，即可从药品数据库查询信息。',
+                    style: TextStyle(
+                      color: Color(0xFF475569),
+                      fontSize: 13,
+                      height: 1.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReadySliver() {
+    return const SliverToBoxAdapter(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(16, 18, 16, 10),
+        child: SearchSurfaceCard(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(14, 14, 14, 14),
+            child: Row(
+              children: [
+                Icon(Icons.keyboard_return_rounded, color: Color(0xFF0EA5E9)),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '按下“搜索”开始查询药品数据库。',
+                    style: TextStyle(
+                      color: Color(0xFF475569),
+                      fontSize: 13,
+                      height: 1.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingSliver() {
+    return const SliverToBoxAdapter(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(16, 26, 16, 10),
+        child: Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingMoreSliver() {
+    return const SliverToBoxAdapter(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(16, 14, 16, 10),
+        child: Center(
+          child: SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
       ),
     );
   }
@@ -440,9 +530,11 @@ class _SearchViewState extends State<SearchView> {
     _searchController.text = tag;
     _searchController.selection = TextSelection.collapsed(offset: tag.length);
     setState(() {
+      _draftKeyword = tag;
       _keyword = tag;
       _updateRecentKeywords(tag);
     });
+    _search(reset: true);
   }
 
   void _commitSearch() {
@@ -452,9 +544,11 @@ class _SearchViewState extends State<SearchView> {
       return;
     }
     setState(() {
+      _draftKeyword = keyword;
       _keyword = keyword;
       _updateRecentKeywords(keyword);
     });
+    _search(reset: true);
     FocusScope.of(context).unfocus();
   }
 
@@ -462,6 +556,10 @@ class _SearchViewState extends State<SearchView> {
     _searchController.clear();
     setState(() {
       _keyword = '';
+      _draftKeyword = '';
+      _results.clear();
+      _hasMore = false;
+      _page = 1;
     });
   }
 
@@ -477,6 +575,79 @@ class _SearchViewState extends State<SearchView> {
     _recentKeywords.insert(0, keyword);
     if (_recentKeywords.length > 8) {
       _recentKeywords.removeLast();
+    }
+  }
+
+  SearchResultItemData _toCardData(MedicineItem item) {
+    final tips = item.approvalNo.isNotEmpty
+        ? '批准文号: ${item.approvalNo}'
+        : item.displayTips;
+    return SearchResultItemData(
+      name: item.displayName,
+      subtitle: item.displaySubtitle,
+      tips: tips,
+      badge: item.displayBadge,
+    );
+  }
+
+  Future<void> _search({required bool reset}) async {
+    final keyword = _keyword.trim();
+    if (keyword.isEmpty) {
+      return;
+    }
+
+    if (reset) {
+      if (_loading) {
+        return;
+      }
+      setState(() {
+        _loading = true;
+        _loadingMore = false;
+        _page = 1;
+        _hasMore = false;
+        _results.clear();
+      });
+    } else {
+      if (_loadingMore || _loading || !_hasMore) {
+        return;
+      }
+      setState(() {
+        _loadingMore = true;
+      });
+    }
+
+    try {
+      final response = await MedicineApi.search(
+        keyword: keyword,
+        page: _page,
+        pageSize: _pageSize,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      final result = response.result;
+      setState(() {
+        _results.addAll(result.items);
+        _hasMore = result.hasMore;
+        _page = result.page + 1;
+      });
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ToastUtils.instance.show(
+        context,
+        e.toString().replaceFirst('Exception: ', ''),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _loadingMore = false;
+        });
+      }
     }
   }
 }
