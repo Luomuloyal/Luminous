@@ -2,9 +2,16 @@ import 'package:luminous/constants/constants.dart';
 import 'package:luminous/utils/DioRequest.dart';
 import 'package:luminous/viewmodels/safety.dart';
 
+/// 安全辅助接口封装。
 class SafetyApi {
+  /// 私有构造函数，当前类只提供静态能力。
   SafetyApi._();
 
+  /// 向安全辅助接口发起查询。
+  ///
+  /// - `userId`：当前用户 id，可选；
+  /// - `mode`：查询模式，例如单药/多药；
+  /// - `medicines`：参与分析的药品列表。
   static Future<ApiResult<MedicineAiSafetyResult>> query({
     String? userId,
     required String mode,
@@ -23,10 +30,10 @@ class SafetyApi {
     );
   }
 
+  /// 把动态接口结果安全转换为 Map。
   static Map<String, dynamic> _asMap(dynamic json) {
     if (json is Map<String, dynamic>) return json;
     if (json is Map) return json.map((k, v) => MapEntry(k.toString(), v));
     return <String, dynamic>{};
   }
 }
-

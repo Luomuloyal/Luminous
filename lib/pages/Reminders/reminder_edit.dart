@@ -10,27 +10,48 @@ import 'package:luminous/viewmodels/reminder.dart';
 class ReminderEditPage extends StatefulWidget {
   const ReminderEditPage({super.key, this.initial});
 
+  /// 编辑时传入的初始提醒计划。
+  ///
+  /// - null：新增提醒
+  /// - 非 null：编辑已有提醒
   final ReminderPlan? initial;
 
+  /// 创建提醒编辑页对应的状态对象。
   @override
   State<ReminderEditPage> createState() => _ReminderEditPageState();
 }
 
 class _ReminderEditPageState extends State<ReminderEditPage> {
+  /// 全局用户控制器，用于读取当前 userId。
   final UserController _userController = Get.find<UserController>();
 
+  /// 药品名称输入框控制器。
   late final TextEditingController _nameController;
+
+  /// 备注输入框控制器。
   late final TextEditingController _subtitleController;
 
+  /// 当前选中药品的 drugCode。
   String _drugCode = '';
+
+  /// 当前选中药品的 approvalNo。
   String _approvalNo = '';
+
+  /// 当前选择的提醒时间（HH:mm）。
   String _time = '08:00';
+
+  /// 当前提醒是否启用。
   bool _enabled = true;
 
+  /// 当前是否正在保存。
   bool _saving = false;
 
+  /// 当前登录用户 id（未登录时为空字符串）。
   String get _userId => _userController.user.value?.id ?? '';
 
+  /// 初始化编辑页状态。
+  ///
+  /// 如果是编辑模式，会把 `widget.initial` 的数据回填到表单。
   @override
   void initState() {
     super.initState();
@@ -43,6 +64,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
     _enabled = init?.enabled ?? true;
   }
 
+  /// 释放文本控制器资源。
   @override
   void dispose() {
     _nameController.dispose();
@@ -50,8 +72,10 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
     super.dispose();
   }
 
+  /// 构建提醒编辑页 UI。
   @override
   Widget build(BuildContext context) {
+    /// 当前是否为编辑模式。
     final isEdit = widget.initial != null;
     return Scaffold(
       backgroundColor: const Color(0xFFF3F7FB),
@@ -71,8 +95,12 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
                 _tile(
                   icon: Icons.medication_outlined,
                   color: const Color(0xFF0EA5E9),
-                  title: _nameController.text.trim().isEmpty ? '选择药品' : _nameController.text.trim(),
-                  subtitle: _drugCode.trim().isNotEmpty || _approvalNo.trim().isNotEmpty
+                  title: _nameController.text.trim().isEmpty
+                      ? '选择药品'
+                      : _nameController.text.trim(),
+                  subtitle:
+                      _drugCode.trim().isNotEmpty ||
+                          _approvalNo.trim().isNotEmpty
                       ? 'drugCode: ${_drugCode.isEmpty ? '-' : _drugCode}  approvalNo: ${_approvalNo.isEmpty ? '-' : _approvalNo}'
                       : '可从“我的药品/搜索库”选择',
                   onTap: _pickMedicine,
@@ -130,7 +158,10 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
                     ),
                   ),
                 ),
-                Switch(value: _enabled, onChanged: (v) => setState(() => _enabled = v)),
+                Switch(
+                  value: _enabled,
+                  onChanged: (v) => setState(() => _enabled = v),
+                ),
               ],
             ),
           ),
@@ -143,13 +174,18 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
                 backgroundColor: const Color(0xFF10B981),
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 48),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
               child: _saving
                   ? const SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Text('保存'),
             ),
@@ -169,6 +205,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
     );
   }
 
+  /// 构建一个统一风格的白色 section 卡片。
   Widget _buildSection({required String title, required Widget child}) {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
@@ -202,6 +239,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
     );
   }
 
+  /// 构建可点击的选择 tile（药品 / 时间）。
   Widget _tile({
     required IconData icon,
     required Color color,
@@ -262,6 +300,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
     );
   }
 
+  /// 打开药品选择器并把结果回填到表单。
   Future<void> _pickMedicine() async {
     final item = await Navigator.of(context).push<MedicineItem>(
       MaterialPageRoute<MedicineItem>(
@@ -278,9 +317,15 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
     });
   }
 
+  /// 打开时间选择器并更新提醒时间。
   Future<void> _pickTime() async {
+    /// 当前时间字符串按冒号拆分后的部分。
     final parts = _time.split(':');
+
+    /// 当前时间的小时值。
     final h = parts.length == 2 ? int.tryParse(parts[0]) ?? 8 : 8;
+
+    /// 当前时间的分钟值。
     final m = parts.length == 2 ? int.tryParse(parts[1]) ?? 0 : 0;
     final picked = await showTimePicker(
       context: context,
@@ -288,11 +333,16 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
     );
     if (picked == null) return;
     setState(() {
-      _time = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+      _time =
+          '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
     });
   }
 
+  /// 保存提醒计划。
+  ///
+  /// 会先做前端校验，再调用 `ReminderApi.upsert`，成功后把结果返回上一页。
   Future<void> _save() async {
+    /// 当前 userId。
     final userId = _userId;
     if (userId.trim().isEmpty) {
       ToastUtils.instance.show(context, '请先登录');
@@ -300,6 +350,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
       return;
     }
 
+    /// 表单中的药品名称。
     final productName = _nameController.text.trim();
     if (productName.isEmpty) {
       ToastUtils.instance.show(context, '药品名称不能为空');
@@ -308,6 +359,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
 
     setState(() => _saving = true);
     try {
+      /// 调用新增/更新提醒接口。
       final response = await ReminderApi.upsert(
         userId: userId,
         id: widget.initial?.id,
@@ -324,10 +376,12 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
       Navigator.pop(context, response.result);
     } catch (e) {
       if (!mounted) return;
-      ToastUtils.instance.show(context, e.toString().replaceFirst('Exception: ', ''));
+      ToastUtils.instance.show(
+        context,
+        e.toString().replaceFirst('Exception: ', ''),
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 }
-

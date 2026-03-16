@@ -5,23 +5,27 @@ import 'package:luminous/constants/constants.dart';
 import 'package:luminous/viewmodels/auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// UserController：全局用户态（GetX）。
-//
-// 设计思路：
-// - UI 只读 user / isLoggedIn，不直接操作 SharedPreferences
-// - 登录成功时 setUser，退出时 logout
-// - init 在 main() 中执行，用于应用启动恢复登录态
-//
-// 注意：
-// - 当前阶段未接 token（仅保存 safeUser），后续接 token 时可扩展字段与持久化逻辑
-// - widget test 中不会走 main()，需要在测试里 Get.put(UserController) 并 setMockInitialValues
+/// 全局用户态控制器。
+///
+/// 使用 GetX 管理当前登录用户，并负责和本地持久化做同步。
 class UserController extends GetxController {
+  /// 当前登录用户的响应式容器。
+  ///
+  /// 未登录时值为 `null`，已登录时保存 `UserSafe`。
   final Rxn<UserSafe> user = Rxn<UserSafe>();
 
+  /// 当前是否处于登录状态。
+  ///
+  /// 通过用户对象是否存在且有有效数据来判断。
   bool get isLoggedIn => user.value?.hasData ?? false;
 
+  /// 从本地缓存恢复登录用户。
+  ///
+  /// 应用启动时由 `main()` 调用一次。
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
+
+    /// 本地缓存的用户 JSON 字符串。
     final rawUser = prefs.getString(GlobalConstants.USER_KEY);
 
     if (rawUser == null || rawUser.trim().isEmpty) {
@@ -30,6 +34,7 @@ class UserController extends GetxController {
     }
 
     try {
+      /// 从本地字符串反序列化得到的 JSON 对象。
       final decoded = jsonDecode(rawUser);
       if (decoded is Map<String, dynamic>) {
         user.value = UserSafe.fromJson(decoded);
@@ -42,6 +47,9 @@ class UserController extends GetxController {
     user.value = null;
   }
 
+  /// 更新当前用户并持久化到本地。
+  ///
+  /// 一般在登录成功后调用。
   Future<void> setUser(UserSafe nextUser) async {
     user.value = nextUser;
     final prefs = await SharedPreferences.getInstance();
@@ -51,6 +59,9 @@ class UserController extends GetxController {
     );
   }
 
+  /// 清空当前用户状态并删除本地持久化数据。
+  ///
+  /// 一般在主动退出登录时调用。
   Future<void> logout() async {
     user.value = null;
     final prefs = await SharedPreferences.getInstance();

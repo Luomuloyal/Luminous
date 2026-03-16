@@ -15,19 +15,32 @@ import 'package:luminous/viewmodels/medicine.dart';
 class MedicineDetailPage extends StatefulWidget {
   const MedicineDetailPage({super.key, required this.initialItem});
 
+  /// 详情页的初始药品对象。
+  ///
+  /// 通常来自列表页/搜索页的点击结果，字段可能不完整，页面会再调用详情接口补齐。
   final MedicineItem initialItem;
 
+  /// 创建详情页对应的状态对象。
   @override
   State<MedicineDetailPage> createState() => _MedicineDetailPageState();
 }
 
 class _MedicineDetailPageState extends State<MedicineDetailPage> {
+  /// 当前展示的药品对象。
+  ///
+  /// 初始值来自 `widget.initialItem`，当详情接口返回更完整的数据后会覆盖更新。
   late MedicineItem _item;
+
+  /// 是否正在加载基础详情数据。
   bool _loadingDetail = false;
 
+  /// AI 解读接口返回的结果。
   MedicineAiDetailResult? _aiResult;
+
+  /// 是否正在请求 AI 解读内容。
   bool _loadingAi = false;
 
+  /// 初始化时设置初始药品对象，并尝试加载基础详情。
   @override
   void initState() {
     super.initState();
@@ -35,6 +48,10 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
     _loadDetail();
   }
 
+  /// 加载药品基础详情信息。
+  ///
+  /// - 如果当前药品不具备身份字段（drugCode/approvalNo），则不发起请求；
+  /// - 请求成功后会用返回值覆盖 `_item`，补齐字段。
   Future<void> _loadDetail() async {
     if (_loadingDetail || !_item.hasIdentity) {
       return;
@@ -72,6 +89,9 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
     }
   }
 
+  /// 加载药品的 AI 解读内容。
+  ///
+  /// 该请求独立于基础详情请求，用户点击按钮时才触发。
   Future<void> _loadAiDetail() async {
     if (_loadingAi || !_item.hasIdentity) {
       return;
@@ -110,8 +130,10 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
     }
   }
 
+  /// 构建药品详情页 UI。
   @override
   Widget build(BuildContext context) {
+    /// AppBar 使用的标题文案。
     final title = _item.displayName;
 
     return Scaffold(
@@ -147,6 +169,9 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
   }
 }
 
+/// 详情页顶部基础信息卡片。
+///
+/// 展示药品名称、规格信息与关键身份字段（批准文号/药品编码），并提供“刷新”按钮。
 class _HeaderCard extends StatelessWidget {
   const _HeaderCard({
     required this.item,
@@ -154,8 +179,13 @@ class _HeaderCard extends StatelessWidget {
     required this.onRefresh,
   });
 
+  /// 当前药品对象。
   final MedicineItem item;
+
+  /// 是否正在加载基础详情（用于禁用刷新并展示进度）。
   final bool loading;
+
+  /// 点击刷新回调。
   final VoidCallback onRefresh;
 
   @override
@@ -254,6 +284,7 @@ class _HeaderCard extends StatelessWidget {
     );
   }
 
+  /// 渲染顶部卡片中的信息 pill（例如批准文号/药品编码）。
   Widget _pill({required String label, required String value}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -273,9 +304,11 @@ class _HeaderCard extends StatelessWidget {
   }
 }
 
+/// 详情页“基础信息”卡片。
 class _InfoCard extends StatelessWidget {
   const _InfoCard({required this.item});
 
+  /// 当前药品对象。
   final MedicineItem item;
 
   @override
@@ -298,6 +331,7 @@ class _InfoCard extends StatelessWidget {
   }
 }
 
+/// 详情页“AI 智能解读”卡片。
 class _AiCard extends StatelessWidget {
   const _AiCard({
     required this.hasIdentity,
@@ -306,9 +340,16 @@ class _AiCard extends StatelessWidget {
     required this.onFetch,
   });
 
+  /// 是否具备身份字段（用于决定按钮是否可点击）。
   final bool hasIdentity;
+
+  /// 是否正在加载 AI 解读内容。
   final bool loading;
+
+  /// AI 解读结果。
   final MedicineAiDetailResult? result;
+
+  /// 点击“获取详细信息”回调。
   final VoidCallback onFetch;
 
   @override
@@ -359,6 +400,7 @@ class _AiCard extends StatelessWidget {
   }
 }
 
+/// 详情页底部免责声明卡片。
 class _DisclaimerCard extends StatelessWidget {
   const _DisclaimerCard();
 
@@ -380,11 +422,19 @@ class _DisclaimerCard extends StatelessWidget {
   }
 }
 
+/// 详情页统一使用的白色表面卡片容器。
+///
+/// 用于保持“基础信息/AI 解读/免责声明”等区域的视觉一致性。
 class _SurfaceCard extends StatelessWidget {
   const _SurfaceCard({required this.title, required this.child, this.trailing});
 
+  /// 卡片标题。
   final String title;
+
+  /// 卡片主体内容。
   final Widget child;
+
+  /// 右上角 trailing 区域（可选），例如按钮。
   final Widget? trailing;
 
   @override
@@ -430,14 +480,19 @@ class _SurfaceCard extends StatelessWidget {
   }
 }
 
+/// “基础信息”卡片中的一行字段展示。
 class _InfoRow extends StatelessWidget {
   const _InfoRow({required this.label, required this.value});
 
+  /// 字段名称。
   final String label;
+
+  /// 字段值。
   final String value;
 
   @override
   Widget build(BuildContext context) {
+    /// 经过兜底处理的展示文本。
     final text = value.trim().isEmpty ? '-' : value.trim();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),

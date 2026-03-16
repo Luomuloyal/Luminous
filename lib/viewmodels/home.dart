@@ -1,10 +1,27 @@
+import 'package:flutter/material.dart';
+
+/// 首页模块相关的数据模型与轻量 UI 小组件。
+///
+/// 注意：
+/// - `ReminderItem/TodayRemindersResult` 用于承载接口返回；
+/// - `HomeStatusChip/HomeInfoPill` 是首页顶部卡片复用的小组件。
 class ReminderItem {
+  /// 提醒 id（后端可能返回 `id` 或 `_id`）。
   final String id;
+
+  /// 提醒时间（HH:mm）。
   final String time;
+
+  /// 提醒标题（通常是药品名或事项名）。
   final String title;
+
+  /// 提醒副标题（例如服用说明）。
   final String subtitle;
+
+  /// 是否已完成（用于 UI 状态展示）。
   final bool done;
 
+  /// 创建一个提醒条目对象。
   const ReminderItem({
     required this.id,
     required this.time,
@@ -13,6 +30,7 @@ class ReminderItem {
     required this.done,
   });
 
+  /// 从后端 JSON 反序列化为 `ReminderItem`。
   factory ReminderItem.fromJson(Map<String, dynamic> json) {
     return ReminderItem(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
@@ -25,13 +43,21 @@ class ReminderItem {
 }
 
 class TodayRemindersResult {
+  /// 数据对应的日期（yyyy-MM-dd）。
   final String date;
+
+  /// 今日提醒列表。
   final List<ReminderItem> items;
 
+  /// 创建一个今日提醒结果对象。
   const TodayRemindersResult({required this.date, required this.items});
 
+  /// 从后端 JSON 反序列化为 `TodayRemindersResult`。
   factory TodayRemindersResult.fromJson(Map<String, dynamic> json) {
+    /// 原始 items 字段，类型可能不稳定。
     final rawItems = json['items'];
+
+    /// 解析后的提醒条目列表。
     final items = rawItems is List
         ? rawItems
               .whereType<Map>()
@@ -42,6 +68,62 @@ class TodayRemindersResult {
     return TodayRemindersResult(
       date: (json['date'] ?? '').toString(),
       items: items,
+    );
+  }
+}
+
+/// 首页顶部卡片中的状态 chip（例如“已同步”）。
+class HomeStatusChip extends StatelessWidget {
+  /// 创建一个状态 chip。
+  const HomeStatusChip({super.key, required this.text});
+
+  /// chip 上展示的文本。
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: const Color(0x33FFFFFF),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+/// 首页顶部卡片中的信息 pill（例如“今日提醒 3 条”）。
+class HomeInfoPill extends StatelessWidget {
+  /// 创建一个信息 pill。
+  const HomeInfoPill({super.key, required this.text});
+
+  /// pill 上展示的文本。
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: const Color(0x29FFFFFF),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12.5,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

@@ -3,38 +3,45 @@ import 'package:get/get.dart';
 import 'package:luminous/components/mine.dart';
 import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/toast_utils.dart';
+import 'package:luminous/viewmodels/mine.dart';
 
 // 我的页
 //
 // 设计要点：
-// - 顶部资料卡（MineProfileCard）是可复用组件，页面只负责布局/交互
-// - 不再让“资料卡撑满整屏”（你截图的问题），改用 ListView + 卡片分区
-// - QuickActions/Menu 目前是预留入口，后续接入真实功能时替换 onTap 即可
+// - 页面只负责交互/登录态判断
+// - 具体 UI（背景、卡片布局、QuickActions/Menu）拆到 components/mine.dart
+// - QuickAction 卡片等小组件下沉到 viewmodels/mine.dart
 class MineView extends StatefulWidget {
   const MineView({super.key});
 
+  /// 创建我的页对应的状态对象。
   @override
   State<MineView> createState() => _MineViewState();
 }
 
 class _MineViewState extends State<MineView> {
+  /// 全局用户控制器。
+  ///
+  /// 用于判断登录态、读取用户信息、执行退出登录。
   final UserController _userController = Get.find<UserController>();
-  final List<_MineQuickAction> _quickActions = const [
-    _MineQuickAction(
+
+  /// 我的页顶部快捷入口配置列表。
+  final List<MineQuickActionData> _quickActions = const [
+    MineQuickActionData(
       icon: Icons.alarm_rounded,
       title: '今日提醒',
       subtitle: '查看计划',
       color: Color(0xFF10B981),
       id: 'reminders',
     ),
-    _MineQuickAction(
+    MineQuickActionData(
       icon: Icons.search_rounded,
       title: '手动搜索',
       subtitle: '药品信息',
       color: Color(0xFF0EA5E9),
       id: 'search',
     ),
-    _MineQuickAction(
+    MineQuickActionData(
       icon: Icons.settings_rounded,
       title: '设置',
       subtitle: '偏好选项',
@@ -43,6 +50,9 @@ class _MineViewState extends State<MineView> {
     ),
   ];
 
+  /// 点击 Profile 区域（头像/昵称）回调。
+  ///
+  /// 未登录：跳转登录页；已登录：目前占位提示。
   Future<void> _onTapProfile() async {
     if (!_userController.isLoggedIn) {
       Navigator.pushNamed(context, '/login');
@@ -51,6 +61,9 @@ class _MineViewState extends State<MineView> {
     ToastUtils.instance.show(context, '功能开发中');
   }
 
+  /// 点击 Profile 右侧按钮回调。
+  ///
+  /// 未登录：跳转登录页；已登录：弹出确认框后退出登录。
   Future<void> _onTapAction() async {
     if (!_userController.isLoggedIn) {
       Navigator.pushNamed(context, '/login');
@@ -87,83 +100,9 @@ class _MineViewState extends State<MineView> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: DecoratedBox(
-        decoration: const BoxDecoration(color: Color(0xFFF3F7FB)),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -120,
-              right: -120,
-              child: Container(
-                width: 260,
-                height: 260,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF0EA5E9).withValues(alpha: 0.10),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -140,
-              left: -140,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF14B8A6).withValues(alpha: 0.10),
-                ),
-              ),
-            ),
-            ListView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-              children: [
-                Obx(
-                  () => MineProfileCard(
-                    user: _userController.user.value,
-                    onTapProfile: _onTapProfile,
-                    onTapAction: _onTapAction,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildQuickActions(),
-                const SizedBox(height: 12),
-                _buildMenuCard(),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActions() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: _quickActions.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.96,
-      ),
-      itemBuilder: (context, index) {
-        final item = _quickActions[index];
-        return _QuickActionCard(
-          icon: item.icon,
-          title: item.title,
-          subtitle: item.subtitle,
-          color: item.color,
-          onTap: () => _onTapQuickAction(item.id),
-        );
-      },
-    );
-  }
-
+  /// 点击快捷入口卡片回调。
+  ///
+  /// 根据 id 决定跳转的页面。
   void _onTapQuickAction(String id) {
     if (id == 'search') {
       Navigator.pushNamed(context, '/search');
@@ -176,185 +115,22 @@ class _MineViewState extends State<MineView> {
     ToastUtils.instance.show(context, '功能开发中');
   }
 
-  Widget _buildMenuCard() {
-    Widget item({
-      required IconData icon,
-      required String title,
-      required String subtitle,
-      required VoidCallback onTap,
-    }) {
-      return InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: const Color(0xFF0F172A)),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: Color(0xFF64748B),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 12,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          item(
-            icon: Icons.history_rounded,
-            title: '浏览记录',
-            subtitle: '你最近查看过的药品',
-            onTap: () => ToastUtils.instance.show(context, '功能开发中'),
-          ),
-          const Divider(height: 1, color: Color(0xFFE2E8F0)),
-          item(
-            icon: Icons.shield_rounded,
-            title: '账号与安全',
-            subtitle: '隐私设置与安全选项',
-            onTap: () => ToastUtils.instance.show(context, '功能开发中'),
-          ),
-          const Divider(height: 1, color: Color(0xFFE2E8F0)),
-          item(
-            icon: Icons.info_rounded,
-            title: '关于 Luminous',
-            subtitle: '版本信息与使用说明',
-            onTap: () => ToastUtils.instance.show(context, '功能开发中'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _QuickActionCard extends StatelessWidget {
-  const _QuickActionCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final VoidCallback onTap;
-
+  /// 构建我的页 UI。
+  ///
+  /// 这里用 `Obx` 监听用户对象变化，让 UI 自动响应登录/退出登录。
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Ink(
-        padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: 74,
-              height: 74,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: Icon(icon, color: color, size: 38),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF0F172A),
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 3),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF64748B),
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
+    return Obx(
+      () => MinePage(
+        user: _userController.user.value,
+        quickActions: _quickActions,
+        onTapProfile: _onTapProfile,
+        onTapAction: _onTapAction,
+        onTapQuickAction: _onTapQuickAction,
+        onTapBrowseHistory: () => ToastUtils.instance.show(context, '功能开发中'),
+        onTapSecurity: () => ToastUtils.instance.show(context, '功能开发中'),
+        onTapAbout: () => ToastUtils.instance.show(context, '功能开发中'),
       ),
     );
   }
-}
-
-class _MineQuickAction {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-  final String id;
-
-  const _MineQuickAction({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-    required this.id,
-  });
 }

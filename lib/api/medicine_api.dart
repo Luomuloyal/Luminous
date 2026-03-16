@@ -2,15 +2,16 @@ import 'package:luminous/constants/constants.dart';
 import 'package:luminous/utils/DioRequest.dart';
 import 'package:luminous/viewmodels/medicine.dart';
 
-// MedicineApi：药品服务接口封装层
-//
-// 设计原则：
-// - 页面不直接拼路径/字段名，只调用这里的方法
-// - 统一使用 ApiResult<T> + decoder，把 result 解析为强类型对象
-// - Loading 由页面自行控制（搜索与分页更适合局部 loading，而非全屏弹窗）
+/// 药品服务接口封装层。
+///
+/// 页面只依赖这个类，不直接关心接口路径和动态字段解析。
 class MedicineApi {
+  /// 私有构造函数，当前类只提供静态 API 方法。
   MedicineApi._();
 
+  /// 根据关键词搜索药品。
+  ///
+  /// 支持分页参数，返回强类型的 `MedicineSearchResult`。
   static Future<ApiResult<MedicineSearchResult>> search({
     required String keyword,
     int page = 1,
@@ -41,6 +42,9 @@ class MedicineApi {
     );
   }
 
+  /// 查询药品详情。
+  ///
+  /// 可以通过 `drugCode`、`approvalNo` 或两者组合定位目标药品。
   static Future<ApiResult<MedicineItem>> fetchDetail({
     String? drugCode,
     String? approvalNo,
@@ -76,6 +80,9 @@ class MedicineApi {
     );
   }
 
+  /// 获取药品 AI 解读内容。
+  ///
+  /// 这个接口主要为详情页的“AI 智能解读”区域提供文本数据。
   static Future<ApiResult<MedicineAiDetailResult>> fetchAiDetail({
     String? drugCode,
     String? approvalNo,

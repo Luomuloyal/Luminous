@@ -16,6 +16,14 @@ import 'package:luminous/viewmodels/medicine.dart';
 import 'package:luminous/viewmodels/scan.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+/// 药物识别页面。
+///
+/// 页面职责：
+/// - 调起相机拍照（ImagePicker）；
+/// - 把照片上传到后端识别（ScanApi.scanMedicine）；
+/// - 展示候选药品列表，并允许用户选择正确项；
+/// - 在不同入口模式下提供不同动作（添加到我的药品/保存到相册/查看详情等）；
+/// - best-effort 同步识别记录到远端并缓存到本地 SQLite。
 enum ScanEntryMode {
   /// 首页入口：拍照后主要展示识别结果
   result,
@@ -31,7 +39,13 @@ class MedicineScanPage extends StatefulWidget {
     this.autoStart = true,
   });
 
+  /// 页面入口模式。
+  ///
+  /// - result：偏“识别结果展示”；
+  /// - actions：偏“识别后操作（添加/保存/查看/重拍）”。
   final ScanEntryMode mode;
+
+  /// 是否在页面首次展示后自动启动一次拍照识别流程。
   final bool autoStart;
 
   @override
@@ -39,25 +53,41 @@ class MedicineScanPage extends StatefulWidget {
 }
 
 class _MedicineScanPageState extends State<MedicineScanPage> {
+  /// 全局用户控制器，用于读取 userId（决定是否同步远端识别记录）。
   final UserController _userController = Get.find<UserController>();
 
+  /// 底部拖拽面板控制器。
   final DraggableScrollableController _sheetController =
       DraggableScrollableController();
+
+  /// 当前底部面板占屏幕高度比例（用于驱动图片区域的“收缩效果”）。
   double _sheetSize = 0.36;
 
+  /// 当前拍摄照片的字节内容。
   Uint8List? _photoBytes;
+
+  /// 当前照片的 MIME 类型（用于上传接口与保存到相册）。
   String _photoMimeType = 'image/jpeg';
 
+  /// 是否正在把图片保存到系统相册。
   bool _savingToGallery = false;
+
+  /// 是否正在请求后端识别。
   bool _scanning = false;
+
+  /// 当前识别结果（包含候选列表与缩略图 base64）。
   MedicineScanResult? _scanResult;
+
+  /// 当前选中的候选下标。
   int _selectedIndex = 0;
 
+  /// 最近一次错误文案（用于在 UI 中展示错误卡片）。
   String? _lastError;
 
   @override
   void initState() {
     super.initState();
+    // 监听底部面板大小变化，用于联动图片区域高度。
     _sheetController.addListener(_onSheetChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // Auto slide up for the "photo shrink / content reveal" effect.
@@ -70,6 +100,7 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
 
   @override
   void dispose() {
+    // 释放 controller，避免内存泄漏。
     _sheetController.removeListener(_onSheetChanged);
     _sheetController.dispose();
     super.dispose();
@@ -111,14 +142,22 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
+          // 底部面板最小高度（占屏幕比例）。
           final minChildSize = 0.22;
+          // 底部面板最大高度（占屏幕比例）。
           final maxChildSize = 0.90;
 
-          final t = ((_sheetSize - minChildSize) / (maxChildSize - minChildSize))
-              .clamp(0.0, 1.0);
+          // 将当前面板高度映射为 0-1 的进度值，用于驱动图片区域高度插值。
+          final t =
+              ((_sheetSize - minChildSize) / (maxChildSize - minChildSize))
+                  .clamp(0.0, 1.0);
+          // 图片区域最大高度（面板最小时）。
           final maxImageHeight = constraints.maxHeight * 0.62;
+          // 图片区域最小高度（面板最大时）。
           final minImageHeight = constraints.maxHeight * 0.28;
-          final imageHeight = maxImageHeight - (maxImageHeight - minImageHeight) * t;
+          // 根据面板展开程度计算当前图片区域高度。
+          final imageHeight =
+              maxImageHeight - (maxImageHeight - minImageHeight) * t;
 
           return Stack(
             children: [
@@ -149,7 +188,12 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     );
   }
 
+  /// 构建顶部照片展示区域。
+  ///
+  /// - 未拍照时显示占位状态；
+  /// - 拍照后显示拍摄的图片，并在底部圆角收边。
   Widget _buildPhotoArea() {
+    // 当前照片 bytes；为空表示尚未拍照或已重置。
     final bytes = _photoBytes;
     return Container(
       color: Colors.black,
@@ -183,7 +227,9 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
               ],
             )
           : ClipRRect(
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(18)),
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(18),
+              ),
               child: Image.memory(
                 bytes,
                 fit: BoxFit.cover,
@@ -194,6 +240,11 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     );
   }
 
+  /// 构建底部可拖拽面板内容。
+  ///
+  /// 面板里会根据模式显示：
+  /// - actions：操作入口区 + 结果列表（紧凑版）；
+  /// - result：结果列表为主 + 底部按钮。
   Widget _buildSheet(ScrollController scrollController) {
     return DecoratedBox(
       decoration: const BoxDecoration(
@@ -223,7 +274,8 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
           else
             _buildResultSection(),
           const SizedBox(height: 10),
-          if (widget.mode == ScanEntryMode.actions) _buildResultSection(compact: true),
+          if (widget.mode == ScanEntryMode.actions)
+            _buildResultSection(compact: true),
           const SizedBox(height: 10),
           _buildBottomButtons(),
         ],
@@ -231,13 +283,17 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     );
   }
 
+  /// 构建底部面板顶部的标题区域。
   Widget _buildHeaderRow() {
+    /// 顶部标题文案，按入口模式切换。
     final title = widget.mode == ScanEntryMode.actions ? '药物识别' : '识别结果';
+
+    /// 顶部副标题文案，根据当前识别状态动态变化。
     final subtitle = _scanning
         ? '识别中，请稍等...'
         : _scanResult == null
-            ? '拍照后上传，由后端调用腾讯云智能问药能力识别药品信息'
-            : '共识别 ${_scanResult!.candidates.length} 个候选结果';
+        ? '拍照后上传，由后端调用腾讯云智能问药能力识别药品信息'
+        : '共识别 ${_scanResult!.candidates.length} 个候选结果';
 
     return Row(
       children: [
@@ -248,7 +304,10 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
             color: const Color(0xFF10B981).withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(14),
           ),
-          child: const Icon(Icons.camera_alt_outlined, color: Color(0xFF10B981)),
+          child: const Icon(
+            Icons.camera_alt_outlined,
+            color: Color(0xFF10B981),
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -284,6 +343,7 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     );
   }
 
+  /// 构建错误提示卡片。
   Widget _buildErrorCard(String message) {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
@@ -301,7 +361,10 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
               color: const Color(0xFFFEE2E2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.error_outline_rounded, color: Color(0xFFEF4444)),
+            child: const Icon(
+              Icons.error_outline_rounded,
+              color: Color(0xFFEF4444),
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -320,6 +383,7 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     );
   }
 
+  /// 构建“操作模式”下的三个动作卡片。
   Widget _buildActionsSection() {
     return Column(
       children: [
@@ -350,7 +414,12 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     );
   }
 
+  /// 构建识别结果区域。
+  ///
+  /// - `compact = false`：普通模式，结果区域作为主内容；
+  /// - `compact = true`：操作模式下作为辅助紧凑列表展示。
   Widget _buildResultSection({bool compact = false}) {
+    /// 当前识别结果对象。
     final result = _scanResult;
     if (_scanning) {
       return Container(
@@ -429,24 +498,34 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
             final c = entry.value;
             final selected = index == _selectedIndex;
             return Padding(
-              padding: EdgeInsets.only(bottom: index == result.candidates.length - 1 ? 0 : 10),
+              padding: EdgeInsets.only(
+                bottom: index == result.candidates.length - 1 ? 0 : 10,
+              ),
               child: InkWell(
                 borderRadius: BorderRadius.circular(14),
                 onTap: () => setState(() => _selectedIndex = index),
                 child: Ink(
                   padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
                   decoration: BoxDecoration(
-                    color: selected ? const Color(0xFFEFF6FF) : const Color(0xFFF8FAFC),
+                    color: selected
+                        ? const Color(0xFFEFF6FF)
+                        : const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: selected ? const Color(0xFF93C5FD) : const Color(0xFFE2E8F0),
+                      color: selected
+                          ? const Color(0xFF93C5FD)
+                          : const Color(0xFFE2E8F0),
                     ),
                   ),
                   child: Row(
                     children: [
                       Icon(
-                        selected ? Icons.radio_button_checked : Icons.radio_button_off,
-                        color: selected ? const Color(0xFF2563EB) : const Color(0xFF94A3B8),
+                        selected
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_off,
+                        color: selected
+                            ? const Color(0xFF2563EB)
+                            : const Color(0xFF94A3B8),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -473,7 +552,9 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
                             const SizedBox(height: 2),
                             Text(
                               c.manufacturer.trim().isEmpty
-                                  ? (c.approvalNo.trim().isEmpty ? '' : '批准文号: ${c.approvalNo}')
+                                  ? (c.approvalNo.trim().isEmpty
+                                        ? ''
+                                        : '批准文号: ${c.approvalNo}')
                                   : c.manufacturer,
                               style: const TextStyle(
                                 fontSize: 11.5,
@@ -488,9 +569,14 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
                       ),
                       if (c.score > 0)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                            color: const Color(
+                              0xFF10B981,
+                            ).withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
@@ -513,8 +599,11 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     );
   }
 
+  /// 构建底部按钮区域。
   Widget _buildBottomButtons() {
-    final canUseResult = _scanResult != null && _scanResult!.candidates.isNotEmpty;
+    /// 当前是否存在可用的识别结果。
+    final canUseResult =
+        _scanResult != null && _scanResult!.candidates.isNotEmpty;
     return Column(
       children: [
         if (widget.mode == ScanEntryMode.result) ...[
@@ -526,7 +615,9 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
                 backgroundColor: const Color(0xFF0EA5E9),
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 48),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
               child: const Text('添加到我的药品'),
             ),
@@ -539,7 +630,9 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
               style: FilledButton.styleFrom(
                 foregroundColor: const Color(0xFF0F172A),
                 minimumSize: const Size(double.infinity, 48),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
               child: const Text('查看详细信息'),
             ),
@@ -554,7 +647,9 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
               foregroundColor: const Color(0xFF64748B),
               side: const BorderSide(color: Color(0xFFE2E8F0)),
               minimumSize: const Size(double.infinity, 48),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
             child: const Text('取消'),
           ),
@@ -563,6 +658,15 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     );
   }
 
+  /// 重新拍照并执行识别流程。
+  ///
+  /// 步骤：
+  /// 1. 重置页面状态；
+  /// 2. 请求相机权限；
+  /// 3. 调起相机拍照；
+  /// 4. 读取图片字节；
+  /// 5. 后台保存到系统相册；
+  /// 6. 上传后端识别。
   Future<void> _retakeAndScan() async {
     setState(() {
       _lastError = null;
@@ -579,7 +683,10 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
       return;
     }
 
+    /// 用于拍照的 ImagePicker 实例。
     final picker = ImagePicker();
+
+    /// 用户实际拍摄得到的图片文件。
     final file = await picker.pickImage(
       source: ImageSource.camera,
       imageQuality: 92,
@@ -593,6 +700,7 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
       return;
     }
 
+    /// 读取后的图片二进制内容。
     Uint8List bytes;
     try {
       bytes = await file.readAsBytes();
@@ -611,6 +719,9 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     await _scan(bytes);
   }
 
+  /// 后台把图片保存到系统相册。
+  ///
+  /// 这是 best-effort 行为，即使失败也不影响识别与本地缓存流程。
   Future<void> _saveToGallery(Uint8List bytes) async {
     if (_savingToGallery) return;
     setState(() => _savingToGallery = true);
@@ -629,6 +740,7 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     }
   }
 
+  /// 用户主动点击“保存到相册”时调用的包装方法。
   Future<void> _saveToGalleryOnly() async {
     final bytes = _photoBytes;
     if (bytes == null) return;
@@ -638,12 +750,18 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     }
   }
 
+  /// 上传图片到后端并获取识别结果。
   Future<void> _scan(Uint8List bytes) async {
     if (_scanning) return;
     setState(() => _scanning = true);
     try {
+      /// 图片的 base64 字符串，用于接口上报。
       final base64 = base64Encode(bytes);
+
+      /// 当前用户 id（可为空）。
       final userId = _userController.user.value?.id;
+
+      /// 调用识别接口得到的响应。
       final response = await ScanApi.scanMedicine(
         userId: userId,
         imageBase64: base64,
@@ -651,6 +769,7 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
       );
       if (!mounted) return;
 
+      /// 接口返回的识别结果对象。
       final result = response.result;
       setState(() {
         _scanResult = result;
@@ -668,14 +787,26 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     }
   }
 
-  Future<void> _persistAlbumRecord(Uint8List bytes, MedicineScanResult result) async {
+  /// 把识别结果记录到本地相册表，并尽量同步到远端。
+  Future<void> _persistAlbumRecord(
+    Uint8List bytes,
+    MedicineScanResult result,
+  ) async {
+    /// 当前选中的候选药品。
     final selected = _getSelectedCandidateOrNull();
+
+    /// 最终要写入 album_items 的缩略图 base64。
     final thumbBase64 = result.thumbBase64.trim().isNotEmpty
         ? result.thumbBase64.trim()
         : _generateThumbBase64(bytes);
 
+    /// 当前记录创建时间戳。
     final now = DateTime.now().millisecondsSinceEpoch;
+
+    /// 如果远端同步成功，这里会拿到远端记录 id。
     String? remoteId;
+
+    /// 当前登录用户 id。
     final userId = _userController.user.value?.id ?? '';
     if (userId.isNotEmpty && thumbBase64.isNotEmpty) {
       try {
@@ -694,6 +825,7 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     }
 
     try {
+      /// 本地数据库实例。
       final db = await AppDatabase.instance.database;
       await db.insert('album_items', {
         'remoteId': remoteId,
@@ -712,6 +844,9 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     }
   }
 
+  /// 找出默认应该选中的候选下标。
+  ///
+  /// 策略：优先选第一个有身份字段（drugCode/approvalNo）的候选。
   int _findBestCandidateIndex(MedicineScanResult result) {
     if (result.candidates.isEmpty) return 0;
     for (final entry in result.candidates.asMap().entries) {
@@ -722,6 +857,9 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     return 0;
   }
 
+  /// 获取当前被选中的候选结果。
+  ///
+  /// 如果没有结果或下标越界，则返回 null。
   ScanCandidate? _getSelectedCandidateOrNull() {
     final result = _scanResult;
     if (result == null) return null;
@@ -730,10 +868,13 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     return result.candidates[index];
   }
 
+  /// 把当前选中的候选药品加入“我的药品”。
   Future<void> _addSelectedToMyMedicines() async {
+    /// 当前选中的候选药品。
     final c = _getSelectedCandidateOrNull();
     if (c == null) return;
 
+    /// 将候选结果转换为统一的 `MedicineItem` 对象。
     final item = MedicineItem(
       serialNo: '',
       approvalNo: c.approvalNo,
@@ -746,8 +887,10 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
       drugCodeRemark: '',
     );
 
+    /// 当前药品的 identityKey。
     final identityKey = _buildIdentityKey(c);
     try {
+      /// 本地数据库实例。
       final db = await AppDatabase.instance.database;
       await db.insert('my_medicines', {
         'identityKey': identityKey,
@@ -773,10 +916,13 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     }
   }
 
+  /// 打开当前选中候选的药品详情页。
   Future<void> _openSelectedDetail() async {
+    /// 当前选中的候选药品。
     final c = _getSelectedCandidateOrNull();
     if (c == null) return;
 
+    /// 由候选数据转换得到的详情初始对象。
     final item = MedicineItem(
       serialNo: '',
       approvalNo: c.approvalNo,
@@ -790,15 +936,25 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     );
 
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => MedicineDetailPage(initialItem: item)),
+      MaterialPageRoute<void>(
+        builder: (_) => MedicineDetailPage(initialItem: item),
+      ),
     );
   }
 
+  /// 从原始图片生成较小的缩略图 base64。
+  ///
+  /// 用于写入 album_items 表，减少相册列表显示时的存储与解码成本。
   String _generateThumbBase64(Uint8List bytes) {
     try {
+      /// 解码后的原始图片对象。
       final decoded = img.decodeImage(bytes);
       if (decoded == null) return '';
+
+      /// 缩放后的缩略图对象。
       final resized = img.copyResize(decoded, width: 240);
+
+      /// 重新编码后的 jpg 字节。
       final jpg = img.encodeJpg(resized, quality: 80);
       return base64Encode(jpg);
     } catch (_) {
@@ -806,15 +962,23 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     }
   }
 
+  /// 为识别候选生成唯一 identityKey。
+  ///
+  /// 优先级：drugCode > approvalNo > productName。
   String _buildIdentityKey(ScanCandidate? candidate) {
     if (candidate == null) {
       return 'scan:${DateTime.now().millisecondsSinceEpoch}';
     }
-    if (candidate.drugCode.trim().isNotEmpty) return 'drugCode:${candidate.drugCode.trim()}';
-    if (candidate.approvalNo.trim().isNotEmpty) return 'approvalNo:${candidate.approvalNo.trim()}';
+    if (candidate.drugCode.trim().isNotEmpty) {
+      return 'drugCode:${candidate.drugCode.trim()}';
+    }
+    if (candidate.approvalNo.trim().isNotEmpty) {
+      return 'approvalNo:${candidate.approvalNo.trim()}';
+    }
     return 'name:${candidate.productName.trim()}';
   }
 
+  /// 根据文件路径猜测 MIME 类型。
   String _guessMimeType(String path) {
     final lower = path.toLowerCase();
     if (lower.endsWith('.png')) return 'image/png';
@@ -831,10 +995,19 @@ class _ActionTile extends StatelessWidget {
     required this.onTap,
   });
 
+  /// 左侧图标。
   final IconData icon;
+
+  /// 图标与背景主题色。
   final Color color;
+
+  /// 主标题。
   final String label;
+
+  /// 副标题。
   final String subtitle;
+
+  /// 点击回调；为 null 时表示不可用。
   final VoidCallback? onTap;
 
   @override
@@ -893,7 +1066,9 @@ class _ActionTile extends StatelessWidget {
               ),
             ),
             Icon(
-              onTap == null ? Icons.lock_outline_rounded : Icons.chevron_right_rounded,
+              onTap == null
+                  ? Icons.lock_outline_rounded
+                  : Icons.chevron_right_rounded,
               color: const Color(0xFF94A3B8),
             ),
           ],

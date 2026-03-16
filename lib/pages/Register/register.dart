@@ -12,39 +12,76 @@ import 'package:luminous/utils/toast_utils.dart';
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
 
+  /// 创建注册页对应的状态对象。
   @override
   State<RegisterView> createState() => _RegisterViewState();
 }
 
+/// 注册页支持的两种方式。
 enum _RegisterMethod { email, svg }
 
 class _RegisterViewState extends State<RegisterView> {
+  /// 表单 key，用于触发表单校验。
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  /// 邮箱输入框控制器。
   final TextEditingController _emailController = TextEditingController();
+
+  /// 邮箱验证码输入框控制器。
   final TextEditingController _emailCodeController = TextEditingController();
+
+  /// SVG 测试账号输入框控制器。
   final TextEditingController _svgUserController = TextEditingController();
+
+  /// SVG 验证码输入框控制器。
   final TextEditingController _svgCodeController = TextEditingController();
+
+  /// 密码输入框控制器。
   final TextEditingController _passwordController = TextEditingController();
+
+  /// 确认密码输入框控制器。
   final TextEditingController _confirmController = TextEditingController();
 
+  /// 当前注册方式。
   _RegisterMethod _method = _RegisterMethod.email;
 
+  /// 是否已勾选协议。
   bool _agreed = false;
+
+  /// 密码是否明文显示。
   bool _obscurePassword = true;
+
+  /// 确认密码是否明文显示。
   bool _obscureConfirm = true;
+
+  /// 是否正在发送邮箱验证码。
   bool _sendingCode = false;
+
+  /// 是否正在加载 SVG 验证码。
   bool _loadingSvg = false;
+
+  /// 是否正在提交注册请求。
   bool _submitting = false;
 
+  /// SVG 验证码内容字符串。
   String? _svgContent;
+
+  /// SVG 验证码对应的 uuid/id。
   String? _svgCodeId;
 
+  /// 邮箱格式校验正则。
   static final RegExp _emailRegExp = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+
+  /// 邮箱验证码格式校验正则（6 位数字）。
   static final RegExp _emailCodeRegExp = RegExp(r'^\d{6}$');
+
+  /// SVG 验证码格式校验正则（4 位数字）。
   static final RegExp _svgCodeRegExp = RegExp(r'^\d{4}$');
+
+  /// 密码格式校验正则（6-12 位字母或数字）。
   static final RegExp _passwordRegExp = RegExp(r'^[A-Za-z0-9]{6,12}$');
 
+  /// 释放输入框控制器资源。
   @override
   void dispose() {
     _emailController.dispose();
@@ -56,10 +93,12 @@ class _RegisterViewState extends State<RegisterView> {
     super.dispose();
   }
 
+  /// 点击协议/隐私政策（当前为占位提示）。
   void _onTapAgreement() {
     ToastUtils.instance.show(context, '功能开发中');
   }
 
+  /// 邮箱输入校验。
   String? _emailValidator(String? value) {
     final email = (value ?? '').trim();
     if (email.isEmpty) {
@@ -71,6 +110,7 @@ class _RegisterViewState extends State<RegisterView> {
     return null;
   }
 
+  /// 邮箱验证码输入校验。
   String? _emailCodeValidator(String? value) {
     final code = (value ?? '').trim();
     if (code.isEmpty) {
@@ -82,6 +122,7 @@ class _RegisterViewState extends State<RegisterView> {
     return null;
   }
 
+  /// SVG 测试账号输入校验。
   String? _svgUserValidator(String? value) {
     final username = (value ?? '').trim();
     if (username.isEmpty) {
@@ -90,6 +131,7 @@ class _RegisterViewState extends State<RegisterView> {
     return null;
   }
 
+  /// SVG 验证码输入校验。
   String? _svgCodeValidator(String? value) {
     final code = (value ?? '').trim();
     if (code.isEmpty) {
@@ -101,6 +143,7 @@ class _RegisterViewState extends State<RegisterView> {
     return null;
   }
 
+  /// 密码输入校验。
   String? _passwordValidator(String? value) {
     final pwd = value ?? '';
     if (pwd.isEmpty) {
@@ -112,6 +155,7 @@ class _RegisterViewState extends State<RegisterView> {
     return null;
   }
 
+  /// 确认密码输入校验。
   String? _confirmValidator(String? value) {
     final confirm = value ?? '';
     if (confirm.isEmpty) {
@@ -123,6 +167,9 @@ class _RegisterViewState extends State<RegisterView> {
     return null;
   }
 
+  /// 切换注册方式。
+  ///
+  /// 切换到 SVG 模式时，如果当前还没有验证码，会自动刷新一次 SVG 验证码。
   void _onMethodChanged(_RegisterMethod method) {
     FocusScope.of(context).unfocus();
     setState(() {
@@ -134,6 +181,7 @@ class _RegisterViewState extends State<RegisterView> {
     }
   }
 
+  /// 发送邮箱验证码。
   Future<void> _onSendEmailCode() async {
     FocusScope.of(context).unfocus();
     if (_sendingCode) {
@@ -178,6 +226,7 @@ class _RegisterViewState extends State<RegisterView> {
     }
   }
 
+  /// 获取 SVG 验证码。
   Future<void> _onFetchSvg() async {
     FocusScope.of(context).unfocus();
     if (_loadingSvg) {
@@ -223,6 +272,13 @@ class _RegisterViewState extends State<RegisterView> {
     }
   }
 
+  /// 点击“注册”按钮。
+  ///
+  /// 该方法会：
+  /// 1. 校验表单；
+  /// 2. 校验协议勾选与 SVG uuid；
+  /// 3. 调用对应注册接口；
+  /// 4. 成功后返回上一页。
   Future<void> _onRegisterPressed() async {
     FocusScope.of(context).unfocus();
     if (_submitting) {
@@ -292,9 +348,13 @@ class _RegisterViewState extends State<RegisterView> {
     }
   }
 
+  /// 构建注册页 UI。
   @override
   Widget build(BuildContext context) {
+    /// 当前屏幕宽度。
     final screenWidth = MediaQuery.sizeOf(context).width;
+
+    /// 宽屏时使用更大的左右 padding。
     final horizontalPadding = screenWidth < 600 ? 16.0 : 24.0;
 
     return Scaffold(
@@ -373,6 +433,7 @@ class _RegisterViewState extends State<RegisterView> {
     );
   }
 
+  /// 构建顶部返回栏。
   Widget _buildTopBar() {
     return Row(
       children: [
@@ -408,6 +469,7 @@ class _RegisterViewState extends State<RegisterView> {
     );
   }
 
+  /// 构建表单区域卡片。
   Widget _buildFormCard() {
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -566,6 +628,7 @@ class _RegisterViewState extends State<RegisterView> {
     );
   }
 
+  /// 统一输入框样式构建方法。
   InputDecoration _buildInputDecoration({
     required String labelText,
     required String hintText,
@@ -586,6 +649,7 @@ class _RegisterViewState extends State<RegisterView> {
     );
   }
 
+  /// 构建“注册”按钮。
   Widget _buildRegisterButton() {
     return SizedBox(
       height: 48,
@@ -614,6 +678,7 @@ class _RegisterViewState extends State<RegisterView> {
     );
   }
 
+  /// 构建底部帮助文案。
   Widget _buildHelperText() {
     return Text(
       _method == _RegisterMethod.email

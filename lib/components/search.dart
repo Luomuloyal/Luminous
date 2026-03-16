@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
 
+/// 搜索页（Search）可复用 UI 组件集合。
 class SearchResultItemData {
+  /// 药品/结果名称。
   final String name;
+
+  /// 结果副标题（剂型 + 规格等）。
   final String subtitle;
+
+  /// 结果补充提示（厂家等）。
   final String tips;
+
+  /// 右上角徽标文本。
   final String badge;
 
+  /// 创建一个搜索结果展示数据对象。
   const SearchResultItemData({
     required this.name,
     required this.subtitle,
@@ -14,9 +23,13 @@ class SearchResultItemData {
   });
 }
 
+/// 搜索页统一使用的白色表面卡片容器。
+///
+/// 用于保持搜索框、结果卡片等区域的视觉一致性。
 class SearchSurfaceCard extends StatelessWidget {
   const SearchSurfaceCard({super.key, required this.child});
 
+  /// 卡片内部内容。
   final Widget child;
 
   @override
@@ -38,6 +51,9 @@ class SearchSurfaceCard extends StatelessWidget {
   }
 }
 
+/// 搜索结果列表中的单个药品卡片。
+///
+/// 组件只负责展示，点击卡片和点击“添加”分别通过回调交给页面处理。
 class SearchResultCard extends StatelessWidget {
   const SearchResultCard({
     super.key,
@@ -47,7 +63,10 @@ class SearchResultCard extends StatelessWidget {
     this.onAdd,
   });
 
+  /// 当前卡片对应的展示数据。
   final SearchResultItemData item;
+
+  /// 点击整张卡片回调（通常进入详情页）。
   final VoidCallback onTap;
 
   /// 是否已添加到"我的药品"

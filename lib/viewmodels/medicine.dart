@@ -1,14 +1,33 @@
+/// 药品搜索、详情、AI 解读共用的数据模型。
 class MedicineItem {
+  /// 药品表中的序号字段。
   final String serialNo;
+
+  /// 批准文号。
   final String approvalNo;
+
+  /// 产品名称。
   final String productName;
+
+  /// 剂型。
   final String dosageForm;
+
+  /// 规格。
   final String specification;
+
+  /// 上市许可持有人。
   final String marketingAuthorizationHolder;
+
+  /// 生产厂家。
   final String manufacturer;
+
+  /// 药品编码。
   final String drugCode;
+
+  /// 药品编码备注。
   final String drugCodeRemark;
 
+  /// 创建一个药品对象。
   const MedicineItem({
     required this.serialNo,
     required this.approvalNo,
@@ -21,6 +40,9 @@ class MedicineItem {
     required this.drugCodeRemark,
   });
 
+  /// 从后端 JSON 反序列化为 `MedicineItem`。
+  ///
+  /// 同时兼容英文键和数据库中文字段名。
   factory MedicineItem.fromJson(Map<String, dynamic> json) {
     return MedicineItem(
       serialNo: (json['serialNo'] ?? json['序号'] ?? '').toString(),
@@ -38,10 +60,17 @@ class MedicineItem {
     );
   }
 
+  /// 当前药品是否具备可用于详情查询的身份字段。
   bool get hasIdentity => drugCode.isNotEmpty || approvalNo.isNotEmpty;
 
+  /// 页面展示时的主标题。
+  ///
+  /// 若产品名称为空，则回退为“未知药品”。
   String get displayName => productName.isEmpty ? '未知药品' : productName;
 
+  /// 页面展示时的副标题。
+  ///
+  /// 由剂型和规格组合而成。
   String get displaySubtitle {
     final parts = <String>[
       if (dosageForm.isNotEmpty) dosageForm,
@@ -50,6 +79,9 @@ class MedicineItem {
     return parts.isEmpty ? '暂无规格信息' : parts.join(' · ');
   }
 
+  /// 页面展示时的补充提示信息。
+  ///
+  /// 优先使用生产厂家，其次使用上市许可持有人。
   String get displayTips {
     if (manufacturer.isNotEmpty) {
       return manufacturer;
@@ -60,6 +92,9 @@ class MedicineItem {
     return '';
   }
 
+  /// 页面展示时的徽标文本。
+  ///
+  /// 优先展示剂型，没有剂型时回退为“药品”。
   String get displayBadge {
     if (dosageForm.isNotEmpty) {
       return dosageForm;
@@ -68,12 +103,21 @@ class MedicineItem {
   }
 }
 
+/// 药品搜索接口的分页结果。
 class MedicineSearchResult {
+  /// 当前页返回的药品列表。
   final List<MedicineItem> items;
+
+  /// 符合条件的总记录数。
   final int total;
+
+  /// 当前页码。
   final int page;
+
+  /// 每页大小。
   final int pageSize;
 
+  /// 创建一个搜索结果对象。
   const MedicineSearchResult({
     required this.items,
     required this.total,
@@ -81,8 +125,12 @@ class MedicineSearchResult {
     required this.pageSize,
   });
 
+  /// 从后端 JSON 反序列化为 `MedicineSearchResult`。
   factory MedicineSearchResult.fromJson(Map<String, dynamic> json) {
+    /// 原始 items 字段，可能不是严格的 `List<Map<String, dynamic>>`。
     final rawItems = json['items'];
+
+    /// 解析后的药品对象列表。
     final items = rawItems is List
         ? rawItems
               .whereType<Map>()
@@ -98,10 +146,15 @@ class MedicineSearchResult {
     );
   }
 
+  /// 当前分页结果是否还有下一页数据可继续加载。
   bool get hasMore => page * pageSize < total;
 }
 
+/// 安全解析分页大小。
+///
+/// 若后端未返回合法 pageSize，则回退到调用方给定的默认值。
 int _parsePageSize(dynamic value, {required int fallback}) {
+  /// 尝试解析得到的 pageSize 数值。
   final parsed = int.tryParse((value ?? '').toString());
   if (parsed != null && parsed > 0) {
     return parsed;
@@ -109,14 +162,19 @@ int _parsePageSize(dynamic value, {required int fallback}) {
   return fallback;
 }
 
+/// AI 药品详情解读结果。
 class MedicineAiDetailResult {
+  /// AI 返回的纯文本解读内容。
   final String text;
 
+  /// 创建一个 AI 解读结果对象。
   const MedicineAiDetailResult({required this.text});
 
+  /// 从后端 JSON 反序列化为 `MedicineAiDetailResult`。
   factory MedicineAiDetailResult.fromJson(Map<String, dynamic> json) {
     return MedicineAiDetailResult(text: (json['text'] ?? '').toString());
   }
 
+  /// AI 是否返回了有效文本。
   bool get hasText => text.trim().isNotEmpty;
 }

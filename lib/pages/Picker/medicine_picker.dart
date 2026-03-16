@@ -7,27 +7,37 @@ import 'package:luminous/viewmodels/medicine.dart';
 class MedicinePickerPage extends StatefulWidget {
   const MedicinePickerPage({super.key, this.title = '选择药品'});
 
+  /// 顶部 AppBar 标题。
   final String title;
 
+  /// 创建药品选择页对应的状态对象。
   @override
   State<MedicinePickerPage> createState() => _MedicinePickerPageState();
 }
 
 class _MedicinePickerPageState extends State<MedicinePickerPage> {
+  /// 当前是否正在加载“我的药品”列表。
   bool _loading = false;
+
+  /// 从本地数据库读取到的“我的药品”行数据。
   List<Map<String, dynamic>> _rows = [];
 
+  /// 页面初始化时立即加载本地药品列表。
   @override
   void initState() {
     super.initState();
     _load();
   }
 
+  /// 从本地数据库加载“我的药品”。
   Future<void> _load() async {
     if (_loading) return;
     setState(() => _loading = true);
     try {
+      /// 本地数据库实例。
       final db = await AppDatabase.instance.database;
+
+      /// 查询到的药品行数据。
       final rows = await db.query('my_medicines', orderBy: 'createdAt DESC');
       if (!mounted) return;
       setState(() => _rows = rows);
@@ -40,6 +50,7 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
     }
   }
 
+  /// 构建药品选择页 UI。
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,6 +75,7 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
     );
   }
 
+  /// 构建顶部“手动搜索药品库”入口。
   Widget _buildSearchEntry() {
     return InkWell(
       borderRadius: BorderRadius.circular(18),
@@ -118,6 +130,9 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
     );
   }
 
+  /// 构建“我的药品”选择卡片区域。
+  ///
+  /// 用户可以直接从本地已添加的药品里点选，也可以跳到搜索页重新选择。
   Widget _buildMyMedicinesCard() {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
@@ -172,11 +187,18 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
             )
           else
             ..._rows.asMap().entries.map((entry) {
+              /// 当前列表项下标。
               final index = entry.key;
+
+              /// 当前数据库行数据。
               final row = entry.value;
+
+              /// 由数据库行转换而成的药品对象。
               final item = _rowToItem(row);
               return Padding(
-                padding: EdgeInsets.only(bottom: index == _rows.length - 1 ? 0 : 10),
+                padding: EdgeInsets.only(
+                  bottom: index == _rows.length - 1 ? 0 : 10,
+                ),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(14),
                   onTap: () => Navigator.pop(context, item),
@@ -193,7 +215,9 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0EA5E9).withValues(alpha: 0.12),
+                            color: const Color(
+                              0xFF0EA5E9,
+                            ).withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: const Icon(
@@ -226,7 +250,10 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
                             ],
                           ),
                         ),
-                        const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
+                        const Icon(
+                          Icons.chevron_right_rounded,
+                          color: Color(0xFF94A3B8),
+                        ),
                       ],
                     ),
                   ),
@@ -238,6 +265,9 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
     );
   }
 
+  /// 把数据库行数据转换为 `MedicineItem`。
+  ///
+  /// 这样选择页返回给上层的是统一的强类型对象，而不是原始 Map。
   MedicineItem _rowToItem(Map<String, dynamic> row) {
     return MedicineItem(
       serialNo: '',
@@ -252,7 +282,11 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
     );
   }
 
+  /// 打开搜索页进行药品选择。
+  ///
+  /// 搜索页会以 `pickerMode=true` 打开，选中后直接返回 `MedicineItem`。
   Future<void> _openSearchPicker() async {
+    /// 从搜索页返回的药品对象。
     final result = await Navigator.of(context).push<MedicineItem>(
       MaterialPageRoute<MedicineItem>(
         builder: (_) => const SearchView(pickerMode: true),
@@ -263,4 +297,3 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
     Navigator.pop(context, result);
   }
 }
-

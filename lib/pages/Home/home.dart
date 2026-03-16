@@ -21,29 +21,43 @@ import 'package:luminous/viewmodels/medicine.dart';
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
 
+  /// 创建首页对应的状态对象，所有首页数据加载与交互都在状态类里完成。
   @override
   State<HomeView> createState() => _HomeViewState();
 }
 
 class _HomeViewState extends State<HomeView> {
+  /// 当前登录用户控制器。
+  ///
+  /// 用来读取用户 id，以便请求“今日提醒”接口和查询本地提醒/打卡数据。
   final UserController _userController = Get.find<UserController>();
 
-  // 10 条温馨提示，每次应用启动随机选一条
+  /// 首页顶部随机展示的健康提示文案。
+  ///
+  /// 页面初始化时会从这里随机挑选一条，展示在顶部绿色卡片中。
   static const List<String> _healthTips = [
-    '按时服药是控制慢性病的第一步，别让遗忘成为健康的绊脚石。',
-    '药物与食物的相互作用不可忽视，服药前记得查阅注意事项。',
-    '多喝水有助于药物吸收，除非医嘱有特别限制。',
-    '漏服一次怎么办？不要加倍补服，请参照说明书或咨询药师。',
-    '储存药品请避光、防潮、防高温，不要放在浴室或车内。',
-    '抗生素需完整疗程服用，症状好转后擅自停药可能导致耐药。',
-    '服药期间如出现皮疹、呼吸困难等异常，请立即就医。',
-    '定期整理家中药箱，清理过期药品，安全处置是对环境的负责。',
-    '有些药需要饭前服，有些需要饭后服，请仔细阅读说明书。',
-    '良好的作息和均衡饮食是辅助药物发挥最佳效果的基础。',
+    '按时服药，别漏别补',
+    '饭前饭后按说明来',
+    '合并用药先问药师',
+    '漏服勿加倍，咨询放在先',
+    '出现不适，及时就医',
+    '抗生素按疗程，不要擅停',
+    '药品避光防潮，远离高温',
+    '定期清理过期药品',
+    '用药前看禁忌与相互作用',
+    '规律作息，药效更稳',
   ];
 
+  /// 本次页面生命周期内选中的那一条提示文案。
+  ///
+  /// 使用 `late final` 是因为它只会在 `initState` 随机生成一次，
+  /// 之后整个页面重建时都复用同一条，避免每次 `build` 都变化。
   late final String _todayTip;
 
+  /// “常用功能”区域的静态入口列表。
+  ///
+  /// 每个元素描述一个功能卡片的 id、标题、副标题、图标和颜色，
+  /// 页面点击后会根据 id 决定跳转到哪个功能页。
   final List<HomeFeatureItemData> _entries = const [
     HomeFeatureItemData(
       id: 'drugScan',
@@ -89,6 +103,9 @@ class _HomeViewState extends State<HomeView> {
     ),
   ];
 
+  /// 当接口没有返回提醒，或者本地/网络数据暂时不可用时使用的兜底提醒数据。
+  ///
+  /// 这样首页“今日提醒”区域不会空白，能始终保持一个完整布局。
   static const List<HomeReminderItemData> _fallbackReminders = [
     HomeReminderItemData(
       icon: Icons.access_time_rounded,
@@ -110,11 +127,26 @@ class _HomeViewState extends State<HomeView> {
     ),
   ];
 
+  /// 当前真正渲染到页面上的提醒列表。
+  ///
+  /// 初始值使用兜底提醒，后续会在 `_fetchTodayReminders` 中
+  /// 被本地数据库数据或接口数据替换。
   late List<HomeReminderItemData> _reminders = List<HomeReminderItemData>.from(
     _fallbackReminders,
   );
+
+  /// 标记首页提醒区域是否正处于加载状态。
+  ///
+  /// 主要用于：
+  /// 1. 防止重复触发提醒请求；
+  /// 2. 顶部卡片展示“提醒加载中...”文案。
   bool _loadingReminders = false;
 
+  /// 页面初始化时完成一次性数据准备。
+  ///
+  /// 这里做两件事：
+  /// 1. 随机选出顶部展示的温馨提示；
+  /// 2. 拉取今日提醒，替换默认兜底数据。
   @override
   void initState() {
     super.initState();
@@ -123,14 +155,42 @@ class _HomeViewState extends State<HomeView> {
     _fetchTodayReminders();
   }
 
+  /// 构建首页整体 UI。
+  ///
+  /// 页面结构分为三块：
+  /// 1. 顶部健康助手卡片；
+  /// 2. 常用功能网格；
+  /// 3. 今日提醒列表。
   @override
   Widget build(BuildContext context) {
+    /// 当前提醒列表里“下一条未完成提醒”。
+    ///
+    /// 顶部卡片会优先展示它，帮助用户快速知道最近一次该做什么。
+    final next = _reminders.cast<HomeReminderItemData?>().firstWhere(
+      (e) => e != null && e.done == false,
+      orElse: () => null,
+    );
+
+    /// 顶部卡片中展示的“下一次提醒”文案。
+    ///
+    /// 如果今天没有待完成提醒，则显示“暂无提醒”。
+    final nextText = next == null
+        ? '暂无提醒'
+        : '下一次提醒: ${next.title} · ${next.subtitle}';
+
     return SafeArea(
       child: Container(
         color: const Color(0xFFF3F7FB),
         child: CustomScrollView(
           slivers: [
-            _buildTopSliver(),
+            SliverToBoxAdapter(
+              child: HomeTopSection(
+                todayTip: _todayTip,
+                nextText: nextText,
+                loadingReminders: _loadingReminders,
+                reminderCount: _reminders.length,
+              ),
+            ),
             SliverToBoxAdapter(
               child: HomeFeatureSection(items: _entries, onTap: _onEntryTap),
             ),
@@ -142,102 +202,10 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  Widget _buildTopSliver() {
-    final next = _reminders.cast<HomeReminderItemData?>().firstWhere(
-      (e) => e != null && e.done == false,
-      orElse: () => null,
-    );
-    final nextText = next == null
-        ? '暂无提醒'
-        : '下一次提醒: ${next.title} · ${next.subtitle}';
-
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-        child: Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              // 主页保留绿色渐变
-              colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x30000000),
-                blurRadius: 14,
-                offset: Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color(0x28FFFFFF),
-                    ),
-                    child: const Icon(
-                      Icons.favorite_outline,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  const Expanded(
-                    child: Text(
-                      '健康助手',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                  _buildStatusChip('已同步'),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // 随机温馨提示
-              Text(
-                _todayTip,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                nextText,
-                style: const TextStyle(color: Color(0xE6FFFFFF), fontSize: 14),
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  _buildInfoPill(
-                    _loadingReminders
-                        ? '提醒加载中...'
-                        : '今日提醒 ${_reminders.length} 条',
-                  ),
-                  const SizedBox(width: 8),
-                  _buildInfoPill('健康小贴士'),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
+  /// 处理“常用功能”卡片的点击事件。
+  ///
+  /// 根据不同入口的 id 进行页面跳转；部分跳转完成后会刷新首页提醒，
+  /// 保证提醒和打卡状态能及时同步回首页。
   void _onEntryTap(HomeFeatureItemData item) {
     if (item.id == 'manualSearch') {
       Navigator.pushNamed(context, '/search');
@@ -276,7 +244,13 @@ class _HomeViewState extends State<HomeView> {
     ToastUtils.instance.show(context, '功能开发中');
   }
 
+  /// 打开药品选择页，并在用户选中药品后进入药品详情页。
+  ///
+  /// 这是首页“药物信息”入口的行为：先选药，再看详情。
   Future<void> _pickAndOpenMedicineDetail() async {
+    /// 从药品选择页返回的药品对象。
+    ///
+    /// 用户取消选择时会得到 `null`。
     final item = await Navigator.of(context).push<MedicineItem>(
       MaterialPageRoute<MedicineItem>(
         builder: (_) => const MedicinePickerPage(title: '选择药品'),
@@ -286,46 +260,19 @@ class _HomeViewState extends State<HomeView> {
     if (item == null) return;
 
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => MedicineDetailPage(initialItem: item)),
-    );
-  }
-
-  Widget _buildStatusChip(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        color: const Color(0x33FFFFFF),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
+      MaterialPageRoute<void>(
+        builder: (_) => MedicineDetailPage(initialItem: item),
       ),
     );
   }
 
-  Widget _buildInfoPill(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        color: const Color(0x29FFFFFF),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12.5,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-
+  /// 拉取首页“今日提醒”数据。
+  ///
+  /// 加载顺序是：
+  /// 1. 先请求后端 today-reminders；
+  /// 2. 再尝试读取本地今天的提醒与打卡结果；
+  /// 3. 如果本地有数据，优先使用本地数据；
+  /// 4. 否则使用接口返回的数据。
   Future<void> _fetchTodayReminders() async {
     if (_loadingReminders) {
       return;
@@ -335,13 +282,30 @@ class _HomeViewState extends State<HomeView> {
     });
 
     try {
+      /// 当前登录用户 id。
+      ///
+      /// 如果用户未登录，这里会是 `null`，接口和本地查询都会按未登录场景处理。
       final userId = _userController.user.value?.id;
+
+      /// 后端返回的“今日提醒”结果。
+      ///
+      /// 作为网络数据来源，当本地没有可用数据时会回退使用这里的内容。
       final response = await HomeApi.fetchTodayReminders(userId: userId);
       if (!mounted) {
         return;
       }
+
+      /// 从本地数据库中整理出来的“今天的提醒 UI 数据”。
+      ///
+      /// 它会把 reminders 表和 checkins 表拼起来，得出哪些提醒已经完成。
       final local = await _loadLocalTodayReminders(userId);
-      final items = local.isNotEmpty ? local : response.result.items.map(_toReminderUi).toList();
+
+      /// 本次最终准备渲染到页面上的提醒列表。
+      ///
+      /// 优先级：本地数据 > 接口数据。
+      final items = local.isNotEmpty
+          ? local
+          : response.result.items.map(_toReminderUi).toList();
 
       if (!mounted) return;
       if (items.isNotEmpty) {
@@ -366,30 +330,75 @@ class _HomeViewState extends State<HomeView> {
     }
   }
 
-  Future<List<HomeReminderItemData>> _loadLocalTodayReminders(String? userId) async {
+  /// 从本地数据库读取“今天的提醒”并组装成首页 UI 需要的数据结构。
+  ///
+  /// 这个方法会：
+  /// 1. 查今天的打卡记录，确定哪些提醒已经完成；
+  /// 2. 查当前用户启用中的提醒计划；
+  /// 3. 组合成首页展示用的 `HomeReminderItemData` 列表。
+  Future<List<HomeReminderItemData>> _loadLocalTodayReminders(
+    String? userId,
+  ) async {
+    /// 去掉空白后的用户 id。
+    ///
+    /// 若为空，说明当前没有可用于查询本地提醒的用户身份，直接返回空列表。
     final uid = (userId ?? '').trim();
     if (uid.isEmpty) {
       return const [];
     }
 
     try {
+      /// 应用本地数据库实例。
+      ///
+      /// 用来查询 reminders 和 checkins 两张表。
       final db = await AppDatabase.instance.database;
+
+      /// 当前时间。
+      ///
+      /// 仅用于计算“今天开始时间”和“明天开始时间”。
       final now = DateTime.now();
-      final start = DateTime(now.year, now.month, now.day).millisecondsSinceEpoch;
+
+      /// 今天 00:00:00 对应的毫秒时间戳。
+      ///
+      /// 用于筛选今天范围内的打卡记录。
+      final start = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).millisecondsSinceEpoch;
+
+      /// 明天 00:00:00 对应的毫秒时间戳。
+      ///
+      /// 与 `start` 组成左闭右开区间 `[start, end)` 来查询“今天”的数据。
       final end = start + const Duration(days: 1).inMilliseconds;
 
+      /// 今天所有打卡记录里记录过的 reminderRemoteId 列表。
+      ///
+      /// 用来判断某条提醒今天是否已经完成。
       final checkinRows = await db.query(
         'checkins',
         columns: ['reminderRemoteId'],
         where: 'userId = ? AND takenAt >= ? AND takenAt < ?',
         whereArgs: [uid, start, end],
       );
+
+      /// 今天已经完成打卡的提醒 id 集合。
+      ///
+      /// 用 Set 是为了后续判断某条提醒是否完成时可以快速查找。
       final doneSet = <String>{};
+
+      /// 遍历每条今天的打卡记录，把有效的提醒 id 放入已完成集合。
       for (final row in checkinRows) {
+        /// 单条打卡记录里关联的远端提醒 id。
+        ///
+        /// 它是 reminders 表与 checkins 表之间的关联键。
         final id = (row['reminderRemoteId'] ?? '').toString().trim();
         if (id.isNotEmpty) doneSet.add(id);
       }
 
+      /// 当前用户所有启用中的提醒计划。
+      ///
+      /// 这些数据会被转换为首页要展示的提醒条目。
       final reminderRows = await db.query(
         'reminders',
         where: 'userId = ? AND enabled = 1',
@@ -401,12 +410,26 @@ class _HomeViewState extends State<HomeView> {
       }
 
       return reminderRows.map((row) {
+        /// 提醒计划在服务端/本地同步时使用的唯一 id。
+        ///
+        /// 用它和 `doneSet` 对比，就能知道今天这条提醒是否已完成。
         final remoteId = (row['remoteId'] ?? '').toString();
+
+        /// 提醒时间，例如 `08:30`。
         final time = (row['time'] ?? '').toString().trim();
+
+        /// 提醒标题对应的药品名称。
         final title = (row['productName'] ?? '').toString().trim();
+
+        /// 提醒副标题，通常描述服药方式或附加说明。
         final subtitle = (row['subtitle'] ?? '').toString().trim();
+
+        /// 当前提醒今天是否已经打过卡。
         final done = remoteId.isNotEmpty && doneSet.contains(remoteId);
 
+        /// 首页主标题展示用的组合文案。
+        ///
+        /// 规则是把时间和药名拼成一行，例如 `08:30 维生素D`。
         final combinedTitle = time.isEmpty ? title : '$time $title';
         return HomeReminderItemData(
           icon: Icons.access_time_rounded,
@@ -420,9 +443,17 @@ class _HomeViewState extends State<HomeView> {
     }
   }
 
+  /// 把接口层的提醒对象转换为首页组件直接可用的 UI 数据。
+  ///
+  /// 这样页面不需要直接依赖接口返回结构的字段命名和组合规则。
   HomeReminderItemData _toReminderUi(ReminderItem item) {
+    /// 接口返回的提醒时间字符串。
     final time = item.time.trim();
+
+    /// 接口返回的提醒标题。
     final title = item.title.trim();
+
+    /// 首页主标题展示用的组合文案。
     final combinedTitle = time.isEmpty ? title : '$time $title';
 
     return HomeReminderItemData(

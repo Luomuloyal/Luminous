@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'dart:typed_data';
 import 'package:get/get.dart';
 import 'package:luminous/api/scan_api.dart';
+import 'package:luminous/components/album.dart';
 import 'package:luminous/pages/Drug/medicine_detail.dart';
 import 'package:luminous/stores/app_database.dart';
 import 'package:luminous/stores/user_controller.dart';
@@ -14,25 +13,47 @@ import 'package:sqflite/sqflite.dart';
 class AlbumView extends StatefulWidget {
   const AlbumView({super.key});
 
+  /// 创建相册页对应的状态对象。
   @override
   State<AlbumView> createState() => _AlbumViewState();
 }
 
 class _AlbumViewState extends State<AlbumView> {
+  /// 全局用户控制器。
+  ///
+  /// 用于判断当前是否登录，以及读取当前用户 id。
   final UserController _userController = Get.find<UserController>();
 
+  /// 相册页当前是否正在加载数据。
   bool _loading = false;
-  String? _error;
-  List<_AlbumEntry> _entries = [];
 
+  /// 当前错误文案。
+  ///
+  /// 非空时页面会展示错误 banner。
+  String? _error;
+
+  /// 页面最终展示的相册条目列表。
+  List<AlbumEntry> _entries = [];
+
+  /// 当前登录用户 id。
+  ///
+  /// 未登录时为空字符串。
   String get _userId => _userController.user.value?.id ?? '';
 
+  /// 页面初始化时立即加载相册数据。
   @override
   void initState() {
     super.initState();
     _load();
   }
 
+  /// 加载相册页数据。
+  ///
+  /// 顺序是：
+  /// 1. 先读本地数据库；
+  /// 2. 如果已登录，再拉远端识别记录；
+  /// 3. 合并本地与远端结果；
+  /// 4. 再把远端数据回写缓存到本地。
   Future<void> _load() async {
     if (_loading) return;
     setState(() {
@@ -41,18 +62,23 @@ class _AlbumViewState extends State<AlbumView> {
     });
 
     try {
+      /// 先从本地数据库读取的相册记录。
       final local = await _loadLocal();
       if (!mounted) return;
       setState(() => _entries = local);
 
+      /// 当前是否满足拉远端记录的前提：已登录且有有效 userId。
       final loggedIn = _userController.isLoggedIn && _userId.isNotEmpty;
       if (loggedIn) {
+        /// 远端识别记录列表接口返回结果。
         final remote = await ScanApi.listScanRecords(
           userId: _userId,
           page: 1,
           pageSize: 50,
         );
         if (!mounted) return;
+
+        /// 合并本地与远端后得到的最终展示结果。
         final merged = _merge(local, remote.result.items);
         setState(() => _entries = merged);
         await _cacheRemoteToLocal(remote.result.items);
@@ -61,318 +87,117 @@ class _AlbumViewState extends State<AlbumView> {
       if (!mounted) return;
       setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
-  Future<List<_AlbumEntry>> _loadLocal() async {
+  /// 读取本地缓存的相册记录。
+  Future<List<AlbumEntry>> _loadLocal() async {
     try {
+      /// 本地数据库实例。
       final db = await AppDatabase.instance.database;
+
+      /// 从 album_items 表按创建时间倒序查询到的行数据。
       final rows = await db.query('album_items', orderBy: 'createdAt DESC');
-      return rows.map(_rowToEntry).toList();
+      return rows.map(AlbumEntry.fromLocalRow).toList();
     } catch (_) {
       return [];
     }
   }
 
-  _AlbumEntry _rowToEntry(Map<String, dynamic> row) {
-    return _AlbumEntry(
-      remoteId: (row['remoteId'] ?? '').toString(),
-      productName: (row['productName'] ?? '').toString(),
-      drugCode: (row['drugCode'] ?? '').toString(),
-      approvalNo: (row['approvalNo'] ?? '').toString(),
-      thumbBase64: (row['thumbBase64'] ?? '').toString(),
-      takenAt: (row['takenAt'] as int?) ?? (row['createdAt'] as int?) ?? 0,
-    );
-  }
-
-  List<_AlbumEntry> _merge(List<_AlbumEntry> local, List<ScanRecordItem> remote) {
-    final map = <String, _AlbumEntry>{};
-    for (final e in local) {
-      final key = e.remoteId.trim();
+  /// 合并本地相册记录与远端识别记录。
+  ///
+  /// 规则：
+  /// - 有 remoteId 的本地记录与远端记录按 remoteId 去重；
+  /// - 没有 remoteId 的本地离线记录直接保留；
+  /// - 最终按 takenAt 倒序排序。
+  List<AlbumEntry> _merge(List<AlbumEntry> local, List<ScanRecordItem> remote) {
+    /// 以 remoteId 为 key 的去重 map。
+    final map = <String, AlbumEntry>{};
+    for (final entry in local) {
+      /// 本地条目的远端 id。
+      final key = entry.remoteId.trim();
       if (key.isNotEmpty) {
-        map[key] = e;
+        map[key] = entry;
       }
     }
-    final result = <_AlbumEntry>[];
-    for (final r in remote) {
-      final key = r.id.trim();
-      final entry = _AlbumEntry(
-        remoteId: key,
-        productName: r.productName,
-        drugCode: r.drugCode,
-        approvalNo: r.approvalNo,
-        thumbBase64: r.thumbBase64,
-        takenAt: r.takenAt,
-      );
-      map[key] = entry;
+
+    /// 把远端记录覆盖写入 map，保证远端数据优先。
+    for (final record in remote) {
+      map[record.id.trim()] = AlbumEntry.fromScanRecord(record);
     }
 
-    // Keep locals without remoteId
-    result.addAll(local.where((e) => e.remoteId.trim().isEmpty));
-    result.addAll(map.values);
+    /// 合并后的结果列表。
+    final result = <AlbumEntry>[
+      ...local.where((entry) => entry.remoteId.trim().isEmpty),
+      ...map.values,
+    ];
     result.sort((a, b) => b.takenAt.compareTo(a.takenAt));
     return result;
   }
 
+  /// 将远端识别记录缓存到本地数据库。
+  ///
+  /// 这是 best-effort 行为：即使缓存失败，也不影响当前页面展示。
   Future<void> _cacheRemoteToLocal(List<ScanRecordItem> items) async {
     try {
+      /// 本地数据库实例。
       final db = await AppDatabase.instance.database;
-      for (final r in items) {
-        await db.insert(
-          'album_items',
-          {
-            'remoteId': r.id,
-            'identityKey': _buildIdentityKey(r.drugCode, r.approvalNo, r.productName),
-            'drugCode': r.drugCode,
-            'approvalNo': r.approvalNo,
-            'productName': r.productName,
-            'filePath': '',
-            'thumbBase64': r.thumbBase64,
-            'takenAt': r.takenAt,
-            'source': 'scan',
-            'createdAt': r.takenAt == 0 ? DateTime.now().millisecondsSinceEpoch : r.takenAt,
-          },
-          conflictAlgorithm: ConflictAlgorithm.ignore,
-        );
+
+      /// 逐条把远端记录写入 album_items 表。
+      for (final item in items) {
+        await db.insert('album_items', {
+          'remoteId': item.id,
+          'identityKey': _buildIdentityKey(
+            item.drugCode,
+            item.approvalNo,
+            item.productName,
+          ),
+          'drugCode': item.drugCode,
+          'approvalNo': item.approvalNo,
+          'productName': item.productName,
+          'filePath': '',
+          'thumbBase64': item.thumbBase64,
+          'takenAt': item.takenAt,
+          'source': 'scan',
+          'createdAt': item.takenAt == 0
+              ? DateTime.now().millisecondsSinceEpoch
+              : item.takenAt,
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
       }
     } catch (_) {}
   }
 
+  /// 生成相册/药品记录统一使用的 identityKey。
+  ///
+  /// 优先级：drugCode > approvalNo > productName。
   String _buildIdentityKey(String drugCode, String approvalNo, String name) {
     if (drugCode.trim().isNotEmpty) return 'drugCode:${drugCode.trim()}';
     if (approvalNo.trim().isNotEmpty) return 'approvalNo:${approvalNo.trim()}';
     return 'name:${name.trim()}';
   }
 
+  /// 构建相册页 UI。
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        color: const Color(0xFFF3F7FB),
-        child: RefreshIndicator(
-          onRefresh: _load,
-          child: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(child: _buildHeader()),
-              if (!_userController.isLoggedIn)
-                SliverToBoxAdapter(child: _buildLoginBanner()),
-              if (_error != null)
-                SliverToBoxAdapter(child: _buildErrorBanner(_error!)),
-              if (_entries.isEmpty && !_loading)
-                SliverToBoxAdapter(child: _buildEmpty())
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                  sliver: SliverGrid.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 10,
-                      crossAxisSpacing: 10,
-                      childAspectRatio: 0.92,
-                    ),
-                    itemCount: _entries.length,
-                    itemBuilder: (context, index) {
-                      final e = _entries[index];
-                      return _AlbumCard(entry: e, onTap: () => _openDetail(e));
-                    },
-                  ),
-                ),
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
-            ],
-          ),
-        ),
-      ),
+    return AlbumPage(
+      loading: _loading,
+      isLoggedIn: _userController.isLoggedIn,
+      error: _error,
+      entries: _entries,
+      onRefresh: _load,
+      onTapLogin: () => Navigator.pushNamed(context, '/login'),
+      onTapEntry: _openDetail,
     );
   }
 
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: const LinearGradient(
-            colors: [Color(0xFF6366F1), Color(0xFF0EA5E9)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x28000000),
-              blurRadius: 14,
-              offset: Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0x28FFFFFF),
-              ),
-              child: const Icon(Icons.photo_library_outlined, color: Colors.white),
-            ),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '识别相册',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    '同步缩略图与识别结果',
-                    style: TextStyle(
-                      color: Color(0xE6FFFFFF),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (_loading)
-              const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildErrorBanner(String text) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFFBEB),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFFDE68A)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.warning_amber_rounded, color: Color(0xFFF59E0B)),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                text,
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  height: 1.45,
-                  color: Color(0xFF92400E),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmpty() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 44),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-        ),
-        child: const Column(
-          children: [
-            Icon(Icons.photo_outlined, size: 44, color: Color(0xFF94A3B8)),
-            SizedBox(height: 10),
-            Text(
-              '暂无记录',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF0F172A),
-              ),
-            ),
-            SizedBox(height: 6),
-            Text(
-              '去“药物识别”拍照后会自动同步到这里',
-              style: TextStyle(
-                fontSize: 13,
-                color: Color(0xFF64748B),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLoginBanner() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: const Color(0xFF0EA5E9).withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.lock_outline_rounded, color: Color(0xFF0EA5E9)),
-            ),
-            const SizedBox(width: 10),
-            const Expanded(
-              child: Text(
-                '登录后可同步识别记录并跨设备查看缩略图',
-                style: TextStyle(
-                  fontSize: 12.5,
-                  height: 1.45,
-                  color: Color(0xFF475569),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            FilledButton(
-              onPressed: () => Navigator.pushNamed(context, '/login'),
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF0EA5E9),
-                foregroundColor: Colors.white,
-                minimumSize: const Size(78, 40),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: const Text('登录'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _openDetail(_AlbumEntry entry) async {
+  /// 打开某条相册记录对应的药品详情页。
+  ///
+  /// 如果记录缺少 drugCode 和 approvalNo，则无法进入详情页，只提示用户。
+  Future<void> _openDetail(AlbumEntry entry) async {
+    /// 根据相册条目拼装出的药品详情初始对象。
     final item = MedicineItem(
       serialNo: '',
       approvalNo: entry.approvalNo,
@@ -389,120 +214,8 @@ class _AlbumViewState extends State<AlbumView> {
       return;
     }
     await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => MedicineDetailPage(initialItem: item)),
-    );
-  }
-}
-
-class _AlbumEntry {
-  final String remoteId;
-  final String productName;
-  final String drugCode;
-  final String approvalNo;
-  final String thumbBase64;
-  final int takenAt;
-
-  const _AlbumEntry({
-    required this.remoteId,
-    required this.productName,
-    required this.drugCode,
-    required this.approvalNo,
-    required this.thumbBase64,
-    required this.takenAt,
-  });
-
-  String get displayName => productName.trim().isEmpty ? '未知药品' : productName.trim();
-}
-
-class _AlbumCard extends StatelessWidget {
-  const _AlbumCard({required this.entry, required this.onTap});
-
-  final _AlbumEntry entry;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    Uint8List? bytes;
-    final raw = entry.thumbBase64.trim();
-    if (raw.isNotEmpty) {
-      try {
-        bytes = base64Decode(raw);
-      } catch (_) {
-        bytes = null;
-      }
-    }
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(18),
-      onTap: onTap,
-      child: Ink(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x0F000000),
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
-                child: bytes == null
-                    ? Container(
-                        color: const Color(0xFFF1F5F9),
-                        alignment: Alignment.center,
-                        child: const Icon(
-                          Icons.photo_outlined,
-                          color: Color(0xFF94A3B8),
-                          size: 34,
-                        ),
-                      )
-                    : Image.memory(
-                        bytes,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                      ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    entry.displayName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    entry.approvalNo.trim().isEmpty ? '点击查看详情' : '批准文号: ${entry.approvalNo}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 11.5,
-                      color: Color(0xFF64748B),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+      MaterialPageRoute<void>(
+        builder: (_) => MedicineDetailPage(initialItem: item),
       ),
     );
   }

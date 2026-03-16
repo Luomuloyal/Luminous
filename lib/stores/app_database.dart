@@ -10,22 +10,39 @@ import 'package:sqflite/sqflite.dart';
 // - 这类本地数据属于“客户端缓存/本地资产”，不依赖后端。
 // - 表结构尽量保持稳定；需要变更时通过 version + onUpgrade 做迁移。
 class AppDatabase {
+  /// 私有构造函数，当前数据库管理器通过单例使用。
   AppDatabase._();
 
+  /// 全局数据库单例。
   static final AppDatabase instance = AppDatabase._();
 
+  /// SQLite 数据库文件名。
   static const String _dbName = 'luminous.db';
+
+  /// 当前数据库 schema 版本号。
+  ///
+  /// 版本变更时需要同步更新 `_upgradeTables` 中的迁移逻辑。
   static const int _version = 2;
 
+  /// 已打开的数据库实例缓存。
   Database? _db;
 
+  /// 获取可用的数据库实例。
+  ///
+  /// 首次访问时会打开数据库，后续直接复用缓存实例。
   Future<Database> get database async {
     _db ??= await _open();
     return _db!;
   }
 
+  /// 打开 SQLite 数据库。
+  ///
+  /// 会在首次创建时执行建表逻辑，在版本升级时执行迁移逻辑。
   Future<Database> _open() async {
+    /// 设备上 SQLite 数据库目录路径。
     final dbPath = await getDatabasesPath();
+
+    /// 当前应用数据库完整文件路径。
     final path = '$dbPath/$_dbName';
     return openDatabase(
       path,
@@ -39,6 +56,7 @@ class AppDatabase {
     );
   }
 
+  /// 创建当前版本所需的全部表结构与索引。
   Future<void> _createTables(Database db) async {
     // my_medicines：用户添加的药品（来自手动搜索/药物识别）
     await db.execute('''
@@ -116,18 +134,34 @@ class AppDatabase {
     );
   }
 
-  Future<void> _upgradeTables(Database db, int oldVersion, int newVersion) async {
+  /// 执行数据库升级迁移。
+  ///
+  /// 当前仅处理从 v1 升级到 v2 的场景。
+  Future<void> _upgradeTables(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
     if (oldVersion < 2) {
       // album_items 新增字段：remoteId/thumbBase64/takenAt
       await _tryExecute(db, 'ALTER TABLE album_items ADD COLUMN remoteId TEXT');
-      await _tryExecute(db, 'ALTER TABLE album_items ADD COLUMN thumbBase64 TEXT');
-      await _tryExecute(db, 'ALTER TABLE album_items ADD COLUMN takenAt INTEGER');
+      await _tryExecute(
+        db,
+        'ALTER TABLE album_items ADD COLUMN thumbBase64 TEXT',
+      );
+      await _tryExecute(
+        db,
+        'ALTER TABLE album_items ADD COLUMN takenAt INTEGER',
+      );
 
       // 新表：reminders/checkins
       await _createTables(db);
     }
   }
 
+  /// 尝试执行一条 SQL 语句。
+  ///
+  /// 用于迁移时的“幂等式”字段新增，避免字段已存在时整个升级失败。
   Future<void> _tryExecute(Database db, String sql) async {
     try {
       await db.execute(sql);
@@ -136,6 +170,7 @@ class AppDatabase {
     }
   }
 
+  /// 关闭数据库连接并清空实例缓存。
   Future<void> close() async {
     final db = _db;
     if (db == null) {
@@ -145,4 +180,3 @@ class AppDatabase {
     _db = null;
   }
 }
-

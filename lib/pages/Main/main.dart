@@ -12,11 +12,18 @@ import 'package:luminous/pages/Mine/mine.dart';
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
+  /// 创建底部 Tab 主页面对应的状态对象。
   @override
   State<MainPage> createState() => _MainPageState();
 }
 
 class _MainPageState extends State<MainPage> {
+  /// 底部导航栏配置列表。
+  ///
+  /// 每一项包含：
+  /// - 默认图标路径；
+  /// - 选中图标路径；
+  /// - 展示文本。
   final List<Map<String, String>> _tablist = [
     {
       "icon": "lib/assets/home.png",
@@ -40,6 +47,17 @@ class _MainPageState extends State<MainPage> {
     },
   ];
 
+  /// 与底部 Tab 一一对应的页面实例列表。
+  ///
+  /// 使用 `const` + `IndexedStack` 组合，保证切换 Tab 时页面状态不丢失。
+  final List<Widget> _children = const [
+    HomeView(),
+    DrugView(),
+    AlbumView(),
+    MineView(),
+  ];
+
+  /// 根据 `_tablist` 构建 BottomNavigationBarItem 列表。
   List<BottomNavigationBarItem> _getTabBarWidget() {
     return List.generate(_tablist.length, (index) {
       return BottomNavigationBarItem(
@@ -54,18 +72,20 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-  List<Widget> _getChildren() {
-    return [HomeView(), DrugView(), AlbumView(), MineView()];
-  }
-
+  /// 当前选中的底部 Tab 下标。
   int _currentIndex = 0;
 
+  /// 构建主页面 UI。
+  ///
+  /// 上半部分使用 `IndexedStack` 承载四个一级页面，
+  /// 下半部分使用 `BottomNavigationBar` 负责切换。
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _getChildren()),
+      body: IndexedStack(index: _currentIndex, children: _children),
       bottomNavigationBar: BottomNavigationBar(
         onTap: (index) {
+          /// 更新当前选中的 Tab 下标。
           setState(() {
             _currentIndex = index;
           });

@@ -14,35 +14,64 @@ import 'package:luminous/utils/toast_utils.dart';
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
+  /// 创建登录页对应的状态对象。
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
+/// 登录页支持的两种方式。
 enum _LoginMethod { email, svg }
 
 class _LoginPageState extends State<LoginPage> {
+  /// 表单 key，用于触发表单校验。
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  /// 邮箱输入框控制器。
   final TextEditingController _emailController = TextEditingController();
+
+  /// 密码输入框控制器（邮箱登录与 SVG 登录共用）。
   final TextEditingController _passwordController = TextEditingController();
+
+  /// SVG 测试账号输入框控制器。
   final TextEditingController _svgUserController = TextEditingController();
+
+  /// SVG 验证码输入框控制器。
   final TextEditingController _svgCodeController = TextEditingController();
 
+  /// 全局用户控制器，用于登录成功后写入用户态并持久化。
   final UserController _userController = Get.find<UserController>();
 
+  /// 是否已勾选协议。
   bool _agreed = false;
+
+  /// 密码是否以明文显示。
   bool _obscurePassword = true;
+
+  /// 是否正在加载 SVG 验证码。
   bool _loadingSvg = false;
+
+  /// 是否正在提交登录请求。
   bool _submitting = false;
+
+  /// 当前登录方式。
   _LoginMethod _method = _LoginMethod.email;
 
+  /// SVG 验证码内容字符串。
   String? _svgContent;
+
+  /// SVG 验证码对应的 uuid/id（用于登录请求传参）。
   String? _svgCodeId;
 
+  /// 邮箱格式校验正则。
   static final RegExp _emailRegExp = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+
+  /// 密码格式校验正则（6-12 位字母或数字）。
   static final RegExp _passwordRegExp = RegExp(r'^[A-Za-z0-9]{6,12}$');
+
+  /// SVG 验证码格式校验正则（4 位数字）。
   static final RegExp _svgCodeRegExp = RegExp(r'^\d{4}$');
 
+  /// 释放输入框控制器资源。
   @override
   void dispose() {
     _emailController.dispose();
@@ -52,6 +81,7 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  /// 邮箱输入校验。
   String? _emailValidator(String? value) {
     final email = (value ?? '').trim();
     if (email.isEmpty) {
@@ -63,6 +93,7 @@ class _LoginPageState extends State<LoginPage> {
     return null;
   }
 
+  /// 密码输入校验。
   String? _passwordValidator(String? value) {
     final pwd = value ?? '';
     if (pwd.isEmpty) {
@@ -74,6 +105,7 @@ class _LoginPageState extends State<LoginPage> {
     return null;
   }
 
+  /// SVG 测试账号输入校验。
   String? _svgUserValidator(String? value) {
     final username = (value ?? '').trim();
     if (username.isEmpty) {
@@ -82,6 +114,7 @@ class _LoginPageState extends State<LoginPage> {
     return null;
   }
 
+  /// SVG 验证码输入校验。
   String? _svgCodeValidator(String? value) {
     final code = (value ?? '').trim();
     if (code.isEmpty) {
@@ -93,10 +126,14 @@ class _LoginPageState extends State<LoginPage> {
     return null;
   }
 
+  /// 点击协议/隐私政策（当前占位提示）。
   void _onTapAgreement() {
     ToastUtils.instance.show(context, '功能开发中');
   }
 
+  /// 切换登录方式。
+  ///
+  /// 当切换到 SVG 模式且当前还没有验证码时，会自动触发一次验证码获取。
   void _onMethodChanged(_LoginMethod method) {
     FocusScope.of(context).unfocus();
     setState(() {
@@ -108,6 +145,7 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  /// 获取 SVG 验证码。
   Future<void> _onFetchSvg() async {
     FocusScope.of(context).unfocus();
     if (_loadingSvg) {
@@ -152,6 +190,13 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  /// 点击“登录”按钮。
+  ///
+  /// 该方法会：
+  /// 1. 校验表单；
+  /// 2. 校验协议勾选与 SVG uuid；
+  /// 3. 调用对应登录接口；
+  /// 4. 写入用户态并返回上一页。
   Future<void> _onLoginPressed() async {
     FocusScope.of(context).unfocus();
     if (_submitting) {
@@ -227,9 +272,13 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  /// 构建登录页 UI。
   @override
   Widget build(BuildContext context) {
+    /// 当前屏幕宽度。
     final screenWidth = MediaQuery.sizeOf(context).width;
+
+    /// 宽屏时加大左右 padding，提升桌面端观感。
     final horizontalPadding = screenWidth < 600 ? 16.0 : 24.0;
 
     return Scaffold(
@@ -307,6 +356,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  /// 构建顶部返回与“注册”入口。
   Widget _buildTopBar() {
     return Row(
       children: [
@@ -346,6 +396,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  /// 构建表单区域卡片。
   Widget _buildFormCard() {
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -441,6 +492,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  /// 统一输入框样式构建方法。
   InputDecoration _buildInputDecoration({
     required String labelText,
     required String hintText,
@@ -461,6 +513,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  /// 构建“登录”按钮。
   Widget _buildLoginButton() {
     return SizedBox(
       height: 48,
@@ -489,6 +542,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  /// 构建底部提示文案。
   Widget _buildHelperText() {
     return Text(
       _method == _LoginMethod.email

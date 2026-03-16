@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+/// 认证页面（登录/注册）可复用的 UI 组件集合。
+///
+/// 设计目标：
+/// - 登录页与注册页共用相同风格的 Hero 卡、方法切换器、验证码卡、协议行；
+/// - 页面本身只负责状态与交互，把可复用 UI 抽到 components 层。
 class AuthMethodItem {
+  /// 选项显示文本（例如“邮箱登录”“SVG 测试登录”）。
   final String label;
+
+  /// 当前选项是否处于选中状态。
   final bool selected;
+
+  /// 点击该选项时的回调。
   final VoidCallback onTap;
 
+  /// 创建一个方法切换器选项对象。
   const AuthMethodItem({
     required this.label,
     required this.selected,
@@ -13,7 +24,11 @@ class AuthMethodItem {
   });
 }
 
+/// 登录/注册页顶部的 Hero 卡片。
+///
+/// 用于统一展示页面 icon、标题和副标题。
 class AuthHeroCard extends StatelessWidget {
+  /// 创建一个 Hero 卡片组件。
   const AuthHeroCard({
     super.key,
     required this.icon,
@@ -21,8 +36,13 @@ class AuthHeroCard extends StatelessWidget {
     required this.subtitle,
   });
 
+  /// Hero 左侧图标。
   final IconData icon;
+
+  /// Hero 主标题。
   final String title;
+
+  /// Hero 副标题。
   final String subtitle;
 
   @override
@@ -86,9 +106,14 @@ class AuthHeroCard extends StatelessWidget {
   }
 }
 
+/// 认证方式切换器。
+///
+/// 通常用于“邮箱登录/验证码登录”等切换场景，选中项使用高亮背景。
 class AuthMethodSwitcher extends StatelessWidget {
+  /// 创建一个方法切换器组件。
   const AuthMethodSwitcher({super.key, required this.items});
 
+  /// 可选项列表。
   final List<AuthMethodItem> items;
 
   @override
@@ -146,7 +171,14 @@ class AuthMethodSwitcher extends StatelessWidget {
   }
 }
 
+/// SVG 验证码展示卡。
+///
+/// 支持三种状态：
+/// - loading：展示进度圈；
+/// - empty：展示引导文案；
+/// - 有 svgContent：渲染 SVG 图像。
 class AuthSvgCaptchaCard extends StatelessWidget {
+  /// 创建一个 SVG 验证码卡片。
   const AuthSvgCaptchaCard({
     super.key,
     required this.isLoading,
@@ -155,9 +187,16 @@ class AuthSvgCaptchaCard extends StatelessWidget {
     this.emptyText = '点击右侧刷新获取SVG验证码',
   });
 
+  /// 是否处于加载中。
   final bool isLoading;
+
+  /// 点击“刷新”按钮回调。
   final VoidCallback onRefresh;
+
+  /// SVG 原始字符串内容（来自后端）。
   final String? svgContent;
+
+  /// 没有 SVG 内容时的提示文案。
   final String emptyText;
 
   @override
@@ -212,7 +251,11 @@ class AuthSvgCaptchaCard extends StatelessWidget {
   }
 }
 
+/// 协议与隐私政策勾选行。
+///
+/// 用于登录/注册页底部，统一实现“勾选 + 文本跳转”的交互。
 class AuthAgreementRow extends StatelessWidget {
+  /// 创建一个协议勾选行组件。
   const AuthAgreementRow({
     super.key,
     required this.agreed,
@@ -221,9 +264,16 @@ class AuthAgreementRow extends StatelessWidget {
     required this.onTapPrivacy,
   });
 
+  /// 当前是否已勾选同意。
   final bool agreed;
+
+  /// 勾选状态变更回调。
   final ValueChanged<bool> onChanged;
+
+  /// 点击“用户协议”回调。
   final VoidCallback onTapAgreement;
+
+  /// 点击“隐私政策”回调。
   final VoidCallback onTapPrivacy;
 
   @override

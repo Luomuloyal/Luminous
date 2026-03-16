@@ -12,25 +12,38 @@ import 'package:sqflite/sqflite.dart';
 class ReminderListPage extends StatefulWidget {
   const ReminderListPage({super.key});
 
+  /// 创建提醒列表页对应的状态对象。
   @override
   State<ReminderListPage> createState() => _ReminderListPageState();
 }
 
 class _ReminderListPageState extends State<ReminderListPage> {
+  /// 全局用户控制器，用于判断登录态与获取 userId。
   final UserController _userController = Get.find<UserController>();
 
+  /// 当前是否正在加载提醒列表。
   bool _loading = false;
+
+  /// 当前错误提示文案（非空时会在页面顶部展示错误 banner）。
   String? _error;
+
+  /// 当前提醒计划列表。
   List<ReminderPlan> _items = [];
 
+  /// 页面初始化时先拉取一次提醒列表。
   @override
   void initState() {
     super.initState();
     _load();
   }
 
+  /// 当前登录用户 id（未登录时为空字符串）。
   String get _userId => _userController.user.value?.id ?? '';
 
+  /// 加载提醒计划列表。
+  ///
+  /// - 成功：写入本地缓存，并重新调度系统通知；
+  /// - 失败：回退读取本地缓存。
   Future<void> _load() async {
     final userId = _userId;
     if (userId.trim().isEmpty) {
@@ -43,13 +56,18 @@ class _ReminderListPageState extends State<ReminderListPage> {
     });
 
     try {
+      // 1) 从后端拉取提醒计划列表。
       final response = await ReminderApi.list(userId: userId);
       if (!mounted) return;
+      // 2) 拿到提醒计划列表并按时间排序，便于页面展示。
       final items = response.result.items;
       setState(() {
-        _items = List<ReminderPlan>.from(items)..sort((a, b) => a.time.compareTo(b.time));
+        _items = List<ReminderPlan>.from(items)
+          ..sort((a, b) => a.time.compareTo(b.time));
       });
+      // 3) 写入本地缓存，便于离线展示与首页拼装“今日提醒”。
       await _cacheToLocal(userId, _items);
+      // 4) 根据最新计划重新调度系统通知。
       await NotificationService.instance.rescheduleAll(_items);
     } catch (e) {
       if (!mounted) return;
@@ -61,6 +79,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
     }
   }
 
+  /// 从本地缓存读取提醒计划列表（网络失败时回退使用）。
   Future<void> _loadLocal(String userId) async {
     try {
       final db = await AppDatabase.instance.database;
@@ -78,6 +97,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
     } catch (_) {}
   }
 
+  /// 把 reminders 表的一行记录转换为 `ReminderPlan`。
   ReminderPlan _rowToPlan(Map<String, dynamic> row) {
     return ReminderPlan(
       id: (row['remoteId'] ?? '').toString(),
@@ -93,31 +113,31 @@ class _ReminderListPageState extends State<ReminderListPage> {
     );
   }
 
+  /// 将提醒计划列表写入本地 reminders 表缓存。
+  ///
+  /// 使用 replace 覆盖写入，保证本地缓存与远端结果一致。
   Future<void> _cacheToLocal(String userId, List<ReminderPlan> items) async {
     final db = await AppDatabase.instance.database;
     final now = DateTime.now().millisecondsSinceEpoch;
     for (final r in items) {
       if (r.id.trim().isEmpty) continue;
-      await db.insert(
-        'reminders',
-        {
-          'remoteId': r.id,
-          'userId': userId,
-          'time': r.time,
-          'drugCode': r.drugCode,
-          'approvalNo': r.approvalNo,
-          'productName': r.productName,
-          'subtitle': r.subtitle,
-          'enabled': r.enabled ? 1 : 0,
-          'repeatRule': r.repeatRule,
-          'method': r.method,
-          'updatedAt': now,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await db.insert('reminders', {
+        'remoteId': r.id,
+        'userId': userId,
+        'time': r.time,
+        'drugCode': r.drugCode,
+        'approvalNo': r.approvalNo,
+        'productName': r.productName,
+        'subtitle': r.subtitle,
+        'enabled': r.enabled ? 1 : 0,
+        'repeatRule': r.repeatRule,
+        'method': r.method,
+        'updatedAt': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
   }
 
+  /// 构建提醒列表页 UI。
   @override
   Widget build(BuildContext context) {
     final loggedIn = _userController.isLoggedIn && _userId.isNotEmpty;
@@ -164,7 +184,9 @@ class _ReminderListPageState extends State<ReminderListPage> {
                     final index = entry.key;
                     final item = entry.value;
                     return Padding(
-                      padding: EdgeInsets.only(bottom: index == _items.length - 1 ? 0 : 10),
+                      padding: EdgeInsets.only(
+                        bottom: index == _items.length - 1 ? 0 : 10,
+                      ),
                       child: _ReminderCard(
                         item: item,
                         onTap: () => _openEdit(item),
@@ -179,6 +201,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
     );
   }
 
+  /// 构建未登录时的引导视图。
   Widget _buildNeedLogin() {
     return Center(
       child: Padding(
@@ -200,7 +223,11 @@ class _ReminderListPageState extends State<ReminderListPage> {
                   color: const Color(0xFF10B981).withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.alarm_rounded, color: Color(0xFF10B981), size: 30),
+                child: const Icon(
+                  Icons.alarm_rounded,
+                  color: Color(0xFF10B981),
+                  size: 30,
+                ),
               ),
               const SizedBox(height: 12),
               const Text(
@@ -231,7 +258,9 @@ class _ReminderListPageState extends State<ReminderListPage> {
                     backgroundColor: const Color(0xFF0EA5E9),
                     foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 46),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
                   ),
                   child: const Text('去登录'),
                 ),
@@ -243,6 +272,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
     );
   }
 
+  /// 构建错误提示 banner。
   Widget _buildErrorBanner(String text) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -272,6 +302,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
     );
   }
 
+  /// 构建空状态占位视图。
   Widget _buildEmpty() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 42),
@@ -306,11 +337,10 @@ class _ReminderListPageState extends State<ReminderListPage> {
     );
   }
 
+  /// 打开“新增提醒”页面并在保存成功后更新列表与通知调度。
   Future<void> _openCreate() async {
     final plan = await Navigator.of(context).push<ReminderPlan>(
-      MaterialPageRoute<ReminderPlan>(
-        builder: (_) => const ReminderEditPage(),
-      ),
+      MaterialPageRoute<ReminderPlan>(builder: (_) => const ReminderEditPage()),
     );
     if (!mounted) return;
     if (plan == null) return;
@@ -323,6 +353,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
     await NotificationService.instance.rescheduleAll(_items);
   }
 
+  /// 打开“编辑提醒”页面并在保存成功后更新列表与通知调度。
   Future<void> _openEdit(ReminderPlan plan) async {
     final next = await Navigator.of(context).push<ReminderPlan>(
       MaterialPageRoute<ReminderPlan>(
@@ -340,6 +371,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
     await NotificationService.instance.rescheduleAll(_items);
   }
 
+  /// 切换某条提醒的启用状态，并同步到后端/本地/系统通知。
   Future<void> _toggleEnabled(ReminderPlan plan, bool enabled) async {
     try {
       final next = await ReminderApi.upsert(
@@ -363,11 +395,15 @@ class _ReminderListPageState extends State<ReminderListPage> {
       await NotificationService.instance.rescheduleAll(_items);
     } catch (e) {
       if (mounted) {
-        ToastUtils.instance.show(context, e.toString().replaceFirst('Exception: ', ''));
+        ToastUtils.instance.show(
+          context,
+          e.toString().replaceFirst('Exception: ', ''),
+        );
       }
     }
   }
 
+  /// 删除一条提醒计划，并同步到后端/本地/系统通知。
   Future<void> _delete(ReminderPlan plan) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -402,7 +438,10 @@ class _ReminderListPageState extends State<ReminderListPage> {
       if (mounted) ToastUtils.instance.show(context, '已删除');
     } catch (e) {
       if (mounted) {
-        ToastUtils.instance.show(context, e.toString().replaceFirst('Exception: ', ''));
+        ToastUtils.instance.show(
+          context,
+          e.toString().replaceFirst('Exception: ', ''),
+        );
       }
     }
   }
@@ -416,9 +455,16 @@ class _ReminderCard extends StatelessWidget {
     required this.onDelete,
   });
 
+  /// 当前提醒计划条目。
   final ReminderPlan item;
+
+  /// 点击卡片回调（进入编辑）。
   final VoidCallback onTap;
+
+  /// 开关切换回调。
   final ValueChanged<bool> onToggle;
+
+  /// 删除回调。
   final VoidCallback onDelete;
 
   @override
@@ -448,13 +494,18 @@ class _ReminderCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: (item.enabled ? const Color(0xFF10B981) : const Color(0xFF94A3B8))
-                      .withValues(alpha: 0.12),
+                  color:
+                      (item.enabled
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFF94A3B8))
+                          .withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
                   Icons.alarm_rounded,
-                  color: item.enabled ? const Color(0xFF10B981) : const Color(0xFF94A3B8),
+                  color: item.enabled
+                      ? const Color(0xFF10B981)
+                      : const Color(0xFF94A3B8),
                 ),
               ),
               const SizedBox(width: 12),
@@ -472,7 +523,9 @@ class _ReminderCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      item.subtitle.trim().isEmpty ? '系统通知提醒' : item.subtitle.trim(),
+                      item.subtitle.trim().isEmpty
+                          ? '系统通知提醒'
+                          : item.subtitle.trim(),
                       style: const TextStyle(
                         fontSize: 12.5,
                         height: 1.4,
@@ -483,10 +536,7 @@ class _ReminderCard extends StatelessWidget {
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        Switch(
-                          value: item.enabled,
-                          onChanged: onToggle,
-                        ),
+                        Switch(value: item.enabled, onChanged: onToggle),
                         const Spacer(),
                         IconButton(
                           onPressed: onDelete,
@@ -505,4 +555,3 @@ class _ReminderCard extends StatelessWidget {
     );
   }
 }
-

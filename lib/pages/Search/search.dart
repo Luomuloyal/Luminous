@@ -25,16 +25,27 @@ import 'package:luminous/viewmodels/medicine.dart';
 class SearchView extends StatefulWidget {
   const SearchView({super.key, this.pickerMode = false});
 
+  /// 是否以“选择器模式”打开。
+  ///
+  /// - false：普通搜索页，点击结果进入详情页；
+  /// - true：药品选择器模式，点击结果直接 `Navigator.pop(item)` 返回给上层。
   final bool pickerMode;
 
+  /// 创建搜索页对应的状态对象。
   @override
   State<SearchView> createState() => _SearchViewState();
 }
 
 class _SearchViewState extends State<SearchView> {
+  /// 搜索输入框控制器。
   final TextEditingController _searchController = TextEditingController();
+
+  /// 页面滚动控制器。
+  ///
+  /// 用于监听列表滚动位置，在接近底部时自动加载下一页。
   final ScrollController _scrollController = ScrollController();
 
+  /// 搜索框下方的快捷搜索标签。
   final List<String> _quickTags = const [
     '阿莫西林',
     '布洛芬',
@@ -44,21 +55,42 @@ class _SearchViewState extends State<SearchView> {
     '胃药',
   ];
 
+  /// 最近搜索关键词列表。
+  ///
+  /// 当前仅做内存态演示，未持久化到本地。
   final List<String> _recentKeywords = ['阿莫西林', '布洛芬', '维生素D'];
 
+  /// 已提交并用于实际请求的搜索关键词。
   String _keyword = '';
+
+  /// 输入框当前实时内容（尚未真正发起请求）。
   String _draftKeyword = '';
+
+  /// 最近一次搜索失败时的错误文案。
   String? _lastError;
 
+  /// 当前已加载出来的搜索结果列表。
   final List<MedicineItem> _results = [];
   // 记录哪些药品已添加（identityKey 集合）
+  /// 已经添加到“我的药品”的 identityKey 集合。
   final Set<String> _addedKeys = {};
+
+  /// 是否正在执行“首屏/重置搜索”。
   bool _loading = false;
+
+  /// 是否正在加载下一页。
   bool _loadingMore = false;
+
+  /// 当前是否还有下一页结果。
   bool _hasMore = false;
+
+  /// 下一次请求要使用的页码。
   int _page = 1;
+
+  /// 每页大小常量。
   static const int _pageSize = 20;
 
+  /// 初始化时加载已添加药品集合，并注册滚动分页监听。
   @override
   void initState() {
     super.initState();
@@ -70,7 +102,11 @@ class _SearchViewState extends State<SearchView> {
       if (_keyword.isEmpty || !_hasMore || _loadingMore || _loading) {
         return;
       }
+
+      /// 当前列表可滚动的最大偏移值。
       final maxScroll = _scrollController.position.maxScrollExtent;
+
+      /// 当前滚动偏移值。
       final current = _scrollController.offset;
       if (current >= maxScroll - 120) {
         _search(reset: false);
@@ -78,13 +114,19 @@ class _SearchViewState extends State<SearchView> {
     });
   }
 
+  /// 读取本地“我的药品”列表里的 identityKey，用于标记哪些搜索结果已添加。
   Future<void> _loadAddedKeys() async {
     try {
+      /// 本地数据库实例。
       final db = await AppDatabase.instance.database;
+
+      /// 仅查询 identityKey 列，减少无关数据读取。
       final rows = await db.query('my_medicines', columns: ['identityKey']);
       if (!mounted) return;
       setState(() {
         _addedKeys.clear();
+
+        /// 把所有已有的 identityKey 放入 Set，便于 O(1) 判断。
         for (final row in rows) {
           final key = row['identityKey']?.toString() ?? '';
           if (key.isNotEmpty) _addedKeys.add(key);
@@ -93,6 +135,7 @@ class _SearchViewState extends State<SearchView> {
     } catch (_) {}
   }
 
+  /// 页面销毁时释放控制器资源。
   @override
   void dispose() {
     _searchController.dispose();
@@ -100,6 +143,7 @@ class _SearchViewState extends State<SearchView> {
     super.dispose();
   }
 
+  /// 构建搜索页整体 UI。
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -133,6 +177,7 @@ class _SearchViewState extends State<SearchView> {
     );
   }
 
+  /// 构建顶部标题区域。
   Widget _buildHeaderSliver() {
     return SliverToBoxAdapter(
       child: Padding(
@@ -183,6 +228,7 @@ class _SearchViewState extends State<SearchView> {
     );
   }
 
+  /// 构建搜索输入框区域。
   Widget _buildSearchBarSliver() {
     return SliverToBoxAdapter(
       child: Padding(
@@ -255,6 +301,7 @@ class _SearchViewState extends State<SearchView> {
     );
   }
 
+  /// 构建快捷搜索标签区域。
   Widget _buildQuickTagsSliver() {
     return SliverToBoxAdapter(
       child: Padding(
@@ -305,6 +352,7 @@ class _SearchViewState extends State<SearchView> {
     );
   }
 
+  /// 构建最近搜索历史区域。
   Widget _buildHistorySliver() {
     return SliverToBoxAdapter(
       child: Padding(
@@ -393,6 +441,7 @@ class _SearchViewState extends State<SearchView> {
     );
   }
 
+  /// 构建“搜索结果”标题行。
   Widget _buildResultTitleSliver() {
     return SliverToBoxAdapter(
       child: Padding(
@@ -422,6 +471,7 @@ class _SearchViewState extends State<SearchView> {
     );
   }
 
+  /// 构建真正的搜索结果列表。
   Widget _buildResultListSliver() {
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -429,8 +479,14 @@ class _SearchViewState extends State<SearchView> {
         itemCount: _results.length,
         itemBuilder: (context, index) {
           final item = _results[index];
+
+          /// 把药品对象转换成卡片展示数据。
           final cardData = _toCardData(item);
+
+          /// 当前药品在本地列表中的 identityKey。
           final identityKey = _buildIdentityKey(item);
+
+          /// 当前药品是否已在“我的药品”中。
           final isAdded = _addedKeys.contains(identityKey);
           return Padding(
             padding: EdgeInsets.only(
@@ -458,6 +514,7 @@ class _SearchViewState extends State<SearchView> {
     );
   }
 
+  /// 构建“还没输入也没搜索”时的搜索提示区域。
   Widget _buildGuideSliver() {
     return const SliverToBoxAdapter(
       child: Padding(
@@ -500,6 +557,7 @@ class _SearchViewState extends State<SearchView> {
     );
   }
 
+  /// 构建“输入了内容但还没真正搜索”时的引导区域。
   Widget _buildReadySliver() {
     return const SliverToBoxAdapter(
       child: Padding(
@@ -530,6 +588,7 @@ class _SearchViewState extends State<SearchView> {
     );
   }
 
+  /// 构建首屏搜索中的 loading 区域。
   Widget _buildLoadingSliver() {
     return const SliverToBoxAdapter(
       child: Padding(
@@ -545,6 +604,7 @@ class _SearchViewState extends State<SearchView> {
     );
   }
 
+  /// 构建分页加载中的 loading 区域。
   Widget _buildLoadingMoreSliver() {
     return const SliverToBoxAdapter(
       child: Padding(
@@ -560,6 +620,7 @@ class _SearchViewState extends State<SearchView> {
     );
   }
 
+  /// 构建空结果占位区域。
   Widget _buildEmptySliver() {
     return const SliverToBoxAdapter(
       child: Padding(
@@ -593,6 +654,7 @@ class _SearchViewState extends State<SearchView> {
     );
   }
 
+  /// 构建搜索失败时的错误区域。
   Widget _buildErrorSliver(String message) {
     return SliverToBoxAdapter(
       child: Padding(
@@ -657,6 +719,7 @@ class _SearchViewState extends State<SearchView> {
     );
   }
 
+  /// 点击快捷标签/历史记录时直接应用关键词并触发搜索。
   void _applyQuickTag(String tag) {
     _searchController.text = tag;
     _searchController.selection = TextSelection.collapsed(offset: tag.length);
@@ -669,7 +732,11 @@ class _SearchViewState extends State<SearchView> {
     _search(reset: true);
   }
 
+  /// 提交搜索。
+  ///
+  /// 该方法会把输入框内容同步到 `_keyword`，再触发一次重置搜索。
   void _commitSearch() {
+    /// 输入框中当前的关键词。
     final keyword = _searchController.text.trim();
     if (keyword.isEmpty) {
       ToastUtils.instance.show(context, '请输入产品名称、批准文号或生产单位后再搜索');
@@ -685,6 +752,7 @@ class _SearchViewState extends State<SearchView> {
     FocusScope.of(context).unfocus();
   }
 
+  /// 清空当前搜索内容与结果列表。
   void _clearKeyword() {
     _searchController.clear();
     setState(() {
@@ -697,6 +765,7 @@ class _SearchViewState extends State<SearchView> {
     });
   }
 
+  /// 清空最近搜索历史。
   void _clearHistory() {
     setState(() {
       _recentKeywords.clear();
@@ -704,6 +773,11 @@ class _SearchViewState extends State<SearchView> {
     ToastUtils.instance.show(context, '最近搜索已清空');
   }
 
+  /// 更新最近搜索列表。
+  ///
+  /// 规则：
+  /// - 相同关键词去重后移到最前；
+  /// - 最多保留 8 条。
   void _updateRecentKeywords(String keyword) {
     _recentKeywords.remove(keyword);
     _recentKeywords.insert(0, keyword);
@@ -712,7 +786,9 @@ class _SearchViewState extends State<SearchView> {
     }
   }
 
+  /// 将 `MedicineItem` 转为搜索结果卡片所需的数据对象。
   SearchResultItemData _toCardData(MedicineItem item) {
+    /// 卡片下方的补充提示。
     final tips = item.approvalNo.isNotEmpty
         ? '批准文号: ${item.approvalNo}'
         : item.displayTips;
@@ -724,15 +800,21 @@ class _SearchViewState extends State<SearchView> {
     );
   }
 
+  /// 生成药品的 identityKey。
+  ///
+  /// 优先级：drugCode > approvalNo > productName。
   String _buildIdentityKey(MedicineItem item) {
     if (item.drugCode.isNotEmpty) return 'drugCode:${item.drugCode}';
     if (item.approvalNo.isNotEmpty) return 'approvalNo:${item.approvalNo}';
     return 'name:${item.productName}';
   }
 
+  /// 将一条搜索结果加入“我的药品”。
   Future<void> _addToMyMedicines(MedicineItem item) async {
+    /// 当前药品的唯一 identityKey。
     final identityKey = _buildIdentityKey(item);
     try {
+      /// 本地数据库实例。
       final db = await AppDatabase.instance.database;
       await db.insert('my_medicines', {
         'identityKey': identityKey,
@@ -766,7 +848,12 @@ class _SearchViewState extends State<SearchView> {
     }
   }
 
+  /// 执行搜索请求。
+  ///
+  /// - `reset=true`：重置结果并从第一页开始搜；
+  /// - `reset=false`：在已有结果后继续加载下一页。
   Future<void> _search({required bool reset}) async {
+    /// 真正用于请求的关键词。
     final keyword = _keyword.trim();
     if (keyword.isEmpty) {
       return;
@@ -794,6 +881,7 @@ class _SearchViewState extends State<SearchView> {
     }
 
     try {
+      /// 调用药品搜索接口获取当前页结果。
       final response = await MedicineApi.search(
         keyword: keyword,
         page: _page,
@@ -804,6 +892,7 @@ class _SearchViewState extends State<SearchView> {
         return;
       }
 
+      /// 当前页返回的分页结果对象。
       final result = response.result;
       setState(() {
         _results.addAll(result.items);
