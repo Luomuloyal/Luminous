@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:luminous/pages/Search/search.dart';
-import 'package:luminous/stores/app_database.dart';
+import 'package:luminous/stores/my_medicine_repository.dart';
+import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/medicine.dart';
 
@@ -23,6 +25,9 @@ class MedicinePickerPage extends StatefulWidget {
 ///
 /// 页面会先展示本地“我的药品”，必要时再跳到搜索页做更大范围的选择。
 class _MedicinePickerPageState extends State<MedicinePickerPage> {
+  /// 当前登录用户控制器。
+  final UserController _userController = Get.find<UserController>();
+
   /// 当前是否正在加载“我的药品”列表。
   bool _loading = false;
 
@@ -41,13 +46,18 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
     if (_loading) return;
     setState(() => _loading = true);
     try {
-      /// 本地数据库实例。
-      final db = await AppDatabase.instance.database;
-
-      /// 查询到的药品行数据。
-      final rows = await db.query('my_medicines', orderBy: 'createdAt DESC');
+      final rows = await myMedicineRepository.loadLocalRows(userId: _userId);
       if (!mounted) return;
       setState(() => _rows = rows);
+
+      if (_userId.isNotEmpty) {
+        await myMedicineRepository.syncRemote(_userId);
+        final syncedRows = await myMedicineRepository.loadLocalRows(
+          userId: _userId,
+        );
+        if (!mounted) return;
+        setState(() => _rows = syncedRows);
+      }
     } catch (_) {
       if (mounted) {
         ToastUtils.instance.show(context, '加载我的药品失败');
@@ -56,6 +66,9 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
       if (mounted) setState(() => _loading = false);
     }
   }
+
+  /// 当前登录用户 id（未登录时为空字符串）。
+  String get _userId => _userController.user.value?.id ?? '';
 
   /// 构建药品选择页 UI。
   @override

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:luminous/api/medicine_api.dart';
 import 'package:luminous/components/search.dart';
 import 'package:luminous/pages/Drug/medicine_detail.dart';
-import 'package:luminous/stores/app_database.dart';
+import 'package:luminous/stores/my_medicine_repository.dart';
+import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/medicine.dart';
 
@@ -47,6 +49,9 @@ class SearchView extends StatefulWidget {
 /// - 分页链路：`_hasMore/_page/_loadingMore` 控制滚动到底后的下一页请求；
 /// - 本地联动链路：`_addedKeys` 用于把搜索结果和“我的药品”列表对齐。
 class _SearchViewState extends State<SearchView> {
+  /// 当前登录用户控制器。
+  final UserController _userController = Get.find<UserController>();
+
   /// 搜索输入框控制器。
   final TextEditingController _searchController = TextEditingController();
 
@@ -129,11 +134,17 @@ class _SearchViewState extends State<SearchView> {
   /// 每页大小常量。
   static const int _pageSize = 20;
 
+  /// 监听登录用户变化的 worker。
+  Worker? _userWorker;
+
   /// 初始化时加载已添加药品集合，并注册滚动分页监听。
   @override
   void initState() {
     super.initState();
     _loadAddedKeys();
+    _userWorker = ever<dynamic>(_userController.user, (_) {
+      _loadAddedKeys();
+    });
     _scrollController.addListener(() {
       if (!_scrollController.hasClients) {
         return;
@@ -159,20 +170,12 @@ class _SearchViewState extends State<SearchView> {
   /// 已经存在于本地列表里，避免用户重复点击“添加”。
   Future<void> _loadAddedKeys() async {
     try {
-      /// 本地数据库实例。
-      final db = await AppDatabase.instance.database;
-
-      /// 仅查询 identityKey 列，减少无关数据读取。
-      final rows = await db.query('my_medicines', columns: ['identityKey']);
+      /// 当前作用域下已经存在的 identityKey 集合。
+      final keys = await myMedicineRepository.loadIdentityKeys(userId: _userId);
       if (!mounted) return;
       setState(() {
         _addedKeys.clear();
-
-        /// 把所有已有的 identityKey 放入 Set，便于 O(1) 判断。
-        for (final row in rows) {
-          final key = row['identityKey']?.toString() ?? '';
-          if (key.isNotEmpty) _addedKeys.add(key);
-        }
+        _addedKeys.addAll(keys);
       });
     } catch (_) {}
   }
@@ -180,10 +183,14 @@ class _SearchViewState extends State<SearchView> {
   /// 页面销毁时释放控制器资源。
   @override
   void dispose() {
+    _userWorker?.dispose();
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
+
+  /// 当前登录用户 id（未登录时为空字符串）。
+  String get _userId => _userController.user.value?.id ?? '';
 
   /// 构建搜索页整体 UI。
   ///
@@ -862,9 +869,10 @@ class _SearchViewState extends State<SearchView> {
   ///
   /// 优先级：drugCode > approvalNo > productName。
   String _buildIdentityKey(MedicineItem item) {
-    if (item.drugCode.isNotEmpty) return 'drugCode:${item.drugCode}';
-    if (item.approvalNo.isNotEmpty) return 'approvalNo:${item.approvalNo}';
-    return 'name:${item.productName}';
+    return myMedicineRepository.buildScopedIdentityKeyFromMedicine(
+      item,
+      userId: _userId,
+    );
   }
 
   /// 将一条搜索结果加入“我的药品”。
@@ -875,37 +883,31 @@ class _SearchViewState extends State<SearchView> {
     /// 当前药品的唯一 identityKey。
     final identityKey = _buildIdentityKey(item);
     try {
-      /// 本地数据库实例。
-      final db = await AppDatabase.instance.database;
-      await db.insert('my_medicines', {
-        'identityKey': identityKey,
-        'drugCode': item.drugCode,
-        'approvalNo': item.approvalNo,
-        'productName': item.productName,
-        'dosageForm': item.dosageForm,
-        'specification': item.specification,
-        'manufacturer': item.manufacturer.isNotEmpty
-            ? item.manufacturer
-            : item.marketingAuthorizationHolder,
-        'source': 'search',
-        'createdAt': DateTime.now().millisecondsSinceEpoch,
-      });
+      final result = await myMedicineRepository.addMedicine(
+        item: item,
+        source: 'search',
+        userId: _userId,
+      );
       if (!mounted) return;
-      setState(() {
-        _addedKeys.add(identityKey);
-      });
-      ToastUtils.instance.show(context, '已添加到我的药品');
-    } catch (e) {
-      if (!mounted) return;
-      final msg = e.toString();
-      if (msg.contains('UNIQUE')) {
+      if (!result.added) {
         ToastUtils.instance.show(context, '该药品已在我的药品列表中');
         setState(() {
           _addedKeys.add(identityKey);
         });
-      } else {
-        ToastUtils.instance.show(context, '添加失败，请重试');
+        return;
       }
+      setState(() {
+        _addedKeys.add(identityKey);
+      });
+      ToastUtils.instance.show(
+        context,
+        _userId.isNotEmpty && !result.remoteSynced
+            ? '已添加到我的药品，待同步到云端'
+            : '已添加到我的药品',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ToastUtils.instance.show(context, '添加失败，请重试');
     }
   }
 

@@ -47,6 +47,15 @@ class HttpConstants {
   /// 用户登录接口。
   static const String LOGIN_USER = '/login-user';
 
+  /// 我的药品新增/更新接口。
+  static const String MY_MEDICINE_UPSERT = '/my-medicine-upsert';
+
+  /// 我的药品删除接口。
+  static const String MY_MEDICINE_DELETE = '/my-medicine-delete';
+
+  /// 我的药品列表接口。
+  static const String MY_MEDICINE_LIST = '/my-medicine-list';
+
   /// 首页今日提醒接口。
   static const String TODAY_REMINDERS = '/today-reminders';
 

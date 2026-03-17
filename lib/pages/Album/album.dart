@@ -33,6 +33,9 @@ class _AlbumViewState extends State<AlbumView> {
   /// 用于判断当前是否登录，以及读取当前用户 id。
   final UserController _userController = Get.find<UserController>();
 
+  /// 监听登录用户变化的 worker。
+  Worker? _userWorker;
+
   /// 相册页当前是否正在加载数据。
   bool _loading = false;
 
@@ -53,7 +56,16 @@ class _AlbumViewState extends State<AlbumView> {
   @override
   void initState() {
     super.initState();
+    _userWorker = ever<dynamic>(_userController.user, (_) {
+      _load();
+    });
     _load();
+  }
+
+  @override
+  void dispose() {
+    _userWorker?.dispose();
+    super.dispose();
   }
 
   /// 加载相册页数据。

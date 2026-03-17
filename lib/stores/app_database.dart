@@ -22,7 +22,7 @@ class AppDatabase {
   /// 当前数据库 schema 版本号。
   ///
   /// 版本变更时需要同步更新 `_upgradeTables` 中的迁移逻辑。
-  static const int _version = 2;
+  static const int _version = 3;
 
   /// 已打开的数据库实例缓存。
   Database? _db;
@@ -63,6 +63,8 @@ class AppDatabase {
       CREATE TABLE IF NOT EXISTS my_medicines (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         identityKey TEXT NOT NULL UNIQUE,
+        userId TEXT NOT NULL DEFAULT '',
+        remoteId TEXT,
         drugCode TEXT,
         approvalNo TEXT,
         productName TEXT,
@@ -75,6 +77,9 @@ class AppDatabase {
     ''');
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_my_medicines_createdAt ON my_medicines(createdAt DESC)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_my_medicines_userId_createdAt ON my_medicines(userId, createdAt DESC)',
     );
 
     // album_items：相册记录（先存元数据，后续接入真实图片 filePath）
@@ -155,6 +160,23 @@ class AppDatabase {
       );
 
       // 新表：reminders/checkins
+      await _createTables(db);
+    }
+
+    if (oldVersion < 3) {
+      await _tryExecute(
+        db,
+        "ALTER TABLE my_medicines ADD COLUMN userId TEXT NOT NULL DEFAULT ''",
+      );
+      await _tryExecute(
+        db,
+        'ALTER TABLE my_medicines ADD COLUMN remoteId TEXT',
+      );
+      await _tryExecute(
+        db,
+        "UPDATE my_medicines SET identityKey = 'guest|' || identityKey "
+        "WHERE identityKey NOT LIKE 'guest|%' AND identityKey NOT LIKE 'user:%|%'",
+      );
       await _createTables(db);
     }
   }

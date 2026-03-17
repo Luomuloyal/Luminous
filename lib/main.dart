@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:luminous/routes/routes.dart';
+import 'package:luminous/stores/session_sync_service.dart';
 import 'package:luminous/stores/token_manager.dart';
 import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/notification_service.dart';
@@ -24,6 +27,11 @@ Future<void> main() async {
 
   /// 从本地恢复登录态。
   await userController.init();
+
+  /// 尝试在后台恢复当前用户的云端数据。
+  if (userController.isLoggedIn) {
+    unawaited(sessionSyncService.syncForUser(userController.user.value?.id));
+  }
 
   /// 启动根应用组件。
   runApp(getRootWidget());

@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:luminous/api/scan_api.dart';
 import 'package:luminous/pages/Drug/medicine_detail.dart';
 import 'package:luminous/stores/app_database.dart';
+import 'package:luminous/stores/my_medicine_repository.dart';
 import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/gallery_saver.dart';
 import 'package:luminous/utils/toast_utils.dart';
@@ -973,32 +974,27 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
       drugCodeRemark: '',
     );
 
-    /// 当前药品的 identityKey。
-    final identityKey = _buildIdentityKey(c);
     try {
-      /// 本地数据库实例。
-      final db = await AppDatabase.instance.database;
-      await db.insert('my_medicines', {
-        'identityKey': identityKey,
-        'drugCode': item.drugCode,
-        'approvalNo': item.approvalNo,
-        'productName': item.productName,
-        'dosageForm': item.dosageForm,
-        'specification': item.specification,
-        'manufacturer': item.manufacturer,
-        'source': 'scan',
-        'createdAt': DateTime.now().millisecondsSinceEpoch,
-      });
+      final result = await myMedicineRepository.addMedicine(
+        item: item,
+        source: 'scan',
+        userId: _userController.user.value?.id,
+      );
       if (!mounted) return;
-      ToastUtils.instance.show(context, '已添加到我的药品');
+      if (!result.added) {
+        ToastUtils.instance.show(context, '该药品已在我的药品列表中');
+        return;
+      }
+      ToastUtils.instance.show(
+        context,
+        (_userController.user.value?.id ?? '').isNotEmpty &&
+                !result.remoteSynced
+            ? '已添加到我的药品，待同步到云端'
+            : '已添加到我的药品',
+      );
     } catch (e) {
       if (!mounted) return;
-      final msg = e.toString();
-      if (msg.contains('UNIQUE')) {
-        ToastUtils.instance.show(context, '该药品已在我的药品列表中');
-      } else {
-        ToastUtils.instance.show(context, '添加失败，请重试');
-      }
+      ToastUtils.instance.show(context, '添加失败，请重试');
     }
   }
 

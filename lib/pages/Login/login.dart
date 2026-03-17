@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/api/auth_api.dart';
 import 'package:luminous/components/auth.dart';
+import 'package:luminous/stores/session_sync_service.dart';
+import 'package:luminous/stores/token_manager.dart';
 import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/toast_utils.dart';
 
@@ -243,7 +245,17 @@ class _LoginPageState extends State<LoginPage> {
               uuid: _svgCodeId!,
             );
 
-      await _userController.setUser(response.result);
+      final loginResult = response.result;
+      if (loginResult.token.trim().isNotEmpty) {
+        await tokenManager.setToken(loginResult.token.trim());
+      } else {
+        await tokenManager.deleteToken();
+      }
+
+      await _userController.setUser(loginResult.user);
+      final syncErrors = await sessionSyncService.syncForUser(
+        loginResult.user.id,
+      );
 
       if (!mounted) {
         return;
@@ -251,7 +263,9 @@ class _LoginPageState extends State<LoginPage> {
 
       ToastUtils.instance.show(
         context,
-        response.msg.isEmpty ? '登录成功' : response.msg,
+        syncErrors.isEmpty
+            ? (response.msg.isEmpty ? '登录成功' : response.msg)
+            : '登录成功，但部分云端数据同步失败',
       );
 
       await Future<void>.delayed(const Duration(milliseconds: 500));

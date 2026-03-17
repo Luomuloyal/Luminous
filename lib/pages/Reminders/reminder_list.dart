@@ -29,6 +29,9 @@ class _ReminderListPageState extends State<ReminderListPage> {
   /// 全局用户控制器，用于判断登录态与获取 userId。
   final UserController _userController = Get.find<UserController>();
 
+  /// 监听登录用户变化的 worker。
+  Worker? _userWorker;
+
   /// 当前是否正在加载提醒列表。
   bool _loading = false;
 
@@ -42,7 +45,16 @@ class _ReminderListPageState extends State<ReminderListPage> {
   @override
   void initState() {
     super.initState();
+    _userWorker = ever<dynamic>(_userController.user, (_) {
+      _load();
+    });
     _load();
+  }
+
+  @override
+  void dispose() {
+    _userWorker?.dispose();
+    super.dispose();
   }
 
   /// 当前登录用户 id（未登录时为空字符串）。
@@ -55,6 +67,13 @@ class _ReminderListPageState extends State<ReminderListPage> {
   Future<void> _load() async {
     final userId = _userId;
     if (userId.trim().isEmpty) {
+      if (mounted) {
+        setState(() {
+          _items = [];
+          _error = null;
+          _loading = false;
+        });
+      }
       return;
     }
     if (_loading) return;

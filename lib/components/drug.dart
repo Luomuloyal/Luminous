@@ -41,7 +41,7 @@ class DrugPage extends StatelessWidget {
   final ValueChanged<Map<String, dynamic>> onTapMedicineRow;
 
   /// 点击删除药品回调。
-  final ValueChanged<int> onDeleteMedicine;
+  final ValueChanged<Map<String, dynamic>> onDeleteMedicine;
 
   @override
   Widget build(BuildContext context) {
@@ -385,7 +385,7 @@ class DrugMyMedicinesListSliver extends StatelessWidget {
   final List<Map<String, dynamic>> rows;
 
   /// 删除药品回调。
-  final ValueChanged<int> onDeleteMedicine;
+  final ValueChanged<Map<String, dynamic>> onDeleteMedicine;
 
   /// 点击药品行回调。
   final ValueChanged<Map<String, dynamic>> onTapRow;
@@ -402,7 +402,7 @@ class DrugMyMedicinesListSliver extends StatelessWidget {
             padding: EdgeInsets.only(bottom: index == rows.length - 1 ? 0 : 10),
             child: DrugMyMedicineCard(
               row: row,
-              onDelete: () => onDeleteMedicine(row['id'] as int),
+              onDelete: () => onDeleteMedicine(row),
               onTap: () => onTapRow(row),
             ),
           );

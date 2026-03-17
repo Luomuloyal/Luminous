@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:get/get.dart';
 import 'package:luminous/constants/constants.dart';
+import 'package:luminous/stores/token_manager.dart';
+import 'package:luminous/utils/notification_service.dart';
 import 'package:luminous/viewmodels/auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -66,5 +68,7 @@ class UserController extends GetxController {
     user.value = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(GlobalConstants.USER_KEY);
+    await tokenManager.deleteToken();
+    await NotificationService.instance.cancelAll();
   }
 }

@@ -51,6 +51,45 @@ class RegisterResult {
   }
 }
 
+/// 登录接口返回对象。
+///
+/// 兼容两种返回结构：
+/// - 旧结构：`result` 直接就是用户对象；
+/// - 新结构：`result.user + result.token`。
+class LoginResult {
+  /// 登录后的用户信息。
+  final UserSafe user;
+
+  /// 登录后返回的访问令牌。
+  ///
+  /// 当前后端如果还没返回 token，这里会是空字符串。
+  final String token;
+
+  /// 创建一个登录结果对象。
+  const LoginResult({required this.user, required this.token});
+
+  /// 从后端 JSON 反序列化为 `LoginResult`。
+  factory LoginResult.fromJson(Map<String, dynamic> json) {
+    final rawUser = json['user'];
+    final userJson = rawUser is Map<String, dynamic>
+        ? rawUser
+        : rawUser is Map
+        ? rawUser.map((key, value) => MapEntry(key.toString(), value))
+        : json;
+
+    return LoginResult(
+      user: UserSafe.fromJson(userJson),
+      token:
+          (json['token'] ??
+                  json['accessToken'] ??
+                  json['access_token'] ??
+                  json['jwt'] ??
+                  '')
+              .toString(),
+    );
+  }
+}
+
 /// 登录后前端使用的“安全用户对象”。
 ///
 /// 该对象用于：

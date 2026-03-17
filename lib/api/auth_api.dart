@@ -82,12 +82,12 @@ class AuthApi {
 
   /// 使用邮箱密码登录。
   ///
-  /// 接口返回值会被解析为安全用户对象 `UserSafe`，供全局用户态使用。
-  static Future<ApiResult<UserSafe>> loginWithEmail({
+  /// 接口返回值会被解析为 `LoginResult`，兼容“仅用户信息”与“用户+token”两种结构。
+  static Future<ApiResult<LoginResult>> loginWithEmail({
     required String email,
     required String password,
   }) {
-    return dioRequest.post<UserSafe>(
+    return dioRequest.post<LoginResult>(
       HttpConstants.LOGIN_USER,
       data: {
         'type': 2,
@@ -97,20 +97,20 @@ class AuthApi {
       },
       showLoading: true,
       loadingText: '登录中...',
-      decoder: (json) => UserSafe.fromJson(_asMap(json)),
+      decoder: (json) => LoginResult.fromJson(_asMap(json)),
     );
   }
 
   /// 使用 SVG 验证码登录。
   ///
   /// 主要用于验证码联调场景，与邮箱登录的区别是必须附带 `code` 和 `uuid`。
-  static Future<ApiResult<UserSafe>> loginWithSvg({
+  static Future<ApiResult<LoginResult>> loginWithSvg({
     required String username,
     required String password,
     required String code,
     required String uuid,
   }) {
-    return dioRequest.post<UserSafe>(
+    return dioRequest.post<LoginResult>(
       HttpConstants.LOGIN_USER,
       data: {
         'type': 1,
@@ -121,7 +121,7 @@ class AuthApi {
       },
       showLoading: true,
       loadingText: '登录中...',
-      decoder: (json) => UserSafe.fromJson(_asMap(json)),
+      decoder: (json) => LoginResult.fromJson(_asMap(json)),
     );
   }
 

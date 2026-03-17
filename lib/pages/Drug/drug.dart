@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:luminous/components/drug.dart';
-import 'package:luminous/stores/app_database.dart';
+import 'package:luminous/stores/my_medicine_repository.dart';
+import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/drug.dart';
 import 'package:luminous/viewmodels/medicine.dart';
@@ -30,6 +32,12 @@ class DrugView extends StatefulWidget {
 ///
 /// 页面本身不维护复杂业务计算，核心是把顶部快捷入口和本地“我的药品”列表串起来。
 class _DrugViewState extends State<DrugView> {
+  /// 当前登录用户控制器。
+  final UserController _userController = Get.find<UserController>();
+
+  /// 监听登录用户变化的 worker。
+  Worker? _userWorker;
+
   /// 药品页顶部“快捷入口”的固定配置列表。
   final List<DrugQuickEntry> _quickEntries = const [
     DrugQuickEntry(
@@ -65,17 +73,16 @@ class _DrugViewState extends State<DrugView> {
   @override
   void initState() {
     super.initState();
+    _userWorker = ever<dynamic>(_userController.user, (_) {
+      _loadMyMedicines();
+    });
     _loadMyMedicines();
   }
 
-  /// 依赖变化时刷新列表。
-  ///
-  /// 这样在从搜索页/识别页返回后，列表能自动更新。
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // 每次页面回到前台时刷新列表（比如从搜索页添加了药品后返回）
-    _loadMyMedicines();
+  void dispose() {
+    _userWorker?.dispose();
+    super.dispose();
   }
 
   /// 从本地数据库加载“我的药品”列表。
@@ -85,15 +92,32 @@ class _DrugViewState extends State<DrugView> {
       _loadingMedicines = true;
     });
     try {
-      /// 本地数据库实例。
-      final db = await AppDatabase.instance.database;
-
-      /// 按创建时间倒序查询 my_medicines 表得到的行数据。
-      final rows = await db.query('my_medicines', orderBy: 'createdAt DESC');
+      /// 先读取当前作用域下的本地缓存。
+      final rows = await myMedicineRepository.loadLocalRows(userId: _userId);
       if (!mounted) return;
       setState(() {
         _myMedicines = rows;
       });
+
+      if (_userId.isNotEmpty) {
+        try {
+          await myMedicineRepository.syncRemote(_userId);
+          final syncedRows = await myMedicineRepository.loadLocalRows(
+            userId: _userId,
+          );
+          if (!mounted) return;
+          setState(() {
+            _myMedicines = syncedRows;
+          });
+        } catch (e) {
+          if (mounted) {
+            ToastUtils.instance.show(
+              context,
+              e.toString().replaceFirst('Exception: ', ''),
+            );
+          }
+        }
+      }
     } catch (e) {
       if (mounted) {
         ToastUtils.instance.show(context, '加载我的药品失败');
@@ -107,14 +131,15 @@ class _DrugViewState extends State<DrugView> {
     }
   }
 
+  /// 当前登录用户 id（未登录时为空字符串）。
+  String get _userId => _userController.user.value?.id ?? '';
+
   /// 从“我的药品”列表删除一条药品记录。
   ///
   /// 删除完成后会自动重新加载列表并提示用户。
-  Future<void> _deleteMedicine(int id) async {
+  Future<void> _deleteMedicine(Map<String, dynamic> row) async {
     try {
-      /// 本地数据库实例。
-      final db = await AppDatabase.instance.database;
-      await db.delete('my_medicines', where: 'id = ?', whereArgs: [id]);
+      await myMedicineRepository.deleteMedicine(row, userId: _userId);
       await _loadMyMedicines();
       if (mounted) {
         ToastUtils.instance.show(context, '已从我的药品中移除');
@@ -134,7 +159,11 @@ class _DrugViewState extends State<DrugView> {
       myMedicines: _myMedicines,
       loadingMedicines: _loadingMedicines,
       onRefresh: _loadMyMedicines,
-      onTapSearch: () => Navigator.pushNamed(context, '/search'),
+      onTapSearch: () {
+        Navigator.pushNamed(context, '/search').then((_) {
+          _loadMyMedicines();
+        });
+      },
       onTapQuickEntry: _onTapQuick,
       onTapMedicineRow: _openMedicineDetail,
       onDeleteMedicine: _deleteMedicine,

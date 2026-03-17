@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:luminous/constants/constants.dart';
+import 'package:luminous/stores/token_manager.dart';
 import 'package:luminous/utils/loading_utils.dart';
 
 /// 通用接口返回包装。
@@ -68,7 +69,13 @@ class DioRequest {
 
     _dio.interceptors.add(
       InterceptorsWrapper(
-        onRequest: (options, handler) {
+        onRequest: (options, handler) async {
+          /// 本地缓存的访问令牌。
+          final token = await tokenManager.getToken();
+          if (token.trim().isNotEmpty &&
+              !options.headers.containsKey('Authorization')) {
+            options.headers['Authorization'] = 'Bearer ${token.trim()}';
+          }
           if (options.extra[_showLoadingKey] == true) {
             LoadingUtils.show(
               text: options.extra[_loadingTextKey]?.toString() ?? '加载中...',

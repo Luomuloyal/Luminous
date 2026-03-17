@@ -42,6 +42,9 @@ class _HomeViewState extends State<HomeView> {
   /// 用来读取用户 id，以便请求“今日提醒”接口和查询本地提醒/打卡数据。
   final UserController _userController = Get.find<UserController>();
 
+  /// 监听登录用户变化的 worker。
+  Worker? _userWorker;
+
   /// 首页顶部随机展示的健康提示文案。
   ///
   /// 页面初始化时会从这里随机挑选一条，展示在顶部绿色卡片中。
@@ -162,7 +165,16 @@ class _HomeViewState extends State<HomeView> {
     super.initState();
     // 随机选取一条温馨提示
     _todayTip = _healthTips[Random().nextInt(_healthTips.length)];
+    _userWorker = ever<dynamic>(_userController.user, (_) {
+      _fetchTodayReminders();
+    });
     _fetchTodayReminders();
+  }
+
+  @override
+  void dispose() {
+    _userWorker?.dispose();
+    super.dispose();
   }
 
   /// 构建首页整体 UI。
