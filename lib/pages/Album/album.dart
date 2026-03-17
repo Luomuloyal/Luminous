@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/api/scan_api.dart';
 import 'package:luminous/components/album.dart';
+import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/pages/Drug/medicine_detail.dart';
 import 'package:luminous/stores/app_database.dart';
 import 'package:luminous/stores/user_controller.dart';
+import 'package:luminous/utils/message_utils.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/album.dart';
 import 'package:luminous/viewmodels/medicine.dart';
@@ -106,7 +108,7 @@ class _AlbumViewState extends State<AlbumView> {
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+      setState(() => _error = MessageUtils.extractError(e));
     } finally {
       if (mounted) {
         setState(() => _loading = false);
@@ -204,6 +206,7 @@ class _AlbumViewState extends State<AlbumView> {
   @override
   Widget build(BuildContext context) {
     return AlbumPage(
+      headerPalette: SoftBannerPalettes.album,
       loading: _loading,
       isLoggedIn: _userController.isLoggedIn,
       error: _error,

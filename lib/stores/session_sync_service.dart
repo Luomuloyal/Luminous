@@ -1,6 +1,7 @@
 import 'package:luminous/api/reminder_api.dart';
 import 'package:luminous/stores/my_medicine_repository.dart';
 import 'package:luminous/stores/reminder_local_store.dart';
+import 'package:luminous/utils/message_utils.dart';
 import 'package:luminous/utils/notification_service.dart';
 import 'package:luminous/viewmodels/reminder.dart';
 
@@ -63,7 +64,7 @@ class SessionSyncService {
 
   /// 生成同步失败提示文案。
   String _buildErrorText(String module, Object error) {
-    final text = error.toString().replaceFirst('Exception: ', '');
+    final text = MessageUtils.extractError(error);
     return '$module同步失败：$text';
   }
 }

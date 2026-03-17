@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/viewmodels/auth.dart';
 import 'package:luminous/viewmodels/mine.dart';
 
@@ -13,10 +14,14 @@ import 'package:luminous/viewmodels/mine.dart';
 class MineProfileCard extends StatelessWidget {
   const MineProfileCard({
     super.key,
+    required this.palette,
     required this.user,
     required this.onTapProfile,
     required this.onTapAction,
   });
+
+  /// 顶部横幅配色。
+  final SoftBannerPalette palette;
 
   /// 当前登录用户（未登录时为 null）。
   final UserSafe? user;
@@ -32,88 +37,76 @@ class MineProfileCard extends StatelessWidget {
     final isLoggedIn = user?.hasData ?? false;
     final displayUser = user;
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x22000000),
-            blurRadius: 16,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: onTapProfile,
-            child: Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.22),
-              ),
-              child: Icon(
-                isLoggedIn
-                    ? Icons.verified_user_rounded
-                    : Icons.person_outline_rounded,
-                color: Colors.white,
-                size: 28,
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: GestureDetector(
+    return SoftBannerCard(
+      palette: palette,
+      builder: (context, theme) {
+        return Row(
+          children: [
+            GestureDetector(
               onTap: onTapProfile,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isLoggedIn ? displayUser!.displayTitle : '立即登录',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    isLoggedIn
-                        ? displayUser!.displaySubtitle
-                        : '登录后可管理账号信息与同步个人数据',
-                    style: const TextStyle(
-                      color: Color(0xE6FFFFFF),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.86),
+                  border: Border.all(color: theme.borderColor),
+                ),
+                child: Icon(
+                  isLoggedIn
+                      ? Icons.verified_user_rounded
+                      : Icons.person_outline_rounded,
+                  color: theme.accentColor,
+                  size: 28,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 10),
-          FilledButton(
-            onPressed: onTapAction,
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF0F766E),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(999),
+            const SizedBox(width: 14),
+            Expanded(
+              child: GestureDetector(
+                onTap: onTapProfile,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isLoggedIn ? displayUser!.displayTitle : '立即登录',
+                      style: TextStyle(
+                        color: theme.textColor,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isLoggedIn
+                          ? displayUser!.displaySubtitle
+                          : '登录后可管理账号信息与同步个人数据',
+                      style: TextStyle(
+                        color: theme.secondaryTextColor,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              minimumSize: const Size(88, 40),
             ),
-            child: Text(isLoggedIn ? '退出登录' : '去登录'),
-          ),
-        ],
-      ),
+            const SizedBox(width: 10),
+            FilledButton(
+              onPressed: onTapAction,
+              style: FilledButton.styleFrom(
+                backgroundColor: theme.surfaceColor,
+                foregroundColor: theme.surfaceTextColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                minimumSize: const Size(88, 40),
+              ),
+              child: Text(isLoggedIn ? '退出登录' : '去登录'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -124,6 +117,7 @@ class MineProfileCard extends StatelessWidget {
 class MinePage extends StatelessWidget {
   const MinePage({
     super.key,
+    required this.headerPalette,
     required this.user,
     required this.quickActions,
     required this.onTapProfile,
@@ -133,6 +127,9 @@ class MinePage extends StatelessWidget {
     required this.onTapSecurity,
     required this.onTapAbout,
   });
+
+  /// 顶部横幅配色。
+  final SoftBannerPalette headerPalette;
 
   /// 当前用户对象。
   final UserSafe? user;
@@ -185,6 +182,7 @@ class MinePage extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               children: [
                 MineProfileCard(
+                  palette: headerPalette,
                   user: user,
                   onTapProfile: onTapProfile,
                   onTapAction: onTapAction,

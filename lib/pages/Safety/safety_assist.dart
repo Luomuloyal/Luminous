@@ -375,10 +375,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
       }
     } catch (e) {
       if (!mounted) return;
-      ToastUtils.instance.show(
-        context,
-        e.toString().replaceFirst('Exception: ', ''),
-      );
+      ToastUtils.instance.showError(context, e);
     } finally {
       if (mounted) setState(() => _loading = false);
     }

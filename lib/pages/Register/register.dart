@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:luminous/api/auth_api.dart';
 import 'package:luminous/components/auth.dart';
+import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/utils/toast_utils.dart';
 
 // 注册页
@@ -220,10 +221,7 @@ class _RegisterViewState extends State<RegisterView> {
       if (!mounted) {
         return;
       }
-      ToastUtils.instance.show(
-        context,
-        e.toString().replaceFirst('Exception: ', ''),
-      );
+      ToastUtils.instance.showError(context, e);
     } finally {
       if (mounted) {
         setState(() {
@@ -266,10 +264,7 @@ class _RegisterViewState extends State<RegisterView> {
       if (!mounted) {
         return;
       }
-      ToastUtils.instance.show(
-        context,
-        e.toString().replaceFirst('Exception: ', ''),
-      );
+      ToastUtils.instance.showError(context, e);
     } finally {
       if (mounted) {
         setState(() {
@@ -342,10 +337,7 @@ class _RegisterViewState extends State<RegisterView> {
       if (!mounted) {
         return;
       }
-      ToastUtils.instance.show(
-        context,
-        e.toString().replaceFirst('Exception: ', ''),
-      );
+      ToastUtils.instance.showError(context, e);
     } finally {
       if (mounted) {
         setState(() {
@@ -390,6 +382,7 @@ class _RegisterViewState extends State<RegisterView> {
                       _buildTopBar(),
                       const SizedBox(height: 14),
                       AuthHeroCard(
+                        palette: SoftBannerPalettes.auth,
                         icon: Icons.person_add_alt_1_rounded,
                         title: '创建账号',
                         subtitle: _method == _RegisterMethod.email

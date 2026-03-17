@@ -12,6 +12,7 @@ import 'package:luminous/stores/app_database.dart';
 import 'package:luminous/stores/my_medicine_repository.dart';
 import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/gallery_saver.dart';
+import 'package:luminous/utils/message_utils.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/medicine.dart';
 import 'package:luminous/viewmodels/scan.dart';
@@ -857,7 +858,7 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
       await _persistAlbumRecord(bytes, result);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _lastError = e.toString().replaceFirst('Exception: ', ''));
+      setState(() => _lastError = MessageUtils.extractError(e));
     } finally {
       if (mounted) {
         setState(() => _scanning = false);

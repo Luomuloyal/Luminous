@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/components/mine.dart';
+import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/mine.dart';
@@ -129,6 +130,7 @@ class _MineViewState extends State<MineView> {
   Widget build(BuildContext context) {
     return Obx(
       () => MinePage(
+        headerPalette: SoftBannerPalettes.mine,
         user: _userController.user.value,
         quickActions: _quickActions,
         onTapProfile: _onTapProfile,

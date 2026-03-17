@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/api/home_api.dart';
 import 'package:luminous/components/home.dart';
+import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/pages/Drug/medicine_detail.dart';
 import 'package:luminous/pages/Picker/medicine_picker.dart';
 import 'package:luminous/stores/app_database.dart';
@@ -214,6 +215,7 @@ class _HomeViewState extends State<HomeView> {
           slivers: [
             SliverToBoxAdapter(
               child: HomeTopSection(
+                palette: SoftBannerPalettes.home,
                 todayTip: _todayTip,
                 nextText: nextText,
                 loadingReminders: _loadingReminders,
@@ -347,10 +349,7 @@ class _HomeViewState extends State<HomeView> {
       if (!mounted) {
         return;
       }
-      ToastUtils.instance.show(
-        context,
-        e.toString().replaceFirst('Exception: ', ''),
-      );
+      ToastUtils.instance.showError(context, e);
     } finally {
       if (_isActiveReminderRequest(requestId) && mounted) {
         setState(() {

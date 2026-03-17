@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/viewmodels/home.dart';
 
 /// 首页（Home）可复用的 UI 组件集合。
@@ -208,11 +209,15 @@ class HomeReminderSection extends StatelessWidget {
 class HomeTopSection extends StatelessWidget {
   const HomeTopSection({
     super.key,
+    required this.palette,
     required this.todayTip,
     required this.nextText,
     required this.loadingReminders,
     required this.reminderCount,
   });
+
+  /// 顶部横幅配色。
+  final SoftBannerPalette palette;
 
   /// 顶部随机提示文案。
   final String todayTip;
@@ -230,81 +235,81 @@ class HomeTopSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF0F766E), Color(0xFF14B8A6)],
-          ),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x30000000),
-              blurRadius: 14,
-              offset: Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0x28FFFFFF),
-                  ),
-                  child: const Icon(
-                    Icons.favorite_outline,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                const Expanded(
-                  child: Text(
-                    '健康助手',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
+      child: SoftBannerCard(
+        palette: palette,
+        builder: (context, theme) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.86),
+                      border: Border.all(color: theme.borderColor),
+                    ),
+                    child: Icon(
+                      Icons.favorite_outline,
+                      color: theme.accentColor,
                     ),
                   ),
-                ),
-                const HomeStatusChip(text: '已同步'),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              todayTip,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                height: 1.5,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      '健康助手',
+                      style: TextStyle(
+                        color: theme.textColor,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  HomeStatusChip(
+                    text: '已同步',
+                    backgroundColor: theme.surfaceColor,
+                    textColor: theme.surfaceTextColor,
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              nextText,
-              style: const TextStyle(color: Color(0xE6FFFFFF), fontSize: 14),
-            ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                HomeInfoPill(
-                  text: loadingReminders ? '提醒加载中...' : '今日提醒 $reminderCount 条',
+              const SizedBox(height: 16),
+              Text(
+                todayTip,
+                style: TextStyle(
+                  color: theme.textColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  height: 1.5,
                 ),
-                const SizedBox(width: 8),
-                const HomeInfoPill(text: '健康小贴士'),
-              ],
-            ),
-          ],
-        ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                nextText,
+                style: TextStyle(color: theme.secondaryTextColor, fontSize: 14),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  HomeInfoPill(
+                    text: loadingReminders
+                        ? '提醒加载中...'
+                        : '今日提醒 $reminderCount 条',
+                    backgroundColor: theme.surfaceColor,
+                    textColor: theme.surfaceTextColor,
+                  ),
+                  const SizedBox(width: 8),
+                  HomeInfoPill(
+                    text: '健康小贴士',
+                    backgroundColor: theme.surfaceColor,
+                    textColor: theme.surfaceTextColor,
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }

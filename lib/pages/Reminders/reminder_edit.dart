@@ -414,10 +414,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
       Navigator.pop(context, response.result);
     } catch (e) {
       if (!mounted) return;
-      ToastUtils.instance.show(
-        context,
-        e.toString().replaceFirst('Exception: ', ''),
-      );
+      ToastUtils.instance.showError(context, e);
     } finally {
       if (mounted) setState(() => _saving = false);
     }

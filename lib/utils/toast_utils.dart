@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:luminous/utils/message_utils.dart';
 
 /// 统一轻提示工具。
 ///
@@ -21,7 +22,18 @@ class ToastUtils {
     Duration toastduration = const Duration(seconds: 2),
   }) {
     /// 去除首尾空白后的提示文案。
-    final message = msg.trim();
+    final raw = msg.trim();
+    final shouldNormalize =
+        raw.contains('\n') ||
+        raw.contains('Exception') ||
+        raw.contains('DioException') ||
+        raw.contains('StackTrace') ||
+        raw.contains('(package:') ||
+        raw.contains('package:') ||
+        raw.length > 120;
+    final message = shouldNormalize
+        ? MessageUtils.normalize(raw, fallback: '', maxLength: 80)
+        : raw;
     if (message.isEmpty) {
       return;
     }
@@ -55,5 +67,22 @@ class ToastUtils {
           ),
         ),
       );
+  }
+
+  /// 显示一条“错误提示”。
+  ///
+  /// 与 [show] 的区别是它会把异常对象的 `toString()` 做一次清洗，
+  /// 避免把堆栈/请求参数等长内容直接展示给用户。
+  void showError(
+    BuildContext context,
+    Object? error, {
+    String fallback = '操作失败，请稍后重试',
+    Duration toastduration = const Duration(seconds: 2),
+  }) {
+    show(
+      context,
+      MessageUtils.extractError(error, fallback: fallback, maxLength: 80),
+      toastduration: toastduration,
+    );
   }
 }

@@ -6,6 +6,7 @@ import 'package:luminous/api/reminder_api.dart';
 import 'package:luminous/pages/Reminders/reminder_edit.dart';
 import 'package:luminous/stores/reminder_local_store.dart';
 import 'package:luminous/stores/user_controller.dart';
+import 'package:luminous/utils/message_utils.dart';
 import 'package:luminous/utils/notification_service.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/reminder.dart';
@@ -106,7 +107,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
       await NotificationService.instance.rescheduleAll(items);
     } catch (e) {
       if (!_canApplyLoadResult(requestId, userId)) return;
-      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+      setState(() => _error = MessageUtils.extractError(e));
       await _loadLocal(userId, requestId: requestId);
     } finally {
       if (_isActiveLoadRequest(requestId) && mounted) {
@@ -416,10 +417,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
       await NotificationService.instance.rescheduleAll(_items);
     } catch (e) {
       if (mounted) {
-        ToastUtils.instance.show(
-          context,
-          e.toString().replaceFirst('Exception: ', ''),
-        );
+        ToastUtils.instance.showError(context, e);
       }
     }
   }
@@ -458,10 +456,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
       if (mounted) ToastUtils.instance.show(context, '已删除');
     } catch (e) {
       if (mounted) {
-        ToastUtils.instance.show(
-          context,
-          e.toString().replaceFirst('Exception: ', ''),
-        );
+        ToastUtils.instance.showError(context, e);
       }
     }
   }

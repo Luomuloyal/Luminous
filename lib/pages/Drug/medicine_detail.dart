@@ -85,10 +85,7 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
       if (!mounted) {
         return;
       }
-      ToastUtils.instance.show(
-        context,
-        e.toString().replaceFirst('Exception: ', ''),
-      );
+      ToastUtils.instance.showError(context, e);
     } finally {
       if (mounted) {
         setState(() {
@@ -126,10 +123,7 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
       if (!mounted) {
         return;
       }
-      ToastUtils.instance.show(
-        context,
-        e.toString().replaceFirst('Exception: ', ''),
-      );
+      ToastUtils.instance.showError(context, e);
     } finally {
       if (mounted) {
         setState(() {

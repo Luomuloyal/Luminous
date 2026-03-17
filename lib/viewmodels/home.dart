@@ -75,10 +75,21 @@ class TodayRemindersResult {
 /// 首页顶部卡片中的状态 chip（例如“已同步”）。
 class HomeStatusChip extends StatelessWidget {
   /// 创建一个状态 chip。
-  const HomeStatusChip({super.key, required this.text});
+  const HomeStatusChip({
+    super.key,
+    required this.text,
+    this.backgroundColor = const Color(0x33FFFFFF),
+    this.textColor = Colors.white,
+  });
 
   /// chip 上展示的文本。
   final String text;
+
+  /// chip 背景色。
+  final Color backgroundColor;
+
+  /// chip 文字色。
+  final Color textColor;
 
   @override
   Widget build(BuildContext context) {
@@ -86,12 +97,12 @@ class HomeStatusChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
-        color: const Color(0x33FFFFFF),
+        color: backgroundColor,
       ),
       child: Text(
         text,
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: textColor,
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
@@ -103,10 +114,21 @@ class HomeStatusChip extends StatelessWidget {
 /// 首页顶部卡片中的信息 pill（例如“今日提醒 3 条”）。
 class HomeInfoPill extends StatelessWidget {
   /// 创建一个信息 pill。
-  const HomeInfoPill({super.key, required this.text});
+  const HomeInfoPill({
+    super.key,
+    required this.text,
+    this.backgroundColor = const Color(0x29FFFFFF),
+    this.textColor = Colors.white,
+  });
 
   /// pill 上展示的文本。
   final String text;
+
+  /// pill 背景色。
+  final Color backgroundColor;
+
+  /// pill 文字色。
+  final Color textColor;
 
   @override
   Widget build(BuildContext context) {
@@ -114,12 +136,12 @@ class HomeInfoPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
-        color: const Color(0x29FFFFFF),
+        color: backgroundColor,
       ),
       child: Text(
         text,
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color: textColor,
           fontSize: 12.5,
           fontWeight: FontWeight.w600,
         ),

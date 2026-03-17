@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/viewmodels/album.dart';
 
 /// 相册页（Album）的大块 UI 组件集合。
@@ -7,6 +8,7 @@ import 'package:luminous/viewmodels/album.dart';
 class AlbumPage extends StatelessWidget {
   const AlbumPage({
     super.key,
+    required this.headerPalette,
     required this.loading,
     required this.isLoggedIn,
     required this.error,
@@ -15,6 +17,9 @@ class AlbumPage extends StatelessWidget {
     required this.onTapLogin,
     required this.onTapEntry,
   });
+
+  /// 顶部横幅配色。
+  final SoftBannerPalette headerPalette;
 
   /// 是否正在加载数据。
   final bool loading;
@@ -46,7 +51,7 @@ class AlbumPage extends StatelessWidget {
           onRefresh: onRefresh,
           child: CustomScrollView(
             slivers: [
-              AlbumHeaderSliver(loading: loading),
+              AlbumHeaderSliver(palette: headerPalette, loading: loading),
               if (!isLoggedIn) AlbumLoginBannerSliver(onTapLogin: onTapLogin),
               if (error != null) AlbumErrorBannerSliver(text: error!),
               if (entries.isEmpty && !loading)
@@ -80,7 +85,14 @@ class AlbumPage extends StatelessWidget {
 
 /// 相册页顶部 header sliver。
 class AlbumHeaderSliver extends StatelessWidget {
-  const AlbumHeaderSliver({super.key, required this.loading});
+  const AlbumHeaderSliver({
+    super.key,
+    required this.palette,
+    required this.loading,
+  });
+
+  /// 顶部横幅配色。
+  final SoftBannerPalette palette;
 
   /// 是否正在加载，用于显示右侧进度圈。
   final bool loading;
@@ -90,73 +102,62 @@ class AlbumHeaderSliver extends StatelessWidget {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-        child: Container(
+        child: SoftBannerCard(
+          palette: palette,
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: const LinearGradient(
-              colors: [Color(0xFF6366F1), Color(0xFF0EA5E9)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x28000000),
-                blurRadius: 14,
-                offset: Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0x28FFFFFF),
-                ),
-                child: const Icon(
-                  Icons.photo_library_outlined,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '识别相册',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      '同步缩略图与识别结果',
-                      style: TextStyle(
-                        color: Color(0xE6FFFFFF),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (loading)
-                const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
+          builder: (context, theme) {
+            return Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: 0.86),
+                    border: Border.all(color: theme.borderColor),
+                  ),
+                  child: Icon(
+                    Icons.photo_library_outlined,
+                    color: theme.accentColor,
                   ),
                 ),
-            ],
-          ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '识别相册',
+                        style: TextStyle(
+                          color: theme.textColor,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '同步缩略图与识别结果',
+                        style: TextStyle(
+                          color: theme.secondaryTextColor,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (loading)
+                  SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: theme.accentColor,
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
       ),
     );

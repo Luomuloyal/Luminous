@@ -5,6 +5,7 @@ import 'package:luminous/components/search.dart';
 import 'package:luminous/pages/Drug/medicine_detail.dart';
 import 'package:luminous/stores/my_medicine_repository.dart';
 import 'package:luminous/stores/user_controller.dart';
+import 'package:luminous/utils/message_utils.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/medicine.dart';
 
@@ -975,7 +976,7 @@ class _SearchViewState extends State<SearchView> {
       if (!mounted) {
         return;
       }
-      final msg = e.toString().replaceFirst('Exception: ', '');
+      final msg = MessageUtils.extractError(e);
       ToastUtils.instance.show(context, msg);
       if (reset) {
         setState(() {

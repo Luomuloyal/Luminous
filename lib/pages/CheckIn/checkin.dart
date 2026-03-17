@@ -4,6 +4,7 @@ import 'package:luminous/api/checkin_api.dart';
 import 'package:luminous/api/home_api.dart';
 import 'package:luminous/stores/app_database.dart';
 import 'package:luminous/stores/user_controller.dart';
+import 'package:luminous/utils/message_utils.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/home.dart';
 
@@ -68,7 +69,7 @@ class _CheckInPageState extends State<CheckInPage> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = e.toString().replaceFirst('Exception: ', ''));
+      setState(() => _error = MessageUtils.extractError(e));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -309,10 +310,7 @@ class _CheckInPageState extends State<CheckInPage> {
       await _load();
     } catch (e) {
       if (!mounted) return;
-      ToastUtils.instance.show(
-        context,
-        e.toString().replaceFirst('Exception: ', ''),
-      );
+      ToastUtils.instance.showError(context, e);
     }
   }
 }

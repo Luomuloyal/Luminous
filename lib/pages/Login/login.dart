@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/api/auth_api.dart';
 import 'package:luminous/components/auth.dart';
+import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/stores/session_sync_service.dart';
 import 'package:luminous/stores/token_manager.dart';
 import 'package:luminous/stores/user_controller.dart';
@@ -191,10 +192,7 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) {
         return;
       }
-      ToastUtils.instance.show(
-        context,
-        e.toString().replaceFirst('Exception: ', ''),
-      );
+      ToastUtils.instance.showError(context, e);
     } finally {
       if (mounted) {
         setState(() {
@@ -284,10 +282,7 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) {
         return;
       }
-      ToastUtils.instance.show(
-        context,
-        e.toString().replaceFirst('Exception: ', ''),
-      );
+      ToastUtils.instance.showError(context, e);
     } finally {
       if (mounted) {
         setState(() {
@@ -336,6 +331,7 @@ class _LoginPageState extends State<LoginPage> {
                       _buildTopBar(),
                       const SizedBox(height: 14),
                       AuthHeroCard(
+                        palette: SoftBannerPalettes.auth,
                         icon: Icons.health_and_safety_rounded,
                         title: '健康助手',
                         subtitle: _method == _LoginMethod.email

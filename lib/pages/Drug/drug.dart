@@ -111,10 +111,7 @@ class _DrugViewState extends State<DrugView> {
           });
         } catch (e) {
           if (mounted) {
-            ToastUtils.instance.show(
-              context,
-              e.toString().replaceFirst('Exception: ', ''),
-            );
+            ToastUtils.instance.showError(context, e);
           }
         }
       }
