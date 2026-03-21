@@ -317,3 +317,139 @@ class AlbumLoginBannerSliver extends StatelessWidget {
     );
   }
 }
+
+/// 相册预览页。
+class AlbumPreviewPage extends StatelessWidget {
+  const AlbumPreviewPage({
+    super.key,
+    required this.entry,
+    required this.onOpenDetail,
+    required this.onRescan,
+  });
+
+  final AlbumEntry entry;
+  final VoidCallback onOpenDetail;
+  final VoidCallback? onRescan;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasOriginalImage = entry.hasOriginalImage;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF0F172A),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF0F172A),
+        foregroundColor: Colors.white,
+        title: Text(entry.displayName),
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: Center(
+                child: InteractiveViewer(
+                  minScale: 1,
+                  maxScale: 4,
+                  child: Base64MemoryImage(
+                    base64: entry.previewBase64,
+                    fit: BoxFit.contain,
+                    width: double.infinity,
+                    placeholder: const Icon(
+                      Icons.photo_outlined,
+                      size: 72,
+                      color: Color(0xFF94A3B8),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF3F7FB),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    entry.displayName,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    entry.approvalNo.trim().isEmpty
+                        ? '暂无批准文号'
+                        : '批准文号: ${entry.approvalNo}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF64748B),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (!hasOriginalImage) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFFBEB),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
+                      ),
+                      child: const Text(
+                        '该旧记录仅有缩略图，无法高质量重识别。',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          height: 1.45,
+                          color: Color(0xFF92400E),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 14),
+                  FilledButton(
+                    key: const ValueKey('album_preview_detail_button'),
+                    onPressed: onOpenDetail,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF0EA5E9),
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: const Text('查看药品详情'),
+                  ),
+                  const SizedBox(height: 10),
+                  FilledButton.tonal(
+                    key: const ValueKey('album_preview_rescan_button'),
+                    onPressed: onRescan,
+                    style: FilledButton.styleFrom(
+                      foregroundColor: onRescan == null
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF0F172A),
+                      backgroundColor: onRescan == null
+                          ? const Color(0xFFF1F5F9)
+                          : const Color(0xFFEAF6FF),
+                      minimumSize: const Size(double.infinity, 48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: const Text('再次识别'),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

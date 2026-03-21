@@ -8,7 +8,7 @@ import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/pages/Drug/medicine_detail.dart';
 import 'package:luminous/pages/Picker/medicine_picker.dart';
 import 'package:luminous/pages/Scan/medicine_scan.dart';
-import 'package:luminous/stores/app_database.dart';
+import 'package:luminous/stores/today_reminder_local_store.dart';
 import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/home.dart';
@@ -326,12 +326,14 @@ class _HomeViewState extends State<HomeView> {
         userId: userId.isEmpty ? null : userId,
       );
 
-      final overrides = await _loadTodayCheckinOverrides(userId);
+      final overrides = await todayReminderLocalStore.loadTodayOverrides(
+        userId,
+      );
 
       /// 从本地数据库中整理出来的“今天的提醒 UI 数据”。
       ///
       /// 它会把 reminders 表和 checkins 表拼起来，得出哪些提醒已经完成。
-      final local = await _loadLocalTodayReminders(
+      final local = await todayReminderLocalStore.loadHomeReminderItems(
         userId,
         overrides: overrides,
       );
@@ -360,8 +362,10 @@ class _HomeViewState extends State<HomeView> {
       if (!_canApplyReminderResult(requestId, userId)) {
         return;
       }
-      final overrides = await _loadTodayCheckinOverrides(userId);
-      final local = await _loadLocalTodayReminders(
+      final overrides = await todayReminderLocalStore.loadTodayOverrides(
+        userId,
+      );
+      final local = await todayReminderLocalStore.loadHomeReminderItems(
         userId,
         overrides: overrides,
       );
@@ -399,106 +403,6 @@ class _HomeViewState extends State<HomeView> {
     return requestId == _reminderRequestId;
   }
 
-  /// 从本地数据库读取“今天的提醒”并组装成首页 UI 需要的数据结构。
-  ///
-  /// 这个方法会：
-  /// 1. 查今天的打卡记录，确定哪些提醒已经完成；
-  /// 2. 查当前用户启用中的提醒计划；
-  /// 3. 组合成首页展示用的 `HomeReminderItemData` 列表。
-  Future<List<HomeReminderItemData>> _loadLocalTodayReminders(
-    String? userId, {
-    Map<String, bool>? overrides,
-  }) async {
-    /// 去掉空白后的用户 id。
-    ///
-    /// 若为空，说明当前没有可用于查询本地提醒的用户身份，直接返回空列表。
-    final uid = (userId ?? '').trim();
-    if (uid.isEmpty) {
-      return const [];
-    }
-
-    try {
-      /// 应用本地数据库实例。
-      ///
-      /// 用来查询 reminders 和 checkins 两张表。
-      final db = await AppDatabase.instance.database;
-
-      /// 今天所有打卡记录里记录过的 reminderRemoteId 列表。
-      ///
-      /// 用来判断某条提醒今天是否已经完成。
-      final range = _todayRange();
-      final checkinRows = await db.query(
-        'checkins',
-        columns: ['reminderRemoteId'],
-        where: 'userId = ? AND takenAt >= ? AND takenAt < ?',
-        whereArgs: [uid, range.start, range.end],
-      );
-
-      /// 今天已经完成打卡的提醒 id 集合。
-      ///
-      /// 用 Set 是为了后续判断某条提醒是否完成时可以快速查找。
-      final doneSet = <String>{};
-
-      /// 遍历每条今天的打卡记录，把有效的提醒 id 放入已完成集合。
-      for (final row in checkinRows) {
-        /// 单条打卡记录里关联的远端提醒 id。
-        ///
-        /// 它是 reminders 表与 checkins 表之间的关联键。
-        final id = (row['reminderRemoteId'] ?? '').toString().trim();
-        if (id.isNotEmpty) doneSet.add(id);
-      }
-
-      /// 当前用户所有启用中的提醒计划。
-      ///
-      /// 这些数据会被转换为首页要展示的提醒条目。
-      final reminderRows = await db.query(
-        'reminders',
-        where: 'userId = ? AND enabled = 1',
-        whereArgs: [uid],
-        orderBy: 'time ASC',
-      );
-      if (reminderRows.isEmpty) {
-        return const [];
-      }
-
-      return reminderRows.map((row) {
-        /// 提醒计划在服务端/本地同步时使用的唯一 id。
-        ///
-        /// 用它和 `doneSet` 对比，就能知道今天这条提醒是否已完成。
-        final remoteId = (row['remoteId'] ?? '').toString();
-
-        /// 提醒时间，例如 `08:30`。
-        final time = (row['time'] ?? '').toString().trim();
-
-        /// 提醒标题对应的药品名称。
-        final title = (row['productName'] ?? '').toString().trim();
-
-        /// 提醒副标题，通常描述服药方式或附加说明。
-        final subtitle = (row['subtitle'] ?? '').toString().trim();
-
-        /// 当前提醒今天是否已经打过卡。
-        final done = _resolveDoneState(
-          remoteId: remoteId,
-          doneSet: doneSet,
-          overrides: overrides,
-        );
-
-        /// 首页主标题展示用的组合文案。
-        ///
-        /// 规则是把时间和药名拼成一行，例如 `08:30 维生素D`。
-        final combinedTitle = time.isEmpty ? title : '$time $title';
-        return HomeReminderItemData(
-          icon: Icons.access_time_rounded,
-          title: combinedTitle.isEmpty ? '用药提醒' : combinedTitle,
-          subtitle: subtitle.isEmpty ? '系统通知提醒' : subtitle,
-          done: done,
-        );
-      }).toList();
-    } catch (_) {
-      return const [];
-    }
-  }
-
   /// 把接口层的提醒对象转换为首页组件直接可用的 UI 数据。
   ///
   /// 这样页面不需要直接依赖接口返回结构的字段命名和组合规则。
@@ -534,58 +438,5 @@ class _HomeViewState extends State<HomeView> {
     setState(() {
       _todayTip = nextTips[Random().nextInt(nextTips.length)];
     });
-  }
-
-  ({int start, int end, String dateKey}) _todayRange() {
-    final now = DateTime.now();
-    final start = DateTime(now.year, now.month, now.day).millisecondsSinceEpoch;
-    final end = start + const Duration(days: 1).inMilliseconds;
-    final dateKey =
-        '${now.year.toString().padLeft(4, '0')}-'
-        '${now.month.toString().padLeft(2, '0')}-'
-        '${now.day.toString().padLeft(2, '0')}';
-    return (start: start, end: end, dateKey: dateKey);
-  }
-
-  bool _resolveDoneState({
-    required String remoteId,
-    required Set<String> doneSet,
-    Map<String, bool>? overrides,
-  }) {
-    final trimmedId = remoteId.trim();
-    if (trimmedId.isEmpty) {
-      return false;
-    }
-    final override = overrides?[trimmedId];
-    if (override != null) {
-      return override;
-    }
-    return doneSet.contains(trimmedId);
-  }
-
-  Future<Map<String, bool>> _loadTodayCheckinOverrides(String? userId) async {
-    final uid = (userId ?? '').trim();
-    if (uid.isEmpty) {
-      return const {};
-    }
-
-    try {
-      final db = await AppDatabase.instance.database;
-      final range = _todayRange();
-      final rows = await db.query(
-        'checkin_overrides',
-        columns: ['reminderRemoteId', 'done'],
-        where: 'userId = ? AND dateKey = ?',
-        whereArgs: [uid, range.dateKey],
-      );
-
-      return {
-        for (final row in rows)
-          (row['reminderRemoteId'] ?? '').toString().trim():
-              (row['done'] as int? ?? 0) == 1,
-      }..removeWhere((key, value) => key.isEmpty);
-    } catch (_) {
-      return const {};
-    }
   }
 }

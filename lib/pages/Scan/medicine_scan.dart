@@ -8,7 +8,7 @@ import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:luminous/api/scan_api.dart';
 import 'package:luminous/pages/Search/search.dart';
-import 'package:luminous/stores/app_database.dart';
+import 'package:luminous/stores/album_local_store.dart';
 import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/message_utils.dart';
 import 'package:luminous/utils/toast_utils.dart';
@@ -751,19 +751,15 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
       }
     }
 
-    final db = await AppDatabase.instance.database;
-    await db.insert('album_items', {
-      'remoteId': remoteId,
-      'identityKey': _buildIdentityKey(selected),
-      'drugCode': selected?.drugCode ?? '',
-      'approvalNo': selected?.approvalNo ?? '',
-      'productName': selected?.productName ?? '',
-      'filePath': '',
-      'thumbBase64': thumbBase64,
-      'takenAt': now,
-      'source': 'scan',
-      'createdAt': now,
-    });
+    await albumLocalStore.saveScanRecord(
+      remoteId: remoteId,
+      drugCode: selected?.drugCode,
+      approvalNo: selected?.approvalNo,
+      productName: selected?.productName,
+      thumbBase64: thumbBase64,
+      imageBase64: base64Encode(bytes),
+      takenAt: now,
+    );
   }
 
   int _findBestCandidateIndex(MedicineScanResult result) {
@@ -828,19 +824,6 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     } catch (_) {
       return '';
     }
-  }
-
-  String _buildIdentityKey(ScanCandidate? candidate) {
-    if (candidate == null) {
-      return 'scan:${DateTime.now().millisecondsSinceEpoch}';
-    }
-    if (candidate.drugCode.trim().isNotEmpty) {
-      return 'drugCode:${candidate.drugCode.trim()}';
-    }
-    if (candidate.approvalNo.trim().isNotEmpty) {
-      return 'approvalNo:${candidate.approvalNo.trim()}';
-    }
-    return 'name:${candidate.productName.trim()}';
   }
 }
 

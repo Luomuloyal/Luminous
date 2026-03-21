@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:luminous/api/scan_api.dart';
 import 'package:luminous/components/album.dart';
 import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/pages/Drug/medicine_detail.dart';
-import 'package:luminous/stores/app_database.dart';
+import 'package:luminous/pages/Scan/medicine_scan.dart';
+import 'package:luminous/stores/album_local_store.dart';
 import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/message_utils.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/album.dart';
 import 'package:luminous/viewmodels/medicine.dart';
-import 'package:sqflite/sqflite.dart';
 
 /// 识别相册页。
 ///
@@ -45,6 +46,9 @@ class _AlbumViewState extends State<AlbumView> {
   ///
   /// 非空时页面会展示错误 banner。
   String? _error;
+
+  /// 相册本地缓存读写入口。
+  final AlbumLocalStore _albumLocalStore = albumLocalStore;
 
   /// 页面最终展示的相册条目列表。
   List<AlbumEntry> _entries = [];
@@ -100,11 +104,10 @@ class _AlbumViewState extends State<AlbumView> {
           pageSize: 50,
         );
         if (!mounted) return;
-
-        /// 合并本地与远端后得到的最终展示结果。
-        final merged = _merge(local, remote.result.items);
-        setState(() => _entries = merged);
-        await _cacheRemoteToLocal(remote.result.items);
+        await _albumLocalStore.upsertRemoteRecords(remote.result.items);
+        final refreshedLocal = await _loadLocal();
+        if (!mounted) return;
+        setState(() => _entries = refreshedLocal);
       }
     } catch (e) {
       if (!mounted) return;
@@ -117,90 +120,7 @@ class _AlbumViewState extends State<AlbumView> {
   }
 
   /// 读取本地缓存的相册记录。
-  Future<List<AlbumEntry>> _loadLocal() async {
-    try {
-      /// 本地数据库实例。
-      final db = await AppDatabase.instance.database;
-
-      /// 从 album_items 表按创建时间倒序查询到的行数据。
-      final rows = await db.query('album_items', orderBy: 'createdAt DESC');
-      return rows.map(AlbumEntry.fromLocalRow).toList();
-    } catch (_) {
-      return [];
-    }
-  }
-
-  /// 合并本地相册记录与远端识别记录。
-  ///
-  /// 规则：
-  /// - 有 remoteId 的本地记录与远端记录按 remoteId 去重；
-  /// - 没有 remoteId 的本地离线记录直接保留；
-  /// - 最终按 takenAt 倒序排序。
-  List<AlbumEntry> _merge(List<AlbumEntry> local, List<ScanRecordItem> remote) {
-    /// 以 remoteId 为 key 的去重 map。
-    final map = <String, AlbumEntry>{};
-    for (final entry in local) {
-      /// 本地条目的远端 id。
-      final key = entry.remoteId.trim();
-      if (key.isNotEmpty) {
-        map[key] = entry;
-      }
-    }
-
-    /// 把远端记录覆盖写入 map，保证远端数据优先。
-    for (final record in remote) {
-      map[record.id.trim()] = AlbumEntry.fromScanRecord(record);
-    }
-
-    /// 合并后的结果列表。
-    final result = <AlbumEntry>[
-      ...local.where((entry) => entry.remoteId.trim().isEmpty),
-      ...map.values,
-    ];
-    result.sort((a, b) => b.takenAt.compareTo(a.takenAt));
-    return result;
-  }
-
-  /// 将远端识别记录缓存到本地数据库。
-  ///
-  /// 这是 best-effort 行为：即使缓存失败，也不影响当前页面展示。
-  Future<void> _cacheRemoteToLocal(List<ScanRecordItem> items) async {
-    try {
-      /// 本地数据库实例。
-      final db = await AppDatabase.instance.database;
-
-      /// 逐条把远端记录写入 album_items 表。
-      for (final item in items) {
-        await db.insert('album_items', {
-          'remoteId': item.id,
-          'identityKey': _buildIdentityKey(
-            item.drugCode,
-            item.approvalNo,
-            item.productName,
-          ),
-          'drugCode': item.drugCode,
-          'approvalNo': item.approvalNo,
-          'productName': item.productName,
-          'filePath': '',
-          'thumbBase64': item.thumbBase64,
-          'takenAt': item.takenAt,
-          'source': 'scan',
-          'createdAt': item.takenAt == 0
-              ? DateTime.now().millisecondsSinceEpoch
-              : item.takenAt,
-        }, conflictAlgorithm: ConflictAlgorithm.ignore);
-      }
-    } catch (_) {}
-  }
-
-  /// 生成相册/药品记录统一使用的 identityKey。
-  ///
-  /// 优先级：drugCode > approvalNo > productName。
-  String _buildIdentityKey(String drugCode, String approvalNo, String name) {
-    if (drugCode.trim().isNotEmpty) return 'drugCode:${drugCode.trim()}';
-    if (approvalNo.trim().isNotEmpty) return 'approvalNo:${approvalNo.trim()}';
-    return 'name:${name.trim()}';
-  }
+  Future<List<AlbumEntry>> _loadLocal() => _albumLocalStore.loadEntries();
 
   /// 构建相册页 UI。
   @override
@@ -213,14 +133,24 @@ class _AlbumViewState extends State<AlbumView> {
       entries: _entries,
       onRefresh: _load,
       onTapLogin: () => Navigator.pushNamed(context, '/login'),
-      onTapEntry: _openDetail,
+      onTapEntry: _openPreview,
+    );
+  }
+
+  Future<void> _openPreview(AlbumEntry entry) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => AlbumPreviewPage(
+          entry: entry,
+          onOpenDetail: () => _openDetailFromEntry(entry),
+          onRescan: entry.hasOriginalImage ? () => _rescanEntry(entry) : null,
+        ),
+      ),
     );
   }
 
   /// 打开某条相册记录对应的药品详情页。
-  ///
-  /// 如果记录缺少 drugCode 和 approvalNo，则无法进入详情页，只提示用户。
-  Future<void> _openDetail(AlbumEntry entry) async {
+  Future<void> _openDetailFromEntry(AlbumEntry entry) async {
     /// 根据相册条目拼装出的药品详情初始对象。
     final item = MedicineItem(
       serialNo: '',
@@ -240,6 +170,33 @@ class _AlbumViewState extends State<AlbumView> {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => MedicineDetailPage(initialItem: item),
+      ),
+    );
+  }
+
+  Future<void> _rescanEntry(AlbumEntry entry) async {
+    final imageBase64 = entry.imageBase64.trim();
+    if (imageBase64.isEmpty) {
+      ToastUtils.instance.show(context, '该旧记录仅有缩略图，无法高质量重识别');
+      return;
+    }
+
+    final bytes = decodeBase64Bytes(imageBase64);
+    if (bytes == null || !mounted) {
+      ToastUtils.instance.show(context, '原图读取失败，无法重识别');
+      return;
+    }
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => MedicineScanPage(
+          mode: ScanEntryMode.result,
+          initialImage: SelectedScanImage(
+            bytes: bytes,
+            mimeType: 'image/jpeg',
+            source: ImageSource.gallery,
+          ),
+        ),
       ),
     );
   }

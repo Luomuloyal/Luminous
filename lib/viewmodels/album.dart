@@ -123,7 +123,7 @@ class ScanRecordListResult {
 /// 它把：
 /// - 本地 SQLite 行（album_items 表）；
 /// - 远端 ScanRecordItem；
-/// 都统一映射为一个结构，并提前把缩略图 base64 解码为 bytes，避免滚动时重复 decode。
+/// 都统一映射为一个结构，并把图片解码延后到展示组件中按需完成。
 class AlbumEntry {
   /// 远端 id（如果是本地离线记录可能为空）。
   final String remoteId;
@@ -140,10 +140,8 @@ class AlbumEntry {
   /// 缩略图 base64 原始字符串。
   final String thumbBase64;
 
-  /// 预解码后的缩略图 bytes。
-  ///
-  /// 为空表示没有缩略图或解码失败。
-  final Uint8List? thumbBytes;
+  /// 原图 base64（仅本地记录可能存在）。
+  final String imageBase64;
 
   /// 拍摄/识别时间戳（毫秒）。
   final int takenAt;
@@ -155,40 +153,37 @@ class AlbumEntry {
     required this.drugCode,
     required this.approvalNo,
     required this.thumbBase64,
-    required this.thumbBytes,
+    required this.imageBase64,
     required this.takenAt,
   });
 
   /// 从本地数据库行构建 `AlbumEntry`。
   ///
-  /// 同时会把 thumbBase64 解码为 bytes，缓存到 `thumbBytes`。
+  /// 原图只保存在本地，因此会优先从本地行里读取 `imageBase64`。
   factory AlbumEntry.fromLocalRow(Map<String, dynamic> row) {
-    /// 本地缓存的缩略图 base64。
-    final raw = (row['thumbBase64'] ?? '').toString();
+    final thumbBase64 = (row['thumbBase64'] ?? '').toString();
     return AlbumEntry(
       remoteId: (row['remoteId'] ?? '').toString(),
       productName: (row['productName'] ?? '').toString(),
       drugCode: (row['drugCode'] ?? '').toString(),
       approvalNo: (row['approvalNo'] ?? '').toString(),
-      thumbBase64: raw,
-      thumbBytes: _decodeBase64(raw),
+      thumbBase64: thumbBase64,
+      imageBase64: (row['imageBase64'] ?? '').toString(),
       takenAt: (row['takenAt'] as int?) ?? (row['createdAt'] as int?) ?? 0,
     );
   }
 
   /// 从远端识别记录构建 `AlbumEntry`。
   ///
-  /// 同样会预解码缩略图，避免 UI build 时重复执行耗时操作。
+  /// 云端仅保存缩略图，不携带原图。
   factory AlbumEntry.fromScanRecord(ScanRecordItem record) {
-    /// 远端返回的缩略图 base64。
-    final raw = record.thumbBase64;
     return AlbumEntry(
       remoteId: record.id,
       productName: record.productName,
       drugCode: record.drugCode,
       approvalNo: record.approvalNo,
-      thumbBase64: raw,
-      thumbBytes: _decodeBase64(raw),
+      thumbBase64: record.thumbBase64,
+      imageBase64: '',
       takenAt: record.takenAt,
     );
   }
@@ -196,6 +191,23 @@ class AlbumEntry {
   /// 页面展示用名称。
   String get displayName =>
       productName.trim().isEmpty ? '未知药品' : productName.trim();
+
+  /// 当前记录是否有本地原图。
+  bool get hasOriginalImage => imageBase64.trim().isNotEmpty;
+
+  /// 当前记录是否至少有可预览图片。
+  bool get hasPreviewImage =>
+      imageBase64.trim().isNotEmpty || thumbBase64.trim().isNotEmpty;
+
+  /// 预览优先使用原图，没有原图时回退到缩略图。
+  String get previewBase64 =>
+      imageBase64.trim().isNotEmpty ? imageBase64.trim() : thumbBase64.trim();
+
+  /// 惰性解码缩略图。
+  Uint8List? get thumbBytes => _decodeBase64(thumbBase64);
+
+  /// 惰性解码预览图。
+  Uint8List? get previewBytes => _decodeBase64(previewBase64);
 }
 
 /// 相册网格中单个条目的 UI 卡片。
@@ -213,8 +225,6 @@ class AlbumCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    /// 缩略图 bytes（若为空则显示占位图标）。
-    final bytes = entry.thumbBytes;
     return RepaintBoundary(
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
@@ -240,22 +250,22 @@ class AlbumCard extends StatelessWidget {
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(18),
                   ),
-                  child: bytes == null
-                      ? Container(
-                          color: const Color(0xFFF1F5F9),
-                          alignment: Alignment.center,
-                          child: const Icon(
-                            Icons.photo_outlined,
-                            color: Color(0xFF94A3B8),
-                            size: 34,
-                          ),
-                        )
-                      : Image.memory(
-                          bytes,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                        ),
+                  child: Base64MemoryImage(
+                    base64: entry.thumbBase64,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                    cacheWidth: 640,
+                    placeholder: Container(
+                      color: const Color(0xFFF1F5F9),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.photo_outlined,
+                        color: Color(0xFF94A3B8),
+                        size: 34,
+                      ),
+                    ),
+                  ),
                 ),
               ),
               Padding(
@@ -297,6 +307,71 @@ class AlbumCard extends StatelessWidget {
   }
 }
 
+/// 按需解码 base64 并以 `Image.memory` 展示。
+class Base64MemoryImage extends StatefulWidget {
+  const Base64MemoryImage({
+    super.key,
+    required this.base64,
+    required this.fit,
+    required this.placeholder,
+    this.width,
+    this.height,
+    this.cacheWidth,
+  });
+
+  final String base64;
+  final BoxFit fit;
+  final Widget placeholder;
+  final double? width;
+  final double? height;
+  final int? cacheWidth;
+
+  @override
+  State<Base64MemoryImage> createState() => _Base64MemoryImageState();
+}
+
+class _Base64MemoryImageState extends State<Base64MemoryImage> {
+  Uint8List? _bytes;
+  String _decodedSource = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshDecodedBytes();
+  }
+
+  @override
+  void didUpdateWidget(covariant Base64MemoryImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.base64 != widget.base64) {
+      _refreshDecodedBytes();
+    }
+  }
+
+  void _refreshDecodedBytes() {
+    final nextSource = widget.base64.trim();
+    _decodedSource = nextSource;
+    _bytes = decodeBase64Bytes(nextSource);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bytes = _bytes;
+    if (bytes == null || _decodedSource.isEmpty) {
+      return widget.placeholder;
+    }
+    return Image.memory(
+      bytes,
+      fit: widget.fit,
+      width: widget.width,
+      height: widget.height,
+      cacheWidth: widget.cacheWidth,
+      gaplessPlayback: true,
+      filterQuality: FilterQuality.medium,
+    );
+  }
+}
+
 /// 解码 base64 缩略图。
 ///
 /// - 输入为空直接返回 null；
@@ -313,3 +388,6 @@ Uint8List? _decodeBase64(String raw) {
     return null;
   }
 }
+
+/// 对外暴露的安全 base64 解码方法。
+Uint8List? decodeBase64Bytes(String raw) => _decodeBase64(raw);

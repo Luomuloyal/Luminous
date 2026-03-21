@@ -22,7 +22,7 @@ class AppDatabase {
   /// 当前数据库 schema 版本号。
   ///
   /// 版本变更时需要同步更新 `_upgradeTables` 中的迁移逻辑。
-  static const int _version = 4;
+  static const int _version = 5;
 
   /// 已打开的数据库实例缓存。
   Database? _db;
@@ -93,6 +93,7 @@ class AppDatabase {
         productName TEXT,
         filePath TEXT,
         thumbBase64 TEXT,
+        imageBase64 TEXT,
         takenAt INTEGER,
         source TEXT,
         createdAt INTEGER NOT NULL
@@ -100,6 +101,9 @@ class AppDatabase {
     ''');
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_album_items_createdAt ON album_items(createdAt DESC)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_album_items_remoteId ON album_items(remoteId)',
     );
 
     // reminders：提醒计划缓存（后端同步源）
@@ -198,6 +202,14 @@ class AppDatabase {
     }
 
     if (oldVersion < 4) {
+      await _createTables(db);
+    }
+
+    if (oldVersion < 5) {
+      await _tryExecute(
+        db,
+        'ALTER TABLE album_items ADD COLUMN imageBase64 TEXT',
+      );
       await _createTables(db);
     }
   }
