@@ -15,6 +15,7 @@ void main() {
       approvalNo: '国药准字H20000001',
       thumbBase64: _tinyPngBase64,
       imageBase64: imageBase64,
+      imageMimeType: imageBase64.isEmpty ? '' : 'image/png',
       takenAt: 1710000000000,
     );
   }

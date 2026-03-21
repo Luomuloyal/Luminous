@@ -42,6 +42,29 @@ class ReminderItem {
   }
 }
 
+/// 首页“今日提醒”区域使用的展示数据。
+class HomeReminderItemData {
+  /// 提醒左侧图标。
+  final IconData icon;
+
+  /// 提醒标题（通常为时间 + 药品名）。
+  final String title;
+
+  /// 提醒副标题（服用说明等）。
+  final String subtitle;
+
+  /// 当前提醒是否已完成。
+  final bool done;
+
+  /// 创建一个首页提醒条目数据对象。
+  const HomeReminderItemData({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.done,
+  });
+}
+
 class TodayRemindersResult {
   /// 数据对应的日期（yyyy-MM-dd）。
   final String date;

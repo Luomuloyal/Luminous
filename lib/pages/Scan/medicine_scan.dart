@@ -752,12 +752,14 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     }
 
     await albumLocalStore.saveScanRecord(
+      userId: userId,
       remoteId: remoteId,
       drugCode: selected?.drugCode,
       approvalNo: selected?.approvalNo,
       productName: selected?.productName,
       thumbBase64: thumbBase64,
       imageBase64: base64Encode(bytes),
+      imageMimeType: _photoMimeType,
       takenAt: now,
     );
   }

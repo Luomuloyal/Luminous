@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/viewmodels/album.dart';
@@ -314,6 +316,162 @@ class AlbumLoginBannerSliver extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 相册网格中单个条目的 UI 卡片。
+class AlbumCard extends StatelessWidget {
+  const AlbumCard({super.key, required this.entry, required this.onTap});
+
+  final AlbumEntry entry;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Ink(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0F000000),
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(18),
+                  ),
+                  child: Base64MemoryImage(
+                    base64: entry.thumbBase64,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                    cacheWidth: 640,
+                    placeholder: Container(
+                      color: const Color(0xFFF1F5F9),
+                      alignment: Alignment.center,
+                      child: const Icon(
+                        Icons.photo_outlined,
+                        color: Color(0xFF94A3B8),
+                        size: 34,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      entry.approvalNo.trim().isEmpty
+                          ? '点击查看详情'
+                          : '批准文号: ${entry.approvalNo}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        color: Color(0xFF64748B),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 按需解码 base64 并以 `Image.memory` 展示。
+class Base64MemoryImage extends StatefulWidget {
+  const Base64MemoryImage({
+    super.key,
+    required this.base64,
+    required this.fit,
+    required this.placeholder,
+    this.width,
+    this.height,
+    this.cacheWidth,
+  });
+
+  final String base64;
+  final BoxFit fit;
+  final Widget placeholder;
+  final double? width;
+  final double? height;
+  final int? cacheWidth;
+
+  @override
+  State<Base64MemoryImage> createState() => _Base64MemoryImageState();
+}
+
+class _Base64MemoryImageState extends State<Base64MemoryImage> {
+  Uint8List? _bytes;
+  String _decodedSource = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshDecodedBytes();
+  }
+
+  @override
+  void didUpdateWidget(covariant Base64MemoryImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.base64 != widget.base64) {
+      _refreshDecodedBytes();
+    }
+  }
+
+  void _refreshDecodedBytes() {
+    final nextSource = widget.base64.trim();
+    _decodedSource = nextSource;
+    _bytes = decodeBase64Bytes(nextSource);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bytes = _bytes;
+    if (bytes == null || _decodedSource.isEmpty) {
+      return widget.placeholder;
+    }
+    return Image.memory(
+      bytes,
+      fit: widget.fit,
+      width: widget.width,
+      height: widget.height,
+      cacheWidth: widget.cacheWidth,
+      gaplessPlayback: true,
+      filterQuality: FilterQuality.medium,
     );
   }
 }

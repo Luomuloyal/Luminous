@@ -1,22 +1,59 @@
+import 'package:luminous/api/scan_api.dart';
 import 'package:luminous/stores/app_database.dart';
 import 'package:luminous/viewmodels/album.dart';
 import 'package:sqflite/sqflite.dart';
 
+typedef AlbumCreateRemoteRecord =
+    Future<IdResult> Function({
+      required String userId,
+      required String thumbBase64,
+      String? drugCode,
+      String? approvalNo,
+      String? productName,
+      int? takenAt,
+    });
+
+typedef AlbumListRemoteRecords =
+    Future<ScanRecordListResult> Function({
+      required String userId,
+      int page,
+      int pageSize,
+    });
+
 /// 相册本地缓存的统一读写入口。
 class AlbumLocalStore {
-  AlbumLocalStore._();
+  AlbumLocalStore({
+    AlbumCreateRemoteRecord? createRemoteRecord,
+    AlbumListRemoteRecords? listRemoteRecords,
+  }) : _createRemoteRecord = createRemoteRecord ?? _defaultCreateRemoteRecord,
+       _listRemoteRecords = listRemoteRecords ?? _defaultListRemoteRecords;
 
-  static final AlbumLocalStore instance = AlbumLocalStore._();
+  static final AlbumLocalStore instance = AlbumLocalStore();
+
+  final AlbumCreateRemoteRecord _createRemoteRecord;
+  final AlbumListRemoteRecords _listRemoteRecords;
 
   /// 读取相册条目，并按 remoteId 折叠历史重复记录。
-  Future<List<AlbumEntry>> loadEntries() async {
+  Future<List<AlbumEntry>> loadEntries({String? userId}) async {
     try {
       final db = await AppDatabase.instance.database;
-      final rows = await db.query(
-        'album_items',
-        orderBy: 'COALESCE(takenAt, createdAt) DESC, createdAt DESC, id DESC',
-      );
-      return _collapseRows(rows);
+      final uid = normalizeUserId(userId);
+      final rows = await _isGuestScope(uid)
+          ? db.query(
+              'album_items',
+              where: 'userId = ? OR userId = ?',
+              whereArgs: ['', AppDatabase.legacyAlbumUserId],
+              orderBy:
+                  'COALESCE(takenAt, createdAt) DESC, createdAt DESC, id DESC',
+            )
+          : db.query(
+              'album_items',
+              where: 'userId = ?',
+              whereArgs: [uid],
+              orderBy:
+                  'COALESCE(takenAt, createdAt) DESC, createdAt DESC, id DESC',
+            );
+      return _collapseRows(await rows);
     } catch (_) {
       return const [];
     }
@@ -24,18 +61,22 @@ class AlbumLocalStore {
 
   /// 保存一条新的本地识别记录。
   Future<void> saveScanRecord({
+    String? userId,
     String? remoteId,
     String? drugCode,
     String? approvalNo,
     String? productName,
     required String thumbBase64,
     required String imageBase64,
+    String imageMimeType = '',
     required int takenAt,
     String source = 'scan',
   }) async {
     final db = await AppDatabase.instance.database;
+    final uid = normalizeUserId(userId);
     await db.insert('album_items', {
       'remoteId': _trimOrNull(remoteId),
+      'userId': uid,
       'identityKey': _buildIdentityKey(
         drugCode: drugCode,
         approvalNo: approvalNo,
@@ -47,14 +88,50 @@ class AlbumLocalStore {
       'filePath': '',
       'thumbBase64': thumbBase64.trim(),
       'imageBase64': imageBase64.trim(),
+      'imageMimeType': imageMimeType.trim(),
       'takenAt': takenAt,
       'source': source.trim().isEmpty ? 'scan' : source.trim(),
       'createdAt': takenAt,
     });
   }
 
+  /// 同步当前登录用户的待上传记录，并回写远端完整列表。
+  Future<void> syncRemoteForUser(String? userId, {int pageSize = 50}) async {
+    final uid = normalizeUserId(userId);
+    if (uid.isEmpty) {
+      return;
+    }
+
+    await _pushPendingLocal(uid);
+
+    final remoteItems = <ScanRecordItem>[];
+    var page = 1;
+    while (true) {
+      final remote = await _listRemoteRecords(
+        userId: uid,
+        page: page,
+        pageSize: pageSize,
+      );
+      remoteItems.addAll(remote.items);
+      if (!remote.hasMore || remote.items.isEmpty) {
+        break;
+      }
+      page = remote.page + 1;
+    }
+
+    await upsertRemoteRecords(uid, remoteItems);
+  }
+
   /// 把远端识别记录回写到本地，并保留已有原图。
-  Future<void> upsertRemoteRecords(List<ScanRecordItem> items) async {
+  Future<void> upsertRemoteRecords(
+    String? userId,
+    List<ScanRecordItem> items,
+  ) async {
+    final uid = normalizeUserId(userId);
+    if (uid.isEmpty) {
+      return;
+    }
+
     final remoteItems = [
       for (final item in items)
         if (item.id.trim().isNotEmpty) item,
@@ -67,6 +144,7 @@ class AlbumLocalStore {
     await db.transaction((txn) async {
       final existingByRemoteId = await _loadExistingRemoteRows(
         txn,
+        uid,
         remoteItems,
       );
       for (final item in remoteItems) {
@@ -75,16 +153,18 @@ class AlbumLocalStore {
         final preservedImageBase64 = _firstNonEmpty(
           duplicates.map((row) => (row['imageBase64'] ?? '').toString()),
         );
+        final preservedImageMimeType = _firstNonEmpty(
+          duplicates.map((row) => (row['imageMimeType'] ?? '').toString()),
+        );
         final preservedCreatedAt = _resolveCreatedAt(
           duplicates,
           fallback: item.takenAt,
         );
-        final keepId = duplicates.isNotEmpty
-            ? (duplicates.first['id'] as int?) ?? 0
-            : 0;
+        final keepId = _resolveKeepId(duplicates, uid);
 
         final values = <String, Object?>{
           'remoteId': remoteId,
+          'userId': uid,
           'identityKey': _buildIdentityKey(
             drugCode: item.drugCode,
             approvalNo: item.approvalNo,
@@ -96,6 +176,7 @@ class AlbumLocalStore {
           'filePath': '',
           'thumbBase64': item.thumbBase64.trim(),
           'imageBase64': preservedImageBase64,
+          'imageMimeType': preservedImageMimeType,
           'takenAt': item.takenAt,
           'source': 'scan',
           'createdAt': preservedCreatedAt,
@@ -109,8 +190,9 @@ class AlbumLocalStore {
             whereArgs: [keepId],
           );
           final duplicateIds = [
-            for (final row in duplicates.skip(1))
-              if ((row['id'] as int?) != null) row['id'] as int,
+            for (final row in duplicates)
+              if ((row['id'] as int?) != null && row['id'] != keepId)
+                row['id'] as int,
           ];
           if (duplicateIds.isNotEmpty) {
             final placeholders = List.filled(
@@ -132,6 +214,7 @@ class AlbumLocalStore {
 
   Future<Map<String, List<Map<String, Object?>>>> _loadExistingRemoteRows(
     Transaction txn,
+    String userId,
     List<ScanRecordItem> items,
   ) async {
     final remoteIds = items
@@ -146,9 +229,17 @@ class AlbumLocalStore {
     final placeholders = List.filled(remoteIds.length, '?').join(',');
     final rows = await txn.query(
       'album_items',
-      columns: ['id', 'remoteId', 'imageBase64', 'createdAt'],
-      where: 'remoteId IN ($placeholders)',
-      whereArgs: remoteIds,
+      columns: [
+        'id',
+        'remoteId',
+        'userId',
+        'imageBase64',
+        'imageMimeType',
+        'createdAt',
+      ],
+      where:
+          'remoteId IN ($placeholders) AND (userId = ? OR userId = ? OR userId = ?)',
+      whereArgs: [...remoteIds, userId, '', AppDatabase.legacyAlbumUserId],
       orderBy: 'createdAt ASC, id ASC',
     );
 
@@ -197,6 +288,9 @@ class AlbumLocalStore {
     newest['imageBase64'] = _firstNonEmpty(
       sorted.map((row) => (row['imageBase64'] ?? '').toString()),
     );
+    newest['imageMimeType'] = _firstNonEmpty(
+      sorted.map((row) => (row['imageMimeType'] ?? '').toString()),
+    );
     return AlbumEntry.fromLocalRow(newest);
   }
 
@@ -215,6 +309,21 @@ class AlbumLocalStore {
       return createdAtValues.first;
     }
     return fallback == 0 ? DateTime.now().millisecondsSinceEpoch : fallback;
+  }
+
+  int _resolveKeepId(List<Map<String, Object?>> rows, String userId) {
+    for (final row in rows) {
+      if ((row['userId'] ?? '').toString().trim() == userId) {
+        return (row['id'] as int?) ?? 0;
+      }
+    }
+    for (final row in rows) {
+      if ((row['userId'] ?? '').toString().trim() ==
+          AppDatabase.legacyAlbumUserId) {
+        return (row['id'] as int?) ?? 0;
+      }
+    }
+    return rows.isNotEmpty ? (rows.first['id'] as int?) ?? 0 : 0;
   }
 
   String _buildIdentityKey({
@@ -242,6 +351,10 @@ class AlbumLocalStore {
 
   String _trimOrEmpty(String? value) => (value ?? '').trim();
 
+  String normalizeUserId(String? value) => _trimOrEmpty(value);
+
+  bool _isGuestScope(String userId) => userId.isEmpty;
+
   String? _trimOrNull(String? value) {
     final trimmed = _trimOrEmpty(value);
     return trimmed.isEmpty ? null : trimmed;
@@ -255,6 +368,77 @@ class AlbumLocalStore {
       }
     }
     return '';
+  }
+
+  Future<void> _pushPendingLocal(String userId) async {
+    final db = await AppDatabase.instance.database;
+    final rows = await db.query(
+      'album_items',
+      where:
+          "(userId = ? OR userId = ?) AND (remoteId IS NULL OR remoteId = '')",
+      whereArgs: [userId, AppDatabase.legacyAlbumUserId],
+      orderBy: 'createdAt ASC',
+    );
+    for (final row in rows) {
+      final thumbBase64 = (row['thumbBase64'] ?? '').toString().trim();
+      if (thumbBase64.isEmpty) {
+        continue;
+      }
+      try {
+        final result = await _createRemoteRecord(
+          userId: userId,
+          thumbBase64: thumbBase64,
+          drugCode: (row['drugCode'] ?? '').toString(),
+          approvalNo: (row['approvalNo'] ?? '').toString(),
+          productName: (row['productName'] ?? '').toString(),
+          takenAt: row['takenAt'] as int?,
+        );
+        final localId = row['id'];
+        if (localId is! int || !result.hasId) {
+          continue;
+        }
+        await db.update(
+          'album_items',
+          {'remoteId': result.id, 'userId': userId},
+          where: 'id = ?',
+          whereArgs: [localId],
+        );
+      } catch (_) {
+        // 保留 pending 状态，等待下一次同步。
+      }
+    }
+  }
+
+  static Future<IdResult> _defaultCreateRemoteRecord({
+    required String userId,
+    required String thumbBase64,
+    String? drugCode,
+    String? approvalNo,
+    String? productName,
+    int? takenAt,
+  }) async {
+    final response = await ScanApi.createScanRecord(
+      userId: userId,
+      thumbBase64: thumbBase64,
+      drugCode: drugCode,
+      approvalNo: approvalNo,
+      productName: productName,
+      takenAt: takenAt,
+    );
+    return response.result;
+  }
+
+  static Future<ScanRecordListResult> _defaultListRemoteRecords({
+    required String userId,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final response = await ScanApi.listScanRecords(
+      userId: userId,
+      page: page,
+      pageSize: pageSize,
+    );
+    return response.result;
   }
 }
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/components/drug.dart';
@@ -69,6 +71,12 @@ class _DrugViewState extends State<DrugView> {
   /// 当前是否正在加载“我的药品”列表。
   bool _loadingMedicines = false;
 
+  /// 当前是否有新的刷新请求在排队。
+  bool _reloadQueued = false;
+
+  /// 当前活跃加载请求的编号。
+  int _loadRequestId = 0;
+
   /// 页面初始化时先加载一次“我的药品”。
   @override
   void initState() {
@@ -87,49 +95,75 @@ class _DrugViewState extends State<DrugView> {
 
   /// 从本地数据库加载“我的药品”列表。
   Future<void> _loadMyMedicines() async {
-    if (_loadingMedicines) return;
+    final userId = _userId.trim();
+    if (_loadingMedicines) {
+      _reloadQueued = true;
+      return;
+    }
+
+    final requestId = ++_loadRequestId;
     setState(() {
       _loadingMedicines = true;
     });
     try {
       /// 先读取当前作用域下的本地缓存。
-      final rows = await myMedicineRepository.loadLocalRows(userId: _userId);
-      if (!mounted) return;
+      final rows = await myMedicineRepository.loadLocalRows(userId: userId);
+      if (!_canApplyLoadResult(requestId, userId)) return;
       setState(() {
         _myMedicines = rows;
       });
 
-      if (_userId.isNotEmpty) {
+      if (userId.isNotEmpty) {
         try {
-          await myMedicineRepository.syncRemote(_userId);
+          await myMedicineRepository.syncRemote(userId);
           final syncedRows = await myMedicineRepository.loadLocalRows(
-            userId: _userId,
+            userId: userId,
           );
-          if (!mounted) return;
+          if (!_canApplyLoadResult(requestId, userId)) return;
           setState(() {
             _myMedicines = syncedRows;
           });
         } catch (e) {
-          if (mounted) {
-            ToastUtils.instance.showError(context, e);
+          if (!mounted ||
+              !_isActiveLoadRequest(requestId) ||
+              userId != _userId.trim()) {
+            return;
           }
+          ToastUtils.instance.showError(context, e);
         }
       }
     } catch (e) {
-      if (mounted) {
-        ToastUtils.instance.show(context, '加载我的药品失败');
+      if (!mounted ||
+          !_isActiveLoadRequest(requestId) ||
+          userId != _userId.trim()) {
+        return;
       }
+      ToastUtils.instance.show(context, '加载我的药品失败');
     } finally {
-      if (mounted) {
+      if (_isActiveLoadRequest(requestId) && mounted) {
         setState(() {
           _loadingMedicines = false;
         });
+      }
+      if (_isActiveLoadRequest(requestId) && _reloadQueued && mounted) {
+        _reloadQueued = false;
+        unawaited(_loadMyMedicines());
       }
     }
   }
 
   /// 当前登录用户 id（未登录时为空字符串）。
   String get _userId => _userController.user.value?.id ?? '';
+
+  bool _canApplyLoadResult(int requestId, String userId) {
+    return mounted &&
+        _isActiveLoadRequest(requestId) &&
+        userId == _userId.trim();
+  }
+
+  bool _isActiveLoadRequest(int requestId) {
+    return requestId == _loadRequestId;
+  }
 
   /// 从“我的药品”列表删除一条药品记录。
   ///

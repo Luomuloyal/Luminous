@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:flutter/material.dart';
-
 /// 相册（识别记录）相关的数据模型与列表卡片组件。
 ///
 /// 该文件承载两类内容：
@@ -143,6 +141,9 @@ class AlbumEntry {
   /// 原图 base64（仅本地记录可能存在）。
   final String imageBase64;
 
+  /// 原图 MIME 类型（仅本地记录可能存在）。
+  final String imageMimeType;
+
   /// 拍摄/识别时间戳（毫秒）。
   final int takenAt;
 
@@ -154,6 +155,7 @@ class AlbumEntry {
     required this.approvalNo,
     required this.thumbBase64,
     required this.imageBase64,
+    required this.imageMimeType,
     required this.takenAt,
   });
 
@@ -169,6 +171,7 @@ class AlbumEntry {
       approvalNo: (row['approvalNo'] ?? '').toString(),
       thumbBase64: thumbBase64,
       imageBase64: (row['imageBase64'] ?? '').toString(),
+      imageMimeType: (row['imageMimeType'] ?? '').toString(),
       takenAt: (row['takenAt'] as int?) ?? (row['createdAt'] as int?) ?? 0,
     );
   }
@@ -184,6 +187,7 @@ class AlbumEntry {
       approvalNo: record.approvalNo,
       thumbBase64: record.thumbBase64,
       imageBase64: '',
+      imageMimeType: '',
       takenAt: record.takenAt,
     );
   }
@@ -202,174 +206,6 @@ class AlbumEntry {
   /// 预览优先使用原图，没有原图时回退到缩略图。
   String get previewBase64 =>
       imageBase64.trim().isNotEmpty ? imageBase64.trim() : thumbBase64.trim();
-
-  /// 惰性解码缩略图。
-  Uint8List? get thumbBytes => _decodeBase64(thumbBase64);
-
-  /// 惰性解码预览图。
-  Uint8List? get previewBytes => _decodeBase64(previewBase64);
-}
-
-/// 相册网格中单个条目的 UI 卡片。
-///
-/// 该组件是纯展示组件，点击事件通过 `onTap` 交由页面处理（例如跳转详情）。
-class AlbumCard extends StatelessWidget {
-  /// 创建一个相册卡片组件。
-  const AlbumCard({super.key, required this.entry, required this.onTap});
-
-  /// 当前卡片对应的数据条目。
-  final AlbumEntry entry;
-
-  /// 点击卡片回调。
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return RepaintBoundary(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Ink(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x0F000000),
-                blurRadius: 10,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(18),
-                  ),
-                  child: Base64MemoryImage(
-                    base64: entry.thumbBase64,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                    cacheWidth: 640,
-                    placeholder: Container(
-                      color: const Color(0xFFF1F5F9),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.photo_outlined,
-                        color: Color(0xFF94A3B8),
-                        size: 34,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      entry.displayName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      entry.approvalNo.trim().isEmpty
-                          ? '点击查看详情'
-                          : '批准文号: ${entry.approvalNo}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        color: Color(0xFF64748B),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// 按需解码 base64 并以 `Image.memory` 展示。
-class Base64MemoryImage extends StatefulWidget {
-  const Base64MemoryImage({
-    super.key,
-    required this.base64,
-    required this.fit,
-    required this.placeholder,
-    this.width,
-    this.height,
-    this.cacheWidth,
-  });
-
-  final String base64;
-  final BoxFit fit;
-  final Widget placeholder;
-  final double? width;
-  final double? height;
-  final int? cacheWidth;
-
-  @override
-  State<Base64MemoryImage> createState() => _Base64MemoryImageState();
-}
-
-class _Base64MemoryImageState extends State<Base64MemoryImage> {
-  Uint8List? _bytes;
-  String _decodedSource = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _refreshDecodedBytes();
-  }
-
-  @override
-  void didUpdateWidget(covariant Base64MemoryImage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.base64 != widget.base64) {
-      _refreshDecodedBytes();
-    }
-  }
-
-  void _refreshDecodedBytes() {
-    final nextSource = widget.base64.trim();
-    _decodedSource = nextSource;
-    _bytes = decodeBase64Bytes(nextSource);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final bytes = _bytes;
-    if (bytes == null || _decodedSource.isEmpty) {
-      return widget.placeholder;
-    }
-    return Image.memory(
-      bytes,
-      fit: widget.fit,
-      width: widget.width,
-      height: widget.height,
-      cacheWidth: widget.cacheWidth,
-      gaplessPlayback: true,
-      filterQuality: FilterQuality.medium,
-    );
-  }
 }
 
 /// 解码 base64 缩略图。
@@ -391,3 +227,36 @@ Uint8List? _decodeBase64(String raw) {
 
 /// 对外暴露的安全 base64 解码方法。
 Uint8List? decodeBase64Bytes(String raw) => _decodeBase64(raw);
+
+/// 根据图片字节猜测 MIME 类型。
+String guessImageMimeType(Uint8List bytes) {
+  if (bytes.length >= 12 &&
+      bytes[0] == 0x52 &&
+      bytes[1] == 0x49 &&
+      bytes[2] == 0x46 &&
+      bytes[3] == 0x46 &&
+      bytes[8] == 0x57 &&
+      bytes[9] == 0x45 &&
+      bytes[10] == 0x42 &&
+      bytes[11] == 0x50) {
+    return 'image/webp';
+  }
+  if (bytes.length >= 8 &&
+      bytes[0] == 0x89 &&
+      bytes[1] == 0x50 &&
+      bytes[2] == 0x4E &&
+      bytes[3] == 0x47 &&
+      bytes[4] == 0x0D &&
+      bytes[5] == 0x0A &&
+      bytes[6] == 0x1A &&
+      bytes[7] == 0x0A) {
+    return 'image/png';
+  }
+  if (bytes.length >= 3 &&
+      bytes[0] == 0xFF &&
+      bytes[1] == 0xD8 &&
+      bytes[2] == 0xFF) {
+    return 'image/jpeg';
+  }
+  return 'image/jpeg';
+}

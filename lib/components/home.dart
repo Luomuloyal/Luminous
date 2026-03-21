@@ -35,28 +35,6 @@ class HomeFeatureItemData {
   });
 }
 
-class HomeReminderItemData {
-  /// 提醒左侧图标。
-  final IconData icon;
-
-  /// 提醒标题（通常为时间 + 药品名）。
-  final String title;
-
-  /// 提醒副标题（服用说明等）。
-  final String subtitle;
-
-  /// 当前提醒是否已完成。
-  final bool done;
-
-  /// 创建一个首页提醒条目数据对象。
-  const HomeReminderItemData({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.done,
-  });
-}
-
 /// “常用功能”卡片区域。
 ///
 /// 该组件只负责展示入口网格，点击行为通过 `onTap` 交给页面处理。

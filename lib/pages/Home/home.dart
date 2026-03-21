@@ -333,7 +333,7 @@ class _HomeViewState extends State<HomeView> {
       /// 从本地数据库中整理出来的“今天的提醒 UI 数据”。
       ///
       /// 它会把 reminders 表和 checkins 表拼起来，得出哪些提醒已经完成。
-      final local = await todayReminderLocalStore.loadHomeReminderItems(
+      final local = await todayReminderLocalStore.loadReminderItems(
         userId,
         overrides: overrides,
       );
@@ -343,6 +343,8 @@ class _HomeViewState extends State<HomeView> {
       /// 优先级：本地数据 > 接口数据。
       final items = local.isNotEmpty
           ? local
+                .map((item) => _toReminderUi(item, doneOverride: item.done))
+                .toList()
           : response.result.items
                 .map(
                   (item) => _toReminderUi(
@@ -365,13 +367,15 @@ class _HomeViewState extends State<HomeView> {
       final overrides = await todayReminderLocalStore.loadTodayOverrides(
         userId,
       );
-      final local = await todayReminderLocalStore.loadHomeReminderItems(
+      final local = await todayReminderLocalStore.loadReminderItems(
         userId,
         overrides: overrides,
       );
       if (_canApplyReminderResult(requestId, userId) && local.isNotEmpty) {
         setState(() {
-          _reminders = local;
+          _reminders = local
+              .map((item) => _toReminderUi(item, doneOverride: item.done))
+              .toList();
         });
       }
       if (!mounted) {

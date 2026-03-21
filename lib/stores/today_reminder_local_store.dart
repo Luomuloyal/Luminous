@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-import 'package:luminous/components/home.dart';
 import 'package:luminous/stores/app_database.dart';
 import 'package:luminous/viewmodels/home.dart';
 import 'package:sqflite/sqflite.dart';
@@ -99,37 +97,7 @@ class TodayReminderLocalStore {
     );
   }
 
-  Future<List<HomeReminderItemData>> loadHomeReminderItems(
-    String? userId, {
-    Map<String, bool>? overrides,
-  }) async {
-    final rows = await _loadReminderRows(userId);
-    if (rows.isEmpty) {
-      return const [];
-    }
-
-    final doneSet = await _loadDoneSet(userId);
-    return rows.map((row) {
-      final remoteId = (row['remoteId'] ?? '').toString().trim();
-      final time = (row['time'] ?? '').toString().trim();
-      final title = (row['productName'] ?? '').toString().trim();
-      final subtitle = (row['subtitle'] ?? '').toString().trim();
-      final done = resolveDoneState(
-        remoteId: remoteId,
-        doneSet: doneSet,
-        overrides: overrides,
-      );
-      final combinedTitle = time.isEmpty ? title : '$time $title';
-      return HomeReminderItemData(
-        icon: Icons.access_time_rounded,
-        title: combinedTitle.isEmpty ? '用药提醒' : combinedTitle,
-        subtitle: subtitle.isEmpty ? '系统通知提醒' : subtitle,
-        done: done,
-      );
-    }).toList();
-  }
-
-  Future<List<ReminderItem>> loadCheckInReminderItems(
+  Future<List<ReminderItem>> loadReminderItems(
     String? userId, {
     Map<String, bool>? overrides,
   }) async {

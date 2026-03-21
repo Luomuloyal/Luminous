@@ -1,6 +1,9 @@
+import 'package:get/get.dart';
+import 'package:luminous/stores/album_local_store.dart';
 import 'package:luminous/api/reminder_api.dart';
 import 'package:luminous/stores/my_medicine_repository.dart';
 import 'package:luminous/stores/reminder_local_store.dart';
+import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/message_utils.dart';
 import 'package:luminous/utils/notification_service.dart';
 import 'package:luminous/viewmodels/reminder.dart';
@@ -17,8 +20,8 @@ class SessionSyncService {
   /// 全局单例入口。
   static final SessionSyncService instance = SessionSyncService._();
 
-  /// 当前是否正处于同步中。
-  bool _syncing = false;
+  /// 串行化会话同步请求，避免不同用户会话互相覆盖。
+  Future<void> _syncTail = Future<void>.value();
 
   /// 同步指定用户的云端数据。
   ///
@@ -29,26 +32,41 @@ class SessionSyncService {
       await NotificationService.instance.cancelAll();
       return const [];
     }
-    if (_syncing) {
+    final run = _syncTail.catchError((_) {}).then((_) => _runSyncForUser(uid));
+    _syncTail = run.then<void>((_) {}, onError: (_, __) {});
+    return run;
+  }
+
+  Future<List<String>> _runSyncForUser(String userId) async {
+    if (!_shouldApplySync(userId)) {
       return const [];
     }
 
-    _syncing = true;
     final errors = <String>[];
     try {
-      try {
-        await myMedicineRepository.syncRemote(uid);
-      } catch (e) {
-        errors.add(_buildErrorText('我的药品', e));
-      }
+      await myMedicineRepository.syncRemote(userId);
+    } catch (e) {
+      errors.add(_buildErrorText('我的药品', e));
+    }
 
-      try {
-        await _syncReminders(uid);
-      } catch (e) {
-        errors.add(_buildErrorText('用药提醒', e));
-      }
-    } finally {
-      _syncing = false;
+    if (!_shouldApplySync(userId)) {
+      return errors;
+    }
+
+    try {
+      await _syncReminders(userId);
+    } catch (e) {
+      errors.add(_buildErrorText('用药提醒', e));
+    }
+
+    if (!_shouldApplySync(userId)) {
+      return errors;
+    }
+
+    try {
+      await albumLocalStore.syncRemoteForUser(userId);
+    } catch (e) {
+      errors.add(_buildErrorText('识别相册', e));
     }
     return errors;
   }
@@ -59,7 +77,18 @@ class SessionSyncService {
     final items = List<ReminderPlan>.from(response.result.items)
       ..sort((a, b) => a.time.compareTo(b.time));
     await reminderLocalStore.replaceForUser(userId, items);
+    if (!_shouldApplySync(userId)) {
+      return;
+    }
     await NotificationService.instance.rescheduleAll(items);
+  }
+
+  bool _shouldApplySync(String userId) {
+    if (!Get.isRegistered<UserController>()) {
+      return true;
+    }
+    final currentUserId = Get.find<UserController>().user.value?.id ?? '';
+    return currentUserId.trim() == userId.trim();
   }
 
   /// 生成同步失败提示文案。

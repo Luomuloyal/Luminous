@@ -1,7 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:luminous/api/scan_api.dart';
 import 'package:luminous/components/album.dart';
 import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/pages/Drug/medicine_detail.dart';
@@ -53,6 +54,12 @@ class _AlbumViewState extends State<AlbumView> {
   /// 页面最终展示的相册条目列表。
   List<AlbumEntry> _entries = [];
 
+  /// 当前是否有新的刷新请求在排队。
+  bool _reloadQueued = false;
+
+  /// 当前活跃加载请求的编号。
+  int _loadRequestId = 0;
+
   /// 当前登录用户 id。
   ///
   /// 未登录时为空字符串。
@@ -82,7 +89,13 @@ class _AlbumViewState extends State<AlbumView> {
   /// 3. 合并本地与远端结果；
   /// 4. 再把远端数据回写缓存到本地。
   Future<void> _load() async {
-    if (_loading) return;
+    final userId = _userId.trim();
+    if (_loading) {
+      _reloadQueued = true;
+      return;
+    }
+
+    final requestId = ++_loadRequestId;
     setState(() {
       _loading = true;
       _error = null;
@@ -90,37 +103,47 @@ class _AlbumViewState extends State<AlbumView> {
 
     try {
       /// 先从本地数据库读取的相册记录。
-      final local = await _loadLocal();
-      if (!mounted) return;
+      final local = await _loadLocal(userId: userId);
+      if (!_canApplyLoadResult(requestId, userId)) return;
       setState(() => _entries = local);
 
       /// 当前是否满足拉远端记录的前提：已登录且有有效 userId。
-      final loggedIn = _userController.isLoggedIn && _userId.isNotEmpty;
+      final loggedIn = _userController.isLoggedIn && userId.isNotEmpty;
       if (loggedIn) {
-        /// 远端识别记录列表接口返回结果。
-        final remote = await ScanApi.listScanRecords(
-          userId: _userId,
-          page: 1,
-          pageSize: 50,
-        );
-        if (!mounted) return;
-        await _albumLocalStore.upsertRemoteRecords(remote.result.items);
-        final refreshedLocal = await _loadLocal();
-        if (!mounted) return;
+        await _albumLocalStore.syncRemoteForUser(userId);
+        if (!_canApplyLoadResult(requestId, userId)) return;
+        final refreshedLocal = await _loadLocal(userId: userId);
+        if (!_canApplyLoadResult(requestId, userId)) return;
         setState(() => _entries = refreshedLocal);
       }
     } catch (e) {
-      if (!mounted) return;
+      if (!_canApplyLoadResult(requestId, userId)) return;
       setState(() => _error = MessageUtils.extractError(e));
     } finally {
-      if (mounted) {
+      if (_isActiveLoadRequest(requestId) && mounted) {
         setState(() => _loading = false);
+      }
+      if (_isActiveLoadRequest(requestId) && _reloadQueued && mounted) {
+        _reloadQueued = false;
+        unawaited(_load());
       }
     }
   }
 
   /// 读取本地缓存的相册记录。
-  Future<List<AlbumEntry>> _loadLocal() => _albumLocalStore.loadEntries();
+  Future<List<AlbumEntry>> _loadLocal({required String userId}) {
+    return _albumLocalStore.loadEntries(userId: userId);
+  }
+
+  bool _canApplyLoadResult(int requestId, String userId) {
+    return mounted &&
+        _isActiveLoadRequest(requestId) &&
+        userId == _userId.trim();
+  }
+
+  bool _isActiveLoadRequest(int requestId) {
+    return requestId == _loadRequestId;
+  }
 
   /// 构建相册页 UI。
   @override
@@ -193,7 +216,9 @@ class _AlbumViewState extends State<AlbumView> {
           mode: ScanEntryMode.result,
           initialImage: SelectedScanImage(
             bytes: bytes,
-            mimeType: 'image/jpeg',
+            mimeType: entry.imageMimeType.trim().isNotEmpty
+                ? entry.imageMimeType.trim()
+                : guessImageMimeType(bytes),
             source: ImageSource.gallery,
           ),
         ),

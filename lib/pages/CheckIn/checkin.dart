@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/api/checkin_api.dart';
@@ -25,6 +27,8 @@ class _CheckInPageState extends State<CheckInPage> {
   bool _loading = false;
   String? _error;
   List<ReminderItem> _items = [];
+  bool _reloadQueued = false;
+  int _loadRequestId = 0;
 
   String get _userId => _userController.user.value?.id ?? '';
 
@@ -55,7 +59,12 @@ class _CheckInPageState extends State<CheckInPage> {
       }
       return;
     }
-    if (_loading) return;
+    if (_loading) {
+      _reloadQueued = true;
+      return;
+    }
+
+    final requestId = ++_loadRequestId;
 
     setState(() {
       _loading = true;
@@ -64,12 +73,14 @@ class _CheckInPageState extends State<CheckInPage> {
 
     try {
       final response = await HomeApi.fetchTodayReminders(userId: userId);
-      final overrides = await todayReminderLocalStore.loadTodayOverrides(userId);
-      final local = await todayReminderLocalStore.loadCheckInReminderItems(
+      final overrides = await todayReminderLocalStore.loadTodayOverrides(
+        userId,
+      );
+      final local = await todayReminderLocalStore.loadReminderItems(
         userId,
         overrides: overrides,
       );
-      if (!mounted) return;
+      if (!_canApplyLoadResult(requestId, userId)) return;
 
       setState(() {
         _items = local.isNotEmpty
@@ -87,20 +98,32 @@ class _CheckInPageState extends State<CheckInPage> {
                   .toList();
       });
     } catch (e) {
-      if (!mounted) return;
-      final local = await todayReminderLocalStore.loadCheckInReminderItems(
-        userId,
-      );
-      if (!mounted) return;
+      if (!_canApplyLoadResult(requestId, userId)) return;
+      final local = await todayReminderLocalStore.loadReminderItems(userId);
+      if (!_canApplyLoadResult(requestId, userId)) return;
       setState(() {
         _error = MessageUtils.extractError(e);
         _items = local;
       });
     } finally {
-      if (mounted) {
+      if (_isActiveLoadRequest(requestId) && mounted) {
         setState(() => _loading = false);
       }
+      if (_isActiveLoadRequest(requestId) && _reloadQueued && mounted) {
+        _reloadQueued = false;
+        unawaited(_load());
+      }
     }
+  }
+
+  bool _canApplyLoadResult(int requestId, String userId) {
+    return mounted &&
+        _isActiveLoadRequest(requestId) &&
+        userId == _userId.trim();
+  }
+
+  bool _isActiveLoadRequest(int requestId) {
+    return requestId == _loadRequestId;
   }
 
   @override

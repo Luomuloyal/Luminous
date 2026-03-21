@@ -10,6 +10,8 @@ import 'package:sqflite/sqflite.dart';
 // - 这类本地数据属于“客户端缓存/本地资产”，不依赖后端。
 // - 表结构尽量保持稳定；需要变更时通过 version + onUpgrade 做迁移。
 class AppDatabase {
+  static const String legacyAlbumUserId = '__legacy__';
+
   /// 私有构造函数，当前数据库管理器通过单例使用。
   AppDatabase._();
 
@@ -22,7 +24,7 @@ class AppDatabase {
   /// 当前数据库 schema 版本号。
   ///
   /// 版本变更时需要同步更新 `_upgradeTables` 中的迁移逻辑。
-  static const int _version = 5;
+  static const int _version = 7;
 
   /// 已打开的数据库实例缓存。
   Database? _db;
@@ -87,6 +89,7 @@ class AppDatabase {
       CREATE TABLE IF NOT EXISTS album_items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         remoteId TEXT,
+        userId TEXT NOT NULL DEFAULT '',
         identityKey TEXT,
         drugCode TEXT,
         approvalNo TEXT,
@@ -94,6 +97,7 @@ class AppDatabase {
         filePath TEXT,
         thumbBase64 TEXT,
         imageBase64 TEXT,
+        imageMimeType TEXT,
         takenAt INTEGER,
         source TEXT,
         createdAt INTEGER NOT NULL
@@ -104,6 +108,14 @@ class AppDatabase {
     );
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_album_items_remoteId ON album_items(remoteId)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_album_items_userId_createdAt '
+      'ON album_items(userId, createdAt DESC)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_album_items_userId_remoteId '
+      'ON album_items(userId, remoteId)',
     );
 
     // reminders：提醒计划缓存（后端同步源）
@@ -209,6 +221,26 @@ class AppDatabase {
       await _tryExecute(
         db,
         'ALTER TABLE album_items ADD COLUMN imageBase64 TEXT',
+      );
+      await _createTables(db);
+    }
+
+    if (oldVersion < 6) {
+      await _tryExecute(
+        db,
+        "ALTER TABLE album_items ADD COLUMN userId TEXT NOT NULL DEFAULT ''",
+      );
+      await _tryExecute(
+        db,
+        "UPDATE album_items SET userId = '$legacyAlbumUserId' WHERE userId = ''",
+      );
+      await _createTables(db);
+    }
+
+    if (oldVersion < 7) {
+      await _tryExecute(
+        db,
+        'ALTER TABLE album_items ADD COLUMN imageMimeType TEXT',
       );
       await _createTables(db);
     }
