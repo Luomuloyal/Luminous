@@ -63,6 +63,9 @@ class _HomeViewState extends State<HomeView> {
   /// 监听登录用户变化的 worker。
   Worker? _userWorker;
 
+  /// 当前首页顶部展示的小贴士文案。
+  late String _todayTip;
+
   /// “常用功能”区域的静态入口列表。
   ///
   /// 每个元素描述一个功能卡片的 id、标题、副标题、图标和颜色，
@@ -165,6 +168,7 @@ class _HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
+    _todayTip = _startupHealthTip;
     _userWorker = ever<dynamic>(_userController.user, (_) {
       _fetchTodayReminders();
     });
@@ -203,23 +207,28 @@ class _HomeViewState extends State<HomeView> {
     return SafeArea(
       child: Container(
         color: const Color(0xFFF3F7FB),
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: HomeTopSection(
-                palette: SoftBannerPalettes.home,
-                todayTip: _startupHealthTip,
-                nextText: nextText,
-                loadingReminders: _loadingReminders,
-                reminderCount: _reminders.length,
+        child: RefreshIndicator(
+          onRefresh: _fetchTodayReminders,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: HomeTopSection(
+                  palette: SoftBannerPalettes.home,
+                  todayTip: _todayTip,
+                  nextText: nextText,
+                  loadingReminders: _loadingReminders,
+                  reminderCount: _reminders.length,
+                  onTapTip: _cycleHealthTip,
+                ),
               ),
-            ),
-            SliverToBoxAdapter(
-              child: HomeFeatureSection(items: _entries, onTap: _onEntryTap),
-            ),
-            SliverToBoxAdapter(child: HomeReminderSection(items: _reminders)),
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
-          ],
+              SliverToBoxAdapter(
+                child: HomeFeatureSection(items: _entries, onTap: _onEntryTap),
+              ),
+              SliverToBoxAdapter(child: HomeReminderSection(items: _reminders)),
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            ],
+          ),
         ),
       ),
     );
@@ -316,17 +325,29 @@ class _HomeViewState extends State<HomeView> {
         userId: userId.isEmpty ? null : userId,
       );
 
+      final overrides = await _loadTodayCheckinOverrides(userId);
+
       /// 从本地数据库中整理出来的“今天的提醒 UI 数据”。
       ///
       /// 它会把 reminders 表和 checkins 表拼起来，得出哪些提醒已经完成。
-      final local = await _loadLocalTodayReminders(userId);
+      final local = await _loadLocalTodayReminders(
+        userId,
+        overrides: overrides,
+      );
 
       /// 本次最终准备渲染到页面上的提醒列表。
       ///
       /// 优先级：本地数据 > 接口数据。
       final items = local.isNotEmpty
           ? local
-          : response.result.items.map(_toReminderUi).toList();
+          : response.result.items
+                .map(
+                  (item) => _toReminderUi(
+                    item,
+                    doneOverride: overrides[item.id.trim()],
+                  ),
+                )
+                .toList();
 
       if (!_canApplyReminderResult(requestId, userId)) return;
       setState(() {
@@ -337,6 +358,16 @@ class _HomeViewState extends State<HomeView> {
     } catch (e) {
       if (!_canApplyReminderResult(requestId, userId)) {
         return;
+      }
+      final overrides = await _loadTodayCheckinOverrides(userId);
+      final local = await _loadLocalTodayReminders(
+        userId,
+        overrides: overrides,
+      );
+      if (_canApplyReminderResult(requestId, userId) && local.isNotEmpty) {
+        setState(() {
+          _reminders = local;
+        });
       }
       if (!mounted) {
         return;
@@ -374,8 +405,9 @@ class _HomeViewState extends State<HomeView> {
   /// 2. 查当前用户启用中的提醒计划；
   /// 3. 组合成首页展示用的 `HomeReminderItemData` 列表。
   Future<List<HomeReminderItemData>> _loadLocalTodayReminders(
-    String? userId,
-  ) async {
+    String? userId, {
+    Map<String, bool>? overrides,
+  }) async {
     /// 去掉空白后的用户 id。
     ///
     /// 若为空，说明当前没有可用于查询本地提醒的用户身份，直接返回空列表。
@@ -390,33 +422,15 @@ class _HomeViewState extends State<HomeView> {
       /// 用来查询 reminders 和 checkins 两张表。
       final db = await AppDatabase.instance.database;
 
-      /// 当前时间。
-      ///
-      /// 仅用于计算“今天开始时间”和“明天开始时间”。
-      final now = DateTime.now();
-
-      /// 今天 00:00:00 对应的毫秒时间戳。
-      ///
-      /// 用于筛选今天范围内的打卡记录。
-      final start = DateTime(
-        now.year,
-        now.month,
-        now.day,
-      ).millisecondsSinceEpoch;
-
-      /// 明天 00:00:00 对应的毫秒时间戳。
-      ///
-      /// 与 `start` 组成左闭右开区间 `[start, end)` 来查询“今天”的数据。
-      final end = start + const Duration(days: 1).inMilliseconds;
-
       /// 今天所有打卡记录里记录过的 reminderRemoteId 列表。
       ///
       /// 用来判断某条提醒今天是否已经完成。
+      final range = _todayRange();
       final checkinRows = await db.query(
         'checkins',
         columns: ['reminderRemoteId'],
         where: 'userId = ? AND takenAt >= ? AND takenAt < ?',
-        whereArgs: [uid, start, end],
+        whereArgs: [uid, range.start, range.end],
       );
 
       /// 今天已经完成打卡的提醒 id 集合。
@@ -462,7 +476,11 @@ class _HomeViewState extends State<HomeView> {
         final subtitle = (row['subtitle'] ?? '').toString().trim();
 
         /// 当前提醒今天是否已经打过卡。
-        final done = remoteId.isNotEmpty && doneSet.contains(remoteId);
+        final done = _resolveDoneState(
+          remoteId: remoteId,
+          doneSet: doneSet,
+          overrides: overrides,
+        );
 
         /// 首页主标题展示用的组合文案。
         ///
@@ -483,7 +501,7 @@ class _HomeViewState extends State<HomeView> {
   /// 把接口层的提醒对象转换为首页组件直接可用的 UI 数据。
   ///
   /// 这样页面不需要直接依赖接口返回结构的字段命名和组合规则。
-  HomeReminderItemData _toReminderUi(ReminderItem item) {
+  HomeReminderItemData _toReminderUi(ReminderItem item, {bool? doneOverride}) {
     /// 接口返回的提醒时间字符串。
     final time = item.time.trim();
 
@@ -497,7 +515,76 @@ class _HomeViewState extends State<HomeView> {
       icon: Icons.access_time_rounded,
       title: combinedTitle,
       subtitle: item.subtitle.trim(),
-      done: item.done,
+      done: doneOverride ?? item.done,
     );
+  }
+
+  /// 切换到下一条本地健康小贴士。
+  void _cycleHealthTip() {
+    if (_localHealthTips.length <= 1) {
+      return;
+    }
+
+    final nextTips = _localHealthTips.where((tip) => tip != _todayTip).toList();
+    if (nextTips.isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _todayTip = nextTips[Random().nextInt(nextTips.length)];
+    });
+  }
+
+  ({int start, int end, String dateKey}) _todayRange() {
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, now.day).millisecondsSinceEpoch;
+    final end = start + const Duration(days: 1).inMilliseconds;
+    final dateKey =
+        '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
+    return (start: start, end: end, dateKey: dateKey);
+  }
+
+  bool _resolveDoneState({
+    required String remoteId,
+    required Set<String> doneSet,
+    Map<String, bool>? overrides,
+  }) {
+    final trimmedId = remoteId.trim();
+    if (trimmedId.isEmpty) {
+      return false;
+    }
+    final override = overrides?[trimmedId];
+    if (override != null) {
+      return override;
+    }
+    return doneSet.contains(trimmedId);
+  }
+
+  Future<Map<String, bool>> _loadTodayCheckinOverrides(String? userId) async {
+    final uid = (userId ?? '').trim();
+    if (uid.isEmpty) {
+      return const {};
+    }
+
+    try {
+      final db = await AppDatabase.instance.database;
+      final range = _todayRange();
+      final rows = await db.query(
+        'checkin_overrides',
+        columns: ['reminderRemoteId', 'done'],
+        where: 'userId = ? AND dateKey = ?',
+        whereArgs: [uid, range.dateKey],
+      );
+
+      return {
+        for (final row in rows)
+          (row['reminderRemoteId'] ?? '').toString().trim():
+              (row['done'] as int? ?? 0) == 1,
+      }..removeWhere((key, value) => key.isEmpty);
+    } catch (_) {
+      return const {};
+    }
   }
 }

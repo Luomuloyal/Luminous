@@ -178,6 +178,7 @@ class HomeTopSection extends StatelessWidget {
     required this.nextText,
     required this.loadingReminders,
     required this.reminderCount,
+    required this.onTapTip,
   });
 
   /// 顶部横幅配色。
@@ -194,6 +195,9 @@ class HomeTopSection extends StatelessWidget {
 
   /// 当前提醒条数。
   final int reminderCount;
+
+  /// 点击“健康小贴士”回调。
+  final VoidCallback onTapTip;
 
   @override
   Widget build(BuildContext context) {
@@ -217,6 +221,7 @@ class HomeTopSection extends StatelessWidget {
                   text: '健康小贴士',
                   backgroundColor: theme.surfaceColor,
                   textColor: theme.surfaceTextColor,
+                  onTap: onTapTip,
                 ),
               ];
 

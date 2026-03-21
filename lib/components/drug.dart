@@ -52,6 +52,7 @@ class DrugPage extends StatelessWidget {
         child: RefreshIndicator(
           onRefresh: onRefresh,
           child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               DrugSearchEntrySliver(onTap: onTapSearch),
               DrugQuickEntrySectionSliver(

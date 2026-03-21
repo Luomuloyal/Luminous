@@ -22,7 +22,7 @@ class AppDatabase {
   /// 当前数据库 schema 版本号。
   ///
   /// 版本变更时需要同步更新 `_upgradeTables` 中的迁移逻辑。
-  static const int _version = 3;
+  static const int _version = 4;
 
   /// 已打开的数据库实例缓存。
   Database? _db;
@@ -137,6 +137,23 @@ class AppDatabase {
     await db.execute(
       'CREATE INDEX IF NOT EXISTS idx_checkins_userId_takenAt ON checkins(userId, takenAt DESC)',
     );
+
+    // checkin_overrides：今日打卡状态本地覆盖（支持已打卡/未打卡切换）
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS checkin_overrides (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId TEXT NOT NULL,
+        reminderRemoteId TEXT NOT NULL,
+        dateKey TEXT NOT NULL,
+        done INTEGER NOT NULL,
+        updatedAt INTEGER NOT NULL,
+        UNIQUE(userId, reminderRemoteId, dateKey)
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_checkin_overrides_userId_dateKey '
+      'ON checkin_overrides(userId, dateKey)',
+    );
   }
 
   /// 执行数据库升级迁移。
@@ -177,6 +194,10 @@ class AppDatabase {
         "UPDATE my_medicines SET identityKey = 'guest|' || identityKey "
         "WHERE identityKey NOT LIKE 'guest|%' AND identityKey NOT LIKE 'user:%|%'",
       );
+      await _createTables(db);
+    }
+
+    if (oldVersion < 4) {
       await _createTables(db);
     }
   }

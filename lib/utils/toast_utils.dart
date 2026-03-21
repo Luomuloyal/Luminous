@@ -124,8 +124,8 @@ class ToastUtils {
         return _ToastOverlay(
           message: message,
           placement: placement,
-          topOffset: topInset + 12,
-          bottomOffset: bottomInset + 20,
+          topOffset: topInset + 22,
+          bottomOffset: bottomInset + 40,
           style: style,
         );
       },
@@ -187,7 +187,12 @@ class _ToastOverlay extends StatelessWidget {
               ],
             ),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+              padding: EdgeInsets.fromLTRB(
+                14,
+                placement == ToastPlacement.bottom ? 14 : 11,
+                14,
+                placement == ToastPlacement.bottom ? 14 : 11,
+              ),
               child: Row(
                 children: [
                   Icon(style.icon, size: 18, color: style.accentColor),

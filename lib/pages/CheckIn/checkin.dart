@@ -7,6 +7,7 @@ import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/message_utils.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/home.dart';
+import 'package:sqflite/sqflite.dart';
 
 /// 用药打卡页。
 ///
@@ -22,10 +23,13 @@ class CheckInPage extends StatefulWidget {
 
 /// 用药打卡页状态对象。
 ///
-/// 会把 today-reminders 的结果渲染成可打卡列表，并在打卡成功后同步刷新。
+/// 会把 today-reminders 的结果渲染成可打卡列表，并在本地覆盖状态后同步刷新显示。
 class _CheckInPageState extends State<CheckInPage> {
   /// 全局用户控制器，用于获取 userId 与判断登录态。
   final UserController _userController = Get.find<UserController>();
+
+  /// 监听登录用户变化的 worker。
+  Worker? _userWorker;
 
   /// 当前是否正在加载今日提醒列表。
   bool _loading = false;
@@ -43,7 +47,16 @@ class _CheckInPageState extends State<CheckInPage> {
   @override
   void initState() {
     super.initState();
+    _userWorker = ever<dynamic>(_userController.user, (_) {
+      _load();
+    });
     _load();
+  }
+
+  @override
+  void dispose() {
+    _userWorker?.dispose();
+    super.dispose();
   }
 
   /// 加载今日提醒列表（用于打卡页面展示）。
@@ -51,8 +64,15 @@ class _CheckInPageState extends State<CheckInPage> {
   /// 注意：打卡页依赖登录态，没有 userId 时直接返回。
   Future<void> _load() async {
     /// 当前 userId（提前取出来避免重复读取）。
-    final userId = _userId;
+    final userId = _userId.trim();
     if (userId.trim().isEmpty) {
+      if (mounted) {
+        setState(() {
+          _items = [];
+          _error = null;
+          _loading = false;
+        });
+      }
       return;
     }
     if (_loading) return;
@@ -63,13 +83,35 @@ class _CheckInPageState extends State<CheckInPage> {
     try {
       /// 调用首页同款接口获取今日提醒。
       final response = await HomeApi.fetchTodayReminders(userId: userId);
+      final overrides = await _loadTodayCheckinOverrides(userId);
+      final local = await _loadLocalTodayReminders(
+        userId,
+        overrides: overrides,
+      );
       if (!mounted) return;
       setState(() {
-        _items = response.result.items;
+        _items = local.isNotEmpty
+            ? local
+            : response.result.items
+                  .map(
+                    (item) => ReminderItem(
+                      id: item.id,
+                      time: item.time,
+                      title: item.title,
+                      subtitle: item.subtitle,
+                      done: overrides[item.id.trim()] ?? item.done,
+                    ),
+                  )
+                  .toList();
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = MessageUtils.extractError(e));
+      final local = await _loadLocalTodayReminders(userId);
+      if (!mounted) return;
+      setState(() {
+        _error = MessageUtils.extractError(e);
+        _items = local;
+      });
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -106,6 +148,7 @@ class _CheckInPageState extends State<CheckInPage> {
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                 children: [
                   if (_error != null) _buildErrorBanner(_error!),
@@ -119,7 +162,7 @@ class _CheckInPageState extends State<CheckInPage> {
                       ),
                       child: _CheckInCard(
                         item: item,
-                        onCheckIn: item.done ? null : () => _checkIn(item),
+                        onCheckIn: () => _toggleCheckIn(item),
                       ),
                     );
                   }),
@@ -269,12 +312,19 @@ class _CheckInPageState extends State<CheckInPage> {
     );
   }
 
-  /// 对某条提醒执行打卡。
+  /// 对某条提醒执行打卡状态切换。
   ///
-  /// 成功后会：
-  /// 1. 先 best-effort 写入本地 checkins 表，用于首页与打卡页状态联动；
-  /// 2. 再重新拉取 today-reminders 刷新列表。
-  Future<void> _checkIn(ReminderItem item) async {
+  /// - 未打卡 -> 已打卡：请求创建打卡，并写入本地覆盖状态；
+  /// - 已打卡 -> 未打卡：只更新本地覆盖状态，等待后端后续补齐对应接口。
+  Future<void> _toggleCheckIn(ReminderItem item) async {
+    if (item.done) {
+      await _markUndone(item);
+      return;
+    }
+    await _markDone(item);
+  }
+
+  Future<void> _markDone(ReminderItem item) async {
     /// 当前 userId。
     final userId = _userId;
     if (userId.trim().isEmpty) return;
@@ -292,10 +342,17 @@ class _CheckInPageState extends State<CheckInPage> {
         reminderId: item.id,
         takenAt: now,
       );
-      // cache locally (best-effort)
+
       try {
         /// 本地数据库实例。
         final db = await AppDatabase.instance.database;
+        final range = _todayRange();
+        await db.delete(
+          'checkins',
+          where:
+              'userId = ? AND reminderRemoteId = ? AND takenAt >= ? AND takenAt < ?',
+          whereArgs: [userId, item.id, range.start, range.end],
+        );
         await db.insert('checkins', {
           'remoteId': response.result.id,
           'userId': userId,
@@ -303,14 +360,179 @@ class _CheckInPageState extends State<CheckInPage> {
           'takenAt': now,
           'createdAt': now,
         });
+        await _saveTodayCheckinOverride(
+          userId: userId,
+          reminderId: item.id,
+          done: true,
+        );
       } catch (_) {}
 
       if (!mounted) return;
       ToastUtils.instance.show(context, '打卡成功');
-      await _load();
+      _setLocalDone(item.id, true);
     } catch (e) {
       if (!mounted) return;
       ToastUtils.instance.showError(context, e);
+    }
+  }
+
+  Future<void> _markUndone(ReminderItem item) async {
+    final userId = _userId.trim();
+    if (userId.isEmpty) {
+      return;
+    }
+    if (item.id.trim().isEmpty) {
+      ToastUtils.instance.show(context, '该提醒缺少 id，无法切换状态');
+      return;
+    }
+
+    try {
+      final db = await AppDatabase.instance.database;
+      final range = _todayRange();
+      await db.delete(
+        'checkins',
+        where:
+            'userId = ? AND reminderRemoteId = ? AND takenAt >= ? AND takenAt < ?',
+        whereArgs: [userId, item.id.trim(), range.start, range.end],
+      );
+      await _saveTodayCheckinOverride(
+        userId: userId,
+        reminderId: item.id,
+        done: false,
+      );
+      if (!mounted) return;
+      ToastUtils.instance.show(context, '已改为未打卡');
+      _setLocalDone(item.id, false);
+    } catch (e) {
+      if (!mounted) return;
+      ToastUtils.instance.showError(context, e);
+    }
+  }
+
+  void _setLocalDone(String reminderId, bool done) {
+    setState(() {
+      _items = _items
+          .map(
+            (item) => item.id == reminderId
+                ? ReminderItem(
+                    id: item.id,
+                    time: item.time,
+                    title: item.title,
+                    subtitle: item.subtitle,
+                    done: done,
+                  )
+                : item,
+          )
+          .toList();
+    });
+  }
+
+  ({int start, int end, String dateKey}) _todayRange() {
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, now.day).millisecondsSinceEpoch;
+    final end = start + const Duration(days: 1).inMilliseconds;
+    final dateKey =
+        '${now.year.toString().padLeft(4, '0')}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}';
+    return (start: start, end: end, dateKey: dateKey);
+  }
+
+  Future<void> _saveTodayCheckinOverride({
+    required String userId,
+    required String reminderId,
+    required bool done,
+  }) async {
+    final db = await AppDatabase.instance.database;
+    final range = _todayRange();
+    await db.insert('checkin_overrides', {
+      'userId': userId.trim(),
+      'reminderRemoteId': reminderId.trim(),
+      'dateKey': range.dateKey,
+      'done': done ? 1 : 0,
+      'updatedAt': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<Map<String, bool>> _loadTodayCheckinOverrides(String? userId) async {
+    final uid = (userId ?? '').trim();
+    if (uid.isEmpty) {
+      return const {};
+    }
+
+    try {
+      final db = await AppDatabase.instance.database;
+      final range = _todayRange();
+      final rows = await db.query(
+        'checkin_overrides',
+        columns: ['reminderRemoteId', 'done'],
+        where: 'userId = ? AND dateKey = ?',
+        whereArgs: [uid, range.dateKey],
+      );
+      return {
+        for (final row in rows)
+          (row['reminderRemoteId'] ?? '').toString().trim():
+              (row['done'] as int? ?? 0) == 1,
+      }..removeWhere((key, value) => key.isEmpty);
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  Future<List<ReminderItem>> _loadLocalTodayReminders(
+    String? userId, {
+    Map<String, bool>? overrides,
+  }) async {
+    final uid = (userId ?? '').trim();
+    if (uid.isEmpty) {
+      return const [];
+    }
+
+    try {
+      final db = await AppDatabase.instance.database;
+      final range = _todayRange();
+      final checkinRows = await db.query(
+        'checkins',
+        columns: ['reminderRemoteId'],
+        where: 'userId = ? AND takenAt >= ? AND takenAt < ?',
+        whereArgs: [uid, range.start, range.end],
+      );
+
+      final doneSet = <String>{};
+      for (final row in checkinRows) {
+        final id = (row['reminderRemoteId'] ?? '').toString().trim();
+        if (id.isNotEmpty) {
+          doneSet.add(id);
+        }
+      }
+
+      final reminderRows = await db.query(
+        'reminders',
+        where: 'userId = ? AND enabled = 1',
+        whereArgs: [uid],
+        orderBy: 'time ASC',
+      );
+      if (reminderRows.isEmpty) {
+        return const [];
+      }
+
+      return reminderRows.map((row) {
+        final remoteId = (row['remoteId'] ?? '').toString().trim();
+        final time = (row['time'] ?? '').toString().trim();
+        final title = (row['productName'] ?? '').toString().trim();
+        final subtitle = (row['subtitle'] ?? '').toString().trim();
+        final done = overrides?[remoteId] ?? doneSet.contains(remoteId);
+
+        return ReminderItem(
+          id: remoteId,
+          time: time,
+          title: title.isEmpty ? '用药提醒' : title,
+          subtitle: subtitle.isEmpty ? '系统通知提醒' : subtitle,
+          done: done,
+        );
+      }).toList();
+    } catch (_) {
+      return const [];
     }
   }
 }
@@ -325,8 +547,8 @@ class _CheckInCard extends StatelessWidget {
   /// 当前提醒条目。
   final ReminderItem item;
 
-  /// 点击“打卡”按钮回调；为 null 表示禁用（已完成）。
-  final VoidCallback? onCheckIn;
+  /// 点击“打卡/取消打卡”按钮回调。
+  final VoidCallback onCheckIn;
 
   /// 构建单条打卡提醒卡片 UI。
   @override
@@ -407,7 +629,7 @@ class _CheckInCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: Text(done ? '已完成' : '打卡'),
+              child: Text(done ? '取消打卡' : '打卡'),
             ),
           ],
         ),

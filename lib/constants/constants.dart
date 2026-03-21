@@ -116,6 +116,6 @@ class AppUiConstants {
     Color(0xFF0EA5E9),
     Color(0xFF10B981),
     Color(0xFFF59E0B),
-    Color(0xFF14B8A6),
+    Color(0xFFE77AA6),
   ];
 }

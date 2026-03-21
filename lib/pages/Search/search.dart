@@ -202,29 +202,34 @@ class _SearchViewState extends State<SearchView> {
     return Scaffold(
       backgroundColor: const Color(0xFFF3F7FB),
       body: SafeArea(
-        child: CustomScrollView(
-          controller: _scrollController,
-          slivers: [
-            _buildHeaderSliver(),
-            _buildSearchBarSliver(),
-            _buildQuickTagsSliver(),
-            _buildHistorySliver(),
-            _buildResultTitleSliver(),
-            if (_keyword.isEmpty && _draftKeyword.isEmpty)
-              _buildGuideSliver()
-            else if (_keyword.isEmpty && _draftKeyword.isNotEmpty)
-              _buildReadySliver()
-            else if (_loading && _results.isEmpty)
-              _buildLoadingSliver()
-            else if (_lastError != null && _results.isEmpty)
-              _buildErrorSliver(_lastError!)
-            else if (_results.isEmpty)
-              _buildEmptySliver()
-            else
-              _buildResultListSliver(),
-            if (_keyword.isNotEmpty && _loadingMore) _buildLoadingMoreSliver(),
-            const SliverToBoxAdapter(child: SizedBox(height: 20)),
-          ],
+        child: RefreshIndicator(
+          onRefresh: _refreshSearch,
+          child: CustomScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              _buildHeaderSliver(),
+              _buildSearchBarSliver(),
+              _buildQuickTagsSliver(),
+              _buildHistorySliver(),
+              _buildResultTitleSliver(),
+              if (_keyword.isEmpty && _draftKeyword.isEmpty)
+                _buildGuideSliver()
+              else if (_keyword.isEmpty && _draftKeyword.isNotEmpty)
+                _buildReadySliver()
+              else if (_loading && _results.isEmpty)
+                _buildLoadingSliver()
+              else if (_lastError != null && _results.isEmpty)
+                _buildErrorSliver(_lastError!)
+              else if (_results.isEmpty)
+                _buildEmptySliver()
+              else
+                _buildResultListSliver(),
+              if (_keyword.isNotEmpty && _loadingMore)
+                _buildLoadingMoreSliver(),
+              const SliverToBoxAdapter(child: SizedBox(height: 20)),
+            ],
+          ),
         ),
       ),
     );
@@ -991,6 +996,15 @@ class _SearchViewState extends State<SearchView> {
         });
       }
     }
+  }
+
+  /// 下拉刷新时重新执行当前关键词搜索。
+  Future<void> _refreshSearch() async {
+    if (_keyword.trim().isEmpty) {
+      await _loadAddedKeys();
+      return;
+    }
+    await _search(reset: true);
   }
 }
 

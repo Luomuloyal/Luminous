@@ -50,6 +50,7 @@ class AlbumPage extends StatelessWidget {
         child: RefreshIndicator(
           onRefresh: onRefresh,
           child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               AlbumHeaderSliver(palette: headerPalette, loading: loading),
               if (!isLoggedIn) AlbumLoginBannerSliver(onTapLogin: onTapLogin),

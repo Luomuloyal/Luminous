@@ -198,6 +198,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                 children: [
                   if (_error != null) _buildErrorBanner(_error!),

@@ -62,19 +62,23 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        children: [
-          _buildModeCard(),
-          const SizedBox(height: 12),
-          _buildPickCard(),
-          const SizedBox(height: 12),
-          _buildActionCard(),
-          const SizedBox(height: 12),
-          _buildResultCard(),
-          const SizedBox(height: 12),
-          const _DisclaimerCard(),
-        ],
+      body: RefreshIndicator(
+        onRefresh: _refreshResult,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          children: [
+            _buildModeCard(),
+            const SizedBox(height: 12),
+            _buildPickCard(),
+            const SizedBox(height: 12),
+            _buildActionCard(),
+            const SizedBox(height: 12),
+            _buildResultCard(),
+            const SizedBox(height: 12),
+            const _DisclaimerCard(),
+          ],
+        ),
       ),
     );
   }
@@ -379,6 +383,15 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  /// 下拉刷新时按当前已选药品重新发起一次查询。
+  Future<void> _refreshResult() async {
+    final ready = _a != null && (_mode == 'single' || _b != null);
+    if (!ready || _loading) {
+      return;
+    }
+    await _query();
   }
 }
 

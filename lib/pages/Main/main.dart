@@ -55,7 +55,7 @@ class _MainPageState extends State<MainPage> {
       icon: 'lib/assets/mine.png',
       activeIcon: 'lib/assets/mine-full.png',
       text: '我的',
-      color: Color(0xFF14B8A6),
+      color: Color(0xFFE77AA6),
     ),
   ];
 

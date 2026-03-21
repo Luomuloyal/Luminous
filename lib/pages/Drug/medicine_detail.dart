@@ -147,26 +147,30 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        children: [
-          _HeaderCard(
-            item: _item,
-            loading: _loadingDetail,
-            onRefresh: _loadDetail,
-          ),
-          const SizedBox(height: 12),
-          _InfoCard(item: _item),
-          const SizedBox(height: 12),
-          _AiCard(
-            hasIdentity: _item.hasIdentity,
-            loading: _loadingAi,
-            result: _aiResult,
-            onFetch: _loadAiDetail,
-          ),
-          const SizedBox(height: 12),
-          const _DisclaimerCard(),
-        ],
+      body: RefreshIndicator(
+        onRefresh: _loadDetail,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          children: [
+            _HeaderCard(
+              item: _item,
+              loading: _loadingDetail,
+              onRefresh: _loadDetail,
+            ),
+            const SizedBox(height: 12),
+            _InfoCard(item: _item),
+            const SizedBox(height: 12),
+            _AiCard(
+              hasIdentity: _item.hasIdentity,
+              loading: _loadingAi,
+              result: _aiResult,
+              onFetch: _loadAiDetail,
+            ),
+            const SizedBox(height: 12),
+            const _DisclaimerCard(),
+          ],
+        ),
       ),
     );
   }
