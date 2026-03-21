@@ -15,17 +15,22 @@ class UserController extends GetxController {
   ///
   /// 未登录时值为 `null`，已登录时保存 `UserSafe`。
   final Rxn<UserSafe> user = Rxn<UserSafe>();
+  Future<SharedPreferences>? _prefsFuture;
 
   /// 当前是否处于登录状态。
   ///
   /// 通过用户对象是否存在且有有效数据来判断。
   bool get isLoggedIn => user.value?.hasData ?? false;
 
+  Future<SharedPreferences> get _prefs async {
+    return _prefsFuture ??= SharedPreferences.getInstance();
+  }
+
   /// 从本地缓存恢复登录用户。
   ///
   /// 应用启动时由 `main()` 调用一次。
   Future<void> init() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
 
     /// 本地缓存的用户 JSON 字符串。
     final rawUser = prefs.getString(GlobalConstants.USER_KEY);
@@ -54,7 +59,7 @@ class UserController extends GetxController {
   /// 一般在登录成功后调用。
   Future<void> setUser(UserSafe nextUser) async {
     user.value = nextUser;
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.setString(
       GlobalConstants.USER_KEY,
       jsonEncode(nextUser.toJson()),
@@ -66,7 +71,7 @@ class UserController extends GetxController {
   /// 一般在主动退出登录时调用。
   Future<void> logout() async {
     user.value = null;
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _prefs;
     await prefs.remove(GlobalConstants.USER_KEY);
     await tokenManager.deleteToken();
     await NotificationService.instance.cancelAll();

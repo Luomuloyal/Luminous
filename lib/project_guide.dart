@@ -46,7 +46,7 @@
   D) 全局用户态（让“我的”页、首页等可以共享登录态，避免各页面重复读写本地）
   - UserController（GetX）
   - SharedPreferences 本地持久化 safeUser
-  - main() 中 Get.put + init 顺序固定，否则 Get.find 会崩
+  - main() 中只保留 Get.put；本地恢复与预热任务改到首帧后异步执行
 
   E) 药品服务（核心业务：手动搜索 + 详情页 + AI 预留）
   - 后端：MySQL 查询（healthdev/medicine_db/国产本位码）
@@ -176,7 +176,7 @@
   - widget test 不会走 main()，所以 test 里要：
     - SharedPreferences.setMockInitialValues
     - Get.testMode = true
-    - Get.put(UserController) 并 await init()
+    - Get.put(UserController) 并在需要时手动调用 init()
 
   ---------------------------------------------------------------------------
   8. 页面与组件拆分（复用优先，不机械拆分）
@@ -306,8 +306,9 @@
   3) 最后看页面：lib/pages（UI 只是消费前两层）
 
   (1) lib/main.dart
-  - 做的事只有一件：在 runApp 之前把“必须存在的全局依赖”准备好
+  - 做的事只有一件：在 runApp 之前准备“真正不可缺少的轻量依赖”
   - 关键点：Get.put(UserController) 必须先于页面构造，否则 Get.find 会报错
+  - SharedPreferences/数据库/通知 SDK/云同步都应在首帧之后异步 warm-up
 
   (2) lib/constants/constants.dart
   - GlobalConstants：BASE_URL/TIME_OUT/SUCCESS_CODE/本地存储 key

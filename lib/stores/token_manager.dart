@@ -5,11 +5,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///
 /// 当前项目虽然还未完整启用 token 鉴权，但已经预留了统一的读写入口。
 class TokenManager {
+  Future<SharedPreferences>? _prefsFuture;
+
   /// 获取 `SharedPreferences` 实例。
   ///
   /// 通过 getter 统一封装，便于后续在一个地方调整存储实现。
   Future<SharedPreferences> get _prefs async {
-    return SharedPreferences.getInstance();
+    return _prefsFuture ??= SharedPreferences.getInstance();
   }
 
   /// 预初始化本地存储。
