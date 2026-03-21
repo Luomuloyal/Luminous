@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 // ignore_for_file: constant_identifier_names, non_constant_identifier_names
 
 /// 全局运行时常量集合。
@@ -91,4 +93,29 @@ class HttpConstants {
 
   /// 安全辅助 AI 查询接口。
   static const String MEDICINE_AI_SAFETY = '/medicine-ai-safety';
+}
+
+/// 应用内统一使用的 UI 色值。
+class AppUiConstants {
+  AppUiConstants._();
+
+  /// 四个主 Tab 页面共享的背景底色。
+  static const Color PAGE_BACKGROUND = Color(0xFFF3F7FB);
+
+  /// 底部 Tab 栏背景色，比页面底色略深一点。
+  static const Color TAB_BAR_BACKGROUND = Color(0xFFF8FAFD);
+
+  /// 底部 Tab 栏顶部描边。
+  static const Color TAB_BAR_BORDER = Color(0xFFDCE6F2);
+
+  /// 底部 Tab 未选中图标和文字颜色。
+  static const Color TAB_INACTIVE = Color(0xFF7B8798);
+
+  /// 四个 Tab 选中时的主题色。
+  static const List<Color> TAB_ACTIVE_COLORS = <Color>[
+    Color(0xFF0EA5E9),
+    Color(0xFF10B981),
+    Color(0xFFF59E0B),
+    Color(0xFF14B8A6),
+  ];
 }

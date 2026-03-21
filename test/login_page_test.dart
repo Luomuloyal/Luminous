@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:luminous/pages/Login/login.dart';
 import 'package:luminous/stores/user_controller.dart';
+import 'package:luminous/utils/toast_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -12,6 +13,10 @@ void main() {
     Get.testMode = true;
     final controller = Get.put(UserController(), permanent: true);
     await controller.init();
+  });
+
+  tearDown(() {
+    ToastUtils.instance.dismiss();
   });
 
   Widget createWidget() {
@@ -42,6 +47,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('请先阅读并勾选《用户协议》《隐私政策》'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
   });
 
   testWidgets('invalid email shows email format error before network', (

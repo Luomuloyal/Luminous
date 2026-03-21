@@ -178,13 +178,14 @@ class UserSafe {
   ///
   /// 如果没有任何信息，则回退为引导语。
   String get displaySubtitle {
+    final title = displayTitle;
     final values = <String>{
-      if (username.isNotEmpty) username,
-      if (email.isNotEmpty) email,
-      if (phone.isNotEmpty) phone,
+      if (username.isNotEmpty && username != title) username,
+      if (email.isNotEmpty && email != title) email,
+      if (phone.isNotEmpty && phone != title) phone,
     };
     if (values.isEmpty) {
-      return '登录后可同步你的账号信息';
+      return hasData ? '账号信息已同步' : '登录后可同步你的账号信息';
     }
     return values.join(' · ');
   }

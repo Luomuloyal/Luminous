@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:luminous/components/responsive_quick_grid.dart';
 
 /// 药品页（Drug）相关的数据结构与小组件。
 ///
@@ -140,113 +141,129 @@ class DrugMyMedicineCard extends StatelessWidget {
     final item = DrugMedicineCardViewModel.fromRow(row);
 
     return RepaintBoundary(
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x0A000000),
-              blurRadius: 8,
-              offset: Offset(0, 3),
-            ),
-          ],
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0EA5E9).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(
-                    Icons.medication_rounded,
-                    color: Color(0xFF0EA5E9),
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.productName,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                      if (item.subtitle.isNotEmpty) ...[
-                        const SizedBox(height: 3),
-                        Text(
-                          item.subtitle,
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            color: Color(0xFF475569),
-                          ),
-                        ),
-                      ],
-                      if (item.metaText.isNotEmpty) ...[
-                        const SizedBox(height: 3),
-                        Text(
-                          item.metaText,
-                          style: const TextStyle(
-                            fontSize: 11.5,
-                            color: Color(0xFF94A3B8),
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          if (item.sourceLabel.isNotEmpty)
-                            _DrugBadge(
-                              text: item.sourceLabel,
-                              color: item.sourceColor,
-                            ),
-                          if (item.dateText.isNotEmpty) ...[
-                            const SizedBox(width: 6),
-                            Text(
-                              item.dateText,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: Color(0xFFB0BAC8),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: onDelete,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 8, top: 2),
-                    child: Icon(
-                      Icons.delete_outline_rounded,
-                      size: 20,
-                      color: Colors.red.shade300,
-                    ),
-                  ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = isCompactLayoutWidth(constraints.maxWidth);
+
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0A000000),
+                  blurRadius: 8,
+                  offset: Offset(0, 3),
                 ),
               ],
             ),
-          ),
-        ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: onTap,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  compact ? 10 : 12,
+                  compact ? 10 : 12,
+                  compact ? 10 : 12,
+                  compact ? 10 : 12,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: compact ? 40 : 44,
+                      height: compact ? 40 : 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0EA5E9).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(compact ? 12 : 14),
+                      ),
+                      child: Icon(
+                        Icons.medication_rounded,
+                        color: const Color(0xFF0EA5E9),
+                        size: compact ? 22 : 24,
+                      ),
+                    ),
+                    SizedBox(width: compact ? 10 : 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.productName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: compact ? 14.5 : 15,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0F172A),
+                            ),
+                          ),
+                          if (item.subtitle.isNotEmpty) ...[
+                            SizedBox(height: compact ? 2 : 3),
+                            Text(
+                              item.subtitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: compact ? 12 : 12.5,
+                                color: const Color(0xFF475569),
+                              ),
+                            ),
+                          ],
+                          if (item.metaText.isNotEmpty) ...[
+                            SizedBox(height: compact ? 2 : 3),
+                            Text(
+                              item.metaText,
+                              style: TextStyle(
+                                fontSize: compact ? 11 : 11.5,
+                                color: const Color(0xFF94A3B8),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                          SizedBox(height: compact ? 5 : 6),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              if (item.sourceLabel.isNotEmpty)
+                                _DrugBadge(
+                                  text: item.sourceLabel,
+                                  color: item.sourceColor,
+                                ),
+                              if (item.dateText.isNotEmpty)
+                                Text(
+                                  item.dateText,
+                                  style: TextStyle(
+                                    fontSize: compact ? 10.5 : 11,
+                                    color: const Color(0xFFB0BAC8),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: onDelete,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 8, top: 2),
+                        child: Icon(
+                          Icons.delete_outline_rounded,
+                          size: compact ? 19 : 20,
+                          color: Colors.red.shade300,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -259,6 +276,7 @@ class DrugQuickEntryCard extends StatelessWidget {
     super.key,
     required this.item,
     required this.onTap,
+    this.metrics,
   });
 
   /// 当前入口的数据对象。
@@ -267,58 +285,90 @@ class DrugQuickEntryCard extends StatelessWidget {
   /// 点击回调。
   final VoidCallback onTap;
 
+  /// 由外层网格计算好的响应式尺寸。
+  final ResponsiveQuickGridMetrics? metrics;
+
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
-      child: Ink(
-        padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final resolvedMetrics =
+            metrics ??
+            ResponsiveQuickGridMetrics.fromWidth(constraints.maxWidth);
+        final compact = resolvedMetrics.isCompact;
+
+        return InkWell(
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: 74,
-              height: 74,
-              decoration: BoxDecoration(
-                color: item.color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: Icon(item.icon, color: item.color, size: 38),
+          onTap: onTap,
+          child: Ink(
+            padding: resolvedMetrics.itemPadding,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
-            const SizedBox(height: 12),
-            Text(
-              item.title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF0F172A),
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Align(
+                  child: SizedBox(
+                    width: resolvedMetrics.iconBoxSize,
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: item.color.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(
+                            resolvedMetrics.iconBorderRadius,
+                          ),
+                        ),
+                        child: Icon(
+                          item.icon,
+                          color: item.color,
+                          size: resolvedMetrics.iconSize,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: resolvedMetrics.titleSpacing),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        item.title,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: compact ? 14 : 14.5,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF0F172A),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: resolvedMetrics.subtitleSpacing),
+                      Flexible(
+                        child: Text(
+                          item.subtitle,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: compact ? 11.5 : 12,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF64748B),
+                            height: compact ? 1.2 : 1.25,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 3),
-            Text(
-              item.subtitle,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF64748B),
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -334,8 +384,13 @@ class _DrugBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = isCompactLayoutWidth(MediaQuery.sizeOf(context).width);
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 6 : 7,
+        vertical: compact ? 2.5 : 3,
+      ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
@@ -343,7 +398,7 @@ class _DrugBadge extends StatelessWidget {
       child: Text(
         text,
         style: TextStyle(
-          fontSize: 11,
+          fontSize: compact ? 10.5 : 11,
           fontWeight: FontWeight.w600,
           color: color,
         ),

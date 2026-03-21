@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:luminous/constants/constants.dart';
 import 'package:luminous/pages/CheckIn/checkin.dart';
 import 'package:luminous/pages/Login/login.dart';
 import 'package:luminous/pages/Main/main.dart';
@@ -16,6 +17,10 @@ Widget getRootWidget() {
   return MaterialApp(
     debugShowCheckedModeBanner: false,
     navigatorKey: LoadingUtils.navigatorKey,
+    theme: ThemeData(
+      useMaterial3: true,
+      scaffoldBackgroundColor: AppUiConstants.PAGE_BACKGROUND,
+    ),
     initialRoute: '/',
     routes: getRootRoutes(),
   );

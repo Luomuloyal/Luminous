@@ -13,10 +13,26 @@ import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/home.dart';
 import 'package:luminous/viewmodels/medicine.dart';
 
+const List<String> _localHealthTips = [
+  '按时服药，别漏别补',
+  '饭前饭后按说明来',
+  '合并用药先问药师',
+  '漏服勿加倍，咨询放在先',
+  '出现不适，及时就医',
+  '抗生素按疗程，不要擅停',
+  '药品避光防潮，远离高温',
+  '定期清理过期药品',
+  '用药前看禁忌与相互作用',
+  '规律作息，药效更稳',
+];
+
+final String _startupHealthTip =
+    _localHealthTips[Random().nextInt(_localHealthTips.length)];
+
 // 首页
 //
 // 设计要点：
-// - 顶部色块展示随机温馨提示（10条本地文案，每次启动随机一条）
+// - 顶部色块展示随机温馨提示（纯本地，每次启动应用随机一条）
 // - "常用功能"是本地静态入口（纯 UI）
 // - "今日提醒"来自后端接口 today-reminders
 // - 接口失败时回退到本地 _fallbackReminders
@@ -46,28 +62,6 @@ class _HomeViewState extends State<HomeView> {
 
   /// 监听登录用户变化的 worker。
   Worker? _userWorker;
-
-  /// 首页顶部随机展示的健康提示文案。
-  ///
-  /// 页面初始化时会从这里随机挑选一条，展示在顶部绿色卡片中。
-  static const List<String> _healthTips = [
-    '按时服药，别漏别补',
-    '饭前饭后按说明来',
-    '合并用药先问药师',
-    '漏服勿加倍，咨询放在先',
-    '出现不适，及时就医',
-    '抗生素按疗程，不要擅停',
-    '药品避光防潮，远离高温',
-    '定期清理过期药品',
-    '用药前看禁忌与相互作用',
-    '规律作息，药效更稳',
-  ];
-
-  /// 本次页面生命周期内选中的那一条提示文案。
-  ///
-  /// 使用 `late final` 是因为它只会在 `initState` 随机生成一次，
-  /// 之后整个页面重建时都复用同一条，避免每次 `build` 都变化。
-  late final String _todayTip;
 
   /// “常用功能”区域的静态入口列表。
   ///
@@ -166,13 +160,11 @@ class _HomeViewState extends State<HomeView> {
   /// 页面初始化时完成一次性数据准备。
   ///
   /// 这里做两件事：
-  /// 1. 随机选出顶部展示的温馨提示；
+  /// 1. 绑定用户变化，确保提醒数据和登录态同步；
   /// 2. 拉取今日提醒，替换默认兜底数据。
   @override
   void initState() {
     super.initState();
-    // 随机选取一条温馨提示
-    _todayTip = _healthTips[Random().nextInt(_healthTips.length)];
     _userWorker = ever<dynamic>(_userController.user, (_) {
       _fetchTodayReminders();
     });
@@ -216,7 +208,7 @@ class _HomeViewState extends State<HomeView> {
             SliverToBoxAdapter(
               child: HomeTopSection(
                 palette: SoftBannerPalettes.home,
-                todayTip: _todayTip,
+                todayTip: _startupHealthTip,
                 nextText: nextText,
                 loadingReminders: _loadingReminders,
                 reminderCount: _reminders.length,

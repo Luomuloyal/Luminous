@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:luminous/constants/constants.dart';
 import 'package:luminous/pages/Album/album.dart';
 import 'package:luminous/pages/Drug/drug.dart';
 import 'package:luminous/pages/Home/home.dart';
@@ -31,27 +32,31 @@ class _MainPageState extends State<MainPage> {
   /// - 默认图标路径；
   /// - 选中图标路径；
   /// - 展示文本。
-  final List<Map<String, String>> _tablist = [
-    {
-      "icon": "lib/assets/home.png",
-      "icon-full": "lib/assets/home-full.png",
-      "text": "主页",
-    },
-    {
-      "icon": "lib/assets/drug.png",
-      "icon-full": "lib/assets/drug-full.png",
-      "text": "药品",
-    },
-    {
-      "icon": "lib/assets/picture.png",
-      "icon-full": "lib/assets/picture-full.png",
-      "text": "相册",
-    },
-    {
-      "icon": "lib/assets/mine.png",
-      "icon-full": "lib/assets/mine-full.png",
-      "text": "我的",
-    },
+  final List<_MainTabItem> _tablist = const [
+    _MainTabItem(
+      icon: 'lib/assets/home.png',
+      activeIcon: 'lib/assets/home-full.png',
+      text: '主页',
+      color: Color(0xFF0EA5E9),
+    ),
+    _MainTabItem(
+      icon: 'lib/assets/drug.png',
+      activeIcon: 'lib/assets/drug-full.png',
+      text: '药品',
+      color: Color(0xFF10B981),
+    ),
+    _MainTabItem(
+      icon: 'lib/assets/picture.png',
+      activeIcon: 'lib/assets/picture-full.png',
+      text: '相册',
+      color: Color(0xFFF59E0B),
+    ),
+    _MainTabItem(
+      icon: 'lib/assets/mine.png',
+      activeIcon: 'lib/assets/mine-full.png',
+      text: '我的',
+      color: Color(0xFF14B8A6),
+    ),
   ];
 
   /// 与底部 Tab 一一对应的页面实例列表。
@@ -67,16 +72,26 @@ class _MainPageState extends State<MainPage> {
   /// 根据 `_tablist` 构建 BottomNavigationBarItem 列表。
   List<BottomNavigationBarItem> _getTabBarWidget() {
     return List.generate(_tablist.length, (index) {
+      final item = _tablist[index];
       return BottomNavigationBarItem(
-        icon: Image.asset(_tablist[index]["icon"]!, width: 30, height: 30),
-        activeIcon: Image.asset(
-          _tablist[index]["icon-full"]!,
-          width: 30,
-          height: 30,
+        icon: _buildTabIcon(
+          assetPath: item.icon,
+          color: AppUiConstants.TAB_INACTIVE,
         ),
-        label: _tablist[index]["text"],
+        activeIcon: _buildTabIcon(
+          assetPath: item.activeIcon,
+          color: item.color,
+        ),
+        label: item.text,
       );
     });
+  }
+
+  Widget _buildTabIcon({required String assetPath, required Color color}) {
+    return ColorFiltered(
+      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      child: Image.asset(assetPath, width: 30, height: 30),
+    );
   }
 
   /// 当前选中的底部 Tab 下标。
@@ -88,21 +103,49 @@ class _MainPageState extends State<MainPage> {
   /// 下半部分使用 `BottomNavigationBar` 负责切换。
   @override
   Widget build(BuildContext context) {
+    final currentColor = _tablist[_currentIndex].color;
+
     return Scaffold(
+      backgroundColor: AppUiConstants.PAGE_BACKGROUND,
       body: IndexedStack(index: _currentIndex, children: _children),
-      bottomNavigationBar: BottomNavigationBar(
-        onTap: (index) {
-          /// 更新当前选中的 Tab 下标。
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        currentIndex: _currentIndex,
-        items: _getTabBarWidget(),
-        selectedItemColor: Colors.black,
-        showUnselectedLabels: true,
-        unselectedItemColor: Colors.black,
+      bottomNavigationBar: DecoratedBox(
+        decoration: const BoxDecoration(
+          color: AppUiConstants.TAB_BAR_BACKGROUND,
+          border: Border(top: BorderSide(color: AppUiConstants.TAB_BAR_BORDER)),
+        ),
+        child: BottomNavigationBar(
+          onTap: (index) {
+            /// 更新当前选中的 Tab 下标。
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          currentIndex: _currentIndex,
+          items: _getTabBarWidget(),
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: AppUiConstants.TAB_BAR_BACKGROUND,
+          selectedItemColor: currentColor,
+          showUnselectedLabels: true,
+          unselectedItemColor: AppUiConstants.TAB_INACTIVE,
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+          elevation: 0,
+        ),
       ),
     );
   }
+}
+
+class _MainTabItem {
+  const _MainTabItem({
+    required this.icon,
+    required this.activeIcon,
+    required this.text,
+    required this.color,
+  });
+
+  final String icon;
+  final String activeIcon;
+  final String text;
+  final Color color;
 }
