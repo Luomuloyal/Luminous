@@ -125,7 +125,7 @@ class ToastUtils {
           message: message,
           placement: placement,
           topOffset: topInset + 22,
-          bottomOffset: bottomInset + 40,
+          bottomOffset: bottomInset + 72,
           style: style,
         );
       },

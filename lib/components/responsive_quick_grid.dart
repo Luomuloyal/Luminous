@@ -49,7 +49,7 @@ class ResponsiveQuickGridMetrics {
               crossAxisCount: 3,
               mainAxisSpacing: spacing,
               crossAxisSpacing: spacing,
-              childAspectRatio: 0.82,
+              childAspectRatio: 0.75,
             )
           : const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
