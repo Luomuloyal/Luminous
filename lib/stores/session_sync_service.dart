@@ -33,7 +33,7 @@ class SessionSyncService {
       return const [];
     }
     final run = _syncTail.catchError((_) {}).then((_) => _runSyncForUser(uid));
-    _syncTail = run.then<void>((_) {}, onError: (_, __) {});
+    _syncTail = run.then<void>((_) {}, onError: (_, _) {});
     return run;
   }
 

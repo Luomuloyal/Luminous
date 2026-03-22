@@ -38,7 +38,7 @@ class AlbumLocalStore {
     try {
       final db = await AppDatabase.instance.database;
       final uid = normalizeUserId(userId);
-      final rows = await _isGuestScope(uid)
+      final rows = _isGuestScope(uid)
           ? db.query(
               'album_items',
               where: 'userId = ? OR userId = ?',
