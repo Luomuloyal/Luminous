@@ -2,22 +2,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:luminous/stores/album_local_store.dart';
 import 'package:luminous/stores/app_database.dart';
 import 'package:luminous/viewmodels/album.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+import 'support/fake_sqflite_database.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  });
-
   setUp(() async {
-    await _resetDatabase();
+    await AppDatabase.instance.useTestingDatabase(FakeSqfliteDatabase());
   });
 
   tearDown(() async {
-    await _resetDatabase();
+    await AppDatabase.instance.clearTestingDatabase();
   });
 
   test('saveScanRecord stores thumb and original image locally', () async {
@@ -230,10 +226,4 @@ void main() {
       );
     },
   );
-}
-
-Future<void> _resetDatabase() async {
-  await AppDatabase.instance.close();
-  final dbPath = await getDatabasesPath();
-  await deleteDatabase('$dbPath/luminous.db');
 }
