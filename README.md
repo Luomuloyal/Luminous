@@ -122,6 +122,23 @@ Flutter 侧已经对接了这几个 AI / 药品相关接口：
 - `lib/api/safety_api.dart`
 - `lib/api/scan_api.dart`
 
+需要注意：
+
+- 上面这 5 个接口，是当前 `backend/` 里已经整理成正式代码并可直接打包的部分
+- 但 App 运行时目前还会继续用到一些还没整理进 `backend/` 的云函数，例如：
+  - `scan-record-create`
+  - `scan-record-list`
+  - `today-reminders`
+  - `reminder-upsert`
+  - `reminder-delete`
+  - `reminder-list`
+  - `checkin-create`
+  - `send-code`
+  - `login-user`
+  - `register-user`
+  - `my-medicine-*`
+- 所以如果你现在只部署 `backend/` 这 5 个 bundle，药品搜索和 AI 相关功能可以先跑起来，但相册同步、提醒、登录注册等功能仍然要继续依赖你现有的 Sealos 云函数
+
 对应的后端代码在：
 
 - `backend/src/handlers`
@@ -194,7 +211,7 @@ npm run build:cloud
 
 ## 后续待补内容
 
-当前已经实现并整理好的重点是药品搜索和 AI 相关接口。后面还可以继续补这些：
+下面这些接口不是“App 还没在用”，而是“App 还在用，但还没整理进当前 `backend/` 代码目录”。后面如果你继续补后端，优先把它们也迁进 `backend/`：
 
 - `scan-record-create`
 - `scan-record-list`
