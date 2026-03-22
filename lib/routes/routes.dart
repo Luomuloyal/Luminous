@@ -20,6 +20,16 @@ Widget getRootWidget() {
     theme: ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: AppUiConstants.PAGE_BACKGROUND,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: <TargetPlatform, PageTransitionsBuilder>{
+          TargetPlatform.android: _HorizontalSlidePageTransitionsBuilder(),
+          TargetPlatform.iOS: _HorizontalSlidePageTransitionsBuilder(),
+          TargetPlatform.linux: _HorizontalSlidePageTransitionsBuilder(),
+          TargetPlatform.macOS: _HorizontalSlidePageTransitionsBuilder(),
+          TargetPlatform.windows: _HorizontalSlidePageTransitionsBuilder(),
+          TargetPlatform.fuchsia: _HorizontalSlidePageTransitionsBuilder(),
+        },
+      ),
     ),
     initialRoute: '/',
     routes: getRootRoutes(),
@@ -43,4 +53,49 @@ Map<String, Widget Function(BuildContext)> getRootRoutes() {
     '/checkin': (context) => const CheckInPage(),
     '/safety': (context) => const SafetyAssistPage(),
   };
+}
+
+/// 轻量的全局页面切换动画。
+///
+/// 新页面从右向左轻推进入，并附带很弱的透明度过渡，
+/// 避免复杂变换导致低端机掉帧。
+class _HorizontalSlidePageTransitionsBuilder extends PageTransitionsBuilder {
+  const _HorizontalSlidePageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    final primary = CurvedAnimation(
+      parent: animation,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeOutCubic,
+    );
+    final secondary = CurvedAnimation(
+      parent: secondaryAnimation,
+      curve: Curves.easeOutCubic,
+      reverseCurve: Curves.easeOutCubic,
+    );
+    final incoming = Tween<Offset>(
+      begin: const Offset(0.07, 0),
+      end: Offset.zero,
+    ).animate(primary);
+    final outgoing = Tween<Offset>(
+      begin: Offset.zero,
+      end: const Offset(-0.02, 0),
+    ).animate(secondary);
+    final opacity = Tween<double>(begin: 0.95, end: 1).animate(primary);
+
+    return SlideTransition(
+      position: outgoing,
+      child: SlideTransition(
+        position: incoming,
+        child: FadeTransition(opacity: opacity, child: child),
+      ),
+    );
+  }
 }

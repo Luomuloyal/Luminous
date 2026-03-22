@@ -302,72 +302,39 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final horizontalPadding = screenWidth < 600 ? 16.0 : 24.0;
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FB),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide = constraints.maxWidth >= 600;
-
-            return Align(
-              alignment: Alignment.topCenter,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: isWide ? 420 : double.infinity,
-                ),
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
-                    24,
-                    horizontalPadding,
-                    20,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildTopBar(),
-                      const SizedBox(height: 14),
-                      AuthHeroCard(
-                        palette: SoftBannerPalettes.auth,
-                        icon: Icons.health_and_safety_rounded,
-                        title: '健康助手',
-                        subtitle:
-                            '${_identifierType.label}${_loginMode == AuthLoginMode.password ? '密码登录' : '验证码登录'}',
-                      ),
-                      const SizedBox(height: 12),
-                      AuthMethodSwitcher(
-                        items: [
-                          AuthMethodItem(
-                            label: AuthLoginMode.password.label,
-                            selected: _loginMode == AuthLoginMode.password,
-                            onTap: () =>
-                                _onLoginModeChanged(AuthLoginMode.password),
-                          ),
-                          AuthMethodItem(
-                            label: AuthLoginMode.code.label,
-                            selected: _loginMode == AuthLoginMode.code,
-                            onTap: () =>
-                                _onLoginModeChanged(AuthLoginMode.code),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                      _buildFormCard(),
-                      const SizedBox(height: 18),
-                      _buildLoginButton(),
-                      const SizedBox(height: 10),
-                      _buildHelperText(),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
+    return AuthPageScaffold(
+      children: [
+        _buildTopBar(),
+        const SizedBox(height: 14),
+        AuthHeroCard(
+          palette: SoftBannerPalettes.auth,
+          icon: Icons.health_and_safety_rounded,
+          title: '健康助手',
+          subtitle:
+              '${_identifierType.label}${_loginMode == AuthLoginMode.password ? '密码登录' : '验证码登录'}',
         ),
-      ),
+        const SizedBox(height: 12),
+        AuthMethodSwitcher(
+          items: [
+            AuthMethodItem(
+              label: AuthLoginMode.password.label,
+              selected: _loginMode == AuthLoginMode.password,
+              onTap: () => _onLoginModeChanged(AuthLoginMode.password),
+            ),
+            AuthMethodItem(
+              label: AuthLoginMode.code.label,
+              selected: _loginMode == AuthLoginMode.code,
+              onTap: () => _onLoginModeChanged(AuthLoginMode.code),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        _buildFormCard(),
+        const SizedBox(height: 18),
+        _buildLoginButton(),
+        const SizedBox(height: 10),
+        _buildHelperText(),
+      ],
     );
   }
 
@@ -454,7 +421,10 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 validator: _identifierValidator,
                 onChanged: (value) {
-                  if (value.trim() != _codeTarget) {
+                  final identifier = value.trim();
+                  final hasActiveCodeSession =
+                      _codeId.isNotEmpty || _codeTarget.isNotEmpty;
+                  if (hasActiveCodeSession && identifier != _codeTarget) {
                     setState(() {
                       _clearCodeSession(clearInput: false);
                     });

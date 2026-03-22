@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:luminous/components/responsive_quick_grid.dart';
 import 'package:luminous/components/soft_banner.dart';
@@ -152,18 +153,19 @@ class HomeTopSection extends StatelessWidget {
   const HomeTopSection({
     super.key,
     required this.palette,
-    required this.todayTip,
+    required this.todayTipListenable,
     required this.nextText,
     required this.loadingReminders,
     required this.reminderCount,
     required this.onTapTip,
+    required this.onLongPressTip,
   });
 
   /// 顶部横幅配色。
   final SoftBannerPalette palette;
 
-  /// 顶部随机提示文案。
-  final String todayTip;
+  /// 顶部随机提示文案监听器。
+  final ValueListenable<String> todayTipListenable;
 
   /// 下一条提醒文案（已在页面层拼接好）。
   final String nextText;
@@ -176,6 +178,9 @@ class HomeTopSection extends StatelessWidget {
 
   /// 点击“健康小贴士”回调。
   final VoidCallback onTapTip;
+
+  /// 长按“健康小贴士”回调。
+  final VoidCallback onLongPressTip;
 
   @override
   Widget build(BuildContext context) {
@@ -200,6 +205,7 @@ class HomeTopSection extends StatelessWidget {
                   backgroundColor: theme.surfaceColor,
                   textColor: theme.surfaceTextColor,
                   onTap: onTapTip,
+                  onLongPress: onLongPressTip,
                 ),
               ];
 
@@ -241,14 +247,59 @@ class HomeTopSection extends StatelessWidget {
                     ],
                   ),
                   SizedBox(height: compact ? 14 : 16),
-                  Text(
-                    todayTip,
-                    style: TextStyle(
-                      color: theme.textColor,
-                      fontSize: compact ? 15 : 16,
-                      fontWeight: FontWeight.w700,
-                      height: 1.45,
-                    ),
+                  ValueListenableBuilder<String>(
+                    valueListenable: todayTipListenable,
+                    builder: (context, todayTip, _) {
+                      return AnimatedSize(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOutCubic,
+                        alignment: Alignment.topLeft,
+                        child: ClipRect(
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 260),
+                            switchInCurve: Curves.easeOutCubic,
+                            switchOutCurve: Curves.easeInCubic,
+                            layoutBuilder: (currentChild, previousChildren) {
+                              return Stack(
+                                alignment: Alignment.topLeft,
+                                children: <Widget>[
+                                  ...previousChildren,
+                                  ?currentChild,
+                                ],
+                              );
+                            },
+                            transitionBuilder: (child, animation) {
+                              final position = Tween<Offset>(
+                                begin: const Offset(0, 0.28),
+                                end: Offset.zero,
+                              ).animate(animation);
+                              final opacity = CurvedAnimation(
+                                parent: animation,
+                                curve: Curves.easeOut,
+                              );
+
+                              return FadeTransition(
+                                opacity: opacity,
+                                child: SlideTransition(
+                                  position: position,
+                                  child: child,
+                                ),
+                              );
+                            },
+                            child: Text(
+                              todayTip,
+                              key: ValueKey<String>(todayTip),
+                              style: TextStyle(
+                                color: theme.textColor,
+                                fontSize: compact ? 15 : 16,
+                                fontWeight: FontWeight.w700,
+                                height: 1.45,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   SizedBox(height: compact ? 6 : 8),
                   Text(

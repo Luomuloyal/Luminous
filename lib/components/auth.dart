@@ -25,6 +25,63 @@ class AuthMethodItem {
   });
 }
 
+/// 登录/注册共用的页面骨架。
+///
+/// 重点处理两件事：
+/// - 键盘弹出时只平滑抬升滚动内容，避免 `Scaffold` 整页生硬 resize；
+/// - 保持移动端/宽屏端一致的内容宽度和滚动行为。
+class AuthPageScaffold extends StatelessWidget {
+  const AuthPageScaffold({
+    super.key,
+    required this.children,
+    this.backgroundColor = const Color(0xFFF3F7FB),
+  });
+
+  final List<Widget> children;
+  final Color backgroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isWide = screenWidth >= 600;
+    final horizontalPadding = screenWidth < 600 ? 16.0 : 24.0;
+    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
+
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      resizeToAvoidBottomInset: false,
+      body: SafeArea(
+        bottom: false,
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: isWide ? 420 : double.infinity,
+            ),
+            child: Padding(
+              padding: EdgeInsets.only(bottom: keyboardInset),
+              child: SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  24,
+                  horizontalPadding,
+                  20,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: children,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// 登录/注册页顶部的 Hero 卡片。
 ///
 /// 用于统一展示页面 icon、标题和副标题。

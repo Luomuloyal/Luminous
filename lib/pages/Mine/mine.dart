@@ -128,18 +128,21 @@ class _MineViewState extends State<MineView> {
   /// 这里用 `Obx` 监听用户对象变化，让 UI 自动响应登录/退出登录。
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => MinePage(
-        headerPalette: SoftBannerPalettes.mine,
-        user: _userController.user.value,
-        quickActions: _quickActions,
-        onTapProfile: _onTapProfile,
-        onTapAction: _onTapAction,
-        onTapQuickAction: _onTapQuickAction,
-        onTapBrowseHistory: () => ToastUtils.instance.show(context, '功能开发中'),
-        onTapSecurity: () => ToastUtils.instance.show(context, '功能开发中'),
-        onTapAbout: () => ToastUtils.instance.show(context, '功能开发中'),
+    return MinePage(
+      headerPalette: SoftBannerPalettes.mine,
+      profileCard: Obx(
+        () => MineProfileCard(
+          palette: SoftBannerPalettes.mine,
+          user: _userController.user.value,
+          onTapProfile: _onTapProfile,
+          onTapAction: _onTapAction,
+        ),
       ),
+      quickActions: _quickActions,
+      onTapQuickAction: _onTapQuickAction,
+      onTapBrowseHistory: () => ToastUtils.instance.show(context, '功能开发中'),
+      onTapSecurity: () => ToastUtils.instance.show(context, '功能开发中'),
+      onTapAbout: () => ToastUtils.instance.show(context, '功能开发中'),
     );
   }
 }

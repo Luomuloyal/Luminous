@@ -143,6 +143,7 @@ class HomeInfoPill extends StatelessWidget {
     this.backgroundColor = const Color(0x29FFFFFF),
     this.textColor = Colors.white,
     this.onTap,
+    this.onLongPress,
   });
 
   /// pill 上展示的文本。
@@ -156,6 +157,9 @@ class HomeInfoPill extends StatelessWidget {
 
   /// 点击回调。
   final VoidCallback? onTap;
+
+  /// 长按回调。
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -175,7 +179,7 @@ class HomeInfoPill extends StatelessWidget {
       ),
     );
 
-    if (onTap == null) {
+    if (onTap == null && onLongPress == null) {
       return content;
     }
 
@@ -183,6 +187,7 @@ class HomeInfoPill extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         borderRadius: BorderRadius.circular(999),
         child: Ink(
           decoration: BoxDecoration(borderRadius: BorderRadius.circular(999)),

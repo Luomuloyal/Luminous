@@ -155,11 +155,23 @@ class MedicineScanPage extends StatefulWidget {
 }
 
 class _MedicineScanPageState extends State<MedicineScanPage> {
+  static const double _minSheetSize = 0.22;
+  static const double _initialSheetSize = 0.36;
+  static const double _expandedSheetSize = 0.72;
+  static const double _maxSheetSize = 0.90;
+  static const List<double> _snapSheetSizes = <double>[
+    _initialSheetSize,
+    _expandedSheetSize,
+    _maxSheetSize,
+  ];
+
   final UserController _userController = Get.find<UserController>();
   final DraggableScrollableController _sheetController =
       DraggableScrollableController();
+  final ValueNotifier<double> _sheetSizeNotifier = ValueNotifier<double>(
+    _initialSheetSize,
+  );
 
-  double _sheetSize = 0.36;
   Uint8List? _photoBytes;
   String _photoMimeType = 'image/jpeg';
   bool _scanning = false;
@@ -186,17 +198,16 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
   void dispose() {
     _sheetController.removeListener(_onSheetChanged);
     _sheetController.dispose();
+    _sheetSizeNotifier.dispose();
     super.dispose();
   }
 
   void _onSheetChanged() {
     final next = _sheetController.size;
-    if ((next - _sheetSize).abs() < 0.001) {
+    if ((next - _sheetSizeNotifier.value).abs() < 0.001) {
       return;
     }
-    setState(() {
-      _sheetSize = next;
-    });
+    _sheetSizeNotifier.value = next;
   }
 
   Future<void> _autoExpandSheet() async {
@@ -204,7 +215,7 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
       await Future<void>.delayed(const Duration(milliseconds: 60));
       if (!mounted) return;
       await _sheetController.animateTo(
-        0.72,
+        _expandedSheetSize,
         duration: const Duration(milliseconds: 520),
         curve: Curves.easeOutCubic,
       );
@@ -225,33 +236,38 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final minChildSize = 0.22;
-          final maxChildSize = 0.90;
-          final t =
-              ((_sheetSize - minChildSize) / (maxChildSize - minChildSize))
-                  .clamp(0.0, 1.0);
           final maxImageHeight = constraints.maxHeight * 0.62;
           final minImageHeight = constraints.maxHeight * 0.28;
-          final imageHeight =
-              maxImageHeight - (maxImageHeight - minImageHeight) * t;
 
           return Stack(
             children: [
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: imageHeight,
+              ValueListenableBuilder<double>(
+                valueListenable: _sheetSizeNotifier,
                 child: _buildPhotoArea(),
+                builder: (context, sheetSize, child) {
+                  final t =
+                      ((sheetSize - _minSheetSize) /
+                              (_maxSheetSize - _minSheetSize))
+                          .clamp(0.0, 1.0);
+                  final imageHeight =
+                      maxImageHeight - (maxImageHeight - minImageHeight) * t;
+                  return Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: imageHeight,
+                    child: child!,
+                  );
+                },
               ),
               Positioned.fill(
                 child: DraggableScrollableSheet(
                   controller: _sheetController,
-                  minChildSize: minChildSize,
-                  maxChildSize: maxChildSize,
-                  initialChildSize: 0.36,
+                  minChildSize: _minSheetSize,
+                  maxChildSize: _maxSheetSize,
+                  initialChildSize: _initialSheetSize,
                   snap: true,
-                  snapSizes: const [0.36, 0.72, 0.90],
+                  snapSizes: _snapSheetSizes,
                   builder: (context, scrollController) {
                     return _buildSheet(scrollController);
                   },

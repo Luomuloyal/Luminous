@@ -77,6 +77,7 @@ class _SearchViewState extends State<SearchView> {
 
   /// 搜索输入框控制器。
   final TextEditingController _searchController = TextEditingController();
+  final ValueNotifier<String> _draftKeywordNotifier = ValueNotifier<String>('');
 
   /// 页面滚动控制器。
   ///
@@ -104,13 +105,6 @@ class _SearchViewState extends State<SearchView> {
   /// 用户在输入框里继续编辑时（`_draftKeyword` 变化）不会立刻触发搜索，
   /// 只有点击“搜索/回车”后才会把输入提交到 `_keyword` 并发起请求。
   String _keyword = '';
-
-  /// 输入框当前实时内容（尚未真正发起请求）。
-  ///
-  /// 这个状态主要用于驱动 UI：
-  /// - 决定“搜索提示/准备搜索/结果列表”这些 Sliver 的展示分支；
-  /// - 控制输入框右侧清除按钮是否出现。
-  String _draftKeyword = '';
 
   /// 最近一次搜索失败时的错误文案。
   String? _lastError;
@@ -170,12 +164,13 @@ class _SearchViewState extends State<SearchView> {
       _searchController.selection = TextSelection.collapsed(
         offset: initialKeyword.length,
       );
-      _draftKeyword = initialKeyword;
+      _draftKeywordNotifier.value = initialKeyword;
       if (widget.autoSearchOnInit) {
         _keyword = initialKeyword;
         _updateRecentKeywords(initialKeyword);
       }
     }
+    _searchController.addListener(_syncDraftKeyword);
     _loadAddedKeys();
     _userWorker = ever<dynamic>(_userController.user, (_) {
       _loadAddedKeys();
@@ -215,6 +210,9 @@ class _SearchViewState extends State<SearchView> {
       /// 当前作用域下已经存在的 identityKey 集合。
       final keys = await myMedicineRepository.loadIdentityKeys(userId: _userId);
       if (!mounted) return;
+      if (_sameStringSet(_addedKeys, keys)) {
+        return;
+      }
       setState(() {
         _addedKeys.clear();
         _addedKeys.addAll(keys);
@@ -222,13 +220,35 @@ class _SearchViewState extends State<SearchView> {
     } catch (_) {}
   }
 
+  bool _sameStringSet(Set<String> current, Set<String> next) {
+    if (current.length != next.length) {
+      return false;
+    }
+    for (final key in next) {
+      if (!current.contains(key)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   /// 页面销毁时释放控制器资源。
   @override
   void dispose() {
     _userWorker?.dispose();
+    _searchController.removeListener(_syncDraftKeyword);
     _searchController.dispose();
     _scrollController.dispose();
+    _draftKeywordNotifier.dispose();
     super.dispose();
+  }
+
+  void _syncDraftKeyword() {
+    final next = _searchController.text.trim();
+    if (_draftKeywordNotifier.value == next) {
+      return;
+    }
+    _draftKeywordNotifier.value = next;
   }
 
   /// 当前登录用户 id（未登录时为空字符串）。
@@ -254,18 +274,7 @@ class _SearchViewState extends State<SearchView> {
               _buildQuickTagsSliver(),
               _buildHistorySliver(),
               _buildResultTitleSliver(),
-              if (_keyword.isEmpty && _draftKeyword.isEmpty)
-                _buildGuideSliver()
-              else if (_keyword.isEmpty && _draftKeyword.isNotEmpty)
-                _buildReadySliver()
-              else if (_loading && _results.isEmpty)
-                _buildLoadingSliver()
-              else if (_lastError != null && _results.isEmpty)
-                _buildErrorSliver(_lastError!)
-              else if (_results.isEmpty)
-                _buildEmptySliver()
-              else
-                _buildResultListSliver(),
+              _buildContentSliver(),
               if (_keyword.isNotEmpty && _loadingMore)
                 _buildLoadingMoreSliver(),
               const SliverToBoxAdapter(child: SizedBox(height: 20)),
@@ -329,74 +338,98 @@ class _SearchViewState extends State<SearchView> {
 
   /// 构建搜索输入框区域。
   Widget _buildSearchBarSliver() {
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-        child: SearchSurfaceCard(
+    return ValueListenableBuilder<String>(
+      valueListenable: _draftKeywordNotifier,
+      builder: (context, draftKeyword, _) {
+        return SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (value) {
-                      setState(() {
-                        _draftKeyword = value.trim();
-                      });
-                    },
-                    onSubmitted: (_) => _commitSearch(),
-                    decoration: InputDecoration(
-                      hintText: '产品名称 / 批准文号 / 生产单位',
-                      hintStyle: const TextStyle(
-                        color: Color(0xFF94A3B8),
-                        fontSize: 14,
-                      ),
-                      prefixIcon: const Icon(
-                        Icons.search_rounded,
-                        color: Color(0xFF0EA5E9),
-                      ),
-                      suffixIcon: _draftKeyword.isEmpty
-                          ? null
-                          : IconButton(
-                              onPressed: _clearKeyword,
-                              icon: const Icon(
-                                Icons.close_rounded,
-                                size: 18,
-                                color: Color(0xFF64748B),
-                              ),
-                            ),
-                      filled: true,
-                      fillColor: const Color(0xFFF8FAFC),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 0,
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: SearchSurfaceCard(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        onSubmitted: (_) => _commitSearch(),
+                        decoration: InputDecoration(
+                          hintText: '产品名称 / 批准文号 / 生产单位',
+                          hintStyle: const TextStyle(
+                            color: Color(0xFF94A3B8),
+                            fontSize: 14,
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.search_rounded,
+                            color: Color(0xFF0EA5E9),
+                          ),
+                          suffixIcon: draftKeyword.isEmpty
+                              ? null
+                              : IconButton(
+                                  onPressed: _clearKeyword,
+                                  icon: const Icon(
+                                    Icons.close_rounded,
+                                    size: 18,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                ),
+                          filled: true,
+                          fillColor: const Color(0xFFF8FAFC),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 0,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                FilledButton(
-                  onPressed: _commitSearch,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF0EA5E9),
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(76, 44),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    const SizedBox(width: 8),
+                    FilledButton(
+                      onPressed: _commitSearch,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF0EA5E9),
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(76, 44),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('搜索'),
                     ),
-                  ),
-                  child: const Text('搜索'),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
+    );
+  }
+
+  Widget _buildContentSliver() {
+    return ValueListenableBuilder<String>(
+      valueListenable: _draftKeywordNotifier,
+      builder: (context, draftKeyword, _) {
+        if (_keyword.isEmpty && draftKeyword.isEmpty) {
+          return _buildGuideSliver();
+        }
+        if (_keyword.isEmpty && draftKeyword.isNotEmpty) {
+          return _buildReadySliver();
+        }
+        if (_loading && _results.isEmpty) {
+          return _buildLoadingSliver();
+        }
+        if (_lastError != null && _results.isEmpty) {
+          return _buildErrorSliver(_lastError!);
+        }
+        if (_results.isEmpty) {
+          return _buildEmptySliver();
+        }
+        return _buildResultListSliver();
+      },
     );
   }
 
@@ -830,7 +863,6 @@ class _SearchViewState extends State<SearchView> {
     _searchController.selection = TextSelection.collapsed(offset: tag.length);
     setState(() {
       _lastError = null;
-      _draftKeyword = tag;
       _keyword = tag;
       _updateRecentKeywords(tag);
     });
@@ -850,7 +882,6 @@ class _SearchViewState extends State<SearchView> {
     }
     setState(() {
       _lastError = null;
-      _draftKeyword = keyword;
       _keyword = keyword;
       _updateRecentKeywords(keyword);
     });
@@ -869,7 +900,6 @@ class _SearchViewState extends State<SearchView> {
     _searchController.clear();
     setState(() {
       _keyword = '';
-      _draftKeyword = '';
       _lastError = null;
       _results.clear();
       _hasMore = false;

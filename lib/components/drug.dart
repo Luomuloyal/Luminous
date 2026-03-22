@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:luminous/components/responsive_quick_grid.dart';
+import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/viewmodels/drug.dart';
 
 /// 药品页（Drug）的大块 UI 组件集合。
@@ -197,6 +198,8 @@ class DrugQuickEntrySectionSliver extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = SoftBannerPalettes.drug;
+
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
@@ -207,23 +210,29 @@ class DrugQuickEntrySectionSliver extends StatelessWidget {
                   ((isCompactLayoutWidth(constraints.maxWidth) ? 12 : 14) * 2),
             );
 
-            return DecoratedBox(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: Padding(
-                padding: EdgeInsets.all(metrics.sectionPadding),
-                child: Column(
+            return SoftBannerCard(
+              palette: palette,
+              padding: EdgeInsets.all(metrics.sectionPadding),
+              borderRadius: BorderRadius.circular(18),
+              builder: (context, theme) {
+                return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       '快捷入口',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
+                        color: theme.textColor,
+                      ),
+                    ),
+                    SizedBox(height: metrics.isCompact ? 2 : 3),
+                    Text(
+                      '像首页顶部一样，给常用操作一点轻盈的层次感',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: theme.secondaryTextColor,
                       ),
                     ),
                     SizedBox(height: metrics.isCompact ? 10 : 12),
@@ -242,8 +251,8 @@ class DrugQuickEntrySectionSliver extends StatelessWidget {
                       },
                     ),
                   ],
-                ),
-              ),
+                );
+              },
             );
           },
         ),

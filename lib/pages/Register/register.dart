@@ -331,84 +331,49 @@ class _RegisterViewState extends State<RegisterView> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final horizontalPadding = screenWidth < 600 ? 16.0 : 24.0;
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FB),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide = constraints.maxWidth >= 600;
-
-            return Align(
-              alignment: Alignment.topCenter,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: isWide ? 420 : double.infinity,
-                ),
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
-                    24,
-                    horizontalPadding,
-                    20,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildTopBar(),
-                      const SizedBox(height: 14),
-                      AuthHeroCard(
-                        palette: SoftBannerPalettes.auth,
-                        icon: Icons.person_add_alt_1_rounded,
-                        title: '创建账号',
-                        subtitle: '${_identifierType.label}验证码注册 + SVG 校验',
-                      ),
-                      const SizedBox(height: 12),
-                      AuthMethodSwitcher(
-                        items: [
-                          AuthMethodItem(
-                            label: AuthIdentifierType.phone.registerLabel,
-                            selected:
-                                _identifierType == AuthIdentifierType.phone,
-                            onTap: () =>
-                                _toggleIdentifierType(AuthIdentifierType.phone),
-                          ),
-                          AuthMethodItem(
-                            label: AuthIdentifierType.email.registerLabel,
-                            selected:
-                                _identifierType == AuthIdentifierType.email,
-                            onTap: () =>
-                                _toggleIdentifierType(AuthIdentifierType.email),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                      _buildFormCard(),
-                      const SizedBox(height: 14),
-                      AuthAgreementRow(
-                        agreed: _agreed,
-                        onChanged: (value) {
-                          setState(() {
-                            _agreed = value;
-                          });
-                        },
-                        onTapAgreement: _onTapAgreement,
-                        onTapPrivacy: _onTapAgreement,
-                      ),
-                      const SizedBox(height: 18),
-                      _buildRegisterButton(),
-                      const SizedBox(height: 10),
-                      _buildHelperText(),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
+    return AuthPageScaffold(
+      children: [
+        _buildTopBar(),
+        const SizedBox(height: 14),
+        AuthHeroCard(
+          palette: SoftBannerPalettes.auth,
+          icon: Icons.person_add_alt_1_rounded,
+          title: '创建账号',
+          subtitle: '${_identifierType.label}验证码注册 + SVG 校验',
         ),
-      ),
+        const SizedBox(height: 12),
+        AuthMethodSwitcher(
+          items: [
+            AuthMethodItem(
+              label: AuthIdentifierType.phone.registerLabel,
+              selected: _identifierType == AuthIdentifierType.phone,
+              onTap: () => _toggleIdentifierType(AuthIdentifierType.phone),
+            ),
+            AuthMethodItem(
+              label: AuthIdentifierType.email.registerLabel,
+              selected: _identifierType == AuthIdentifierType.email,
+              onTap: () => _toggleIdentifierType(AuthIdentifierType.email),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+        _buildFormCard(),
+        const SizedBox(height: 14),
+        AuthAgreementRow(
+          agreed: _agreed,
+          onChanged: (value) {
+            setState(() {
+              _agreed = value;
+            });
+          },
+          onTapAgreement: _onTapAgreement,
+          onTapPrivacy: _onTapAgreement,
+        ),
+        const SizedBox(height: 18),
+        _buildRegisterButton(),
+        const SizedBox(height: 10),
+        _buildHelperText(),
+      ],
     );
   }
 
@@ -484,7 +449,10 @@ class _RegisterViewState extends State<RegisterView> {
                 ),
                 validator: _identifierValidator,
                 onChanged: (value) {
-                  if (value.trim() != _codeTarget) {
+                  final identifier = value.trim();
+                  final hasActiveCodeSession =
+                      _codeId.isNotEmpty || _codeTarget.isNotEmpty;
+                  if (hasActiveCodeSession && identifier != _codeTarget) {
                     setState(() {
                       _clearCodeSession(clearInput: false);
                     });

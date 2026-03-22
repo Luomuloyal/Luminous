@@ -136,10 +136,8 @@ class MinePage extends StatelessWidget {
   const MinePage({
     super.key,
     required this.headerPalette,
-    required this.user,
+    required this.profileCard,
     required this.quickActions,
-    required this.onTapProfile,
-    required this.onTapAction,
     required this.onTapQuickAction,
     required this.onTapBrowseHistory,
     required this.onTapSecurity,
@@ -149,17 +147,11 @@ class MinePage extends StatelessWidget {
   /// 顶部横幅配色。
   final SoftBannerPalette headerPalette;
 
-  /// 当前用户对象。
-  final UserSafe? user;
+  /// 顶部用户信息卡。
+  final Widget profileCard;
 
   /// 快捷入口列表数据。
   final List<MineQuickActionData> quickActions;
-
-  /// 点击 Profile 区域回调。
-  final VoidCallback onTapProfile;
-
-  /// 点击 Profile 右侧按钮回调。
-  final VoidCallback onTapAction;
 
   /// 点击某个快捷入口回调（传入其 id）。
   final ValueChanged<String> onTapQuickAction;
@@ -176,6 +168,8 @@ class MinePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final compact = isCompactLayoutWidth(MediaQuery.sizeOf(context).width);
+    final topDecorColor = headerPalette.accentColor.withValues(alpha: 0.10);
+    final bottomDecorColor = headerPalette.endColor.withValues(alpha: 0.24);
 
     return SafeArea(
       child: DecoratedBox(
@@ -185,18 +179,12 @@ class MinePage extends StatelessWidget {
             Positioned(
               top: -120,
               right: -120,
-              child: _MineDecorCircle(
-                size: 260,
-                color: const Color(0xFF0EA5E9).withValues(alpha: 0.10),
-              ),
+              child: _MineDecorCircle(size: 260, color: topDecorColor),
             ),
             Positioned(
               bottom: -140,
               left: -140,
-              child: _MineDecorCircle(
-                size: 300,
-                color: const Color(0xFF14B8A6).withValues(alpha: 0.10),
-              ),
+              child: _MineDecorCircle(size: 300, color: bottomDecorColor),
             ),
             ListView(
               padding: EdgeInsets.fromLTRB(
@@ -206,12 +194,7 @@ class MinePage extends StatelessWidget {
                 compact ? 20 : 24,
               ),
               children: [
-                MineProfileCard(
-                  palette: headerPalette,
-                  user: user,
-                  onTapProfile: onTapProfile,
-                  onTapAction: onTapAction,
-                ),
+                profileCard,
                 SizedBox(height: compact ? 10 : 12),
                 MineQuickActionsSection(
                   items: quickActions,

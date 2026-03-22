@@ -64,8 +64,8 @@ class _HomeViewState extends State<HomeView> {
   /// 监听登录用户变化的 worker。
   Worker? _userWorker;
 
-  /// 当前首页顶部展示的小贴士文案。
-  late String _todayTip;
+  /// 当前首页顶部展示的小贴士文案监听器。
+  late final ValueNotifier<String> _todayTipNotifier;
 
   /// “常用功能”区域的静态入口列表。
   ///
@@ -169,7 +169,7 @@ class _HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
-    _todayTip = _startupHealthTip;
+    _todayTipNotifier = ValueNotifier<String>(_startupHealthTip);
     _userWorker = ever<dynamic>(_userController.user, (_) {
       _fetchTodayReminders();
     });
@@ -179,6 +179,7 @@ class _HomeViewState extends State<HomeView> {
   @override
   void dispose() {
     _userWorker?.dispose();
+    _todayTipNotifier.dispose();
     super.dispose();
   }
 
@@ -216,11 +217,12 @@ class _HomeViewState extends State<HomeView> {
               SliverToBoxAdapter(
                 child: HomeTopSection(
                   palette: SoftBannerPalettes.home,
-                  todayTip: _todayTip,
+                  todayTipListenable: _todayTipNotifier,
                   nextText: nextText,
                   loadingReminders: _loadingReminders,
                   reminderCount: _reminders.length,
                   onTapTip: _cycleHealthTip,
+                  onLongPressTip: _showAllHealthTips,
                 ),
               ),
               SliverToBoxAdapter(
@@ -434,13 +436,140 @@ class _HomeViewState extends State<HomeView> {
       return;
     }
 
-    final nextTips = _localHealthTips.where((tip) => tip != _todayTip).toList();
+    final currentTip = _todayTipNotifier.value;
+    final nextTips = _localHealthTips
+        .where((tip) => tip != currentTip)
+        .toList();
     if (nextTips.isEmpty) {
       return;
     }
 
-    setState(() {
-      _todayTip = nextTips[Random().nextInt(nextTips.length)];
-    });
+    _updateTodayTip(nextTips[Random().nextInt(nextTips.length)]);
+  }
+
+  void _updateTodayTip(String nextTip) {
+    if (nextTip == _todayTipNotifier.value || !mounted) {
+      return;
+    }
+    _todayTipNotifier.value = nextTip;
+  }
+
+  Future<void> _showAllHealthTips() async {
+    final currentTip = _todayTipNotifier.value;
+    final selectedTip = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      useSafeArea: true,
+      isScrollControlled: true,
+      builder: (context) {
+        return FractionallySizedBox(
+          heightFactor: 0.72,
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 8, 20, 6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '全部健康小贴士',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      '点击任意一条即可替换首页提示语',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: Color(0xFFE2E8F0)),
+              Expanded(
+                child: ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
+                  itemCount: _localHealthTips.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final tip = _localHealthTips[index];
+                    final isCurrent = tip == currentTip;
+
+                    return Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () => Navigator.of(context).pop(tip),
+                        child: Ink(
+                          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                          decoration: BoxDecoration(
+                            color: isCurrent
+                                ? const Color(0xFFEAF6FF)
+                                : const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isCurrent
+                                  ? const Color(0xFFBFDBFE)
+                                  : const Color(0xFFE2E8F0),
+                            ),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 26,
+                                height: 26,
+                                margin: const EdgeInsets.only(top: 1),
+                                decoration: BoxDecoration(
+                                  color: isCurrent
+                                      ? const Color(0xFFDBEAFE)
+                                      : const Color(0xFFE2E8F0),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  isCurrent
+                                      ? Icons.favorite_rounded
+                                      : Icons.lightbulb_outline_rounded,
+                                  size: 14,
+                                  color: isCurrent
+                                      ? const Color(0xFF2563EB)
+                                      : const Color(0xFF64748B),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  tip,
+                                  style: const TextStyle(
+                                    fontSize: 13.5,
+                                    height: 1.45,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF0F172A),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (selectedTip != null) {
+      _updateTodayTip(selectedTip);
+    }
   }
 }

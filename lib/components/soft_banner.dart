@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 /// 顶部浅色渐变横幅配色基底。
@@ -87,41 +89,26 @@ class SoftBannerTheme {
 class SoftBannerPalettes {
   SoftBannerPalettes._();
 
-  static const SoftBannerPalette home = SoftBannerPalette(
-    startColor: Color(0xFFE9FFFA),
-    endColor: Color(0xFFEAF3FF),
-    accentColor: Color(0xFF5BB9F0),
-    textColor: Color(0xFF0F172A),
-    secondaryTextColor: Color(0xFF475569),
-    surfaceColor: Color(0xCCFFFFFF),
-    surfaceTextColor: Color(0xFF0F766E),
-    borderColor: Color(0xFFD7F5F1),
-    shadowColor: Color(0x140F172A),
-  );
+  /// 每次应用冷启动只生成一次种子，用于整场会话内的横幅配色。
+  ///
+  /// 这里只做一次轻量随机索引，不做任何 I/O，也不会在页面构建时重复计算。
+  static final int _sessionSeed = Random().nextInt(_healingPalettes.length);
 
-  static const SoftBannerPalette album = SoftBannerPalette(
-    startColor: Color(0xFFF9F7EE),
-    endColor: Color(0xFFEAF4FF),
-    accentColor: Color(0xFFF2C45B),
-    textColor: Color(0xFF0F172A),
-    secondaryTextColor: Color(0xFF475569),
-    surfaceColor: Color(0xCCFFFFFF),
-    surfaceTextColor: Color(0xFF9A5800),
-    borderColor: Color(0xFFF5E7C0),
-    shadowColor: Color(0x140F172A),
-  );
+  /// 首页横幅配色。
+  ///
+  /// 每次冷启动只随机一次，整个应用会话中保持稳定。
+  static final SoftBannerPalette home = _pick(offset: 0);
 
-  static const SoftBannerPalette mine = SoftBannerPalette(
-    startColor: Color(0xFFF0FFFA),
-    endColor: Color(0xFFEAF3FF),
-    accentColor: Color(0xFFF4C54F),
-    textColor: Color(0xFF0F172A),
-    secondaryTextColor: Color(0xFF475569),
-    surfaceColor: Color(0xCCFFFFFF),
-    surfaceTextColor: Color(0xFF0F766E),
-    borderColor: Color(0xFFD7F5F1),
-    shadowColor: Color(0x140F172A),
-  );
+  /// 药品页横幅配色。
+  ///
+  /// 与首页错开固定偏移，避免两个一级页颜色过于相似。
+  static final SoftBannerPalette drug = _pick(offset: 4);
+
+  /// 相册横幅配色。
+  static final SoftBannerPalette album = _pick(offset: 7);
+
+  /// 我的页横幅配色。
+  static final SoftBannerPalette mine = _pick(offset: 10);
 
   static const SoftBannerPalette auth = SoftBannerPalette(
     startColor: Color(0xFFEAF6FF),
@@ -134,6 +121,146 @@ class SoftBannerPalettes {
     borderColor: Color(0xFFD9ECFF),
     shadowColor: Color(0x140F172A),
   );
+
+  static SoftBannerPalette _pick({required int offset}) {
+    final index = (_sessionSeed + offset) % _healingPalettes.length;
+    return _healingPalettes[index];
+  }
+
+  static const List<SoftBannerPalette> _healingPalettes = <SoftBannerPalette>[
+    SoftBannerPalette(
+      startColor: Color(0xFFFFF5F8),
+      endColor: Color(0xFFFFF8FC),
+      accentColor: Color(0xFFE6A3BB),
+      textColor: Color(0xFF0F172A),
+      secondaryTextColor: Color(0xFF5B6270),
+      surfaceColor: Color(0xD9FFFFFF),
+      surfaceTextColor: Color(0xFFAF5E7E),
+      borderColor: Color(0xFFF7DDE7),
+      shadowColor: Color(0x140F172A),
+    ),
+    SoftBannerPalette(
+      startColor: Color(0xFFFFF7FB),
+      endColor: Color(0xFFFFFBFD),
+      accentColor: Color(0xFFDFAED0),
+      textColor: Color(0xFF0F172A),
+      secondaryTextColor: Color(0xFF5B6270),
+      surfaceColor: Color(0xD9FFFFFF),
+      surfaceTextColor: Color(0xFFA25F8A),
+      borderColor: Color(0xFFF4E0EC),
+      shadowColor: Color(0x140F172A),
+    ),
+    SoftBannerPalette(
+      startColor: Color(0xFFF7F4FF),
+      endColor: Color(0xFFFBF8FF),
+      accentColor: Color(0xFFC0A8E8),
+      textColor: Color(0xFF0F172A),
+      secondaryTextColor: Color(0xFF5B6270),
+      surfaceColor: Color(0xD9FFFFFF),
+      surfaceTextColor: Color(0xFF7B67A8),
+      borderColor: Color(0xFFE8E0F8),
+      shadowColor: Color(0x140F172A),
+    ),
+    SoftBannerPalette(
+      startColor: Color(0xFFF9F6FF),
+      endColor: Color(0xFFFDFBFF),
+      accentColor: Color(0xFFD0B3EB),
+      textColor: Color(0xFF0F172A),
+      secondaryTextColor: Color(0xFF5B6270),
+      surfaceColor: Color(0xD9FFFFFF),
+      surfaceTextColor: Color(0xFF8A68A8),
+      borderColor: Color(0xFFEEE4F9),
+      shadowColor: Color(0x140F172A),
+    ),
+    SoftBannerPalette(
+      startColor: Color(0xFFFFF5EE),
+      endColor: Color(0xFFFFFAF5),
+      accentColor: Color(0xFFE7B287),
+      textColor: Color(0xFF0F172A),
+      secondaryTextColor: Color(0xFF5B6270),
+      surfaceColor: Color(0xD9FFFFFF),
+      surfaceTextColor: Color(0xFFB57843),
+      borderColor: Color(0xFFF6E2D0),
+      shadowColor: Color(0x140F172A),
+    ),
+    SoftBannerPalette(
+      startColor: Color(0xFFFFF8F2),
+      endColor: Color(0xFFFFFCF7),
+      accentColor: Color(0xFFE8C09D),
+      textColor: Color(0xFF0F172A),
+      secondaryTextColor: Color(0xFF5B6270),
+      surfaceColor: Color(0xD9FFFFFF),
+      surfaceTextColor: Color(0xFFB27D4C),
+      borderColor: Color(0xFFF7E8DA),
+      shadowColor: Color(0x140F172A),
+    ),
+    SoftBannerPalette(
+      startColor: Color(0xFFF2FBFC),
+      endColor: Color(0xFFF7FCFF),
+      accentColor: Color(0xFF94CFD4),
+      textColor: Color(0xFF0F172A),
+      secondaryTextColor: Color(0xFF5B6270),
+      surfaceColor: Color(0xD9FFFFFF),
+      surfaceTextColor: Color(0xFF417D85),
+      borderColor: Color(0xFFDCEFF1),
+      shadowColor: Color(0x140F172A),
+    ),
+    SoftBannerPalette(
+      startColor: Color(0xFFF2FCF8),
+      endColor: Color(0xFFF7FEFB),
+      accentColor: Color(0xFFA3D7C0),
+      textColor: Color(0xFF0F172A),
+      secondaryTextColor: Color(0xFF5B6270),
+      surfaceColor: Color(0xD9FFFFFF),
+      surfaceTextColor: Color(0xFF4B8468),
+      borderColor: Color(0xFFDDF1E6),
+      shadowColor: Color(0x140F172A),
+    ),
+    SoftBannerPalette(
+      startColor: Color(0xFFF3F8FF),
+      endColor: Color(0xFFF8FBFF),
+      accentColor: Color(0xFFA8C4E8),
+      textColor: Color(0xFF0F172A),
+      secondaryTextColor: Color(0xFF5B6270),
+      surfaceColor: Color(0xD9FFFFFF),
+      surfaceTextColor: Color(0xFF54759A),
+      borderColor: Color(0xFFDDE8F7),
+      shadowColor: Color(0x140F172A),
+    ),
+    SoftBannerPalette(
+      startColor: Color(0xFFF6F4FF),
+      endColor: Color(0xFFFAF8FF),
+      accentColor: Color(0xFFC3B2E9),
+      textColor: Color(0xFF0F172A),
+      secondaryTextColor: Color(0xFF5B6270),
+      surfaceColor: Color(0xD9FFFFFF),
+      surfaceTextColor: Color(0xFF7A69A8),
+      borderColor: Color(0xFFE8E2F8),
+      shadowColor: Color(0x140F172A),
+    ),
+    SoftBannerPalette(
+      startColor: Color(0xFFFFF4F1),
+      endColor: Color(0xFFFFF8F7),
+      accentColor: Color(0xFFE8B8AF),
+      textColor: Color(0xFF0F172A),
+      secondaryTextColor: Color(0xFF5B6270),
+      surfaceColor: Color(0xD9FFFFFF),
+      surfaceTextColor: Color(0xFFB47471),
+      borderColor: Color(0xFFF6E2DE),
+      shadowColor: Color(0x140F172A),
+    ),
+    SoftBannerPalette(
+      startColor: Color(0xFFFFFBEF),
+      endColor: Color(0xFFFFFDF6),
+      accentColor: Color(0xFFE3D398),
+      textColor: Color(0xFF0F172A),
+      secondaryTextColor: Color(0xFF5B6270),
+      surfaceColor: Color(0xD9FFFFFF),
+      surfaceTextColor: Color(0xFF9C8650),
+      borderColor: Color(0xFFF3EDD1),
+      shadowColor: Color(0x140F172A),
+    ),
+  ];
 }
 
 /// 浅色渐变横幅容器。
