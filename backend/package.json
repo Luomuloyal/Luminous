@@ -1,0 +1,29 @@
+{
+  "name": "luminous-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Deployable backend for Luminous medicine search and AI endpoints.",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "build:cloud": "node scripts/bundle-cloud.mjs",
+    "build:all": "npm run build && npm run build:cloud",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "mysql2": "^3.14.1",
+    "openai": "^5.20.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.7.2",
+    "esbuild": "^0.25.10",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
