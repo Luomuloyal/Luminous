@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:luminous/routes/routes.dart';
 import 'package:luminous/startup/app_startup_warmup.dart';
+import 'package:luminous/stores/ornament_controller.dart';
 import 'package:luminous/stores/theme_controller.dart';
 import 'package:luminous/stores/user_controller.dart';
 
@@ -17,8 +18,14 @@ Future<void> main() async {
   final userController = Get.put(UserController(), permanent: true);
   userController.markSessionPending();
   final themeController = Get.put(ThemeController(), permanent: true);
+  final ornamentController = Get.put(OrnamentController(), permanent: true);
   await themeController.init();
-  runApp(LuminousApp(userController: userController));
+  runApp(
+    LuminousApp(
+      userController: userController,
+      ornamentController: ornamentController,
+    ),
+  );
 }
 
 /// 根应用包装器。
@@ -27,9 +34,14 @@ Future<void> main() async {
 /// - 尽快渲染首帧；
 /// - 在首帧后启动所有异步 warm-up 任务。
 class LuminousApp extends StatefulWidget {
-  const LuminousApp({super.key, required this.userController});
+  const LuminousApp({
+    super.key,
+    required this.userController,
+    required this.ornamentController,
+  });
 
   final UserController userController;
+  final OrnamentController ornamentController;
 
   @override
   State<LuminousApp> createState() => _LuminousAppState();
@@ -41,7 +53,10 @@ class _LuminousAppState extends State<LuminousApp> {
   @override
   void initState() {
     super.initState();
-    _startupWarmup = AppStartupWarmup(userController: widget.userController);
+    _startupWarmup = AppStartupWarmup(
+      userController: widget.userController,
+      ornamentController: widget.ornamentController,
+    );
     _startupWarmup.start();
   }
 

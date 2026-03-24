@@ -108,6 +108,7 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
     return AppSectionCard(
       accentColor: scheme.primary,
       secondaryColor: scheme.secondary,
+      ornamentKey: 'picker.search-entry',
       padding: EdgeInsets.zero,
       radius: 18,
       child: Material(
@@ -179,6 +180,7 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
     return AppSectionCard(
       accentColor: scheme.tertiary,
       secondaryColor: scheme.secondary,
+      ornamentKey: 'picker.my-medicines',
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       radius: 18,
       child: Column(

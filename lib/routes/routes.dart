@@ -100,18 +100,21 @@ ThemeData _buildLightTheme(AppThemeStyle style) {
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
     ),
-    cardTheme: const CardThemeData(
-      color: Colors.white,
+    cardTheme: CardThemeData(
+      color: colorScheme.surface,
       surfaceTintColor: Colors.transparent,
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(20)),
         side: BorderSide(color: Color(0xFFE4EAF2)),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: const Color(0xFFF7F9FC),
+      fillColor: Color.alphaBlend(
+        spec.lightPrimary.withValues(alpha: 0.035),
+        const Color(0xFFF7F9FC),
+      ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       hintStyle: const TextStyle(
         color: Color(0xFF94A3B8),
@@ -209,18 +212,21 @@ ThemeData _buildDarkTheme(AppThemeStyle style) {
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
     ),
-    cardTheme: const CardThemeData(
-      color: Color(0xFF131E30),
+    cardTheme: CardThemeData(
+      color: spec.darkSurface,
       surfaceTintColor: Colors.transparent,
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(20)),
         side: BorderSide(color: Color(0xFF334155)),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: spec.darkSurfaceAlt,
+      fillColor: Color.alphaBlend(
+        spec.darkPrimary.withValues(alpha: 0.08),
+        spec.darkSurfaceAlt,
+      ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       hintStyle: const TextStyle(
         color: Color(0xFF94A3B8),
@@ -234,7 +240,7 @@ ThemeData _buildDarkTheme(AppThemeStyle style) {
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         backgroundColor: spec.darkPrimary,
-        foregroundColor: const Color(0xFF082F49),
+        foregroundColor: spec.darkBackground,
         minimumSize: const Size(0, 46),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
@@ -254,7 +260,7 @@ ThemeData _buildDarkTheme(AppThemeStyle style) {
         }
         return spec.darkSurfaceAlt;
       }),
-      checkColor: const WidgetStatePropertyAll<Color>(Color(0xFF082F49)),
+      checkColor: WidgetStatePropertyAll<Color>(spec.darkBackground),
     ),
     switchTheme: const SwitchThemeData(
       trackOutlineColor: WidgetStatePropertyAll<Color>(Colors.transparent),
@@ -278,29 +284,42 @@ _AppThemeSpec _themeSpecFor(AppThemeStyle style) {
   switch (style) {
     case AppThemeStyle.softGlow:
       return const _AppThemeSpec(
-        lightPrimary: Color(0xFF18A9F4),
-        lightSecondary: Color(0xFFC796FF),
-        lightTertiary: Color(0xFFF2CF67),
+        lightPrimary: Color(0xFF2CA6E8),
+        lightSecondary: Color(0xFFC891EB),
+        lightTertiary: Color(0xFFF2C96E),
         lightBackground: Color(0xFFF9FBFF),
-        darkPrimary: Color(0xFF83DCFF),
-        darkSecondary: Color(0xFFE2C8FF),
-        darkTertiary: Color(0xFFF6DE86),
+        darkPrimary: Color(0xFF8DDAFF),
+        darkSecondary: Color(0xFFE3C5FF),
+        darkTertiary: Color(0xFFF2D887),
         darkBackground: Color(0xFF0B1526),
         darkSurface: Color(0xFF152239),
         darkSurfaceAlt: Color(0xFF203250),
       );
     case AppThemeStyle.moonMist:
       return const _AppThemeSpec(
-        lightPrimary: Color(0xFF5689EE),
-        lightSecondary: Color(0xFF8476F0),
-        lightTertiary: Color(0xFF79C9DA),
-        lightBackground: Color(0xFFF4F7FD),
-        darkPrimary: Color(0xFFA7BEFF),
-        darkSecondary: Color(0xFFC8BEFF),
-        darkTertiary: Color(0xFF83CFDF),
-        darkBackground: Color(0xFF08111C),
-        darkSurface: Color(0xFF102033),
-        darkSurfaceAlt: Color(0xFF1A2C45),
+        lightPrimary: Color(0xFF6A84E8),
+        lightSecondary: Color(0xFF8D79D9),
+        lightTertiary: Color(0xFF7DB8CF),
+        lightBackground: Color(0xFFF3F6FC),
+        darkPrimary: Color(0xFFB0C2FF),
+        darkSecondary: Color(0xFFD0C0FF),
+        darkTertiary: Color(0xFF8CC8D8),
+        darkBackground: Color(0xFF07101A),
+        darkSurface: Color(0xFF0F1D31),
+        darkSurfaceAlt: Color(0xFF172942),
+      );
+    case AppThemeStyle.divineTree:
+      return const _AppThemeSpec(
+        lightPrimary: Color(0xFF89B559),
+        lightSecondary: Color(0xFFE0C25E),
+        lightTertiary: Color(0xFFB7D96E),
+        lightBackground: Color(0xFFFAFBF1),
+        darkPrimary: Color(0xFFD2E58A),
+        darkSecondary: Color(0xFFE1CA79),
+        darkTertiary: Color(0xFFA8D48E),
+        darkBackground: Color(0xFF09130D),
+        darkSurface: Color(0xFF13231A),
+        darkSurfaceAlt: Color(0xFF1B3124),
       );
   }
 }

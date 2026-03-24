@@ -49,6 +49,7 @@ class MineProfileCard extends StatelessWidget {
 
         return SoftBannerCard(
           palette: palette,
+          ornamentKey: 'mine.profile',
           padding: EdgeInsets.all(compact ? 16 : 18),
           builder: (context, theme) {
             return Row(
@@ -217,6 +218,7 @@ class MineQuickActionsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = isCompactLayoutWidth(constraints.maxWidth);
@@ -225,8 +227,9 @@ class MineQuickActionsSection extends StatelessWidget {
         );
 
         return AppSectionCard(
-          accentColor: const Color(0xFFF6D7E8),
-          secondaryColor: const Color(0xFFE8DBFF),
+          accentColor: Color.lerp(scheme.secondary, scheme.tertiary, 0.32)!,
+          secondaryColor: Color.lerp(scheme.primary, scheme.secondary, 0.48)!,
+          ornamentKey: 'mine.quick-actions',
           padding: EdgeInsets.all(metrics.sectionPadding),
           radius: 18,
           child: Column(
@@ -284,14 +287,16 @@ class MineMenuCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = isCompactLayoutWidth(constraints.maxWidth);
         final isDark = Theme.of(context).brightness == Brightness.dark;
 
         return AppSectionCard(
-          accentColor: const Color(0xFFE6D9FF),
-          secondaryColor: const Color(0xFFF7E8B2),
+          accentColor: Color.lerp(scheme.secondary, scheme.primary, 0.35)!,
+          secondaryColor: Color.lerp(scheme.tertiary, scheme.secondary, 0.4)!,
+          ornamentKey: 'mine.menu',
           padding: EdgeInsets.zero,
           radius: 18,
           child: Column(

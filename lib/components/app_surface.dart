@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-
-/// 大分区卡片与横幅使用的轻量装饰样式。
-enum AppOrnamentStyle { orbit, comet, petal, halo }
+import 'package:get/get.dart';
+import 'package:luminous/components/app_ornaments.dart';
+import 'package:luminous/stores/ornament_controller.dart';
 
 Color appTintedSurface(
   BuildContext context,
@@ -100,6 +100,7 @@ class AppSectionCard extends StatelessWidget {
     required this.child,
     required this.accentColor,
     this.secondaryColor,
+    this.ornamentKey,
     this.ornamentStyle,
     this.padding = const EdgeInsets.all(14),
     this.radius = 18,
@@ -108,12 +109,30 @@ class AppSectionCard extends StatelessWidget {
   final Widget child;
   final Color accentColor;
   final Color? secondaryColor;
+  final String? ornamentKey;
   final AppOrnamentStyle? ornamentStyle;
   final EdgeInsetsGeometry padding;
   final double radius;
 
   @override
   Widget build(BuildContext context) {
+    if (ornamentKey == null) {
+      return _buildCard(context);
+    }
+    final ornamentController = Get.find<OrnamentController>();
+    return Obx(() {
+      ornamentController.revision.value;
+      return _buildCard(
+        context,
+        sessionLayout: ornamentController.resolveLayout(
+          ornamentKey: ornamentKey!,
+          family: AppOrnamentFamily.section,
+        ),
+      );
+    });
+  }
+
+  Widget _buildCard(BuildContext context, {AppOrnamentLayout? sessionLayout}) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final baseColor = theme.cardTheme.color ?? theme.colorScheme.surface;
@@ -128,6 +147,21 @@ class AppSectionCard extends StatelessWidget {
       (secondaryColor ?? accentColor).withValues(alpha: isDark ? 0.095 : 0.062),
       baseColor,
     );
+    final ornamentWidgets = sessionLayout == null
+        ? _buildSectionOrnaments(
+            style: resolvedStyle,
+            isDark: isDark,
+            accentColor: accentColor,
+            secondaryColor: secondaryColor ?? accentColor,
+          )
+        : _buildSectionOrnamentsForLayout(
+            layout: sessionLayout,
+            isDark: isDark,
+            accentColor: accentColor,
+            secondaryColor: secondaryColor ?? accentColor,
+          );
+    final ornamentIdentity =
+        sessionLayout?.id ?? 'fallback:${resolvedStyle.name}';
 
     return AppSurfaceCard(
       radius: radius,
@@ -146,11 +180,19 @@ class AppSectionCard extends StatelessWidget {
                 ),
               ),
             ),
-            ..._buildSectionOrnaments(
-              style: resolvedStyle,
-              isDark: isDark,
-              accentColor: accentColor,
-              secondaryColor: secondaryColor ?? accentColor,
+            Positioned.fill(
+              child: IgnorePointer(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 260),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  child: Stack(
+                    key: ValueKey<String>(ornamentIdentity),
+                    fit: StackFit.expand,
+                    children: ornamentWidgets,
+                  ),
+                ),
+              ),
             ),
             Padding(
               padding: padding,
@@ -182,144 +224,111 @@ List<Widget> _buildSectionOrnaments({
   required Color accentColor,
   required Color secondaryColor,
 }) {
-  final topAlpha = isDark ? 0.12 : 0.14;
-  final secondAlpha = isDark ? 0.08 : 0.10;
-  final bottomAlpha = isDark ? 0.075 : 0.085;
+  return _buildSectionOrnamentsForLayout(
+    layout: kSectionFallbackLayouts[style]!,
+    isDark: isDark,
+    accentColor: accentColor,
+    secondaryColor: secondaryColor,
+  );
+}
 
-  switch (style) {
-    case AppOrnamentStyle.orbit:
-      return [
-        Positioned(
-          top: -46,
-          right: -18,
-          child: _SectionOrb(
-            size: 142,
-            color: accentColor.withValues(alpha: topAlpha),
+List<Widget> _buildSectionOrnamentsForLayout({
+  required AppOrnamentLayout layout,
+  required bool isDark,
+  required Color accentColor,
+  required Color secondaryColor,
+}) {
+  return layout.nodes
+      .map(
+        (node) => _SectionOrnamentNode(
+          node: node,
+          color: _sectionNodeColor(
+            node: node,
+            isDark: isDark,
+            accentColor: accentColor,
+            secondaryColor: secondaryColor,
+          ),
+          borderColor: _sectionNodeBorderColor(
+            node: node,
+            isDark: isDark,
+            accentColor: accentColor,
+            secondaryColor: secondaryColor,
           ),
         ),
-        Positioned(
-          top: 28,
-          right: 78,
-          child: _SectionOrb(
-            size: 24,
-            color: secondaryColor.withValues(alpha: secondAlpha + 0.03),
-          ),
-        ),
-        Positioned(
-          bottom: -62,
-          left: -28,
-          child: _SectionOrb(
-            size: 156,
-            color: secondaryColor.withValues(alpha: bottomAlpha),
-          ),
-        ),
-      ];
-    case AppOrnamentStyle.comet:
-      return [
-        Positioned(
-          top: -32,
-          right: -38,
-          child: Transform.rotate(
-            angle: -0.35,
-            child: _SectionPill(
-              width: 164,
-              height: 92,
-              color: accentColor.withValues(alpha: topAlpha - 0.015),
-            ),
-          ),
-        ),
-        Positioned(
-          top: 18,
-          right: 34,
-          child: _SectionOrb(
-            size: 18,
-            color: accentColor.withValues(alpha: secondAlpha + 0.02),
-          ),
-        ),
-        Positioned(
-          bottom: -74,
-          left: -30,
-          child: Transform.rotate(
-            angle: 0.45,
-            child: _SectionPill(
-              width: 174,
-              height: 102,
-              color: secondaryColor.withValues(alpha: bottomAlpha),
-            ),
-          ),
-        ),
-      ];
-    case AppOrnamentStyle.petal:
-      return [
-        Positioned(
-          top: -44,
-          right: -8,
-          child: _SectionOrb(
-            size: 112,
-            color: accentColor.withValues(alpha: topAlpha - 0.01),
-          ),
-        ),
-        Positioned(
-          top: -14,
-          right: 54,
-          child: _SectionOrb(
-            size: 62,
-            color: secondaryColor.withValues(alpha: secondAlpha + 0.01),
-          ),
-        ),
-        Positioned(
-          top: 42,
-          right: 24,
-          child: _SectionOrb(
-            size: 16,
-            color: accentColor.withValues(alpha: secondAlpha + 0.04),
-          ),
-        ),
-        Positioned(
-          bottom: -56,
-          left: -20,
-          child: _SectionOrb(
-            size: 148,
-            color: secondaryColor.withValues(alpha: bottomAlpha),
-          ),
-        ),
-      ];
-    case AppOrnamentStyle.halo:
-      return [
-        Positioned(
-          top: -48,
-          right: -10,
-          child: _SectionRing(
-            size: 128,
-            color: accentColor.withValues(alpha: topAlpha + 0.01),
-            borderColor: accentColor.withValues(alpha: isDark ? 0.20 : 0.18),
-          ),
-        ),
-        Positioned(
-          top: 18,
-          right: 54,
-          child: _SectionOrb(
-            size: 36,
-            color: secondaryColor.withValues(alpha: secondAlpha + 0.02),
-          ),
-        ),
-        Positioned(
-          top: 66,
-          right: 24,
-          child: _SectionOrb(
-            size: 14,
-            color: accentColor.withValues(alpha: secondAlpha + 0.05),
-          ),
-        ),
-        Positioned(
-          bottom: -68,
-          left: -34,
-          child: _SectionOrb(
-            size: 162,
-            color: secondaryColor.withValues(alpha: bottomAlpha - 0.005),
-          ),
-        ),
-      ];
+      )
+      .toList();
+}
+
+Color _sectionNodeColor({
+  required AppOrnamentNodeSpec node,
+  required bool isDark,
+  required Color accentColor,
+  required Color secondaryColor,
+}) {
+  final base = node.colorRole == AppOrnamentColorRole.secondary
+      ? secondaryColor
+      : accentColor;
+  final alpha = switch (node.tone) {
+    AppOrnamentTone.strong => isDark ? 0.13 : 0.145,
+    AppOrnamentTone.medium => isDark ? 0.095 : 0.11,
+    AppOrnamentTone.light => isDark ? 0.075 : 0.088,
+    AppOrnamentTone.spark => isDark ? 0.18 : 0.23,
+  };
+  return base.withValues(alpha: alpha);
+}
+
+Color _sectionNodeBorderColor({
+  required AppOrnamentNodeSpec node,
+  required bool isDark,
+  required Color accentColor,
+  required Color secondaryColor,
+}) {
+  final base = node.colorRole == AppOrnamentColorRole.secondary
+      ? secondaryColor
+      : accentColor;
+  final alpha = switch (node.tone) {
+    AppOrnamentTone.strong => isDark ? 0.22 : 0.19,
+    AppOrnamentTone.medium => isDark ? 0.20 : 0.18,
+    AppOrnamentTone.light => isDark ? 0.16 : 0.14,
+    AppOrnamentTone.spark => isDark ? 0.24 : 0.22,
+  };
+  return base.withValues(alpha: alpha);
+}
+
+class _SectionOrnamentNode extends StatelessWidget {
+  const _SectionOrnamentNode({
+    required this.node,
+    required this.color,
+    required this.borderColor,
+  });
+
+  final AppOrnamentNodeSpec node;
+  final Color color;
+  final Color borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final child = switch (node.shape) {
+      AppOrnamentNodeShape.orb => _SectionOrb(size: node.width, color: color),
+      AppOrnamentNodeShape.pill => _SectionPill(
+        width: node.width,
+        height: node.height,
+        color: color,
+      ),
+      AppOrnamentNodeShape.ring => _SectionRing(
+        size: node.width,
+        color: color,
+        borderColor: borderColor,
+      ),
+    };
+
+    return Align(
+      alignment: node.alignment,
+      child: Transform.translate(
+        offset: node.offset,
+        child: Transform.rotate(angle: node.rotation, child: child),
+      ),
+    );
   }
 }
 

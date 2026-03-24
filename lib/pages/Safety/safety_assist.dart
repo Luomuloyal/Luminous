@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:luminous/api/safety_api.dart';
 import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/components/app_surface.dart';
+import 'package:luminous/components/auth.dart';
 import 'package:luminous/pages/Picker/medicine_picker.dart';
 import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/toast_utils.dart';
@@ -92,98 +93,28 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
       title: '查询模式',
       accentColor: scheme.secondary,
       secondaryColor: scheme.tertiary,
-      child: Row(
-        children: [
-          Expanded(
-            child: _modeChip(
-              label: '单药建议',
-              selected: _mode == 'single',
-              onTap: () => setState(() {
-                _mode = 'single';
-                _b = null;
-                _result = null;
-              }),
-            ),
+      ornamentKey: 'safety.mode',
+      child: AuthMethodSwitcher(
+        accentColor: scheme.secondary,
+        items: [
+          AuthMethodItem(
+            label: '单药建议',
+            selected: _mode == 'single',
+            onTap: () => setState(() {
+              _mode = 'single';
+              _b = null;
+              _result = null;
+            }),
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _modeChip(
-              label: '两药相互作用',
-              selected: _mode == 'pair',
-              onTap: () => setState(() {
-                _mode = 'pair';
-                _result = null;
-              }),
-            ),
+          AuthMethodItem(
+            label: '两药相互作用',
+            selected: _mode == 'pair',
+            onTap: () => setState(() {
+              _mode = 'pair';
+              _result = null;
+            }),
           ),
         ],
-      ),
-    );
-  }
-
-  /// 构建单个模式选择 chip。
-  Widget _modeChip({
-    required String label,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final selectedAccent = scheme.secondary;
-    final color = selected ? selectedAccent : scheme.onSurfaceVariant;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Ink(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: selected
-              ? appTintedSurface(
-                  context,
-                  selectedAccent,
-                  lightAlpha: 0.10,
-                  darkAlpha: 0.18,
-                )
-              : appTintedSurface(
-                  context,
-                  scheme.primary,
-                  lightAlpha: 0.03,
-                  darkAlpha: 0.08,
-                ),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: selected
-                ? appTintedBorder(
-                    context,
-                    selectedAccent,
-                    lightAlpha: 0.16,
-                    darkAlpha: 0.24,
-                  )
-                : scheme.outline,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              selected ? Icons.check_circle_rounded : Icons.circle_outlined,
-              size: 18,
-              color: color,
-            ),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                label,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w800,
-                  color: selected ? selectedAccent : scheme.onSurface,
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -195,6 +126,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
       title: '选择药品',
       accentColor: scheme.primary,
       secondaryColor: scheme.secondary,
+      ornamentKey: 'safety.pick',
       child: Column(
         children: [
           _pickTile(
@@ -299,6 +231,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
       title: '开始查询',
       accentColor: scheme.tertiary,
       secondaryColor: scheme.primary,
+      ornamentKey: 'safety.action',
       child: SizedBox(
         width: double.infinity,
         child: FilledButton(
@@ -332,6 +265,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
       title: 'AI 结果',
       accentColor: Color.lerp(scheme.secondary, scheme.primary, 0.5)!,
       secondaryColor: scheme.tertiary,
+      ornamentKey: 'safety.result',
       child: _result == null || !_result!.hasText
           ? Text(
               '选择药品后点击“开始查询”，后端会调用 AI 模型返回用药建议或相互作用提示。',
@@ -451,6 +385,7 @@ class _SectionCard extends StatelessWidget {
     required this.child,
     required this.accentColor,
     required this.secondaryColor,
+    required this.ornamentKey,
   });
 
   /// 卡片标题。
@@ -461,6 +396,7 @@ class _SectionCard extends StatelessWidget {
 
   final Color accentColor;
   final Color secondaryColor;
+  final String ornamentKey;
 
   /// 构建 section 卡片 UI。
   @override
@@ -469,6 +405,7 @@ class _SectionCard extends StatelessWidget {
     return AppSectionCard(
       accentColor: accentColor,
       secondaryColor: secondaryColor,
+      ornamentKey: ornamentKey,
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       radius: 18,
       child: Column(
@@ -502,6 +439,7 @@ class _DisclaimerCard extends StatelessWidget {
       title: '安全提示',
       accentColor: Theme.of(context).colorScheme.tertiary,
       secondaryColor: Theme.of(context).colorScheme.secondary,
+      ornamentKey: 'safety.disclaimer',
       child: Text(
         '本功能基于 AI 生成内容，仅用于健康科普与辅助查询，不能替代医生诊断与处方。'
         '如有不适或正在用药，请遵医嘱并咨询专业人士。',

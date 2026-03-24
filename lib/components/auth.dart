@@ -166,6 +166,7 @@ class AuthHeroCard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.ornamentKey,
   });
 
   /// Hero 卡片使用的浅色横幅配色。
@@ -179,11 +180,13 @@ class AuthHeroCard extends StatelessWidget {
 
   /// Hero 副标题。
   final String subtitle;
+  final String? ornamentKey;
 
   @override
   Widget build(BuildContext context) {
     return SoftBannerCard(
       palette: palette,
+      ornamentKey: ornamentKey ?? 'auth.hero.$title',
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       borderRadius: BorderRadius.circular(18),
       builder: (context, theme) {
@@ -236,21 +239,32 @@ class AuthHeroCard extends StatelessWidget {
 /// 通常用于“邮箱登录/验证码登录”等切换场景，选中项使用高亮背景。
 class AuthMethodSwitcher extends StatelessWidget {
   /// 创建一个方法切换器组件。
-  const AuthMethodSwitcher({super.key, required this.items});
+  const AuthMethodSwitcher({super.key, required this.items, this.accentColor});
 
   /// 可选项列表。
   final List<AuthMethodItem> items;
+  final Color? accentColor;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final accent = accentColor ?? scheme.primary;
+    final outerBackground = Color.alphaBlend(
+      accent.withValues(alpha: isDark ? 0.06 : 0.025),
+      theme.cardTheme.color ?? theme.colorScheme.surface,
+    );
+    final outerBorder = Color.alphaBlend(
+      accent.withValues(alpha: isDark ? 0.14 : 0.08),
+      scheme.outline,
+    );
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF162033) : Colors.white,
+        color: outerBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: outerBorder),
         boxShadow: isDark
             ? const []
             : const [
@@ -281,10 +295,15 @@ class AuthMethodSwitcher extends StatelessWidget {
                         height: 36,
                         decoration: BoxDecoration(
                           color: entry.value.selected
-                              ? const Color(0xFF0EA5E9)
-                              : (isDark
-                                    ? const Color(0xFF1E293B)
-                                    : const Color(0xFFF1F5F9)),
+                              ? accent
+                              : Color.alphaBlend(
+                                  accent.withValues(
+                                    alpha: isDark ? 0.08 : 0.035,
+                                  ),
+                                  isDark
+                                      ? const Color(0xFF1A2335)
+                                      : const Color(0xFFF3F6FA),
+                                ),
                           borderRadius: BorderRadius.circular(11),
                         ),
                         child: Center(
@@ -294,8 +313,10 @@ class AuthMethodSwitcher extends StatelessWidget {
                               color: entry.value.selected
                                   ? Colors.white
                                   : (isDark
-                                        ? const Color(0xFFE2E8F0)
-                                        : const Color(0xFF334155)),
+                                        ? scheme.onSurface
+                                        : scheme.onSurface.withValues(
+                                            alpha: 0.84,
+                                          )),
                               fontWeight: FontWeight.w700,
                               fontSize: 12.5,
                             ),

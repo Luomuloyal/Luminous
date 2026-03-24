@@ -91,6 +91,7 @@ class DrugSearchEntrySliver extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
     final titleColor = isDark ? Colors.white : const Color(0xFF0F172A);
     final subtitleColor = isDark
         ? const Color(0xFFCBD5E1)
@@ -105,8 +106,13 @@ class DrugSearchEntrySliver extends StatelessWidget {
             final cardPadding = compact ? 12.0 : 14.0;
 
             return AppSectionCard(
-              accentColor: const Color(0xFFB8E1FF),
-              secondaryColor: const Color(0xFFE7D8FF),
+              accentColor: Color.lerp(scheme.primary, scheme.secondary, 0.35)!,
+              secondaryColor: Color.lerp(
+                scheme.secondary,
+                scheme.tertiary,
+                0.45,
+              )!,
+              ornamentKey: 'drug.search-entry',
               padding: EdgeInsets.zero,
               radius: 18,
               child: Material(
@@ -210,6 +216,7 @@ class DrugQuickEntrySectionSliver extends StatelessWidget {
 
             return SoftBannerCard(
               palette: palette,
+              ornamentKey: 'drug.quick-banner',
               padding: EdgeInsets.all(metrics.sectionPadding),
               borderRadius: BorderRadius.circular(18),
               builder: (context, theme) {
@@ -355,6 +362,7 @@ class DrugEmptyMedicinesSliver extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
     final titleColor = isDark ? Colors.white : const Color(0xFF0F172A);
     final subtitleColor = isDark
         ? const Color(0xFFCBD5E1)
@@ -369,8 +377,13 @@ class DrugEmptyMedicinesSliver extends StatelessWidget {
           builder: (context, constraints) {
             final compact = isCompactLayoutWidth(constraints.maxWidth);
             return AppSectionCard(
-              accentColor: const Color(0xFFD9EAFE),
-              secondaryColor: const Color(0xFFF9E7A9),
+              accentColor: Color.lerp(scheme.primary, scheme.secondary, 0.3)!,
+              secondaryColor: Color.lerp(
+                scheme.tertiary,
+                scheme.secondary,
+                0.4,
+              )!,
+              ornamentKey: 'drug.empty',
               padding: EdgeInsets.fromLTRB(
                 compact ? 16 : 18,
                 compact ? 28 : 36,

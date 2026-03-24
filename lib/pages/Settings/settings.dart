@@ -34,8 +34,13 @@ class SettingsPage extends StatelessWidget {
             children: [
               _SettingsSectionCard(
                 title: '显示',
-                accentColor: const Color(0xFFE6DAFF),
-                secondaryColor: const Color(0xFFDDEBFF),
+                accentColor: scheme.secondary,
+                secondaryColor: Color.lerp(
+                  scheme.primary,
+                  scheme.tertiary,
+                  0.5,
+                )!,
+                ornamentKey: 'settings.display',
                 children: [
                   _DisplayPreferencesSection(themeController: themeController),
                 ],
@@ -43,8 +48,9 @@ class SettingsPage extends StatelessWidget {
               const SizedBox(height: 12),
               _SettingsSectionCard(
                 title: '账号',
-                accentColor: const Color(0xFFF8E5B2),
-                secondaryColor: const Color(0xFFFFE3EC),
+                accentColor: scheme.tertiary,
+                secondaryColor: scheme.secondary,
+                ornamentKey: 'settings.account',
                 children: [
                   Obx(() {
                     final loggedIn = userController.isLoggedIn;
@@ -132,12 +138,14 @@ class _SettingsSectionCard extends StatelessWidget {
     required this.children,
     required this.accentColor,
     required this.secondaryColor,
+    required this.ornamentKey,
   });
 
   final String title;
   final List<Widget> children;
   final Color accentColor;
   final Color secondaryColor;
+  final String ornamentKey;
 
   @override
   Widget build(BuildContext context) {
@@ -147,6 +155,7 @@ class _SettingsSectionCard extends StatelessWidget {
     return AppSectionCard(
       accentColor: accentColor,
       secondaryColor: secondaryColor,
+      ornamentKey: ornamentKey,
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
       radius: 18,
       child: Column(
@@ -272,38 +281,26 @@ class _DisplayPreferencesSection extends StatelessWidget {
           const SizedBox(height: 8),
           LayoutBuilder(
             builder: (context, constraints) {
-              final vertical = constraints.maxWidth < 360;
-              if (vertical) {
-                return Column(
-                  children: AppThemeStyle.values
-                      .map(
-                        (style) => Padding(
-                          padding: EdgeInsets.only(
-                            bottom: style == AppThemeStyle.softGlow ? 10 : 0,
-                          ),
-                          child: _ThemeStyleCard(
-                            style: style,
-                            selected: selectedStyle == style,
-                            onTap: () => themeController.setThemeStyle(style),
-                          ),
-                        ),
-                      )
-                      .toList(),
-                );
-              }
-              return Row(
-                children: AppThemeStyle.values
+              final styles = AppThemeStyle.values;
+              final columnCount = constraints.maxWidth >= 720
+                  ? 3
+                  : (constraints.maxWidth >= 430 ? 2 : 1);
+              final spacing = 10.0;
+              final itemWidth =
+                  (constraints.maxWidth - (columnCount - 1) * spacing) /
+                  columnCount;
+
+              return Wrap(
+                spacing: spacing,
+                runSpacing: spacing,
+                children: styles
                     .map(
-                      (style) => Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                            right: style == AppThemeStyle.softGlow ? 10 : 0,
-                          ),
-                          child: _ThemeStyleCard(
-                            style: style,
-                            selected: selectedStyle == style,
-                            onTap: () => themeController.setThemeStyle(style),
-                          ),
+                      (style) => SizedBox(
+                        width: itemWidth,
+                        child: _ThemeStyleCard(
+                          style: style,
+                          selected: selectedStyle == style,
+                          onTap: () => themeController.setThemeStyle(style),
                         ),
                       ),
                     )
@@ -436,9 +433,11 @@ IconData _themeModeIcon(AppThemeModePreference preference) {
 String _themeStyleLabel(AppThemeStyle style) {
   switch (style) {
     case AppThemeStyle.softGlow:
-      return '柔光';
+      return '柔和';
     case AppThemeStyle.moonMist:
       return '月雾';
+    case AppThemeStyle.divineTree:
+      return '神树';
   }
 }
 
@@ -448,6 +447,8 @@ String _themeStyleSubtitle(AppThemeStyle style) {
       return '延续现在这套淡黄、淡紫、淡蓝的柔和气质';
     case AppThemeStyle.moonMist:
       return '更冷静一点，偏月光蓝和雾紫，夜间更安静';
+    case AppThemeStyle.divineTree:
+      return '浅黄、嫩绿和黄绿色交错，像夜里泛着金光的神树';
   }
 }
 
@@ -455,11 +456,15 @@ List<Color> _themeStylePreview(AppThemeStyle style, bool isDark) {
   switch (style) {
     case AppThemeStyle.softGlow:
       return isDark
-          ? const [Color(0xFF112134), Color(0xFF1D3150), Color(0xFF4F5C8C)]
+          ? const [Color(0xFF112134), Color(0xFF203452), Color(0xFF66599A)]
           : const [Color(0xFFEAF7FF), Color(0xFFF9EFD4), Color(0xFFEDE5FF)];
     case AppThemeStyle.moonMist:
       return isDark
-          ? const [Color(0xFF0E1827), Color(0xFF17304B), Color(0xFF5B5E91)]
+          ? const [Color(0xFF0C1625), Color(0xFF18324F), Color(0xFF6871B4)]
           : const [Color(0xFFEAF6FF), Color(0xFFEFF3FF), Color(0xFFE6E1FF)];
+    case AppThemeStyle.divineTree:
+      return isDark
+          ? const [Color(0xFF0D1710), Color(0xFF233A29), Color(0xFF7A6A2F)]
+          : const [Color(0xFFFFF7D8), Color(0xFFF0F7D6), Color(0xFFDDEEB0)];
   }
 }

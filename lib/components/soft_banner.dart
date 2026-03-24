@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:luminous/components/app_surface.dart';
+import 'package:get/get.dart';
+import 'package:luminous/components/app_ornaments.dart';
+import 'package:luminous/stores/ornament_controller.dart';
 
 /// 顶部浅色渐变横幅配色基底。
 class SoftBannerPalette {
@@ -252,6 +254,7 @@ class SoftBannerCard extends StatelessWidget {
     super.key,
     required this.palette,
     required this.builder,
+    this.ornamentKey,
     this.ornamentStyle,
     this.padding = const EdgeInsets.all(18),
     this.borderRadius = const BorderRadius.all(Radius.circular(20)),
@@ -262,12 +265,30 @@ class SoftBannerCard extends StatelessWidget {
   /// 允许调用方根据 theme 调整前景色（标题、chip、按钮等）。
   final Widget Function(BuildContext context, SoftBannerTheme theme) builder;
 
+  final String? ornamentKey;
   final AppOrnamentStyle? ornamentStyle;
   final EdgeInsetsGeometry padding;
   final BorderRadius borderRadius;
 
   @override
   Widget build(BuildContext context) {
+    if (ornamentKey == null) {
+      return _buildCard(context);
+    }
+    final ornamentController = Get.find<OrnamentController>();
+    return Obx(() {
+      ornamentController.revision.value;
+      return _buildCard(
+        context,
+        sessionLayout: ornamentController.resolveLayout(
+          ornamentKey: ornamentKey!,
+          family: AppOrnamentFamily.banner,
+        ),
+      );
+    });
+  }
+
+  Widget _buildCard(BuildContext context, {AppOrnamentLayout? sessionLayout}) {
     final theme = palette.createTheme();
     final resolvedStyle =
         ornamentStyle ??
@@ -276,6 +297,11 @@ class SoftBannerCard extends StatelessWidget {
           palette.endColor,
           palette.accentColor,
         );
+    final ornamentWidgets = sessionLayout == null
+        ? _buildBannerOrnaments(style: resolvedStyle, theme: theme)
+        : _buildBannerOrnamentsForLayout(layout: sessionLayout, theme: theme);
+    final ornamentIdentity =
+        sessionLayout?.id ?? 'fallback:${resolvedStyle.name}';
 
     return Container(
       decoration: BoxDecoration(
@@ -298,7 +324,20 @@ class SoftBannerCard extends StatelessWidget {
         borderRadius: borderRadius,
         child: Stack(
           children: [
-            ..._buildBannerOrnaments(style: resolvedStyle, theme: theme),
+            Positioned.fill(
+              child: IgnorePointer(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 260),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  child: Stack(
+                    key: ValueKey<String>(ornamentIdentity),
+                    fit: StackFit.expand,
+                    children: ornamentWidgets,
+                  ),
+                ),
+              ),
+            ),
             Padding(
               padding: padding,
               child: SizedBox(
@@ -328,119 +367,99 @@ List<Widget> _buildBannerOrnaments({
   required AppOrnamentStyle style,
   required SoftBannerTheme theme,
 }) {
-  final strong = theme.accentColor.withValues(alpha: 0.16);
-  final medium = theme.accentColor.withValues(alpha: 0.12);
-  final light = theme.accentColor.withValues(alpha: 0.085);
+  return _buildBannerOrnamentsForLayout(
+    layout: kBannerFallbackLayouts[style]!,
+    theme: theme,
+  );
+}
 
-  switch (style) {
-    case AppOrnamentStyle.orbit:
-      return [
-        Positioned(
-          top: -44,
-          right: -42,
-          child: _SoftBannerBlob(width: 118, height: 118, color: strong),
+List<Widget> _buildBannerOrnamentsForLayout({
+  required AppOrnamentLayout layout,
+  required SoftBannerTheme theme,
+}) {
+  return layout.nodes
+      .map(
+        (node) => _SoftBannerOrnamentNode(
+          node: node,
+          color: _bannerNodeColor(node: node, theme: theme),
+          borderColor: _bannerNodeBorderColor(node: node, theme: theme),
         ),
-        Positioned(
-          top: 30,
-          right: 72,
-          child: _SoftBannerBlob(
-            width: 24,
-            height: 24,
-            color: theme.accentColor.withValues(alpha: 0.26),
-          ),
-        ),
-        Positioned(
-          bottom: -70,
-          left: -66,
-          child: _SoftBannerBlob(width: 132, height: 132, color: light),
-        ),
-      ];
-    case AppOrnamentStyle.comet:
-      return [
-        Positioned(
-          top: -26,
-          right: -44,
-          child: Transform.rotate(
-            angle: -0.32,
-            child: _SoftBannerPill(width: 152, height: 88, color: strong),
-          ),
-        ),
-        Positioned(
-          top: 18,
-          right: 30,
-          child: _SoftBannerBlob(
-            width: 18,
-            height: 18,
-            color: theme.accentColor.withValues(alpha: 0.24),
-          ),
-        ),
-        Positioned(
-          bottom: -72,
-          left: -58,
-          child: Transform.rotate(
-            angle: 0.38,
-            child: _SoftBannerPill(width: 154, height: 94, color: light),
-          ),
-        ),
-      ];
-    case AppOrnamentStyle.petal:
-      return [
-        Positioned(
-          top: -38,
-          right: -14,
-          child: _SoftBannerBlob(width: 102, height: 102, color: strong),
-        ),
-        Positioned(
-          top: -10,
-          right: 50,
-          child: _SoftBannerBlob(width: 58, height: 58, color: medium),
-        ),
-        Positioned(
-          top: 42,
-          right: 30,
-          child: _SoftBannerBlob(
-            width: 16,
-            height: 16,
-            color: theme.accentColor.withValues(alpha: 0.28),
-          ),
-        ),
-        Positioned(
-          bottom: -68,
-          left: -60,
-          child: _SoftBannerBlob(width: 138, height: 138, color: light),
-        ),
-      ];
-    case AppOrnamentStyle.halo:
-      return [
-        Positioned(
-          top: -42,
-          right: -8,
-          child: _SoftBannerRing(
-            size: 116,
-            color: medium,
-            borderColor: theme.accentColor.withValues(alpha: 0.22),
-          ),
-        ),
-        Positioned(
-          top: 18,
-          right: 54,
-          child: _SoftBannerBlob(width: 34, height: 34, color: strong),
-        ),
-        Positioned(
-          top: 64,
-          right: 26,
-          child: _SoftBannerBlob(
-            width: 14,
-            height: 14,
-            color: theme.accentColor.withValues(alpha: 0.28),
-          ),
-        ),
-        Positioned(
-          bottom: -70,
-          left: -66,
-          child: _SoftBannerBlob(width: 136, height: 136, color: light),
-        ),
-      ];
+      )
+      .toList();
+}
+
+Color _bannerNodeColor({
+  required AppOrnamentNodeSpec node,
+  required SoftBannerTheme theme,
+}) {
+  final secondaryBase = Color.lerp(theme.accentColor, theme.endColor, 0.4)!;
+  final base = node.colorRole == AppOrnamentColorRole.secondary
+      ? secondaryBase
+      : theme.accentColor;
+  final alpha = switch (node.tone) {
+    AppOrnamentTone.strong => 0.16,
+    AppOrnamentTone.medium => 0.12,
+    AppOrnamentTone.light => 0.085,
+    AppOrnamentTone.spark => 0.27,
+  };
+  return base.withValues(alpha: alpha);
+}
+
+Color _bannerNodeBorderColor({
+  required AppOrnamentNodeSpec node,
+  required SoftBannerTheme theme,
+}) {
+  final secondaryBase = Color.lerp(theme.accentColor, theme.endColor, 0.4)!;
+  final base = node.colorRole == AppOrnamentColorRole.secondary
+      ? secondaryBase
+      : theme.accentColor;
+  final alpha = switch (node.tone) {
+    AppOrnamentTone.strong => 0.23,
+    AppOrnamentTone.medium => 0.2,
+    AppOrnamentTone.light => 0.16,
+    AppOrnamentTone.spark => 0.28,
+  };
+  return base.withValues(alpha: alpha);
+}
+
+class _SoftBannerOrnamentNode extends StatelessWidget {
+  const _SoftBannerOrnamentNode({
+    required this.node,
+    required this.color,
+    required this.borderColor,
+  });
+
+  final AppOrnamentNodeSpec node;
+  final Color color;
+  final Color borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final child = switch (node.shape) {
+      AppOrnamentNodeShape.orb => _SoftBannerBlob(
+        width: node.width,
+        height: node.height,
+        color: color,
+      ),
+      AppOrnamentNodeShape.pill => _SoftBannerPill(
+        width: node.width,
+        height: node.height,
+        color: color,
+      ),
+      AppOrnamentNodeShape.ring => _SoftBannerRing(
+        size: node.width,
+        color: color,
+        borderColor: borderColor,
+      ),
+    };
+
+    return Align(
+      alignment: node.alignment,
+      child: Transform.translate(
+        offset: node.offset,
+        child: Transform.rotate(angle: node.rotation, child: child),
+      ),
+    );
   }
 }
 

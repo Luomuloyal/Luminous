@@ -208,6 +208,7 @@ class _HeaderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return SoftBannerCard(
       palette: SoftBannerPalettes.drugOf(context),
+      ornamentKey: 'medicine.header',
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       borderRadius: BorderRadius.circular(18),
       builder: (context, theme) {
@@ -343,6 +344,7 @@ class _InfoCard extends StatelessWidget {
       title: '基础信息',
       accentColor: Theme.of(context).colorScheme.primary,
       secondaryColor: Theme.of(context).colorScheme.secondary,
+      ornamentKey: 'medicine.info',
       child: Column(
         children: [
           _InfoRow(label: '产品名称', value: item.productName),
@@ -391,6 +393,7 @@ class _AiCard extends StatelessWidget {
       title: 'AI 智能解读',
       accentColor: Color.lerp(scheme.secondary, scheme.primary, 0.5)!,
       secondaryColor: scheme.tertiary,
+      ornamentKey: 'medicine.ai',
       trailing: FilledButton(
         onPressed: !hasIdentity || loading ? null : onFetch,
         style: FilledButton.styleFrom(
@@ -445,6 +448,7 @@ class _DisclaimerCard extends StatelessWidget {
       title: '安全提示',
       accentColor: Theme.of(context).colorScheme.tertiary,
       secondaryColor: Theme.of(context).colorScheme.secondary,
+      ornamentKey: 'medicine.disclaimer',
       child: Text(
         '本应用信息仅用于健康科普与辅助查询，不能替代医生诊断与处方。'
         '如有不适或正在用药，请遵医嘱并咨询专业人士。',
@@ -469,6 +473,7 @@ class _SurfaceCard extends StatelessWidget {
     required this.child,
     required this.accentColor,
     required this.secondaryColor,
+    required this.ornamentKey,
     this.trailing,
   });
 
@@ -480,6 +485,7 @@ class _SurfaceCard extends StatelessWidget {
 
   final Color accentColor;
   final Color secondaryColor;
+  final String ornamentKey;
 
   /// 右上角 trailing 区域（可选），例如按钮。
   final Widget? trailing;
@@ -491,6 +497,7 @@ class _SurfaceCard extends StatelessWidget {
     return AppSectionCard(
       accentColor: accentColor,
       secondaryColor: secondaryColor,
+      ornamentKey: ornamentKey,
       radius: 18,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),

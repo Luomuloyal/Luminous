@@ -56,6 +56,8 @@ class HomeFeatureSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final accent = Color.lerp(scheme.primary, scheme.secondary, 0.35)!;
+    final secondary = Color.lerp(scheme.secondary, scheme.tertiary, 0.45)!;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
       child: LayoutBuilder(
@@ -66,8 +68,9 @@ class HomeFeatureSection extends StatelessWidget {
           );
 
           return AppSectionCard(
-            accentColor: const Color(0xFFB6DBFB),
-            secondaryColor: const Color(0xFFE7D8FF),
+            accentColor: accent,
+            secondaryColor: secondary,
+            ornamentKey: 'home.features',
             padding: EdgeInsets.all(metrics.sectionPadding),
             radius: 18,
             child: Column(
@@ -120,14 +123,16 @@ class HomeReminderSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final compact = isCompactLayoutWidth(constraints.maxWidth);
           return AppSectionCard(
-            accentColor: const Color(0xFFD8F1DF),
-            secondaryColor: const Color(0xFFE3EEFF),
+            accentColor: Color.lerp(scheme.tertiary, scheme.primary, 0.35)!,
+            secondaryColor: Color.lerp(scheme.primary, scheme.secondary, 0.45)!,
+            ornamentKey: 'home.reminders',
             padding: EdgeInsets.all(compact ? 12 : 14),
             radius: 18,
             child: Column(
@@ -203,6 +208,7 @@ class HomeTopSection extends StatelessWidget {
 
           return SoftBannerCard(
             palette: palette,
+            ornamentKey: 'home.banner',
             padding: EdgeInsets.all(compact ? 16 : 18),
             builder: (context, theme) {
               final pills = <Widget>[

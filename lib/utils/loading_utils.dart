@@ -43,6 +43,9 @@ class LoadingUtils {
       barrierDismissible: false,
       useRootNavigator: true,
       builder: (_) {
+        final theme = Theme.of(context);
+        final scheme = theme.colorScheme;
+        final isDark = theme.brightness == Brightness.dark;
         return PopScope(
           canPop: false,
           child: Center(
@@ -50,26 +53,32 @@ class LoadingUtils {
               width: 128,
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
               decoration: BoxDecoration(
-                color: const Color(0xE6000000),
+                color: Color.alphaBlend(
+                  (isDark ? scheme.primary : Colors.white).withValues(
+                    alpha: isDark ? 0.10 : 0.80,
+                  ),
+                  scheme.surface,
+                ),
                 borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: scheme.outline),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const SizedBox(
+                  SizedBox(
                     width: 24,
                     height: 24,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.4,
-                      color: Colors.white,
+                      color: scheme.primary,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     text,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: scheme.onSurface,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:luminous/stores/app_database.dart';
+import 'package:luminous/stores/ornament_controller.dart';
 import 'package:luminous/stores/session_sync_service.dart';
 import 'package:luminous/stores/token_manager.dart';
 import 'package:luminous/stores/user_controller.dart';
@@ -13,10 +14,14 @@ import 'package:luminous/utils/notification_service.dart';
 /// 目标是把 SharedPreferences、数据库、通知插件和网络同步等重操作
 /// 从 `main()` 移到首帧之后，降低冷启动首帧等待时间。
 class AppStartupWarmup {
-  AppStartupWarmup({required UserController userController})
-    : _userController = userController;
+  AppStartupWarmup({
+    required UserController userController,
+    required OrnamentController ornamentController,
+  }) : _userController = userController,
+       _ornamentController = ornamentController;
 
   final UserController _userController;
+  final OrnamentController _ornamentController;
   bool _started = false;
 
   /// 在首帧之后启动所有预热任务。
@@ -34,6 +39,9 @@ class AppStartupWarmup {
   Future<void> _runWarmup() async {
     await Future<void>.delayed(Duration.zero);
 
+    // 装饰模板只依赖内存随机种子，尽快在首帧后准备好即可。
+    unawaited(_warmOrnaments());
+
     // SharedPreferences 相关预热最先开始，但不阻塞其它任务。
     unawaited(_warmTokenStore());
 
@@ -43,6 +51,15 @@ class AppStartupWarmup {
     // 数据库和第三方 SDK 都延后一点，避免首帧后瞬间打满 I/O。
     unawaited(_warmDatabase());
     unawaited(_warmNotificationSdk());
+  }
+
+  Future<void> _warmOrnaments() async {
+    try {
+      await Future<void>.delayed(const Duration(milliseconds: 12));
+      await _ornamentController.warmup();
+    } catch (_) {
+      // 装饰预热失败时保持确定性兜底布局，不影响功能。
+    }
   }
 
   Future<void> _warmTokenStore() async {

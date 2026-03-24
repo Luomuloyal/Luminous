@@ -232,12 +232,14 @@ class _ReminderListPageState extends State<ReminderListPage> {
 
   /// 构建未登录时的引导视图。
   Widget _buildNeedLogin() {
+    final scheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 22),
         child: AppSectionCard(
-          accentColor: Color(0xFFDDF6E8),
-          secondaryColor: Color(0xFFF8E5AF),
+          accentColor: Color.lerp(scheme.primary, scheme.tertiary, 0.32)!,
+          secondaryColor: Color.lerp(scheme.tertiary, scheme.secondary, 0.4)!,
+          ornamentKey: 'reminders.need-login',
           padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
           radius: 18,
           child: Column(
@@ -331,29 +333,35 @@ class _ReminderListPageState extends State<ReminderListPage> {
 
   /// 构建空状态占位视图。
   Widget _buildEmpty() {
-    return const AppSectionCard(
-      accentColor: Color(0xFFDDF6E8),
-      secondaryColor: Color(0xFFF8E5AF),
-      padding: EdgeInsets.symmetric(vertical: 42),
+    final scheme = Theme.of(context).colorScheme;
+    return AppSectionCard(
+      accentColor: Color.lerp(scheme.primary, scheme.tertiary, 0.32)!,
+      secondaryColor: Color.lerp(scheme.tertiary, scheme.secondary, 0.4)!,
+      ornamentKey: 'reminders.empty',
+      padding: const EdgeInsets.symmetric(vertical: 42),
       radius: 18,
       child: Column(
         children: [
-          Icon(Icons.alarm_off_rounded, size: 42, color: Color(0xFF94A3B8)),
-          SizedBox(height: 10),
+          const Icon(
+            Icons.alarm_off_rounded,
+            size: 42,
+            color: Color(0xFF94A3B8),
+          ),
+          const SizedBox(height: 10),
           Text(
             '暂无提醒',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w800,
-              color: Color(0xFF0F172A),
+              color: scheme.onSurface,
             ),
           ),
-          SizedBox(height: 6),
+          const SizedBox(height: 6),
           Text(
             '点击右下角“新增提醒”开始设置',
             style: TextStyle(
               fontSize: 13,
-              color: Color(0xFF64748B),
+              color: scheme.onSurfaceVariant,
               fontWeight: FontWeight.w600,
             ),
           ),

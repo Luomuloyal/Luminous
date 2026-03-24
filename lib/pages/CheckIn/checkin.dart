@@ -183,12 +183,14 @@ class _CheckInPageState extends State<CheckInPage> {
   }
 
   Widget _buildNeedLogin() {
+    final scheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 22),
         child: AppSectionCard(
-          accentColor: Color(0xFFF8E5AF),
-          secondaryColor: Color(0xFFDDEBFF),
+          accentColor: Color.lerp(scheme.tertiary, scheme.secondary, 0.35)!,
+          secondaryColor: Color.lerp(scheme.primary, scheme.tertiary, 0.4)!,
+          ornamentKey: 'checkin.need-login',
           padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
           radius: 18,
           child: Column(
@@ -280,33 +282,35 @@ class _CheckInPageState extends State<CheckInPage> {
   }
 
   Widget _buildEmpty() {
-    return const AppSectionCard(
-      accentColor: Color(0xFFF8E5AF),
-      secondaryColor: Color(0xFFDDEBFF),
-      padding: EdgeInsets.symmetric(vertical: 42),
+    final scheme = Theme.of(context).colorScheme;
+    return AppSectionCard(
+      accentColor: Color.lerp(scheme.tertiary, scheme.secondary, 0.35)!,
+      secondaryColor: Color.lerp(scheme.primary, scheme.tertiary, 0.4)!,
+      ornamentKey: 'checkin.empty',
+      padding: const EdgeInsets.symmetric(vertical: 42),
       radius: 18,
       child: Column(
         children: [
-          Icon(
+          const Icon(
             Icons.event_available_outlined,
             size: 42,
             color: Color(0xFF94A3B8),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Text(
             '今日暂无提醒',
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w800,
-              color: Color(0xFF0F172A),
+              color: scheme.onSurface,
             ),
           ),
-          SizedBox(height: 6),
+          const SizedBox(height: 6),
           Text(
             '可以先到“用药提醒”里新增计划',
             style: TextStyle(
               fontSize: 13,
-              color: Color(0xFF64748B),
+              color: scheme.onSurfaceVariant,
               fontWeight: FontWeight.w600,
             ),
           ),

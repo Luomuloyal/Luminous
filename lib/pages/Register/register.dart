@@ -354,7 +354,9 @@ class _RegisterViewState extends State<RegisterView> {
   }
 
   Widget _buildTopBar() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     return Row(
       children: [
         InkWell(
@@ -364,13 +366,14 @@ class _RegisterViewState extends State<RegisterView> {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF162033) : Colors.white,
+              color: theme.cardTheme.color ?? scheme.surface,
               borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: scheme.outline),
             ),
             child: Icon(
               Icons.arrow_back_ios_new_rounded,
               size: 16,
-              color: isDark ? Colors.white : const Color(0xFF0F172A),
+              color: isDark ? scheme.onSurface : scheme.onSurface,
             ),
           ),
         ),
@@ -381,7 +384,7 @@ class _RegisterViewState extends State<RegisterView> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
-              color: isDark ? Colors.white : const Color(0xFF0F172A),
+              color: scheme.onSurface,
             ),
           ),
         ),
@@ -390,14 +393,14 @@ class _RegisterViewState extends State<RegisterView> {
   }
 
   Widget _buildFormCard() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF162033) : Colors.white,
+        color: theme.cardTheme.color ?? scheme.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: scheme.outline),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: isDark ? 0.0 : 0.08),
@@ -498,6 +501,7 @@ class _RegisterViewState extends State<RegisterView> {
   }
 
   Widget _buildCodeRow() {
+    final scheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         Expanded(
@@ -519,8 +523,8 @@ class _RegisterViewState extends State<RegisterView> {
               ? null
               : _onSendCode,
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF0EA5E9),
-            foregroundColor: Colors.white,
+            backgroundColor: scheme.primary,
+            foregroundColor: scheme.onPrimary,
             minimumSize: const Size(78, 42),
             padding: const EdgeInsets.symmetric(horizontal: 12),
             shape: RoundedRectangleBorder(
@@ -556,7 +560,9 @@ class _RegisterViewState extends State<RegisterView> {
     required IconData prefixIcon,
     Widget? suffixIcon,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     return InputDecoration(
       labelText: labelText,
       hintText: hintText,
@@ -564,7 +570,9 @@ class _RegisterViewState extends State<RegisterView> {
       suffixIcon: suffixIcon,
       isDense: true,
       filled: true,
-      fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF6F8FC),
+      fillColor:
+          theme.inputDecorationTheme.fillColor ??
+          (isDark ? const Color(0xFF1E293B) : const Color(0xFFF6F8FC)),
       contentPadding: const EdgeInsets.symmetric(vertical: 14),
       prefixIconConstraints: const BoxConstraints(minWidth: 48, minHeight: 44),
       suffixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
@@ -582,12 +590,12 @@ class _RegisterViewState extends State<RegisterView> {
         borderSide: BorderSide.none,
       ),
       labelStyle: TextStyle(
-        color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
+        color: scheme.onSurfaceVariant,
         fontSize: 13.5,
         fontWeight: FontWeight.w600,
       ),
       hintStyle: TextStyle(
-        color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+        color: scheme.onSurfaceVariant.withValues(alpha: 0.78),
         fontSize: 13,
         fontWeight: FontWeight.w500,
       ),
@@ -600,7 +608,6 @@ class _RegisterViewState extends State<RegisterView> {
       child: FilledButton(
         onPressed: _submitting ? null : _onRegisterPressed,
         style: FilledButton.styleFrom(
-          backgroundColor: const Color(0xFF0EA5E9),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(13),
           ),
@@ -623,13 +630,14 @@ class _RegisterViewState extends State<RegisterView> {
   }
 
   Widget _buildHelperText() {
+    final scheme = Theme.of(context).colorScheme;
     return Text(
       _identifierType == AuthIdentifierType.phone
           ? '手机号注册只需短信验证码和密码确认。'
           : '邮箱注册只需邮件验证码和密码确认。',
       textAlign: TextAlign.center,
-      style: const TextStyle(
-        color: Color(0xFF64748B),
+      style: TextStyle(
+        color: scheme.onSurfaceVariant,
         fontSize: 11.5,
         fontWeight: FontWeight.w600,
         height: 1.45,
