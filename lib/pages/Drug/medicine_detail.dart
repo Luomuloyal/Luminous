@@ -143,40 +143,37 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
     final title = _item.displayName;
     final scheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
+    return AppCanvasPageScaffold(
       appBar: AppBar(title: Text(title), centerTitle: true),
-      body: AppCanvas(
-        accentColor: scheme.primary,
-        secondaryAccentColor: Color.lerp(
-          scheme.secondary,
-          scheme.tertiary,
-          0.55,
-        )!,
-        child: RefreshIndicator(
-          onRefresh: _loadDetail,
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            children: [
-              _HeaderCard(
-                item: _item,
-                loading: _loadingDetail,
-                onRefresh: _loadDetail,
-              ),
-              const SizedBox(height: 12),
-              _InfoCard(item: _item),
-              const SizedBox(height: 12),
-              _AiCard(
-                hasIdentity: _item.hasIdentity,
-                loading: _loadingAi,
-                result: _aiResult,
-                onFetch: _loadAiDetail,
-              ),
-              const SizedBox(height: 12),
-              const _DisclaimerCard(),
-            ],
-          ),
+      accentColor: scheme.primary,
+      secondaryAccentColor: Color.lerp(
+        scheme.secondary,
+        scheme.tertiary,
+        0.55,
+      )!,
+      child: RefreshIndicator(
+        onRefresh: _loadDetail,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          children: [
+            _HeaderCard(
+              item: _item,
+              loading: _loadingDetail,
+              onRefresh: _loadDetail,
+            ),
+            const SizedBox(height: 12),
+            _InfoCard(item: _item),
+            const SizedBox(height: 12),
+            _AiCard(
+              hasIdentity: _item.hasIdentity,
+              loading: _loadingAi,
+              result: _aiResult,
+              onFetch: _loadAiDetail,
+            ),
+            const SizedBox(height: 12),
+            const _DisclaimerCard(),
+          ],
         ),
       ),
     );

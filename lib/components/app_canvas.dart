@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// 全局浅色环境背景。
 ///
@@ -99,6 +100,88 @@ class AppCanvas extends StatelessWidget {
           ),
           Positioned.fill(child: child),
         ],
+      ),
+    );
+  }
+}
+
+/// 带有 [AppCanvas] 背景的通用页面骨架。
+///
+/// 适合“透明 AppBar + 渐变环境光背景”的详情/选择类页面：
+/// - 让背景连续覆盖到状态栏与 AppBar 区域；
+/// - 统一处理状态栏图标明暗；
+/// - 让内容区域默认从 AppBar 下方开始，避免压到标题栏。
+class AppCanvasPageScaffold extends StatelessWidget {
+  const AppCanvasPageScaffold({
+    super.key,
+    required this.child,
+    required this.accentColor,
+    this.secondaryAccentColor = const Color(0xFFDCCEFF),
+    this.baseColor,
+    this.appBar,
+    this.floatingActionButton,
+    this.floatingActionButtonLocation,
+    this.bottomNavigationBar,
+    this.reserveAppBarSpace = true,
+    this.safeAreaBottom = false,
+  });
+
+  final Widget child;
+  final Color accentColor;
+  final Color secondaryAccentColor;
+  final Color? baseColor;
+  final PreferredSizeWidget? appBar;
+  final Widget? floatingActionButton;
+  final FloatingActionButtonLocation? floatingActionButtonLocation;
+  final Widget? bottomNavigationBar;
+  final bool reserveAppBarSpace;
+  final bool safeAreaBottom;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final background = baseColor ?? theme.scaffoldBackgroundColor;
+    final topSpacing = appBar == null || !reserveAppBarSpace
+        ? 0.0
+        : appBar!.preferredSize.height;
+    final isDark = theme.brightness == Brightness.dark;
+    final overlayStyle =
+        (isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark)
+            .copyWith(
+              statusBarColor: Colors.transparent,
+              systemNavigationBarColor: background,
+              systemNavigationBarIconBrightness: isDark
+                  ? Brightness.light
+                  : Brightness.dark,
+              statusBarIconBrightness: isDark
+                  ? Brightness.light
+                  : Brightness.dark,
+              statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+            );
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: overlayStyle,
+      child: Scaffold(
+        backgroundColor: background,
+        extendBodyBehindAppBar: appBar != null,
+        appBar: appBar,
+        floatingActionButton: floatingActionButton,
+        floatingActionButtonLocation: floatingActionButtonLocation,
+        bottomNavigationBar: bottomNavigationBar,
+        body: AppCanvas(
+          accentColor: accentColor,
+          secondaryAccentColor: secondaryAccentColor,
+          baseColor: background,
+          child: SafeArea(
+            bottom: safeAreaBottom,
+            child: Column(
+              children: [
+                if (topSpacing > 0) SizedBox(height: topSpacing),
+                Expanded(child: child),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

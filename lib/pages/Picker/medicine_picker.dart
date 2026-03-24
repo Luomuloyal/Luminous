@@ -76,26 +76,19 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      backgroundColor: Colors.transparent,
+    return AppCanvasPageScaffold(
       appBar: AppBar(title: Text(widget.title), centerTitle: true),
-      body: AppCanvas(
-        accentColor: scheme.primary,
-        secondaryAccentColor: Color.lerp(
-          scheme.secondary,
-          scheme.tertiary,
-          0.5,
-        )!,
-        child: RefreshIndicator(
-          onRefresh: _load,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-            children: [
-              _buildSearchEntry(),
-              const SizedBox(height: 12),
-              _buildMyMedicinesCard(),
-            ],
-          ),
+      accentColor: scheme.primary,
+      secondaryAccentColor: Color.lerp(scheme.secondary, scheme.tertiary, 0.5)!,
+      child: RefreshIndicator(
+        onRefresh: _load,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          children: [
+            _buildSearchEntry(),
+            const SizedBox(height: 12),
+            _buildMyMedicinesCard(),
+          ],
         ),
       ),
     );

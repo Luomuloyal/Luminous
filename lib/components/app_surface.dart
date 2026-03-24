@@ -116,7 +116,7 @@ class AppSectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (ornamentKey == null) {
+    if (ornamentKey == null || !Get.isRegistered<OrnamentController>()) {
       return _buildCard(context);
     }
     final ornamentController = Get.find<OrnamentController>();
