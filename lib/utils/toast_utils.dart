@@ -17,6 +17,9 @@ class ToastUtils {
   /// 私有构造函数，保证只通过单例使用。
   ToastUtils._();
 
+  static const double _topSafeGap = 34;
+  static const double _bottomSafeGap = 92;
+
   /// 全局单例实例。
   static final ToastUtils instance = ToastUtils._();
 
@@ -137,8 +140,8 @@ class ToastUtils {
         return _ToastOverlay(
           message: message,
           placement: placement,
-          topOffset: topInset + 22,
-          bottomOffset: bottomInset + 72,
+          topOffset: topInset + _topSafeGap,
+          bottomOffset: bottomInset + _bottomSafeGap,
           style: style,
         );
       },

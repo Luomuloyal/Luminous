@@ -49,9 +49,52 @@ class OrnamentController extends GetxController {
       AppOrnamentFamily.banner => kBannerSessionLayouts,
       AppOrnamentFamily.section => kSectionSessionLayouts,
     };
-    final index =
-        _stableHash('$seed::$ornamentKey::${family.name}') % templates.length;
-    return templates[index];
+    final templateHash = _stableHash(
+      '$seed::template::$ornamentKey::${family.name}',
+    );
+    final variantHash = _stableHash(
+      '$seed::variant::$ornamentKey::${family.name}',
+    );
+    final index = templateHash % templates.length;
+    final base = templates[index];
+
+    return buildVariantOrnamentLayout(
+      base,
+      id: '${base.id}-v${variantHash % 997}',
+      family: family,
+      mirrorX: variantHash.isEven,
+      mirrorY: family == AppOrnamentFamily.section
+          ? variantHash % 4 == 0
+          : variantHash % 6 == 0,
+      scale: _pickScale(variantHash, family),
+      shiftX: _pickShift(
+        variantHash >> 4,
+        family == AppOrnamentFamily.banner ? 28 : 36,
+      ),
+      shiftY: _pickShift(
+        variantHash >> 10,
+        family == AppOrnamentFamily.banner ? 18 : 24,
+      ),
+      rotationDelta: _pickRotation(variantHash >> 16),
+      swapColorRoles: variantHash % 5 == 0,
+    );
+  }
+
+  double _pickScale(int hash, AppOrnamentFamily family) {
+    final min = family == AppOrnamentFamily.banner ? 0.88 : 0.84;
+    final max = family == AppOrnamentFamily.banner ? 1.18 : 1.16;
+    final t = ((hash >> 2) & 0xFF) / 255;
+    return min + (max - min) * t;
+  }
+
+  double _pickShift(int hash, double amplitude) {
+    final t = (hash & 0xFF) / 255;
+    return (t * 2 - 1) * amplitude;
+  }
+
+  double _pickRotation(int hash) {
+    final t = (hash & 0xFF) / 255;
+    return (t * 2 - 1) * 0.18;
   }
 
   int _stableHash(String value) {
