@@ -10,8 +10,6 @@ import 'package:sqflite/sqflite.dart';
 // - 这类本地数据属于“客户端缓存/本地资产”，不依赖后端。
 // - 表结构尽量保持稳定；需要变更时通过 version + onUpgrade 做迁移。
 class AppDatabase {
-  static const String legacyAlbumUserId = '__legacy__';
-
   /// 私有构造函数，当前数据库管理器通过单例使用。
   AppDatabase._();
 
@@ -189,14 +187,6 @@ class AppDatabase {
     int newVersion,
   ) async {
     await _repairRuntimeSchema(db);
-
-    if (oldVersion < 3) {
-      await _tryExecute(
-        db,
-        "UPDATE my_medicines SET identityKey = 'guest|' || identityKey "
-        "WHERE identityKey NOT LIKE 'guest|%' AND identityKey NOT LIKE 'user:%|%'",
-      );
-    }
   }
 
   /// 运行时做一次轻量 schema 修复，兜住老库或上次升级中断后的半成品状态。
@@ -241,7 +231,7 @@ class AppDatabase {
       column: 'imageBase64',
       sql: 'ALTER TABLE album_items ADD COLUMN imageBase64 TEXT',
     );
-    final addedAlbumUserId = await _ensureColumn(
+    await _ensureColumn(
       db,
       table: 'album_items',
       column: 'userId',
@@ -253,13 +243,6 @@ class AppDatabase {
       column: 'imageMimeType',
       sql: 'ALTER TABLE album_items ADD COLUMN imageMimeType TEXT',
     );
-
-    if (addedAlbumUserId) {
-      await _tryExecute(
-        db,
-        "UPDATE album_items SET userId = '$legacyAlbumUserId' WHERE userId = ''",
-      );
-    }
 
     await _createIndexes(db);
   }

@@ -129,6 +129,9 @@ class _SearchViewState extends State<SearchView> {
   /// - `_loadingMore=true` 则保留现有结果，只在底部展示分页 loading。
   bool _loading = false;
 
+  /// 当前活跃搜索请求的编号。
+  int _searchRequestId = 0;
+
   /// 是否正在加载下一页。
   ///
   /// 该状态用于：
@@ -1008,10 +1011,10 @@ class _SearchViewState extends State<SearchView> {
       return;
     }
 
+    final requestId = ++_searchRequestId;
+    final requestPage = reset ? 1 : _page;
+
     if (reset) {
-      if (_loading) {
-        return;
-      }
       setState(() {
         _loading = true;
         _loadingMore = false;
@@ -1034,16 +1037,16 @@ class _SearchViewState extends State<SearchView> {
       final result = widget.searchExecutor != null
           ? await widget.searchExecutor!(
               keyword: keyword,
-              page: _page,
+              page: requestPage,
               pageSize: _pageSize,
             )
           : (await MedicineApi.search(
               keyword: keyword,
-              page: _page,
+              page: requestPage,
               pageSize: _pageSize,
             )).result;
 
-      if (!mounted) {
+      if (!_canApplySearchResult(requestId, keyword)) {
         return;
       }
 
@@ -1053,6 +1056,9 @@ class _SearchViewState extends State<SearchView> {
         _page = result.page + 1;
       });
     } catch (e) {
+      if (!_canApplySearchResult(requestId, keyword)) {
+        return;
+      }
       if (!mounted) {
         return;
       }
@@ -1064,7 +1070,7 @@ class _SearchViewState extends State<SearchView> {
         });
       }
     } finally {
-      if (mounted) {
+      if (_isActiveSearchRequest(requestId) && mounted) {
         setState(() {
           _loading = false;
           _loadingMore = false;
@@ -1080,6 +1086,16 @@ class _SearchViewState extends State<SearchView> {
       return;
     }
     await _search(reset: true);
+  }
+
+  bool _canApplySearchResult(int requestId, String keyword) {
+    return mounted &&
+        _isActiveSearchRequest(requestId) &&
+        keyword == _keyword.trim();
+  }
+
+  bool _isActiveSearchRequest(int requestId) {
+    return requestId == _searchRequestId;
   }
 }
 

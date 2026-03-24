@@ -99,29 +99,29 @@
 - 后续修复方向
   如果以后重新引入云端打卡，再追加一条“本地状态与远端状态必须保持同一口径”的行为契约测试。
 
-### P3. Android 原生启动屏现在是固定尺寸 PNG 配合 `bitmap fill` 整屏拉伸，换到非常规比例设备时容易出现视觉变形
+### P3. Android 原生启动屏的整屏 PNG 拉伸问题已处理
 
 - 状态
-  仍待处理
+  已处理
 - 问题描述
-  当前启动屏是 `drawable-nodpi/native_launch_screen.png`，并通过 `launch_background.xml` 的 `<bitmap android:gravity="fill" .../>` 直接整屏铺满。
+  启动屏已经切换到 Android 12 的系统 `SplashScreen`，不再使用 `native_launch_screen.png + launch_background.xml` 的整屏拉伸方案。
 - 风险 / 影响
-  这张图现在是按单一手机比例导出的，换到平板、折叠屏或比例差异更大的设备时，启动画面会被直接拉伸，和 Flutter 页面的真实设计风格不一定一致。
+  冷启动图标现在使用矢量 `splash_wordmark_icon.xml`，在高 dpi 屏幕上清晰度更稳定，也避免了非常规比例设备上的整屏位图变形。
 - 触发条件或复现线索
-  在宽屏或非常规纵横比设备上冷启动 App，观察顶部块面、文字和插画比例是否被拉宽或拉高。
+  可在不同 dpi 与纵横比设备上冷启动 App，确认系统 SplashScreen 只显示居中图标，不再出现整屏插画被拉伸的问题。
 - 文件与位置
-  `android/app/src/main/res/drawable/launch_background.xml:4`
-  `android/app/src/main/res/drawable-v21/launch_background.xml:4`
-  `android/app/src/main/res/drawable-nodpi/native_launch_screen.png`
+  `android/app/src/main/res/values/styles.xml:3`
+  `android/app/src/main/res/values-night/styles.xml:3`
+  `android/app/src/main/res/drawable/splash_wordmark_icon.xml:2`
 - 简短修复方向
-  把启动屏拆成“纯色 / 渐变背景 + 居中主体元素”，尽量避免整张截图式 PNG 用 `fill` 拉伸；或者至少为不同尺寸准备更稳妥的资源策略。
+  后续如果还要调整品牌视觉，优先继续维护 SVG / VectorDrawable，而不是回到整屏静态位图。
 
 ## 优先级建议
 
 1. 先补 `P2` 的相册全量同步，避免跨设备删除后本地继续残留旧记录。
 2. 继续保持打卡纯本地这一条产品口径；如果以后改回云端同步，再把增删接口和一致性测试一次补齐。
 3. 然后修 `medicine-ai-safety` 的按药名回查分支。
-4. 最后再优化 Android 启动屏的资源策略，减少非常规比例设备上的拉伸感。
+4. Android 启动屏这条已收敛完成，后续只需要按品牌视觉继续维护矢量图标即可。
 
 ## 本轮附带收口
 

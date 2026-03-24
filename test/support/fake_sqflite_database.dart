@@ -239,6 +239,13 @@ class FakeSqfliteDatabase implements Database, Transaction {
     if (normalizedWhere == 'userId = ? AND remoteId = ?') {
       return row['userId'] == args[0] && row['remoteId'] == args[1];
     }
+    if (normalizedWhere ==
+        "userId = ? AND (remoteId IS NULL OR remoteId = '')") {
+      final remoteId = row['remoteId'];
+      final missingRemoteId =
+          remoteId == null || remoteId.toString().trim().isEmpty;
+      return row['userId'] == args[0] && missingRemoteId;
+    }
     if (normalizedWhere == 'id = ?') {
       return row['id'] == args[0];
     }
@@ -252,6 +259,13 @@ class FakeSqfliteDatabase implements Database, Transaction {
       final missingRemoteId =
           remoteId == null || remoteId.toString().trim().isEmpty;
       return matchesUser && missingRemoteId;
+    }
+    if (normalizedWhere.startsWith('remoteId IN (') &&
+        normalizedWhere.endsWith('AND (userId = ? OR userId = ?)')) {
+      final remoteIdArgs = args.take(args.length - 2).toSet();
+      final userArgs = args.skip(args.length - 2).toSet();
+      return remoteIdArgs.contains(row['remoteId']) &&
+          userArgs.contains(row['userId']);
     }
     if (normalizedWhere.startsWith('remoteId IN (') &&
         normalizedWhere.endsWith(

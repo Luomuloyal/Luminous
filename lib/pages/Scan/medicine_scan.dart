@@ -1,15 +1,14 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:luminous/api/scan_api.dart';
 import 'package:luminous/pages/Search/search.dart';
 import 'package:luminous/stores/album_local_store.dart';
 import 'package:luminous/stores/user_controller.dart';
+import 'package:luminous/utils/scan_image_processing.dart';
 import 'package:luminous/utils/message_utils.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/scan.dart';
@@ -694,7 +693,7 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     if (_scanning) return;
     setState(() => _scanning = true);
     try {
-      final base64 = base64Encode(bytes);
+      final base64 = await encodeScanImageBase64(bytes);
       final userId = _userController.user.value?.id;
       final response = await ScanApi.scanMedicine(
         userId: userId,
@@ -744,9 +743,12 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     MedicineScanResult result,
   ) async {
     final selected = _getSelectedCandidateOrNull();
-    final thumbBase64 = result.thumbBase64.trim().isNotEmpty
-        ? result.thumbBase64.trim()
-        : _generateThumbBase64(bytes);
+    final imagePayload = await buildAlbumImagePayload(
+      bytes: bytes,
+      preferredThumbBase64: result.thumbBase64,
+    );
+    final thumbBase64 = imagePayload['thumbBase64'] ?? '';
+    final imageBase64 = imagePayload['imageBase64'] ?? '';
     final now = DateTime.now().millisecondsSinceEpoch;
 
     String? remoteId;
@@ -774,7 +776,7 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
       approvalNo: selected?.approvalNo,
       productName: selected?.productName,
       thumbBase64: thumbBase64,
-      imageBase64: base64Encode(bytes),
+      imageBase64: imageBase64,
       imageMimeType: _photoMimeType,
       takenAt: now,
     );
@@ -829,19 +831,6 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
       return candidate.manufacturer.trim();
     }
     return '';
-  }
-
-  String _generateThumbBase64(Uint8List bytes) {
-    try {
-      final decoded = img.decodeImage(bytes);
-      if (decoded == null) return '';
-
-      final resized = img.copyResize(decoded, width: 240);
-      final jpg = img.encodeJpg(resized, quality: 80);
-      return base64Encode(jpg);
-    } catch (_) {
-      return '';
-    }
   }
 }
 

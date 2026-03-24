@@ -38,21 +38,12 @@ class AlbumLocalStore {
     try {
       final db = await AppDatabase.instance.database;
       final uid = normalizeUserId(userId);
-      final rows = _isGuestScope(uid)
-          ? db.query(
-              'album_items',
-              where: 'userId = ? OR userId = ?',
-              whereArgs: ['', AppDatabase.legacyAlbumUserId],
-              orderBy:
-                  'COALESCE(takenAt, createdAt) DESC, createdAt DESC, id DESC',
-            )
-          : db.query(
-              'album_items',
-              where: 'userId = ?',
-              whereArgs: [uid],
-              orderBy:
-                  'COALESCE(takenAt, createdAt) DESC, createdAt DESC, id DESC',
-            );
+      final rows = db.query(
+        'album_items',
+        where: 'userId = ?',
+        whereArgs: [uid],
+        orderBy: 'COALESCE(takenAt, createdAt) DESC, createdAt DESC, id DESC',
+      );
       return _collapseRows(await rows);
     } catch (_) {
       return const [];
@@ -237,9 +228,8 @@ class AlbumLocalStore {
         'imageMimeType',
         'createdAt',
       ],
-      where:
-          'remoteId IN ($placeholders) AND (userId = ? OR userId = ? OR userId = ?)',
-      whereArgs: [...remoteIds, userId, '', AppDatabase.legacyAlbumUserId],
+      where: 'remoteId IN ($placeholders) AND (userId = ? OR userId = ?)',
+      whereArgs: [...remoteIds, userId, ''],
       orderBy: 'createdAt ASC, id ASC',
     );
 
@@ -317,12 +307,6 @@ class AlbumLocalStore {
         return (row['id'] as int?) ?? 0;
       }
     }
-    for (final row in rows) {
-      if ((row['userId'] ?? '').toString().trim() ==
-          AppDatabase.legacyAlbumUserId) {
-        return (row['id'] as int?) ?? 0;
-      }
-    }
     return rows.isNotEmpty ? (rows.first['id'] as int?) ?? 0 : 0;
   }
 
@@ -353,8 +337,6 @@ class AlbumLocalStore {
 
   String normalizeUserId(String? value) => _trimOrEmpty(value);
 
-  bool _isGuestScope(String userId) => userId.isEmpty;
-
   String? _trimOrNull(String? value) {
     final trimmed = _trimOrEmpty(value);
     return trimmed.isEmpty ? null : trimmed;
@@ -374,9 +356,8 @@ class AlbumLocalStore {
     final db = await AppDatabase.instance.database;
     final rows = await db.query(
       'album_items',
-      where:
-          "(userId = ? OR userId = ?) AND (remoteId IS NULL OR remoteId = '')",
-      whereArgs: [userId, AppDatabase.legacyAlbumUserId],
+      where: "userId = ? AND (remoteId IS NULL OR remoteId = '')",
+      whereArgs: [userId],
       orderBy: 'createdAt ASC',
     );
     for (final row in rows) {

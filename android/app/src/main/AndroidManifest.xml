@@ -5,13 +5,10 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- For exact alarm scheduling on Android 12+ (best-effort; may require user approval on Android 14+) -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <!-- Legacy storage permissions for some gallery saver plugins / old Android versions -->
+    <!-- Android 12 still needs read access when users pick images from the legacy gallery flow -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28" />
     <application
         android:label="luminous"
         android:name="${applicationName}"

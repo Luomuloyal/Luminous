@@ -137,7 +137,7 @@
 - `10-Backend-and-Sealos.md`
   `backend/src` 的分层、5 个已实现接口、handler/cloud 映射、Sealos 打包部署。
 - `11-Android-Native-Startup.md`
-  Android 原生启动屏、Manifest、主题资源、`launch_background.xml`、`MainActivity`。
+  Android 12 系统启动屏、Manifest、主题资源、矢量启动图标和 `MainActivity`。
 
 ## 配合哪些文档一起看最省力
 
