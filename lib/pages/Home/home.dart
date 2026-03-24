@@ -261,7 +261,7 @@ class _HomeViewState extends State<HomeView> {
           slivers: [
             SliverToBoxAdapter(
               child: HomeTopSection(
-                palette: SoftBannerPalettes.home,
+                palette: SoftBannerPalettes.homeOf(context),
                 todayTipListenable: _todayTipNotifier,
                 nextText: nextText,
                 loadingReminders: _loadingReminders,

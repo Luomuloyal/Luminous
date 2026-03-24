@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/api/medicine_api.dart';
 import 'package:luminous/components/app_canvas.dart';
+import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/search.dart';
 import 'package:luminous/pages/Drug/medicine_detail.dart';
 import 'package:luminous/stores/my_medicine_repository.dart';
@@ -264,11 +265,16 @@ class _SearchViewState extends State<SearchView> {
   /// 的组合状态，在“提示态 / 待提交态 / 加载态 / 错误态 / 结果态”之间切换。
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AppCanvas(
-        accentColor: const Color(0xFF0EA5E9),
-        secondaryAccentColor: const Color(0xFFDCCEFF),
+        accentColor: scheme.primary,
+        secondaryAccentColor: Color.lerp(
+          scheme.secondary,
+          scheme.tertiary,
+          0.5,
+        )!,
         child: SafeArea(
           child: RefreshIndicator(
             onRefresh: _refreshSearch,
@@ -295,6 +301,8 @@ class _SearchViewState extends State<SearchView> {
 
   /// 构建顶部标题区域。
   Widget _buildHeaderSliver() {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -310,13 +318,14 @@ class _SearchViewState extends State<SearchView> {
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: theme.cardTheme.color ?? theme.colorScheme.surface,
                       borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: scheme.outline),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.arrow_back_ios_new_rounded,
                       size: 18,
-                      color: Color(0xFF0F172A),
+                      color: scheme.onSurface,
                     ),
                   ),
                 ),
@@ -327,7 +336,7 @@ class _SearchViewState extends State<SearchView> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
+                      color: scheme.onSurface,
                     ),
                   ),
                 ),
@@ -336,7 +345,7 @@ class _SearchViewState extends State<SearchView> {
             const SizedBox(height: 4),
             Text(
               widget.pickerMode ? '从后端药品库搜索并选择' : '支持按药品名称、批准文号、生产单位搜索',
-              style: const TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+              style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -349,6 +358,8 @@ class _SearchViewState extends State<SearchView> {
     return ValueListenableBuilder<String>(
       valueListenable: _draftKeywordNotifier,
       builder: (context, draftKeyword, _) {
+        final theme = Theme.of(context);
+        final scheme = theme.colorScheme;
         return SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -363,26 +374,34 @@ class _SearchViewState extends State<SearchView> {
                         onSubmitted: (_) => _commitSearch(),
                         decoration: InputDecoration(
                           hintText: '产品名称 / 批准文号 / 生产单位',
-                          hintStyle: const TextStyle(
-                            color: Color(0xFF94A3B8),
+                          hintStyle: TextStyle(
+                            color: scheme.onSurfaceVariant,
                             fontSize: 14,
                           ),
-                          prefixIcon: const Icon(
+                          prefixIcon: Icon(
                             Icons.search_rounded,
-                            color: Color(0xFF0EA5E9),
+                            color: scheme.primary,
                           ),
                           suffixIcon: draftKeyword.isEmpty
                               ? null
                               : IconButton(
                                   onPressed: _clearKeyword,
-                                  icon: const Icon(
+                                  icon: Icon(
                                     Icons.close_rounded,
                                     size: 18,
-                                    color: Color(0xFF64748B),
+                                    color: scheme.onSurfaceVariant,
                                   ),
                                 ),
                           filled: true,
-                          fillColor: const Color(0xFFF8FAFC),
+                          fillColor: appTintedSurface(
+                            context,
+                            scheme.primary,
+                            lightAlpha: 0.04,
+                            darkAlpha: 0.10,
+                            baseColor:
+                                theme.inputDecorationTheme.fillColor ??
+                                (theme.cardTheme.color ?? scheme.surface),
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
@@ -398,8 +417,6 @@ class _SearchViewState extends State<SearchView> {
                     FilledButton(
                       onPressed: _commitSearch,
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF0EA5E9),
-                        foregroundColor: Colors.white,
                         minimumSize: const Size(76, 44),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -443,6 +460,7 @@ class _SearchViewState extends State<SearchView> {
 
   /// 构建快捷搜索标签区域。
   Widget _buildQuickTagsSliver() {
+    final scheme = Theme.of(context).colorScheme;
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
@@ -452,12 +470,12 @@ class _SearchViewState extends State<SearchView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   '常用搜索',
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF0F172A),
+                    color: scheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -468,15 +486,27 @@ class _SearchViewState extends State<SearchView> {
                       .map(
                         (tag) => ActionChip(
                           onPressed: () => _applyQuickTag(tag),
-                          side: const BorderSide(color: Color(0xFFE2E8F0)),
-                          backgroundColor: const Color(0xFFF8FAFC),
+                          side: BorderSide(
+                            color: appTintedBorder(
+                              context,
+                              scheme.primary,
+                              lightAlpha: 0.10,
+                              darkAlpha: 0.18,
+                            ),
+                          ),
+                          backgroundColor: appTintedSurface(
+                            context,
+                            scheme.primary,
+                            lightAlpha: 0.05,
+                            darkAlpha: 0.11,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(999),
                           ),
                           label: Text(
                             tag,
-                            style: const TextStyle(
-                              color: Color(0xFF334155),
+                            style: TextStyle(
+                              color: scheme.onSurface,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -494,6 +524,7 @@ class _SearchViewState extends State<SearchView> {
 
   /// 构建最近搜索历史区域。
   Widget _buildHistorySliver() {
+    final scheme = Theme.of(context).colorScheme;
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
@@ -504,12 +535,12 @@ class _SearchViewState extends State<SearchView> {
               children: [
                 Row(
                   children: [
-                    const Text(
+                    Text(
                       '最近搜索',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF0F172A),
+                        color: scheme.onSurface,
                       ),
                     ),
                     const Spacer(),
@@ -518,18 +549,21 @@ class _SearchViewState extends State<SearchView> {
                       style: TextButton.styleFrom(
                         minimumSize: const Size(48, 30),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        foregroundColor: const Color(0xFF64748B),
+                        foregroundColor: scheme.onSurfaceVariant,
                       ),
                       child: const Text('清空'),
                     ),
                   ],
                 ),
                 if (_recentKeywords.isEmpty)
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.only(bottom: 8),
                     child: Text(
                       '暂无搜索历史',
-                      style: TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                   )
                 else
@@ -546,25 +580,25 @@ class _SearchViewState extends State<SearchView> {
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.history_rounded,
                                     size: 16,
-                                    color: Color(0xFF64748B),
+                                    color: scheme.onSurfaceVariant,
                                   ),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
                                       keyword,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 14,
-                                        color: Color(0xFF1E293B),
+                                        color: scheme.onSurface,
                                       ),
                                     ),
                                   ),
-                                  const Icon(
+                                  Icon(
                                     Icons.north_west_rounded,
                                     size: 16,
-                                    color: Color(0xFF94A3B8),
+                                    color: scheme.onSurfaceVariant,
                                   ),
                                 ],
                               ),
@@ -583,25 +617,26 @@ class _SearchViewState extends State<SearchView> {
 
   /// 构建“搜索结果”标题行。
   Widget _buildResultTitleSliver() {
+    final scheme = Theme.of(context).colorScheme;
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
         child: Row(
           children: [
-            const Text(
+            Text(
               '搜索结果',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF0F172A),
+                color: scheme.onSurface,
               ),
             ),
             const SizedBox(width: 6),
             Text(
               '(${_keyword.isEmpty ? 0 : _results.length})',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: Color(0xFF64748B),
+                color: scheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -656,39 +691,37 @@ class _SearchViewState extends State<SearchView> {
 
   /// 构建“还没输入也没搜索”时的搜索提示区域。
   Widget _buildGuideSliver() {
-    return const SliverToBoxAdapter(
+    final scheme = Theme.of(context).colorScheme;
+    return SliverToBoxAdapter(
       child: Padding(
-        padding: EdgeInsets.fromLTRB(16, 26, 16, 10),
+        padding: const EdgeInsets.fromLTRB(16, 26, 16, 10),
         child: SearchSurfaceCard(
           child: Padding(
-            padding: EdgeInsets.fromLTRB(14, 14, 14, 14),
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    Icon(
-                      Icons.tips_and_updates_rounded,
-                      color: Color(0xFF0EA5E9),
-                    ),
-                    SizedBox(width: 10),
+                    Icon(Icons.tips_and_updates_rounded, color: scheme.primary),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         '搜索提示',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF0F172A),
+                          color: scheme.onSurface,
                         ),
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 10),
-                _TipRow(label: '产品名称', example: '阿莫西林胶囊、布洛芬片'),
-                _TipRow(label: '批准文号', example: '国药准字 H20013191'),
-                _TipRow(label: '生产单位', example: '石药集团、华润三九'),
-                _TipRow(label: '药品编码', example: '86901000000000(本位码)'),
+                const SizedBox(height: 10),
+                const _TipRow(label: '产品名称', example: '阿莫西林胶囊、布洛芬片'),
+                const _TipRow(label: '批准文号', example: '国药准字 H20013191'),
+                const _TipRow(label: '生产单位', example: '石药集团、华润三九'),
+                const _TipRow(label: '药品编码', example: '86901000000000(本位码)'),
               ],
             ),
           ),
@@ -699,21 +732,22 @@ class _SearchViewState extends State<SearchView> {
 
   /// 构建“输入了内容但还没真正搜索”时的引导区域。
   Widget _buildReadySliver() {
-    return const SliverToBoxAdapter(
+    final scheme = Theme.of(context).colorScheme;
+    return SliverToBoxAdapter(
       child: Padding(
-        padding: EdgeInsets.fromLTRB(16, 18, 16, 10),
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
         child: SearchSurfaceCard(
           child: Padding(
-            padding: EdgeInsets.fromLTRB(14, 14, 14, 14),
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
             child: Row(
               children: [
-                Icon(Icons.keyboard_return_rounded, color: Color(0xFF0EA5E9)),
-                SizedBox(width: 10),
+                Icon(Icons.keyboard_return_rounded, color: scheme.primary),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     '按下"搜索"或回车键开始查询药品数据库',
                     style: TextStyle(
-                      color: Color(0xFF475569),
+                      color: scheme.onSurfaceVariant,
                       fontSize: 13,
                       height: 1.5,
                       fontWeight: FontWeight.w600,
@@ -762,30 +796,34 @@ class _SearchViewState extends State<SearchView> {
 
   /// 构建空结果占位区域。
   Widget _buildEmptySliver() {
-    return const SliverToBoxAdapter(
+    final scheme = Theme.of(context).colorScheme;
+    return SliverToBoxAdapter(
       child: Padding(
-        padding: EdgeInsets.fromLTRB(16, 30, 16, 12),
+        padding: const EdgeInsets.fromLTRB(16, 30, 16, 12),
         child: Center(
           child: Column(
             children: [
               Icon(
                 Icons.search_off_rounded,
                 size: 38,
-                color: Color(0xFF94A3B8),
+                color: scheme.onSurfaceVariant,
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 '暂无匹配结果',
                 style: TextStyle(
                   fontSize: 15,
-                  color: Color(0xFF64748B),
+                  color: scheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              SizedBox(height: 2),
+              const SizedBox(height: 2),
               Text(
                 '可尝试产品名称、批准文号或生产单位重新搜索',
-                style: TextStyle(fontSize: 12.5, color: Color(0xFF94A3B8)),
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -796,6 +834,7 @@ class _SearchViewState extends State<SearchView> {
 
   /// 构建搜索失败时的错误区域。
   Widget _buildErrorSliver(String message) {
+    final scheme = Theme.of(context).colorScheme;
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 26, 16, 10),
@@ -814,10 +853,10 @@ class _SearchViewState extends State<SearchView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         '查询失败',
                         style: TextStyle(
-                          color: Color(0xFF0F172A),
+                          color: scheme.onSurface,
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
                         ),
@@ -825,8 +864,8 @@ class _SearchViewState extends State<SearchView> {
                       const SizedBox(height: 6),
                       Text(
                         message,
-                        style: const TextStyle(
-                          color: Color(0xFF475569),
+                        style: TextStyle(
+                          color: scheme.onSurfaceVariant,
                           fontSize: 13,
                           height: 1.5,
                           fontWeight: FontWeight.w600,
@@ -838,8 +877,13 @@ class _SearchViewState extends State<SearchView> {
                         child: FilledButton.tonal(
                           onPressed: () => _search(reset: true),
                           style: FilledButton.styleFrom(
-                            foregroundColor: const Color(0xFF0F172A),
-                            backgroundColor: const Color(0xFFF1F5F9),
+                            foregroundColor: scheme.onSurface,
+                            backgroundColor: appTintedSurface(
+                              context,
+                              scheme.primary,
+                              lightAlpha: 0.06,
+                              darkAlpha: 0.12,
+                            ),
                             minimumSize: const Size(88, 40),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -1120,6 +1164,7 @@ class _TipRow extends StatelessWidget {
   /// 构建单行“字段标签 + 示例值”说明。
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
@@ -1128,15 +1173,20 @@ class _TipRow extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
             decoration: BoxDecoration(
-              color: const Color(0xFF0EA5E9).withValues(alpha: 0.10),
+              color: appTintedSurface(
+                context,
+                scheme.primary,
+                lightAlpha: 0.10,
+                darkAlpha: 0.18,
+              ),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF0369A1),
+                color: scheme.primary,
               ),
             ),
           ),
@@ -1144,9 +1194,9 @@ class _TipRow extends StatelessWidget {
           Expanded(
             child: Text(
               example,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12.5,
-                color: Color(0xFF475569),
+                color: scheme.onSurfaceVariant,
                 height: 1.4,
               ),
             ),

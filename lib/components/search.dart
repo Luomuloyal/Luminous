@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:luminous/components/app_surface.dart';
 
 /// 搜索页（Search）可复用 UI 组件集合。
 class SearchResultItemData {
@@ -34,26 +35,7 @@ class SearchSurfaceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF162033) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-        ),
-        boxShadow: isDark
-            ? const []
-            : const [
-                BoxShadow(
-                  color: Color(0x0C0F172A),
-                  blurRadius: 14,
-                  offset: Offset(0, 6),
-                ),
-              ],
-      ),
-      child: child,
-    );
+    return AppSurfaceCard(radius: 16, child: child);
   }
 }
 
@@ -83,6 +65,42 @@ class SearchResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final titleColor = scheme.onSurface;
+    final subtitleColor = scheme.onSurfaceVariant;
+    final badgeBackground = appTintedSurface(
+      context,
+      scheme.primary,
+      lightAlpha: 0.09,
+      darkAlpha: 0.16,
+    );
+    final badgeTextColor = scheme.primary;
+    final addedBackground = appTintedSurface(
+      context,
+      const Color(0xFF16A34A),
+      lightAlpha: 0.08,
+      darkAlpha: 0.14,
+    );
+    final addedBorder = appTintedBorder(
+      context,
+      const Color(0xFF16A34A),
+      lightAlpha: 0.14,
+      darkAlpha: 0.20,
+    );
+    final addBackground = appTintedSurface(
+      context,
+      scheme.primary,
+      lightAlpha: 0.08,
+      darkAlpha: 0.14,
+    );
+    final addBorder = appTintedBorder(
+      context,
+      scheme.primary,
+      lightAlpha: 0.14,
+      darkAlpha: 0.20,
+    );
+
     return SearchSurfaceCard(
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -117,10 +135,10 @@ class SearchResultCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             item.name,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF0F172A),
+                              color: titleColor,
                             ),
                           ),
                         ),
@@ -131,17 +149,17 @@ class SearchResultCard extends StatelessWidget {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEFF6FF),
+                            color: badgeBackground,
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
                             item.badge,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF0369A1),
+                              color: badgeTextColor,
                             ),
                           ),
                         ),
@@ -150,26 +168,23 @@ class SearchResultCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       item.subtitle,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF475569),
-                      ),
+                      style: TextStyle(fontSize: 13, color: subtitleColor),
                     ),
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.info_outline_rounded,
                           size: 14,
-                          color: Color(0xFF64748B),
+                          color: subtitleColor,
                         ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             item.tips,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12.5,
-                              color: Color(0xFF64748B),
+                              color: subtitleColor,
                             ),
                           ),
                         ),
@@ -185,16 +200,10 @@ class SearchResultCard extends StatelessWidget {
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: isAdded
-                              ? const Color(0xFFEFFCF5)
-                              : const Color(0xFF0EA5E9).withValues(alpha: 0.10),
+                          color: isAdded ? addedBackground : addBackground,
                           borderRadius: BorderRadius.circular(999),
                           border: Border.all(
-                            color: isAdded
-                                ? const Color(0xFF86EFAC)
-                                : const Color(
-                                    0xFF0EA5E9,
-                                  ).withValues(alpha: 0.30),
+                            color: isAdded ? addedBorder : addBorder,
                           ),
                         ),
                         child: Row(
@@ -207,7 +216,7 @@ class SearchResultCard extends StatelessWidget {
                               size: 14,
                               color: isAdded
                                   ? const Color(0xFF16A34A)
-                                  : const Color(0xFF0EA5E9),
+                                  : scheme.primary,
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -217,7 +226,7 @@ class SearchResultCard extends StatelessWidget {
                                 fontWeight: FontWeight.w600,
                                 color: isAdded
                                     ? const Color(0xFF16A34A)
-                                    : const Color(0xFF0EA5E9),
+                                    : scheme.primary,
                               ),
                             ),
                           ],

@@ -5,6 +5,11 @@
     android:height="240dp"
     android:viewportWidth="1024"
     android:viewportHeight="1024">
+    <group
+        android:pivotX="512"
+        android:pivotY="512"
+        android:scaleX="0.74"
+        android:scaleY="0.74">
     <path android:pathData="M128,512c0,212.08 171.92,384 384,384s384,-171.92 384,-384c0,-212.08 -171.92,-384 -384,-384S128,299.92 128,512z">
         <aapt:attr name="android:fillColor">
             <gradient
@@ -88,4 +93,5 @@
     <path
         android:fillColor="#FFFFFF"
         android:pathData="M714.24,512c0,15.872 12.8,28.672 28.672,28.672 15.872,0 28.672,-12.8 28.672,-28.672s-12.8,-28.672 -28.672,-28.672c-15.872,0 -28.672,12.8 -28.672,28.672z" />
+    </group>
 </vector>

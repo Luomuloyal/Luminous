@@ -19,17 +19,18 @@ import 'package:luminous/utils/loading_utils.dart';
 /// 当前项目使用原生 `MaterialApp` 路由表，不依赖 `GetMaterialApp`。
 Widget getRootWidget() {
   final themeController = Get.find<ThemeController>();
-  return Obx(
-    () => MaterialApp(
+  return Obx(() {
+    final style = themeController.themeStyle.value;
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       navigatorKey: LoadingUtils.navigatorKey,
-      theme: _buildLightTheme(),
-      darkTheme: _buildDarkTheme(),
+      theme: _buildLightTheme(style),
+      darkTheme: _buildDarkTheme(style),
       themeMode: themeController.themeMode,
       initialRoute: '/',
       routes: getRootRoutes(),
-    ),
-  );
+    );
+  });
 }
 
 /// 返回整个应用的命名路由表。
@@ -54,18 +55,16 @@ Map<String, Widget Function(BuildContext)> getRootRoutes() {
   };
 }
 
-ThemeData _buildLightTheme() {
-  const primary = Color(0xFF0EA5E9);
-  const secondary = Color(0xFFC8A7F2);
-  const tertiary = Color(0xFFE7C767);
+ThemeData _buildLightTheme(AppThemeStyle style) {
+  final spec = _themeSpecFor(style);
   final colorScheme =
       ColorScheme.fromSeed(
-        seedColor: primary,
+        seedColor: spec.lightPrimary,
         brightness: Brightness.light,
       ).copyWith(
-        primary: primary,
-        secondary: secondary,
-        tertiary: tertiary,
+        primary: spec.lightPrimary,
+        secondary: spec.lightSecondary,
+        tertiary: spec.lightTertiary,
         surface: Colors.white,
         onSurfaceVariant: const Color(0xFF64748B),
         outline: const Color(0xFFDDE5F0),
@@ -75,8 +74,8 @@ ThemeData _buildLightTheme() {
   return ThemeData(
     useMaterial3: true,
     colorScheme: colorScheme,
-    scaffoldBackgroundColor: AppUiConstants.PAGE_BACKGROUND,
-    canvasColor: AppUiConstants.PAGE_BACKGROUND,
+    scaffoldBackgroundColor: spec.lightBackground,
+    canvasColor: spec.lightBackground,
     dividerColor: const Color(0xFFE2E8F0),
     shadowColor: const Color(0xFF0F172A),
     dialogTheme: const DialogThemeData(
@@ -84,6 +83,14 @@ ThemeData _buildLightTheme() {
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(24)),
+      ),
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: colorScheme.surface,
+      surfaceTintColor: Colors.transparent,
+      modalBackgroundColor: colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
     ),
     appBarTheme: const AppBarTheme(
@@ -117,7 +124,7 @@ ThemeData _buildLightTheme() {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: primary,
+        backgroundColor: spec.lightPrimary,
         foregroundColor: Colors.white,
         minimumSize: const Size(0, 46),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -125,7 +132,7 @@ ThemeData _buildLightTheme() {
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: primary,
+        foregroundColor: spec.lightPrimary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     ),
@@ -134,7 +141,7 @@ ThemeData _buildLightTheme() {
       side: const BorderSide(color: Color(0xFFCBD5E1)),
       fillColor: WidgetStateProperty.resolveWith<Color?>((states) {
         if (states.contains(WidgetState.selected)) {
-          return primary;
+          return spec.lightPrimary;
         }
         return Colors.white;
       }),
@@ -145,35 +152,30 @@ ThemeData _buildLightTheme() {
     ),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: Colors.transparent,
-      indicatorColor: primary.withValues(alpha: 0.12),
+      indicatorColor: spec.lightPrimary.withValues(alpha: 0.12),
       labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((states) {
         final selected = states.contains(WidgetState.selected);
         return TextStyle(
           fontSize: 12.5,
           fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
-          color: selected ? primary : AppUiConstants.TAB_INACTIVE,
+          color: selected ? spec.lightPrimary : AppUiConstants.TAB_INACTIVE,
         );
       }),
     ),
   );
 }
 
-ThemeData _buildDarkTheme() {
-  const primary = Color(0xFF7DD3FC);
-  const secondary = Color(0xFFE0D2FF);
-  const tertiary = Color(0xFFF7E3A5);
-  const background = Color(0xFF0C1424);
-  const surface = Color(0xFF131E30);
-  const surfaceAlt = Color(0xFF1C2A41);
+ThemeData _buildDarkTheme(AppThemeStyle style) {
+  final spec = _themeSpecFor(style);
   final colorScheme =
       ColorScheme.fromSeed(
-        seedColor: primary,
+        seedColor: spec.darkPrimary,
         brightness: Brightness.dark,
       ).copyWith(
-        primary: primary,
-        surface: surface,
-        secondary: secondary,
-        tertiary: tertiary,
+        primary: spec.darkPrimary,
+        surface: spec.darkSurface,
+        secondary: spec.darkSecondary,
+        tertiary: spec.darkTertiary,
         onSurfaceVariant: const Color(0xFF97A6BA),
         outline: const Color(0xFF334155),
       );
@@ -181,15 +183,23 @@ ThemeData _buildDarkTheme() {
   return ThemeData(
     useMaterial3: true,
     colorScheme: colorScheme,
-    scaffoldBackgroundColor: background,
-    canvasColor: background,
+    scaffoldBackgroundColor: spec.darkBackground,
+    canvasColor: spec.darkBackground,
     dividerColor: const Color(0xFF334155),
     shadowColor: Colors.black,
-    dialogTheme: const DialogThemeData(
-      backgroundColor: surface,
+    dialogTheme: DialogThemeData(
+      backgroundColor: spec.darkSurface,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(24)),
+      ),
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: spec.darkSurface,
+      surfaceTintColor: Colors.transparent,
+      modalBackgroundColor: spec.darkSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
     ),
     appBarTheme: const AppBarTheme(
@@ -200,7 +210,7 @@ ThemeData _buildDarkTheme() {
       surfaceTintColor: Colors.transparent,
     ),
     cardTheme: const CardThemeData(
-      color: surface,
+      color: Color(0xFF131E30),
       surfaceTintColor: Colors.transparent,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
@@ -210,7 +220,7 @@ ThemeData _buildDarkTheme() {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: surfaceAlt,
+      fillColor: spec.darkSurfaceAlt,
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       hintStyle: const TextStyle(
         color: Color(0xFF94A3B8),
@@ -223,7 +233,7 @@ ThemeData _buildDarkTheme() {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: primary,
+        backgroundColor: spec.darkPrimary,
         foregroundColor: const Color(0xFF082F49),
         minimumSize: const Size(0, 46),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -231,7 +241,7 @@ ThemeData _buildDarkTheme() {
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: primary,
+        foregroundColor: spec.darkPrimary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     ),
@@ -240,9 +250,9 @@ ThemeData _buildDarkTheme() {
       side: const BorderSide(color: Color(0xFF475569)),
       fillColor: WidgetStateProperty.resolveWith<Color?>((states) {
         if (states.contains(WidgetState.selected)) {
-          return primary;
+          return spec.darkPrimary;
         }
-        return surfaceAlt;
+        return spec.darkSurfaceAlt;
       }),
       checkColor: const WidgetStatePropertyAll<Color>(Color(0xFF082F49)),
     ),
@@ -251,15 +261,72 @@ ThemeData _buildDarkTheme() {
     ),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: Colors.transparent,
-      indicatorColor: primary.withValues(alpha: 0.18),
+      indicatorColor: spec.darkPrimary.withValues(alpha: 0.18),
       labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((states) {
         final selected = states.contains(WidgetState.selected);
         return TextStyle(
           fontSize: 12.5,
           fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
-          color: selected ? primary : const Color(0xFF94A3B8),
+          color: selected ? spec.darkPrimary : const Color(0xFF94A3B8),
         );
       }),
     ),
   );
+}
+
+_AppThemeSpec _themeSpecFor(AppThemeStyle style) {
+  switch (style) {
+    case AppThemeStyle.softGlow:
+      return const _AppThemeSpec(
+        lightPrimary: Color(0xFF18A9F4),
+        lightSecondary: Color(0xFFC796FF),
+        lightTertiary: Color(0xFFF2CF67),
+        lightBackground: Color(0xFFF9FBFF),
+        darkPrimary: Color(0xFF83DCFF),
+        darkSecondary: Color(0xFFE2C8FF),
+        darkTertiary: Color(0xFFF6DE86),
+        darkBackground: Color(0xFF0B1526),
+        darkSurface: Color(0xFF152239),
+        darkSurfaceAlt: Color(0xFF203250),
+      );
+    case AppThemeStyle.moonMist:
+      return const _AppThemeSpec(
+        lightPrimary: Color(0xFF5689EE),
+        lightSecondary: Color(0xFF8476F0),
+        lightTertiary: Color(0xFF79C9DA),
+        lightBackground: Color(0xFFF4F7FD),
+        darkPrimary: Color(0xFFA7BEFF),
+        darkSecondary: Color(0xFFC8BEFF),
+        darkTertiary: Color(0xFF83CFDF),
+        darkBackground: Color(0xFF08111C),
+        darkSurface: Color(0xFF102033),
+        darkSurfaceAlt: Color(0xFF1A2C45),
+      );
+  }
+}
+
+class _AppThemeSpec {
+  const _AppThemeSpec({
+    required this.lightPrimary,
+    required this.lightSecondary,
+    required this.lightTertiary,
+    required this.lightBackground,
+    required this.darkPrimary,
+    required this.darkSecondary,
+    required this.darkTertiary,
+    required this.darkBackground,
+    required this.darkSurface,
+    required this.darkSurfaceAlt,
+  });
+
+  final Color lightPrimary;
+  final Color lightSecondary;
+  final Color lightTertiary;
+  final Color lightBackground;
+  final Color darkPrimary;
+  final Color darkSecondary;
+  final Color darkTertiary;
+  final Color darkBackground;
+  final Color darkSurface;
+  final Color darkSurfaceAlt;
 }

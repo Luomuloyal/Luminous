@@ -37,6 +37,12 @@ class GlobalConstants {
 
   /// 本地存储暗黑模式偏好时使用的 key。
   static const String DARK_MODE_KEY = 'luminous_dark_mode';
+
+  /// 本地存储主题模式偏好时使用的 key。
+  static const String THEME_MODE_KEY = 'luminous_theme_mode';
+
+  /// 本地存储主题风格偏好时使用的 key。
+  static const String THEME_STYLE_KEY = 'luminous_theme_style';
 }
 
 /// 后端接口路径常量集合。

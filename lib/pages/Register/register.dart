@@ -312,7 +312,7 @@ class _RegisterViewState extends State<RegisterView> {
         _buildTopBar(),
         const SizedBox(height: 10),
         AuthHeroCard(
-          palette: SoftBannerPalettes.auth,
+          palette: SoftBannerPalettes.authOf(context),
           icon: Icons.person_add_alt_1_rounded,
           title: '创建账号',
           subtitle: '${_identifierType.label}验证码注册',

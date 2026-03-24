@@ -354,7 +354,7 @@ class _LoginPageState extends State<LoginPage> {
         _buildTopBar(),
         const SizedBox(height: 10),
         AuthHeroCard(
-          palette: SoftBannerPalettes.auth,
+          palette: SoftBannerPalettes.authOf(context),
           icon: Icons.health_and_safety_rounded,
           title: '健康助手',
           subtitle:

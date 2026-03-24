@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/responsive_quick_grid.dart';
 import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/viewmodels/auth.dart';
@@ -60,7 +61,7 @@ class MineProfileCard extends StatelessWidget {
                     height: compact ? 52 : 56,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.86),
+                      color: theme.surfaceColor,
                       border: Border.all(color: theme.borderColor),
                     ),
                     child: Icon(
@@ -218,23 +219,45 @@ class MineQuickActionsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final compact = isCompactLayoutWidth(constraints.maxWidth);
         final metrics = ResponsiveQuickGridMetrics.fromWidth(
-          constraints.maxWidth,
+          constraints.maxWidth - ((compact ? 12 : 14) * 2),
         );
 
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: items.length,
-          gridDelegate: metrics.gridDelegate,
-          itemBuilder: (context, index) {
-            final item = items[index];
-            return MineQuickActionCard(
-              data: item,
-              metrics: metrics,
-              onTap: () => onTap(item),
-            );
-          },
+        return AppSectionCard(
+          accentColor: const Color(0xFFF6D7E8),
+          secondaryColor: const Color(0xFFE8DBFF),
+          padding: EdgeInsets.all(metrics.sectionPadding),
+          radius: 18,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '常用入口',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 2),
+              const Text(
+                '把账号、同步和设备相关入口集中到一起',
+                style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+              ),
+              SizedBox(height: compact ? 12 : 14),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: items.length,
+                gridDelegate: metrics.gridDelegate,
+                itemBuilder: (context, index) {
+                  final item = items[index];
+                  return MineQuickActionCard(
+                    data: item,
+                    metrics: metrics,
+                    onTap: () => onTap(item),
+                  );
+                },
+              ),
+            ],
+          ),
         );
       },
     );
@@ -266,23 +289,11 @@ class MineMenuCard extends StatelessWidget {
         final compact = isCompactLayoutWidth(constraints.maxWidth);
         final isDark = Theme.of(context).brightness == Brightness.dark;
 
-        return DecoratedBox(
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF162033) : Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-            ),
-            boxShadow: isDark
-                ? const []
-                : const [
-                    BoxShadow(
-                      color: Color(0x0F000000),
-                      blurRadius: 12,
-                      offset: Offset(0, 6),
-                    ),
-                  ],
-          ),
+        return AppSectionCard(
+          accentColor: const Color(0xFFE6D9FF),
+          secondaryColor: const Color(0xFFF7E8B2),
+          padding: EdgeInsets.zero,
+          radius: 18,
           child: Column(
             children: [
               _MineMenuItem(

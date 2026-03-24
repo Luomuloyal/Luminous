@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/responsive_quick_grid.dart';
 
 /// 药品页（Drug）相关的数据结构与小组件。
@@ -139,25 +140,25 @@ class DrugMyMedicineCard extends StatelessWidget {
   Widget build(BuildContext context) {
     /// 将原始行数据转换为 UI 渲染友好的展示模型。
     final item = DrugMedicineCardViewModel.fromRow(row);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final subtitleColor = isDark
+        ? const Color(0xFFE2E8F0)
+        : const Color(0xFF475569);
+    final metaColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF94A3B8);
+    final dateColor = isDark
+        ? const Color(0xFF7F8DA3)
+        : const Color(0xFFB0BAC8);
 
     return RepaintBoundary(
       child: LayoutBuilder(
         builder: (context, constraints) {
           final compact = isCompactLayoutWidth(constraints.maxWidth);
 
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x0A000000),
-                  blurRadius: 8,
-                  offset: Offset(0, 3),
-                ),
-              ],
-            ),
+          return AppSurfaceCard(
+            radius: 16,
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: onTap,
@@ -196,7 +197,7 @@ class DrugMyMedicineCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: compact ? 14.5 : 15,
                               fontWeight: FontWeight.w700,
-                              color: const Color(0xFF0F172A),
+                              color: titleColor,
                             ),
                           ),
                           if (item.subtitle.isNotEmpty) ...[
@@ -207,7 +208,7 @@ class DrugMyMedicineCard extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: compact ? 12 : 12.5,
-                                color: const Color(0xFF475569),
+                                color: subtitleColor,
                               ),
                             ),
                           ],
@@ -217,7 +218,7 @@ class DrugMyMedicineCard extends StatelessWidget {
                               item.metaText,
                               style: TextStyle(
                                 fontSize: compact ? 11 : 11.5,
-                                color: const Color(0xFF94A3B8),
+                                color: metaColor,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -239,7 +240,7 @@ class DrugMyMedicineCard extends StatelessWidget {
                                   item.dateText,
                                   style: TextStyle(
                                     fontSize: compact ? 10.5 : 11,
-                                    color: const Color(0xFFB0BAC8),
+                                    color: dateColor,
                                   ),
                                 ),
                             ],
@@ -296,6 +297,17 @@ class DrugQuickEntryCard extends StatelessWidget {
             metrics ??
             ResponsiveQuickGridMetrics.fromWidth(constraints.maxWidth);
         final compact = resolvedMetrics.isCompact;
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final background = isDark
+            ? const Color(0xFF182336)
+            : const Color(0xFFF8FAFC);
+        final border = isDark
+            ? const Color(0xFF334155)
+            : const Color(0xFFE2E8F0);
+        final titleColor = isDark ? Colors.white : const Color(0xFF0F172A);
+        final subtitleColor = isDark
+            ? const Color(0xFFCBD5E1)
+            : const Color(0xFF64748B);
 
         return InkWell(
           borderRadius: BorderRadius.circular(16),
@@ -303,9 +315,9 @@ class DrugQuickEntryCard extends StatelessWidget {
           child: Ink(
             padding: resolvedMetrics.itemPadding,
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: background,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              border: Border.all(color: border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -341,7 +353,7 @@ class DrugQuickEntryCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: compact ? 14 : 14.5,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFF0F172A),
+                          color: titleColor,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -354,7 +366,7 @@ class DrugQuickEntryCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: compact ? 11.5 : 12,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF64748B),
+                            color: subtitleColor,
                             height: compact ? 1.2 : 1.25,
                           ),
                           maxLines: 2,

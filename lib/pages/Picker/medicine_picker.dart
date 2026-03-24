@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:luminous/components/app_canvas.dart';
+import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/pages/Search/search.dart';
 import 'package:luminous/stores/my_medicine_repository.dart';
 import 'package:luminous/stores/user_controller.dart';
@@ -73,23 +75,27 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
   /// 构建药品选择页 UI。
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FB),
-      appBar: AppBar(
-        title: Text(widget.title),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-      ),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-          children: [
-            _buildSearchEntry(),
-            const SizedBox(height: 12),
-            _buildMyMedicinesCard(),
-          ],
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(title: Text(widget.title), centerTitle: true),
+      body: AppCanvas(
+        accentColor: scheme.primary,
+        secondaryAccentColor: Color.lerp(
+          scheme.secondary,
+          scheme.tertiary,
+          0.5,
+        )!,
+        child: RefreshIndicator(
+          onRefresh: _load,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            children: [
+              _buildSearchEntry(),
+              const SizedBox(height: 12),
+              _buildMyMedicinesCard(),
+            ],
+          ),
         ),
       ),
     );
@@ -97,54 +103,68 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
 
   /// 构建顶部“手动搜索药品库”入口。
   Widget _buildSearchEntry() {
-    return InkWell(
-      borderRadius: BorderRadius.circular(18),
-      onTap: _openSearchPicker,
-      child: Ink(
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return AppSectionCard(
+      accentColor: scheme.primary,
+      secondaryColor: scheme.secondary,
+      padding: EdgeInsets.zero,
+      radius: 18,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: const Color(0xFF0EA5E9).withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(Icons.search_rounded, color: Color(0xFF0EA5E9)),
-            ),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '手动搜索药品库',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
+          onTap: _openSearchPicker,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: appTintedSurface(
+                      context,
+                      scheme.primary,
+                      lightAlpha: 0.10,
+                      darkAlpha: 0.18,
                     ),
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  SizedBox(height: 4),
-                  Text(
-                    '从后端药品库搜索并选择',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF64748B),
-                    ),
+                  child: Icon(Icons.search_rounded, color: scheme.primary),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '手动搜索药品库',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '从后端药品库搜索并选择',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ],
             ),
-            const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
-          ],
+          ),
         ),
       ),
     );
@@ -154,31 +174,24 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
   ///
   /// 用户可以直接从本地已添加的药品里点选，也可以跳到搜索页重新选择。
   Widget _buildMyMedicinesCard() {
-    return Container(
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return AppSectionCard(
+      accentColor: scheme.tertiary,
+      secondaryColor: scheme.secondary,
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
+      radius: 18,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Text(
+              Text(
                 '我的药品',
                 style: TextStyle(
                   fontSize: 15.5,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F172A),
+                  color: scheme.onSurface,
                 ),
               ),
               const Spacer(),
@@ -192,14 +205,14 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
           ),
           const SizedBox(height: 10),
           if (_rows.isEmpty)
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(vertical: 18),
               child: Center(
                 child: Text(
                   '暂无药品，请先添加或从搜索库选择',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Color(0xFF64748B),
+                    color: scheme.onSurfaceVariant,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -225,9 +238,21 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
                   child: Ink(
                     padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
+                      color: appTintedSurface(
+                        context,
+                        scheme.primary,
+                        lightAlpha: 0.04,
+                        darkAlpha: 0.10,
+                      ),
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      border: Border.all(
+                        color: appTintedBorder(
+                          context,
+                          scheme.primary,
+                          lightAlpha: 0.08,
+                          darkAlpha: 0.18,
+                        ),
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -235,14 +260,17 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: const Color(
-                              0xFF0EA5E9,
-                            ).withValues(alpha: 0.12),
+                            color: appTintedSurface(
+                              context,
+                              scheme.primary,
+                              lightAlpha: 0.10,
+                              darkAlpha: 0.18,
+                            ),
                             borderRadius: BorderRadius.circular(14),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.medication_rounded,
-                            color: Color(0xFF0EA5E9),
+                            color: scheme.primary,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -252,27 +280,27 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
                             children: [
                               Text(
                                 item.displayName,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 14.5,
                                   fontWeight: FontWeight.w800,
-                                  color: Color(0xFF0F172A),
+                                  color: scheme.onSurface,
                                 ),
                               ),
                               const SizedBox(height: 2),
                               Text(
                                 item.displaySubtitle,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 12.5,
-                                  color: Color(0xFF64748B),
+                                  color: scheme.onSurfaceVariant,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const Icon(
+                        Icon(
                           Icons.chevron_right_rounded,
-                          color: Color(0xFF94A3B8),
+                          color: scheme.onSurfaceVariant,
                         ),
                       ],
                     ),

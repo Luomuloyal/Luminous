@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/api/reminder_api.dart';
 import 'package:luminous/components/app_canvas.dart';
+import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/pages/Reminders/reminder_edit.dart';
 import 'package:luminous/stores/reminder_local_store.dart';
 import 'package:luminous/stores/user_controller.dart';
@@ -234,13 +235,11 @@ class _ReminderListPageState extends State<ReminderListPage> {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 22),
-        child: Container(
+        child: AppSectionCard(
+          accentColor: Color(0xFFDDF6E8),
+          secondaryColor: Color(0xFFF8E5AF),
           padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
+          radius: 18,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -332,14 +331,12 @@ class _ReminderListPageState extends State<ReminderListPage> {
 
   /// 构建空状态占位视图。
   Widget _buildEmpty() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 42),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: const Column(
+    return const AppSectionCard(
+      accentColor: Color(0xFFDDF6E8),
+      secondaryColor: Color(0xFFF8E5AF),
+      padding: EdgeInsets.symmetric(vertical: 42),
+      radius: 18,
+      child: Column(
         children: [
           Icon(Icons.alarm_off_rounded, size: 42, color: Color(0xFF94A3B8)),
           SizedBox(height: 10),
@@ -495,19 +492,8 @@ class _ReminderCard extends StatelessWidget {
   /// 构建提醒计划卡片 UI。
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
+    return AppSurfaceCard(
+      radius: 18,
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: onTap,

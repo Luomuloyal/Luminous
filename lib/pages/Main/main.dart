@@ -28,11 +28,6 @@ class MainPage extends StatefulWidget {
 /// 这里只维护当前选中的 Tab 下标，不承载任何业务数据，业务状态由各子页面自己保存。
 class _MainPageState extends State<MainPage> {
   /// 底部导航栏配置列表。
-  ///
-  /// 每一项包含：
-  /// - 默认图标路径；
-  /// - 选中图标路径；
-  /// - 展示文本。
   final List<_MainTabItem> _tablist = const [
     _MainTabItem(
       icon: 'lib/assets/home.png',
@@ -61,9 +56,6 @@ class _MainPageState extends State<MainPage> {
   ];
 
   /// 与底部 Tab 一一对应的页面实例列表。
-  ///
-  /// 页面本身仍然通过 `IndexedStack` 保活，但改成按需挂载，
-  /// 避免应用启动时把所有一级页都一起初始化。
   static const List<Widget> _pages = [
     HomeView(),
     DrugView(),
@@ -74,22 +66,8 @@ class _MainPageState extends State<MainPage> {
   /// 已经真正挂载过的 Tab 下标。
   final Set<int> _loadedIndexes = <int>{0};
 
-  /// 根据 `_tablist` 构建导航目的地列表。
-  List<NavigationDestination> _buildDestinations({
-    required Color inactiveColor,
-  }) {
-    return List.generate(_tablist.length, (index) {
-      final item = _tablist[index];
-      return NavigationDestination(
-        icon: _buildTabIcon(assetPath: item.icon, color: inactiveColor),
-        selectedIcon: _buildTabIcon(
-          assetPath: item.activeIcon,
-          color: item.color,
-        ),
-        label: item.text,
-      );
-    });
-  }
+  /// 当前选中的底部 Tab 下标。
+  int _currentIndex = 0;
 
   Widget _buildTabIcon({required String assetPath, required Color color}) {
     return ColorFiltered(
@@ -98,13 +76,6 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  /// 当前选中的底部 Tab 下标。
-  int _currentIndex = 0;
-
-  /// 构建主页面 UI。
-  ///
-  /// 上半部分使用 `IndexedStack` 承载四个一级页面，
-  /// 下半部分使用 Material 3 `NavigationBar` 负责切换。
   @override
   Widget build(BuildContext context) {
     final currentColor = _tablist[_currentIndex].color;
@@ -115,15 +86,12 @@ class _MainPageState extends State<MainPage> {
     final tabBarBackground = isDark
         ? const Color(0xFF111C2E)
         : AppUiConstants.TAB_BAR_BACKGROUND;
-    final tabBarBorder = isDark
-        ? const Color(0xFF243246)
-        : AppUiConstants.TAB_BAR_BORDER;
     final inactiveColor = isDark
         ? const Color(0xFF94A3B8)
         : AppUiConstants.TAB_INACTIVE;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: AppCanvas(
         accentColor: currentColor,
         secondaryAccentColor: secondaryColor,
@@ -140,55 +108,101 @@ class _MainPageState extends State<MainPage> {
       bottomNavigationBar: SafeArea(
         top: false,
         minimum: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: tabBarBackground.withValues(alpha: isDark ? 0.96 : 0.94),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: tabBarBorder),
-            boxShadow: isDark
-                ? const []
-                : const [
-                    BoxShadow(
-                      color: Color(0x140F172A),
-                      blurRadius: 20,
-                      offset: Offset(0, 10),
+        child: _MainBottomBar(
+          items: _tablist,
+          currentIndex: _currentIndex,
+          backgroundColor: tabBarBackground,
+          inactiveColor: inactiveColor,
+          buildIcon: _buildTabIcon,
+          onTap: (index) {
+            setState(() {
+              _loadedIndexes.add(index);
+              _currentIndex = index;
+            });
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _MainBottomBar extends StatelessWidget {
+  const _MainBottomBar({
+    required this.items,
+    required this.currentIndex,
+    required this.backgroundColor,
+    required this.inactiveColor,
+    required this.buildIcon,
+    required this.onTap,
+  });
+
+  final List<_MainTabItem> items;
+  final int currentIndex;
+  final Color backgroundColor;
+  final Color inactiveColor;
+  final Widget Function({required String assetPath, required Color color})
+  buildIcon;
+  final ValueChanged<int> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Material(
+      color: backgroundColor,
+      borderRadius: BorderRadius.circular(30),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+        child: Row(
+          children: List<Widget>.generate(items.length, (index) {
+            final item = items[index];
+            final selected = index == currentIndex;
+
+            return Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(24),
+                  onTap: () => onTap(index),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 240),
+                    curve: Curves.easeOutCubic,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 8,
                     ),
-                  ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
-            child: NavigationBarTheme(
-              data: NavigationBarThemeData(
-                backgroundColor: Colors.transparent,
-                indicatorColor: currentColor.withValues(
-                  alpha: isDark ? 0.22 : 0.14,
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? item.color.withValues(alpha: isDark ? 0.24 : 0.16)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        buildIcon(
+                          assetPath: selected ? item.activeIcon : item.icon,
+                          color: selected ? item.color : inactiveColor,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          item.text,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: selected
+                                ? FontWeight.w800
+                                : FontWeight.w700,
+                            color: selected ? item.color : inactiveColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>((
-                  states,
-                ) {
-                  final selected = states.contains(WidgetState.selected);
-                  return TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
-                    color: selected ? currentColor : inactiveColor,
-                  );
-                }),
               ),
-              child: NavigationBar(
-                selectedIndex: _currentIndex,
-                height: 70,
-                labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-                animationDuration: const Duration(milliseconds: 280),
-                destinations: _buildDestinations(inactiveColor: inactiveColor),
-                onDestinationSelected: (index) {
-                  setState(() {
-                    _loadedIndexes.add(index);
-                    _currentIndex = index;
-                  });
-                },
-              ),
-            ),
-          ),
+            );
+          }),
         ),
       ),
     );

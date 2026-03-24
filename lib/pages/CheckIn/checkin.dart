@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/components/app_canvas.dart';
+import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/stores/reminder_local_store.dart';
 import 'package:luminous/stores/today_reminder_local_store.dart';
 import 'package:luminous/stores/user_controller.dart';
@@ -185,13 +186,11 @@ class _CheckInPageState extends State<CheckInPage> {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 22),
-        child: Container(
+        child: AppSectionCard(
+          accentColor: Color(0xFFF8E5AF),
+          secondaryColor: Color(0xFFDDEBFF),
           padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
+          radius: 18,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -281,14 +280,12 @@ class _CheckInPageState extends State<CheckInPage> {
   }
 
   Widget _buildEmpty() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 42),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: const Column(
+    return const AppSectionCard(
+      accentColor: Color(0xFFF8E5AF),
+      secondaryColor: Color(0xFFDDEBFF),
+      padding: EdgeInsets.symmetric(vertical: 42),
+      radius: 18,
+      child: Column(
         children: [
           Icon(
             Icons.event_available_outlined,
@@ -461,19 +458,8 @@ class _CheckInCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final done = item.done;
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
+    return AppSurfaceCard(
+      radius: 18,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
         child: Row(

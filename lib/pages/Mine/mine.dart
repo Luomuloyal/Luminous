@@ -105,10 +105,10 @@ class _MineViewState extends State<MineView> {
   @override
   Widget build(BuildContext context) {
     return MinePage(
-      headerPalette: SoftBannerPalettes.mine,
+      headerPalette: SoftBannerPalettes.mineOf(context),
       profileCard: Obx(
         () => MineProfileCard(
-          palette: SoftBannerPalettes.mine,
+          palette: SoftBannerPalettes.mineOf(context),
           user: _userController.user.value,
           onTapProfile: _onTapProfile,
           onTapAction: _onTapAction,

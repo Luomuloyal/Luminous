@@ -133,7 +133,7 @@ class _AlbumViewState extends State<AlbumView> {
   @override
   Widget build(BuildContext context) {
     return AlbumPage(
-      headerPalette: SoftBannerPalettes.album,
+      headerPalette: SoftBannerPalettes.albumOf(context),
       loading: _loading,
       isLoggedIn: _userController.isLoggedIn,
       error: _error,

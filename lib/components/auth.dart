@@ -48,13 +48,14 @@ class AuthPageScaffold extends StatelessWidget {
     final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
     final theme = Theme.of(context);
     final scaffoldBackground = backgroundColor ?? theme.scaffoldBackgroundColor;
+    final authPalette = SoftBannerPalettes.authOf(context);
 
     return Scaffold(
       backgroundColor: scaffoldBackground,
       resizeToAvoidBottomInset: false,
       body: AppCanvas(
-        accentColor: SoftBannerPalettes.auth.accentColor,
-        secondaryAccentColor: const Color(0xFFD7C7FF),
+        accentColor: authPalette.accentColor,
+        secondaryAccentColor: theme.colorScheme.secondary,
         baseColor: scaffoldBackground,
         child: SafeArea(
           bottom: false,
@@ -192,7 +193,7 @@ class AuthHeroCard extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.82),
+                color: theme.surfaceColor,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: theme.borderColor),
               ),

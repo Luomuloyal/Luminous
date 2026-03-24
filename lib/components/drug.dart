@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/responsive_quick_grid.dart';
 import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/viewmodels/drug.dart';
@@ -89,6 +90,11 @@ class DrugSearchEntrySliver extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final subtitleColor = isDark
+        ? const Color(0xFFCBD5E1)
+        : const Color(0xFF64748B);
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
@@ -98,76 +104,71 @@ class DrugSearchEntrySliver extends StatelessWidget {
             final iconBoxSize = compact ? 36.0 : 40.0;
             final cardPadding = compact ? 12.0 : 14.0;
 
-            return DecoratedBox(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x0F000000),
-                    blurRadius: 12,
-                    offset: Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(18),
-                onTap: onTap,
-                child: Padding(
-                  padding: EdgeInsets.all(cardPadding),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: iconBoxSize,
-                        height: iconBoxSize,
-                        decoration: BoxDecoration(
-                          color: const Color(
-                            0xFF0EA5E9,
-                          ).withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(
-                            compact ? 12 : 14,
+            return AppSectionCard(
+              accentColor: const Color(0xFFB8E1FF),
+              secondaryColor: const Color(0xFFE7D8FF),
+              padding: EdgeInsets.zero,
+              radius: 18,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(18),
+                  onTap: onTap,
+                  child: Padding(
+                    padding: EdgeInsets.all(cardPadding),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: iconBoxSize,
+                          height: iconBoxSize,
+                          decoration: BoxDecoration(
+                            color: const Color(
+                              0xFF0EA5E9,
+                            ).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(
+                              compact ? 12 : 14,
+                            ),
+                          ),
+                          child: Icon(
+                            Icons.search_rounded,
+                            color: const Color(0xFF0EA5E9),
+                            size: compact ? 20 : 24,
                           ),
                         ),
-                        child: Icon(
-                          Icons.search_rounded,
-                          color: const Color(0xFF0EA5E9),
-                          size: compact ? 20 : 24,
-                        ),
-                      ),
-                      SizedBox(width: compact ? 10 : 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '搜索药品',
-                              style: TextStyle(
-                                fontSize: compact ? 14.5 : 15,
-                                fontWeight: FontWeight.w800,
-                                color: const Color(0xFF0F172A),
+                        SizedBox(width: compact ? 10 : 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '搜索药品',
+                                style: TextStyle(
+                                  fontSize: compact ? 14.5 : 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: titleColor,
+                                ),
                               ),
-                            ),
-                            SizedBox(height: compact ? 3 : 4),
-                            Text(
-                              '支持：产品名称 / 批准文号 / 生产单位',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: compact ? 12 : 12.5,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF64748B),
-                                height: compact ? 1.3 : 1.25,
+                              SizedBox(height: compact ? 3 : 4),
+                              Text(
+                                '支持：产品名称 / 批准文号 / 生产单位',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: compact ? 12 : 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: subtitleColor,
+                                  height: compact ? 1.3 : 1.25,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        color: Color(0xFF94A3B8),
-                      ),
-                    ],
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          color: isDark ? Color(0xFFCBD5E1) : Color(0xFF94A3B8),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -195,7 +196,7 @@ class DrugQuickEntrySectionSliver extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = SoftBannerPalettes.drug;
+    final palette = SoftBannerPalettes.drugOf(context);
 
     return SliverToBoxAdapter(
       child: Padding(
@@ -274,6 +275,7 @@ class DrugMyMedicinesHeaderSliver extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
@@ -282,12 +284,12 @@ class DrugMyMedicinesHeaderSliver extends StatelessWidget {
             final compact = isCompactLayoutWidth(constraints.maxWidth);
             return Row(
               children: [
-                const Text(
+                Text(
                   '我的药品',
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
+                    color: isDark ? Colors.white : Color(0xFF0F172A),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -352,27 +354,38 @@ class DrugEmptyMedicinesSliver extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final subtitleColor = isDark
+        ? const Color(0xFFCBD5E1)
+        : const Color(0xFF64748B);
+    final iconBackground = isDark
+        ? const Color(0xFF183246)
+        : const Color(0x1A0EA5E9);
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
         child: LayoutBuilder(
           builder: (context, constraints) {
             final compact = isCompactLayoutWidth(constraints.maxWidth);
-            return Container(
-              padding: EdgeInsets.symmetric(vertical: compact ? 28 : 36),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+            return AppSectionCard(
+              accentColor: const Color(0xFFD9EAFE),
+              secondaryColor: const Color(0xFFF9E7A9),
+              padding: EdgeInsets.fromLTRB(
+                compact ? 16 : 18,
+                compact ? 28 : 36,
+                compact ? 16 : 18,
+                compact ? 28 : 36,
               ),
+              radius: 18,
               child: Column(
                 children: [
                   SizedBox(
                     width: compact ? 52 : 56,
                     height: compact ? 52 : 56,
                     child: DecoratedBox(
-                      decoration: const BoxDecoration(
-                        color: Color(0x1A0EA5E9),
+                      decoration: BoxDecoration(
+                        color: iconBackground,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -388,7 +401,7 @@ class DrugEmptyMedicinesSliver extends StatelessWidget {
                     style: TextStyle(
                       fontSize: compact ? 14.5 : 15,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF0F172A),
+                      color: titleColor,
                     ),
                   ),
                   SizedBox(height: compact ? 4 : 6),
@@ -397,7 +410,7 @@ class DrugEmptyMedicinesSliver extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: compact ? 12.5 : 13,
-                      color: const Color(0xFF64748B),
+                      color: subtitleColor,
                       height: compact ? 1.45 : 1.55,
                     ),
                   ),

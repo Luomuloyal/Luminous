@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/api/safety_api.dart';
+import 'package:luminous/components/app_canvas.dart';
+import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/pages/Picker/medicine_picker.dart';
 import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/toast_utils.dart';
@@ -54,30 +56,30 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
   /// 构建安全辅助页 UI。
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FB),
-      appBar: AppBar(
-        title: const Text('安全辅助'),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-      ),
-      body: RefreshIndicator(
-        onRefresh: _refreshResult,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-          children: [
-            _buildModeCard(),
-            const SizedBox(height: 12),
-            _buildPickCard(),
-            const SizedBox(height: 12),
-            _buildActionCard(),
-            const SizedBox(height: 12),
-            _buildResultCard(),
-            const SizedBox(height: 12),
-            const _DisclaimerCard(),
-          ],
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(title: const Text('安全辅助'), centerTitle: true),
+      body: AppCanvas(
+        accentColor: scheme.secondary,
+        secondaryAccentColor: Color.lerp(scheme.primary, scheme.tertiary, 0.5)!,
+        child: RefreshIndicator(
+          onRefresh: _refreshResult,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            children: [
+              _buildModeCard(),
+              const SizedBox(height: 12),
+              _buildPickCard(),
+              const SizedBox(height: 12),
+              _buildActionCard(),
+              const SizedBox(height: 12),
+              _buildResultCard(),
+              const SizedBox(height: 12),
+              const _DisclaimerCard(),
+            ],
+          ),
         ),
       ),
     );
@@ -85,8 +87,11 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
 
   /// 构建“查询模式”卡片。
   Widget _buildModeCard() {
+    final scheme = Theme.of(context).colorScheme;
     return _SectionCard(
       title: '查询模式',
+      accentColor: scheme.secondary,
+      secondaryColor: scheme.tertiary,
       child: Row(
         children: [
           Expanded(
@@ -122,17 +127,39 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
     required bool selected,
     required VoidCallback onTap,
   }) {
-    final color = selected ? const Color(0xFFEC4899) : const Color(0xFF64748B);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final selectedAccent = scheme.secondary;
+    final color = selected ? selectedAccent : scheme.onSurfaceVariant;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Ink(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFFFFF1F2) : const Color(0xFFF8FAFC),
+          color: selected
+              ? appTintedSurface(
+                  context,
+                  selectedAccent,
+                  lightAlpha: 0.10,
+                  darkAlpha: 0.18,
+                )
+              : appTintedSurface(
+                  context,
+                  scheme.primary,
+                  lightAlpha: 0.03,
+                  darkAlpha: 0.08,
+                ),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: selected ? const Color(0xFFFDA4AF) : const Color(0xFFE2E8F0),
+            color: selected
+                ? appTintedBorder(
+                    context,
+                    selectedAccent,
+                    lightAlpha: 0.16,
+                    darkAlpha: 0.24,
+                  )
+                : scheme.outline,
           ),
         ),
         child: Row(
@@ -151,9 +178,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
                 style: TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w800,
-                  color: selected
-                      ? const Color(0xFF9F1239)
-                      : const Color(0xFF334155),
+                  color: selected ? selectedAccent : scheme.onSurface,
                 ),
               ),
             ),
@@ -165,8 +190,11 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
 
   /// 构建“选择药品”卡片。
   Widget _buildPickCard() {
+    final scheme = Theme.of(context).colorScheme;
     return _SectionCard(
       title: '选择药品',
+      accentColor: scheme.primary,
+      secondaryColor: scheme.secondary,
       child: Column(
         children: [
           _pickTile(
@@ -196,15 +224,28 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
     required Color color,
     required VoidCallback onTap,
   }) {
+    final scheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Ink(
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+          color: appTintedSurface(
+            context,
+            color,
+            lightAlpha: 0.05,
+            darkAlpha: 0.11,
+          ),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(
+            color: appTintedBorder(
+              context,
+              color,
+              lightAlpha: 0.10,
+              darkAlpha: 0.18,
+            ),
+          ),
         ),
         child: Row(
           children: [
@@ -224,25 +265,25 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
                 children: [
                   Text(
                     label,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14.5,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
+                      color: scheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12.5,
-                      color: Color(0xFF64748B),
+                      color: scheme.onSurfaceVariant,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
+            Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
           ],
         ),
       ),
@@ -253,27 +294,28 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
   Widget _buildActionCard() {
     /// 当前是否已选择到足够的药品以开始查询。
     final ready = _a != null && (_mode == 'single' || _b != null);
+    final scheme = Theme.of(context).colorScheme;
     return _SectionCard(
       title: '开始查询',
+      accentColor: scheme.tertiary,
+      secondaryColor: scheme.primary,
       child: SizedBox(
         width: double.infinity,
         child: FilledButton(
           onPressed: _loading || !ready ? null : _query,
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFFEC4899),
-            foregroundColor: Colors.white,
             minimumSize: const Size(double.infinity, 48),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
           ),
           child: _loading
-              ? const SizedBox(
+              ? SizedBox(
                   width: 18,
                   height: 18,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.white,
+                    color: scheme.onPrimary,
                   ),
                 )
               : Text(_mode == 'pair' ? '查询两药相互作用' : '查询用药建议'),
@@ -284,24 +326,28 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
 
   /// 构建“AI 结果”卡片。
   Widget _buildResultCard() {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return _SectionCard(
       title: 'AI 结果',
+      accentColor: Color.lerp(scheme.secondary, scheme.primary, 0.5)!,
+      secondaryColor: scheme.tertiary,
       child: _result == null || !_result!.hasText
-          ? const Text(
+          ? Text(
               '选择药品后点击“开始查询”，后端会调用 AI 模型返回用药建议或相互作用提示。',
               style: TextStyle(
                 fontSize: 13,
                 height: 1.55,
-                color: Color(0xFF475569),
+                color: scheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
               ),
             )
           : Text(
               _result!.text,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 height: 1.6,
-                color: Color(0xFF0F172A),
+                color: scheme.onSurface,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -400,7 +446,12 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
 /// 通过统一容器包裹不同区域，保持“模式/选药/结果/免责声明”视觉一致。
 class _SectionCard extends StatelessWidget {
   /// 创建统一风格的白色 section 卡片。
-  const _SectionCard({required this.title, required this.child});
+  const _SectionCard({
+    required this.title,
+    required this.child,
+    required this.accentColor,
+    required this.secondaryColor,
+  });
 
   /// 卡片标题。
   final String title;
@@ -408,32 +459,27 @@ class _SectionCard extends StatelessWidget {
   /// 卡片主体内容。
   final Widget child;
 
+  final Color accentColor;
+  final Color secondaryColor;
+
   /// 构建 section 卡片 UI。
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final scheme = Theme.of(context).colorScheme;
+    return AppSectionCard(
+      accentColor: accentColor,
+      secondaryColor: secondaryColor,
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
+      radius: 18,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15.5,
               fontWeight: FontWeight.w800,
-              color: Color(0xFF0F172A),
+              color: scheme.onSurface,
             ),
           ),
           const SizedBox(height: 10),
@@ -454,13 +500,15 @@ class _DisclaimerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return _SectionCard(
       title: '安全提示',
-      child: const Text(
+      accentColor: Theme.of(context).colorScheme.tertiary,
+      secondaryColor: Theme.of(context).colorScheme.secondary,
+      child: Text(
         '本功能基于 AI 生成内容，仅用于健康科普与辅助查询，不能替代医生诊断与处方。'
         '如有不适或正在用药，请遵医嘱并咨询专业人士。',
         style: TextStyle(
           fontSize: 12.5,
           height: 1.55,
-          color: Color(0xFF64748B),
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
           fontWeight: FontWeight.w600,
         ),
       ),

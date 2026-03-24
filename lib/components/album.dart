@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/viewmodels/album.dart';
 
@@ -112,7 +113,7 @@ class AlbumHeaderSliver extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: 0.86),
+                    color: theme.surfaceColor,
                     border: Border.all(color: theme.borderColor),
                   ),
                   child: Icon(
@@ -211,34 +212,42 @@ class AlbumEmptySliver extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final subtitleColor = isDark
+        ? const Color(0xFFCBD5E1)
+        : const Color(0xFF64748B);
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 44),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: const Column(
+        child: AppSectionCard(
+          accentColor: Color(0xFFF9E4AF),
+          secondaryColor: Color(0xFFD9EAFF),
+          padding: const EdgeInsets.fromLTRB(16, 44, 16, 44),
+          radius: 18,
+          child: Column(
             children: [
-              Icon(Icons.photo_outlined, size: 44, color: Color(0xFF94A3B8)),
-              SizedBox(height: 10),
+              const Icon(
+                Icons.photo_outlined,
+                size: 44,
+                color: Color(0xFF94A3B8),
+              ),
+              const SizedBox(height: 10),
               Text(
                 '暂无记录',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F172A),
+                  color: titleColor,
                 ),
               ),
-              SizedBox(height: 6),
+              const SizedBox(height: 6),
               Text(
                 '去“药物识别”拍照后会自动保存到这里',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,
-                  color: Color(0xFF64748B),
+                  color: subtitleColor,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -259,16 +268,18 @@ class AlbumLoginBannerSliver extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark
+        ? const Color(0xFFE2E8F0)
+        : const Color(0xFF475569);
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-        child: Container(
+        child: AppSectionCard(
+          accentColor: const Color(0xFFF9E4AF),
+          secondaryColor: const Color(0xFFD9EAFF),
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
+          radius: 16,
           child: Row(
             children: [
               Container(
@@ -284,13 +295,13 @@ class AlbumLoginBannerSliver extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Text(
                   '登录后可把缩略图和识别结果同步到云端',
                   style: TextStyle(
                     fontSize: 12.5,
                     height: 1.45,
-                    color: Color(0xFF475569),
+                    color: textColor,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -325,22 +336,34 @@ class AlbumCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final background = isDark ? const Color(0xFF162033) : Colors.white;
+    final border = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final titleColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final subtitleColor = isDark
+        ? const Color(0xFFCBD5E1)
+        : const Color(0xFF64748B);
+    final placeholderColor = isDark
+        ? const Color(0xFF1E293B)
+        : const Color(0xFFF1F5F9);
     return RepaintBoundary(
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: onTap,
         child: Ink(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: background,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x0F000000),
-                blurRadius: 10,
-                offset: Offset(0, 4),
-              ),
-            ],
+            border: Border.all(color: border),
+            boxShadow: isDark
+                ? const []
+                : const [
+                    BoxShadow(
+                      color: Color(0x0F000000),
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -357,7 +380,7 @@ class AlbumCard extends StatelessWidget {
                     height: double.infinity,
                     cacheWidth: 640,
                     placeholder: Container(
-                      color: const Color(0xFFF1F5F9),
+                      color: placeholderColor,
                       alignment: Alignment.center,
                       child: const Icon(
                         Icons.photo_outlined,
@@ -377,10 +400,10 @@ class AlbumCard extends StatelessWidget {
                       entry.displayName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
+                        color: titleColor,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -390,9 +413,9 @@ class AlbumCard extends StatelessWidget {
                           : '批准文号: ${entry.approvalNo}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11.5,
-                        color: Color(0xFF64748B),
+                        color: subtitleColor,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/responsive_quick_grid.dart';
 import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/viewmodels/home.dart';
@@ -54,6 +55,7 @@ class HomeFeatureSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
       child: LayoutBuilder(
@@ -63,8 +65,11 @@ class HomeFeatureSection extends StatelessWidget {
             constraints.maxWidth - ((compact ? 12 : 14) * 2),
           );
 
-          return _HomeSectionCard(
+          return AppSectionCard(
+            accentColor: const Color(0xFFB6DBFB),
+            secondaryColor: const Color(0xFFE7D8FF),
             padding: EdgeInsets.all(metrics.sectionPadding),
+            radius: 18,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -73,9 +78,12 @@ class HomeFeatureSection extends StatelessWidget {
                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 2),
-                const Text(
+                Text(
                   '快速进入核心健康服务',
-                  style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
                 SizedBox(height: compact ? 12 : 14),
                 GridView.builder(
@@ -117,8 +125,11 @@ class HomeReminderSection extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final compact = isCompactLayoutWidth(constraints.maxWidth);
-          return _HomeSectionCard(
+          return AppSectionCard(
+            accentColor: const Color(0xFFD8F1DF),
+            secondaryColor: const Color(0xFFE3EEFF),
             padding: EdgeInsets.all(compact ? 12 : 14),
+            radius: 18,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -219,7 +230,7 @@ class HomeTopSection extends StatelessWidget {
                         height: compact ? 38 : 40,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.86),
+                          color: theme.surfaceColor,
                           border: Border.all(color: theme.borderColor),
                         ),
                         child: Icon(
@@ -336,44 +347,6 @@ class HomeTopSection extends StatelessWidget {
   }
 }
 
-class _HomeSectionCard extends StatelessWidget {
-  const _HomeSectionCard({
-    required this.child,
-    this.padding = const EdgeInsets.fromLTRB(14, 14, 14, 14),
-  });
-
-  /// 卡片内部要展示的内容。
-  final Widget child;
-
-  /// 卡片内边距。
-  final EdgeInsetsGeometry padding;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: padding,
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF162033) : Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-        ),
-        boxShadow: isDark
-            ? const []
-            : const [
-                BoxShadow(
-                  color: Color(0x0C0F172A),
-                  blurRadius: 14,
-                  offset: Offset(0, 6),
-                ),
-              ],
-      ),
-      child: child,
-    );
-  }
-}
-
 class _HomeReminderTile extends StatelessWidget {
   const _HomeReminderTile({required this.item, required this.compact});
 
@@ -385,17 +358,39 @@ class _HomeReminderTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final titleColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final subtitleColor = isDark
+        ? const Color(0xFFCBD5E1)
+        : const Color(0xFF64748B);
+    final idleBackground = isDark
+        ? const Color(0xFF172234)
+        : const Color(0xFFF8FAFC);
+    final idleBorder = isDark
+        ? const Color(0xFF314257)
+        : const Color(0xFFE2E8F0);
+    final doneBackground = isDark
+        ? const Color(0xFF12271F)
+        : const Color(0xFFEFFCF5);
+    final doneBorder = isDark
+        ? const Color(0xFF23513E)
+        : const Color(0xFFBBF7D0);
+    final idleIconBackground = isDark
+        ? const Color(0xFF17324B)
+        : const Color(0xFFEFF6FF);
+    final doneIconBackground = isDark
+        ? const Color(0xFF173427)
+        : const Color(0xFFDCFCE7);
+
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: compact ? 10 : 12,
         vertical: compact ? 9 : 10,
       ),
       decoration: BoxDecoration(
-        color: item.done ? const Color(0xFFEFFCF5) : const Color(0xFFF8FAFC),
+        color: item.done ? doneBackground : idleBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: item.done ? const Color(0xFFBBF7D0) : const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: item.done ? doneBorder : idleBorder),
       ),
       child: Row(
         children: [
@@ -403,9 +398,7 @@ class _HomeReminderTile extends StatelessWidget {
             width: compact ? 30 : 32,
             height: compact ? 30 : 32,
             decoration: BoxDecoration(
-              color: item.done
-                  ? const Color(0xFFDCFCE7)
-                  : const Color(0xFFEFF6FF),
+              color: item.done ? doneIconBackground : idleIconBackground,
               borderRadius: BorderRadius.circular(compact ? 8 : 9),
             ),
             child: Icon(
@@ -426,7 +419,7 @@ class _HomeReminderTile extends StatelessWidget {
                   style: TextStyle(
                     fontSize: compact ? 13.5 : 14,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF0F172A),
+                    color: titleColor,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -436,7 +429,7 @@ class _HomeReminderTile extends StatelessWidget {
                   item.subtitle,
                   style: TextStyle(
                     fontSize: compact ? 11.5 : 12,
-                    color: const Color(0xFF64748B),
+                    color: subtitleColor,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -474,17 +467,13 @@ class _HomeFeatureGridItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final compact = metrics.isCompact;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
-      child: Ink(
+      child: Padding(
         padding: metrics.itemPadding,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -521,7 +510,7 @@ class _HomeFeatureGridItem extends StatelessWidget {
                     style: TextStyle(
                       fontSize: compact ? 14 : 14.5,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFF0F172A),
+                      color: isDark ? Colors.white : const Color(0xFF0F172A),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -533,7 +522,9 @@ class _HomeFeatureGridItem extends StatelessWidget {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: compact ? 11.5 : 12,
-                        color: const Color(0xFF64748B),
+                        color: isDark
+                            ? const Color(0xFFCBD5E1)
+                            : const Color(0xFF64748B),
                         fontWeight: FontWeight.w600,
                         height: compact ? 1.2 : 1.25,
                       ),

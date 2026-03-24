@@ -24,11 +24,11 @@ class AppCanvas extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final background = baseColor ?? theme.scaffoldBackgroundColor;
     final topTint = Color.alphaBlend(
-      accentColor.withValues(alpha: isDark ? 0.10 : 0.06),
+      accentColor.withValues(alpha: isDark ? 0.06 : 0.035),
       background,
     );
     final bottomTint = Color.alphaBlend(
-      secondaryAccentColor.withValues(alpha: isDark ? 0.08 : 0.05),
+      secondaryAccentColor.withValues(alpha: isDark ? 0.05 : 0.028),
       background,
     );
 
@@ -43,45 +43,56 @@ class AppCanvas extends StatelessWidget {
       child: Stack(
         children: [
           Positioned(
-            top: -112,
-            right: -88,
+            top: -148,
+            right: -136,
             child: _CanvasOrb(
-              size: 248,
+              size: 356,
               colors: [
-                accentColor.withValues(alpha: isDark ? 0.12 : 0.14),
+                accentColor.withValues(alpha: isDark ? 0.08 : 0.09),
                 accentColor.withValues(alpha: 0),
               ],
             ),
           ),
           Positioned(
-            top: 56,
-            left: -76,
+            top: 24,
+            left: -132,
             child: _CanvasOrb(
-              size: 210,
+              size: 324,
               colors: [
-                const Color(0xFFFDE7A9).withValues(alpha: isDark ? 0.08 : 0.18),
+                const Color(0xFFFDE7A9).withValues(alpha: isDark ? 0.05 : 0.10),
                 const Color(0xFFFDE7A9).withValues(alpha: 0),
               ],
             ),
           ),
           Positioned(
-            bottom: -138,
-            left: -72,
+            top: 260,
+            left: -96,
             child: _CanvasOrb(
-              size: 292,
+              size: 280,
               colors: [
-                secondaryAccentColor.withValues(alpha: isDark ? 0.10 : 0.16),
+                accentColor.withValues(alpha: isDark ? 0.04 : 0.05),
+                accentColor.withValues(alpha: 0),
+              ],
+            ),
+          ),
+          Positioned(
+            bottom: -172,
+            left: -136,
+            child: _CanvasOrb(
+              size: 404,
+              colors: [
+                secondaryAccentColor.withValues(alpha: isDark ? 0.07 : 0.10),
                 secondaryAccentColor.withValues(alpha: 0),
               ],
             ),
           ),
           Positioned(
-            bottom: 84,
-            right: -54,
+            bottom: 32,
+            right: -96,
             child: _CanvasOrb(
-              size: 156,
+              size: 248,
               colors: [
-                const Color(0xFFFFF6C8).withValues(alpha: isDark ? 0.05 : 0.14),
+                const Color(0xFFFFF6C8).withValues(alpha: isDark ? 0.03 : 0.08),
                 const Color(0xFFFFF6C8).withValues(alpha: 0),
               ],
             ),
