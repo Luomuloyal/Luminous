@@ -28,13 +28,37 @@ class SearchResultItemData {
 ///
 /// 用于保持搜索框、结果卡片等区域的视觉一致性。
 class SearchSurfaceCard extends StatelessWidget {
-  const SearchSurfaceCard({super.key, required this.child});
+  const SearchSurfaceCard({
+    super.key,
+    required this.child,
+    this.decorated = false,
+    this.accentColor,
+    this.secondaryColor,
+    this.ornamentKey,
+  });
 
   /// 卡片内部内容。
   final Widget child;
+  final bool decorated;
+  final Color? accentColor;
+  final Color? secondaryColor;
+  final String? ornamentKey;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    if (decorated) {
+      return AppSectionCard(
+        radius: 16,
+        padding: EdgeInsets.zero,
+        accentColor: accentColor ?? scheme.primary,
+        secondaryColor:
+            secondaryColor ??
+            Color.lerp(scheme.secondary, scheme.tertiary, 0.5),
+        ornamentKey: ornamentKey,
+        child: child,
+      );
+    }
     return AppSurfaceCard(radius: 16, child: child);
   }
 }

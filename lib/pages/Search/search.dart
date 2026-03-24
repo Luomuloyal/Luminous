@@ -259,6 +259,45 @@ class _SearchViewState extends State<SearchView> {
   /// 当前登录用户 id（未登录时为空字符串）。
   String get _userId => _userController.user.value?.id ?? '';
 
+  Color _searchDecorAccent(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final base = theme.cardTheme.color ?? scheme.surface;
+    return Color.alphaBlend(
+      scheme.primary.withValues(
+        alpha: theme.brightness == Brightness.dark ? 0.22 : 0.12,
+      ),
+      base,
+    );
+  }
+
+  Color _searchDecorSecondary(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final base = theme.cardTheme.color ?? scheme.surface;
+    return Color.alphaBlend(
+      Color.lerp(
+        scheme.secondary,
+        scheme.tertiary,
+        0.65,
+      )!.withValues(alpha: theme.brightness == Brightness.dark ? 0.18 : 0.10),
+      base,
+    );
+  }
+
+  SearchSurfaceCard _buildSearchDecorCard({
+    required String ornamentKey,
+    required Widget child,
+  }) {
+    return SearchSurfaceCard(
+      decorated: true,
+      ornamentKey: ornamentKey,
+      accentColor: _searchDecorAccent(context),
+      secondaryColor: _searchDecorSecondary(context),
+      child: child,
+    );
+  }
+
   /// 构建搜索页整体 UI。
   ///
   /// 页面会根据 `_keyword/_draftKeyword/_loading/_lastError/_results`
@@ -303,6 +342,12 @@ class _SearchViewState extends State<SearchView> {
   Widget _buildHeaderSliver() {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final badgeBackground = appTintedSurface(
+      context,
+      scheme.primary,
+      lightAlpha: 0.06,
+      darkAlpha: 0.12,
+    );
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -343,9 +388,45 @@ class _SearchViewState extends State<SearchView> {
               ],
             ),
             const SizedBox(height: 4),
-            Text(
-              widget.pickerMode ? '从后端药品库搜索并选择' : '支持按药品名称、批准文号、生产单位搜索',
-              style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: badgeBackground,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: appTintedBorder(
+                        context,
+                        scheme.primary,
+                        lightAlpha: 0.08,
+                        darkAlpha: 0.16,
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    widget.pickerMode ? '药品库选择' : '关键词检索',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: scheme.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    widget.pickerMode ? '从后端药品库搜索并选择' : '支持按药品名称、批准文号、生产单位搜索',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -363,7 +444,10 @@ class _SearchViewState extends State<SearchView> {
         return SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: SearchSurfaceCard(
+            child: _buildSearchDecorCard(
+              ornamentKey: widget.pickerMode
+                  ? 'search.picker.searchBar'
+                  : 'search.manual.searchBar',
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
                 child: Row(
@@ -464,7 +548,10 @@ class _SearchViewState extends State<SearchView> {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
-        child: SearchSurfaceCard(
+        child: _buildSearchDecorCard(
+          ornamentKey: widget.pickerMode
+              ? 'search.picker.quickTags'
+              : 'search.manual.quickTags',
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -695,7 +782,10 @@ class _SearchViewState extends State<SearchView> {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 26, 16, 10),
-        child: SearchSurfaceCard(
+        child: _buildSearchDecorCard(
+          ornamentKey: widget.pickerMode
+              ? 'search.picker.guide'
+              : 'search.manual.guide',
           child: Padding(
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
             child: Column(
@@ -736,7 +826,10 @@ class _SearchViewState extends State<SearchView> {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
-        child: SearchSurfaceCard(
+        child: _buildSearchDecorCard(
+          ornamentKey: widget.pickerMode
+              ? 'search.picker.ready'
+              : 'search.manual.ready',
           child: Padding(
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
             child: Row(
@@ -838,7 +931,10 @@ class _SearchViewState extends State<SearchView> {
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 26, 16, 10),
-        child: SearchSurfaceCard(
+        child: _buildSearchDecorCard(
+          ornamentKey: widget.pickerMode
+              ? 'search.picker.error'
+              : 'search.manual.error',
           child: Padding(
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
             child: Row(
