@@ -58,7 +58,17 @@ class MineQuickActionCard extends StatelessWidget {
               metrics ??
               ResponsiveQuickGridMetrics.fromWidth(constraints.maxWidth);
           final compact = resolvedMetrics.isCompact;
-          final isDark = Theme.of(context).brightness == Brightness.dark;
+          final theme = Theme.of(context);
+          final scheme = theme.colorScheme;
+          final isDark = theme.brightness == Brightness.dark;
+          final cardBackground = Color.alphaBlend(
+            data.color.withValues(alpha: isDark ? 0.10 : 0.055),
+            isDark ? scheme.surface : Colors.white,
+          );
+          final cardBorder = Color.alphaBlend(
+            data.color.withValues(alpha: isDark ? 0.28 : 0.14),
+            scheme.outline,
+          );
 
           return InkWell(
             onTap: onTap,
@@ -66,13 +76,18 @@ class MineQuickActionCard extends StatelessWidget {
             child: Ink(
               padding: resolvedMetrics.itemPadding,
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF162033) : Colors.white,
+                color: cardBackground,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: isDark
-                      ? const Color(0xFF334155)
-                      : const Color(0xFFE2E8F0),
-                ),
+                border: Border.all(color: cardBorder),
+                boxShadow: [
+                  BoxShadow(
+                    color: (isDark ? Colors.black : data.color).withValues(
+                      alpha: isDark ? 0.14 : 0.08,
+                    ),
+                    blurRadius: isDark ? 16 : 14,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -84,9 +99,25 @@ class MineQuickActionCard extends StatelessWidget {
                         aspectRatio: 1,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            color: data.color.withValues(alpha: 0.12),
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                data.color.withValues(
+                                  alpha: isDark ? 0.26 : 0.20,
+                                ),
+                                data.color.withValues(
+                                  alpha: isDark ? 0.15 : 0.11,
+                                ),
+                              ],
+                            ),
                             borderRadius: BorderRadius.circular(
                               resolvedMetrics.iconBorderRadius,
+                            ),
+                            border: Border.all(
+                              color: data.color.withValues(
+                                alpha: isDark ? 0.38 : 0.26,
+                              ),
                             ),
                           ),
                           child: Icon(
@@ -108,9 +139,7 @@ class MineQuickActionCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: compact ? 14 : 14.5,
                             fontWeight: FontWeight.w800,
-                            color: isDark
-                                ? Colors.white
-                                : const Color(0xFF0F172A),
+                            color: scheme.onSurface,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -123,9 +152,7 @@ class MineQuickActionCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: compact ? 11.5 : 12,
                               fontWeight: FontWeight.w600,
-                              color: isDark
-                                  ? const Color(0xFFCBD5E1)
-                                  : const Color(0xFF64748B),
+                              color: scheme.onSurfaceVariant,
                               height: compact ? 1.2 : 1.25,
                             ),
                             maxLines: 2,

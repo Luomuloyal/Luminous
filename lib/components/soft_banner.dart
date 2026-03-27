@@ -215,6 +215,9 @@ class SoftBannerPalettes {
     final accentTone = isDark
         ? Color.lerp(accent, Colors.white, 0.16)!
         : accent;
+    final borderBase = isDark
+        ? Color.alphaBlend(accent.withValues(alpha: 0.20), scheme.outline)
+        : Color.alphaBlend(secondary.withValues(alpha: 0.12), scheme.outline);
 
     return SoftBannerPalette(
       startColor: Color.alphaBlend(
@@ -237,10 +240,7 @@ class SoftBannerPalettes {
             )
           : Colors.white.withValues(alpha: 0.82),
       surfaceTextColor: accentTone,
-      borderColor: Color.alphaBlend(
-        (isDark ? accent : secondary).withValues(alpha: isDark ? 0.24 : 0.10),
-        scheme.outline,
-      ),
+      borderColor: borderBase,
       shadowColor: isDark
           ? Colors.black.withValues(alpha: 0.24)
           : const Color(0x140F172A),

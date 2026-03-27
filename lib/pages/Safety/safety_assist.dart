@@ -73,14 +73,14 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
       ),
-      appBarSpacing: 44,
+      appBarSpacing: 32,
       accentColor: scheme.primary,
       secondaryAccentColor: secondaryAccent,
       child: RefreshIndicator(
         onRefresh: _refreshResult,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
           children: [
             _buildHeroCard(),
             const SizedBox(height: 12),
@@ -156,33 +156,39 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
               ],
             ),
             const SizedBox(height: 14),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
+            Row(
               children: [
-                _SafetyInfoChip(
-                  icon: _mode == 'pair'
-                      ? Icons.compare_arrows_rounded
-                      : Icons.auto_awesome_rounded,
-                  text: _mode == 'pair' ? '两药相互作用' : '单药建议',
-                  backgroundColor: theme.surfaceColor,
-                  foregroundColor: theme.surfaceTextColor,
+                Expanded(
+                  child: _SafetyInfoChip(
+                    icon: _mode == 'pair'
+                        ? Icons.compare_arrows_rounded
+                        : Icons.auto_awesome_rounded,
+                    text: _mode == 'pair' ? '两药相互作用' : '单药建议',
+                    backgroundColor: theme.surfaceColor,
+                    foregroundColor: theme.surfaceTextColor,
+                  ),
                 ),
-                _SafetyInfoChip(
-                  icon: Icons.medication_outlined,
-                  text: selectedCount == 0
-                      ? '等待选择药品'
-                      : '已选择 $selectedCount 个药品',
-                  backgroundColor: theme.surfaceColor,
-                  foregroundColor: theme.surfaceTextColor,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _SafetyInfoChip(
+                    icon: Icons.medication_outlined,
+                    text: selectedCount == 0
+                        ? '等待选择药品'
+                        : '已选择 $selectedCount 个药品',
+                    backgroundColor: theme.surfaceColor,
+                    foregroundColor: theme.surfaceTextColor,
+                  ),
                 ),
-                _SafetyInfoChip(
-                  icon: loggedIn
-                      ? Icons.cloud_done_rounded
-                      : Icons.phone_android_rounded,
-                  text: loggedIn ? '可附带账号上下文' : '本机直接查询',
-                  backgroundColor: theme.surfaceColor,
-                  foregroundColor: theme.surfaceTextColor,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _SafetyInfoChip(
+                    icon: loggedIn
+                        ? Icons.cloud_done_rounded
+                        : Icons.cloud_outlined,
+                    text: loggedIn ? '可附带账号上下文' : '云端AI查询',
+                    backgroundColor: theme.surfaceColor,
+                    foregroundColor: theme.surfaceTextColor,
+                  ),
                 ),
               ],
             ),
@@ -636,20 +642,31 @@ class _SafetyInfoChip extends StatelessWidget {
         color: backgroundColor,
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: foregroundColor),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: TextStyle(
-              color: foregroundColor,
-              fontSize: 12.3,
-              fontWeight: FontWeight.w700,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 18),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 1),
+              child: Icon(icon, size: 16, color: foregroundColor),
             ),
-          ),
-        ],
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                text,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: foregroundColor,
+                  fontSize: 12.3,
+                  fontWeight: FontWeight.w700,
+                  height: 1.15,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

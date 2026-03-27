@@ -78,12 +78,13 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
     final scheme = Theme.of(context).colorScheme;
     return AppCanvasPageScaffold(
       appBar: AppBar(title: Text(widget.title), centerTitle: true),
+      appBarSpacing: 32,
       accentColor: scheme.primary,
       secondaryAccentColor: Color.lerp(scheme.secondary, scheme.tertiary, 0.5)!,
       child: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
           children: [
             _buildFlowHints(),
             const SizedBox(height: 12),

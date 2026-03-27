@@ -77,11 +77,11 @@ class AppSurfaceCard extends StatelessWidget {
                     offset: const Offset(0, 10),
                   ),
                 ]
-              : const [
+              : [
                   BoxShadow(
-                    color: Color(0x0F0F172A),
+                    color: const Color(0x0F0F172A),
                     blurRadius: 16,
-                    offset: Offset(0, 7),
+                    offset: const Offset(0, 7),
                   ),
                 ])
         : const <BoxShadow>[];

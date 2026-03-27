@@ -145,6 +145,7 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
 
     return AppCanvasPageScaffold(
       appBar: AppBar(title: Text(title), centerTitle: true),
+      appBarSpacing: 36,
       accentColor: scheme.primary,
       secondaryAccentColor: Color.lerp(
         scheme.secondary,
@@ -155,7 +156,7 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
         onRefresh: _loadDetail,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
           children: [
             _HeaderCard(
               item: _item,

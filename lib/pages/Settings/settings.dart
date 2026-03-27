@@ -26,7 +26,7 @@ class SettingsPage extends StatelessWidget {
       accentColor: scheme.secondary,
       secondaryAccentColor: scheme.primary,
       safeAreaBottom: true,
-      appBarSpacing: 44,
+      appBarSpacing: 36,
       appBar: AppBar(
         title: const Text('设置'),
         backgroundColor: Colors.transparent,
@@ -35,7 +35,7 @@ class SettingsPage extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
       ),
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 6, 16, 28),
+        padding: const EdgeInsets.fromLTRB(16, 2, 16, 28),
         children: [
           _SettingsHeroCard(
             themeController: themeController,

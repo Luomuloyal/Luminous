@@ -267,9 +267,45 @@ class MineQuickActionsSection extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '常用入口',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+              Row(
+                children: [
+                  const Text(
+                    '常用入口',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: appTintedSurface(
+                        context,
+                        Color.lerp(scheme.secondary, scheme.tertiary, 0.4)!,
+                        lightAlpha: 0.10,
+                        darkAlpha: 0.20,
+                      ),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                        color: appTintedBorder(
+                          context,
+                          scheme.secondary,
+                          lightAlpha: 0.18,
+                          darkAlpha: 0.28,
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      '${items.length} 项',
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        color: scheme.secondary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 2),
               Text(
@@ -328,6 +364,9 @@ class MineMenuCard extends StatelessWidget {
       builder: (context, constraints) {
         final compact = isCompactLayoutWidth(constraints.maxWidth);
         final isDark = Theme.of(context).brightness == Brightness.dark;
+        final dividerColor = scheme.outline.withValues(
+          alpha: isDark ? 0.86 : 0.72,
+        );
 
         return AppSectionCard(
           accentColor: Color.lerp(scheme.secondary, scheme.primary, 0.35)!,
@@ -366,12 +405,7 @@ class MineMenuCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Divider(
-                height: 1,
-                color: isDark
-                    ? const Color(0xFF334155)
-                    : const Color(0xFFE2E8F0),
-              ),
+              Divider(height: 1, color: dividerColor),
               _MineMenuItem(
                 compact: compact,
                 icon: Icons.history_rounded,
@@ -380,12 +414,7 @@ class MineMenuCard extends StatelessWidget {
                 accentColor: scheme.secondary,
                 onTap: onTapBrowseHistory,
               ),
-              Divider(
-                height: 1,
-                color: isDark
-                    ? const Color(0xFF334155)
-                    : const Color(0xFFE2E8F0),
-              ),
+              Divider(height: 1, color: dividerColor),
               _MineMenuItem(
                 compact: compact,
                 icon: Icons.shield_rounded,
@@ -394,12 +423,7 @@ class MineMenuCard extends StatelessWidget {
                 accentColor: scheme.primary,
                 onTap: onTapSecurity,
               ),
-              Divider(
-                height: 1,
-                color: isDark
-                    ? const Color(0xFF334155)
-                    : const Color(0xFFE2E8F0),
-              ),
+              Divider(height: 1, color: dividerColor),
               _MineMenuItem(
                 compact: compact,
                 icon: Icons.info_rounded,
@@ -531,11 +555,15 @@ class _MineInfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: foregroundColor.withValues(alpha: isDark ? 0.28 : 0.20),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
