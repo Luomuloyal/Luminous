@@ -1,99 +1,111 @@
-# Luminous 上线部署配置清单
+# Luminous Deployment Configuration Guide
 
-本文覆盖 4 个部分：
+本文覆盖四部分：
+
 - Flutter App（本仓库）
 - App 后端（本仓库 `backend`）
 - 网站前端（`LuminousWebsite/luminousvue`）
 - 网站后端（`LuminousWebsite/luminousBackend`）
 
-目标是回答两件事：
-- 需要配置什么
-- 在哪里配置
+目标：说明“需要配置什么”以及“在哪里配置”。
 
-## 1. 全局架构与端口建议
+## 1. Architecture and Port Suggestions
 
-建议线上拆分：
+推荐线上拆分：
+
 - App API: `https://api.your-domain.com`（Luminous/backend）
 - Website API: `https://site-api.your-domain.com`（luminousBackend）
-- Website 静态站点: `https://www.your-domain.com`（luminousvue dist）
+- Website Static: `https://www.your-domain.com`（luminousvue dist）
 
-也可以把 Website 前后端合并到 luminousBackend 一个进程里（它支持静态托管 dist）。
+也可将网站前后端合并到 luminousBackend（其支持托管 `dist`）。
 
-## 2. Flutter App（Luminous）
+## 2. Flutter App (Luminous)
 
-### 2.1 后端地址
+### 2.1 Backend Address
 
-位置:
+Location:
+
 - `lib/constants/constants.dart`
 
-需要配置:
+Required config:
+
 - `GlobalConstants.BASE_URL`
 
-说明:
-- Android 模拟器开发常用 `http://10.0.2.2:8787`
-- 真机调试用局域网 IP
-- 线上发布改为 HTTPS 正式域名
+Notes:
 
-### 2.2 Android 应用信息与签名
+- Android 模拟器常用 `http://10.0.2.2:8787`
+- 真机调试使用局域网地址
+- 生产建议使用 HTTPS 域名
 
-位置:
+### 2.2 Android Identity and Signing
+
+Location:
+
 - `android/app/build.gradle.kts`
 - `pubspec.yaml`
 
-需要配置:
-- `applicationId`（唯一包名）
-- `minSdk / targetSdk / versionCode / versionName`
+Required config:
+
+- `applicationId`
+- `minSdk` / `targetSdk` / `versionCode` / `versionName`
 - `buildTypes.release.signingConfig`
 
-当前状态:
-- Release 仍使用 debug 签名，仅适合测试。
+Current status:
 
-上线前必须改:
+- Release 仍为 debug 签名，仅适合测试。
+
+Before release:
+
 1. 生成正式 keystore。
 2. 新建 `android/key.properties`（不入库）。
-3. 在 `android/app/build.gradle.kts` 中添加 release signingConfigs 并绑定到 `buildTypes.release`。
+3. 在 `android/app/build.gradle.kts` 中配置 release signing。
 
-### 2.3 Android 权限
+### 2.3 Android Permissions
 
-位置:
+Location:
+
 - `android/app/src/main/AndroidManifest.xml`
 
-已声明:
+Declared permissions:
+
 - `INTERNET`
 - `CAMERA`
 - `POST_NOTIFICATIONS`
 - `SCHEDULE_EXACT_ALARM`
 - `READ_EXTERNAL_STORAGE`（maxSdkVersion 32）
 
-上线检查:
-- 如接入 Android 13+ 相册新权限（`READ_MEDIA_IMAGES`），按实际功能补充。
+Release check:
 
-## 3. App 后端（Luminous/backend）
+- 若启用 Android 13+ 相册读取能力，按需补充 `READ_MEDIA_IMAGES`。
 
-### 3.1 环境变量
+## 3. App Backend (Luminous/backend)
 
-位置:
-- 读取逻辑: `backend/src/config/env.ts`
-- 运行文件: `backend/.env`（需自行创建）
+### 3.1 Environment Variables
 
-必须配置:
+Location:
+
+- Parser: `backend/src/config/env.ts`
+- Runtime file: `backend/.env`
+
+Required keys:
+
 - `PORT`（默认 8787）
-- `CORS_ORIGIN`（建议填前端来源域名，多个用逗号分隔）
+- `CORS_ORIGIN`
 - `MYSQL_HOST`
 - `MYSQL_PORT`
 - `MYSQL_USER`
 - `MYSQL_PASSWORD`
 - `MYSQL_DATABASE`
-- `MYSQL_TABLE`（默认 `国产本位码`）
+- `MYSQL_TABLE`
 - `MONGODB_URI`
 - `JWT_SECRET`
 - `JWT_REFRESH_SECRET`
 - `DOUBAO_API_KEY`
-- `DOUBAO_BASE_URL`（默认火山方舟地址）
-- `DOUBAO_VISION_ENDPOINT_ID` 或 `DOUBAO_VISION_MODEL_ID`（二选一）
-- `DOUBAO_TEXT_ENDPOINT_ID` 或 `DOUBAO_TEXT_MODEL_ID`（二选一）
+- `DOUBAO_BASE_URL`
+- `DOUBAO_VISION_ENDPOINT_ID` or `DOUBAO_VISION_MODEL_ID`
+- `DOUBAO_TEXT_ENDPOINT_ID` or `DOUBAO_TEXT_MODEL_ID`
 
-建议 .env 示例:
+Example `.env`:
 
 ```env
 PORT=8787
@@ -117,85 +129,100 @@ DOUBAO_VISION_ENDPOINT_ID=ep-vision-xxx
 DOUBAO_TEXT_ENDPOINT_ID=ep-text-xxx
 ```
 
-### 3.2 运行与部署
+### 3.2 Run and Deploy
 
-位置:
-- 脚本: `backend/package.json`
+Location:
 
-命令:
-- 开发: `npm run dev`
-- 构建: `npm run build`
-- 生产启动: `npm run start`
+- `backend/package.json`
 
-建议线上:
-- 用 PM2/systemd 守护 Node 进程。
-- 用 Nginx/Caddy 反向代理并启用 HTTPS。
+Commands:
 
-### 3.3 数据库连接来源
+- Dev: `npm run dev`
+- Build: `npm run build`
+- Start: `npm run start`
 
-位置:
-- MySQL 连接: `backend/src/db/mysql.ts`
-- Mongo 连接: `backend/src/db/mongodb.ts`
+Production recommendation:
 
-说明:
-- Mongo 用于用户认证数据。
-- MySQL 用于药品库查询。
+- 使用 PM2 或 systemd 守护进程
+- 使用 Nginx/Caddy 反向代理并启用 HTTPS
 
-## 4. 网站前端（LuminousWebsite/luminousvue）
+### 3.3 Database Connection Sources
 
-### 4.1 环境变量
+Location:
 
-位置:
-- 模板: `LuminousWebsite/luminousvue/.env.example`
-- 实际: `LuminousWebsite/luminousvue/.env`
-- 消费代码: `LuminousWebsite/luminousvue/src/lib/siteRuntime.js`
+- MySQL: `backend/src/db/mysql.ts`
+- MongoDB: `backend/src/db/mongodb.ts`
 
-变量:
+Notes:
+
+- MongoDB 用于用户认证与用户数据。
+- MySQL 用于药品数据检索。
+
+## 4. Website Frontend (LuminousWebsite/luminousvue)
+
+### 4.1 Environment Variables
+
+Location:
+
+- Template: `LuminousWebsite/luminousvue/.env.example`
+- Runtime: `LuminousWebsite/luminousvue/.env`
+- Consumer: `LuminousWebsite/luminousvue/src/lib/siteRuntime.js`
+
+Key:
+
 - `VITE_API_BASE_URL`
 
-作用:
-- 前端请求网站后端接口（例如 `/api/site-manifest`）时的基础地址。
+Purpose:
 
-示例:
+- 指定网站前端请求网站后端（如 `/api/site-manifest`）的基础地址。
+
+Example:
 
 ```env
 VITE_API_BASE_URL=https://site-api.your-domain.com
 ```
 
-如果留空:
-- 前端将使用相对路径请求（适合同域部署）。
+If empty:
 
-### 4.2 构建与发布
+- 使用相对路径请求，适合同域部署。
 
-位置:
-- 脚本: `LuminousWebsite/luminousvue/package.json`
+### 4.2 Build and Publish
 
-命令:
+Location:
+
+- `LuminousWebsite/luminousvue/package.json`
+
+Build command:
+
 - `npm run build`
 
-产物:
+Output:
+
 - `LuminousWebsite/luminousvue/dist`
 
-可选部署模式:
-- 模式 A: 仅部署 dist 到静态托管（Nginx/CDN/对象存储）。
-- 模式 B: 让网站后端 luminousBackend 直接托管 dist（见下节）。
+Deployment options:
 
-## 5. 网站后端（LuminousWebsite/luminousBackend）
+- Option A: 单独部署 `dist` 到静态托管。
+- Option B: 由 luminousBackend 直接托管 `dist`。
 
-### 5.1 环境变量
+## 5. Website Backend (LuminousWebsite/luminousBackend)
 
-位置:
-- 模板: `LuminousWebsite/luminousBackend/.env.example`
-- 实际: `LuminousWebsite/luminousBackend/.env`
-- 读取代码: `LuminousWebsite/luminousBackend/src/config.js`
+### 5.1 Environment Variables
 
-变量:
+Location:
+
+- Template: `LuminousWebsite/luminousBackend/.env.example`
+- Runtime: `LuminousWebsite/luminousBackend/.env`
+- Loader: `LuminousWebsite/luminousBackend/src/config.js`
+
+Keys:
+
 - `PORT`（默认 3030）
-- `LUMINOUS_APK_SOURCE`（Flutter APK 源文件路径）
-- `ANDROID_SDK_ROOT`（可选，截图脚本用；不填时尝试从 `android/local.properties` 读取）
-- `ANDROID_SERIAL`（可选，截图脚本选择设备）
+- `LUMINOUS_APK_SOURCE`
+- `ANDROID_SDK_ROOT`（可选）
+- `ANDROID_SERIAL`（可选）
 
-示例:
+Example:
 
 ```env
 PORT=3030
@@ -203,75 +230,83 @@ LUMINOUS_APK_SOURCE=/opt/luminous/app-release.apk
 ANDROID_SDK_ROOT=/opt/android-sdk
 ```
 
-### 5.2 运行行为与接口
+### 5.2 Runtime Behavior and Endpoints
 
-位置:
-- 服务入口: `LuminousWebsite/luminousBackend/src/server.js`
+Location:
 
-主要接口:
+- `LuminousWebsite/luminousBackend/src/server.js`
+
+Main endpoints:
+
 - `GET /healthz`
 - `GET /api/site-manifest`
 - `GET /downloads/luminous-android-debug.apk`
 - `GET /media/*`
 
-说明:
-- 若检测到 `luminousvue/dist` 存在，luminousBackend 会同时托管网站静态页面并处理前端路由回退。
+Notes:
 
-### 5.3 资源同步脚本
+- 若检测到 `luminousvue/dist`，会同时托管静态页面并处理前端路由回退。
 
-位置:
+### 5.3 Asset Sync Scripts
+
+Location:
+
 - `LuminousWebsite/luminousBackend/package.json`
 
-命令:
-- `npm run sync:apk`（同步 APK 到下载目录并写 manifest 数据）
-- `npm run capture:screenshots`（通过 adb 抓取截图）
-- `npm run optimize:media`（压缩截图并写入媒体元数据）
+Commands:
 
-## 6. 上线前核对清单
+- `npm run sync:apk`
+- `npm run capture:screenshots`
+- `npm run optimize:media`
+
+## 6. Release Checklist
 
 ### 6.1 Flutter App
 
-- `BASE_URL` 已切换到线上 API 域名
-- Release 签名已替换 debug 签名
+- `BASE_URL` 已切换至生产地址
+- Release 签名已配置
 - `applicationId` 与商店包名一致
 - `versionName/versionCode` 已更新
 
-### 6.2 App 后端
+### 6.2 App Backend
 
-- `.env` 已完整填写（MySQL/Mongo/JWT/DOUBAO）
-- 数据库网络白名单已放通
-- 反向代理 HTTPS 生效
-- `CORS_ORIGIN` 已收敛到真实来源
+- `.env` 已完整填写
+- 数据库白名单已放通
+- HTTPS 反向代理已配置
+- `CORS_ORIGIN` 已收敛
 
-### 6.3 网站前端
+### 6.3 Website Frontend
 
-- `.env` 中 `VITE_API_BASE_URL` 正确
-- `dist` 产物来自线上环境构建
+- `VITE_API_BASE_URL` 正确
+- `dist` 来自生产构建
 
-### 6.4 网站后端
+### 6.4 Website Backend
 
-- `.env` 中端口/APK 路径正确
-- `sync:apk` 已执行
-- `site-manifest` 可访问且返回 `download.available=true`
+- `.env` 中端口与 APK 路径正确
+- `npm run sync:apk` 已执行
+- `GET /api/site-manifest` 返回 `download.available=true`
 
-## 7. 常见问题
+## 7. FAQ
 
 ### 7.1 App 登录后频繁 401
 
-优先检查:
-- `JWT_SECRET` / `JWT_REFRESH_SECRET` 是否在重启后变化
-- Flutter 端 `BASE_URL` 是否指向了旧环境
+Check:
 
-### 7.2 网站下载按钮无文件
+- `JWT_SECRET` / `JWT_REFRESH_SECRET` 是否频繁变更
+- Flutter `BASE_URL` 是否指向错误环境
 
-优先检查:
-- `LUMINOUS_APK_SOURCE` 路径是否存在
-- 是否执行 `npm run sync:apk`
-- `GET /healthz` 返回的 `apkAvailable` 是否为 `true`
+### 7.2 Website 下载按钮无文件
 
-### 7.3 网站图片不显示
+Check:
 
-优先检查:
-- 是否执行 `npm run optimize:media`
-- `GET /api/site-manifest` 是否返回 screenshots
-- 反向代理是否放通 `/media/*`
+- `LUMINOUS_APK_SOURCE` 文件存在
+- 已执行 `npm run sync:apk`
+- `GET /healthz` 的 `apkAvailable=true`
+
+### 7.3 Website 图片不显示
+
+Check:
+
+- 已执行 `npm run optimize:media`
+- `GET /api/site-manifest` 返回 screenshots
+- 反向代理已放通 `/media/*`

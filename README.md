@@ -1,55 +1,55 @@
 # Luminous
 
-Luminous 是一个面向移动端的智慧用药助手，当前主工程为 Flutter App，并包含一套可独立部署的 App 后端（Express + JWT + MongoDB + MySQL）。
+Luminous 是一个面向移动端的智慧用药助手，提供药品识别、药品信息查询、AI 辅助解读、提醒与历史回看能力。
 
-## 功能概览
+本仓库包含 Flutter App 与 App Backend，可独立部署与联调。
+
+## Features
 
 - 药品搜索与药品详情
-- 拍照识别药品并回查药品库
-- AI 解读与 AI 安全辅助
+- 拍照识别与候选回查
+- AI 解读与安全辅助
 - 今日提醒与本地打卡
-- 识别相册与结果回看
-- 多主题与深浅色外观
+- 识别相册与结果沉淀
+- 多主题与深浅色模式
 
-## 技术栈
+## Tech Stack
 
 - App: Flutter (Dart)
-- App Backend: Node.js + TypeScript + Express
-- 鉴权: JWT (Access Token + Refresh Token)
-- 数据库: MongoDB (用户) + MySQL (药品库)
-- AI: 豆包 / 火山方舟
+- Backend: Node.js + TypeScript + Express
+- Auth: JWT (Access Token + Refresh Token)
+- Database: MongoDB (用户) + MySQL (药品库)
+- AI: 豆包 / 火山方舟兼容调用
 
-## 项目结构
+## Repository Structure
 
 ```text
 Luminous/
   lib/                Flutter 主代码
   test/               Flutter 测试
-  backend/            App 后端服务（可独立部署）
-  BackendMd/          后端接口与实现映射文档
-  Study/              代码学习与架构梳理文档
-  android/ios/...     各平台工程
+  backend/            App 后端服务
+  BackendMd/          后端协议与实现映射文档
+  Study/              架构学习与问题定位文档
+  android/ios/...     平台工程
 ```
 
 更多目录说明见 [lib/README.md](lib/README.md)。
 
-## 快速开始
+## Quick Start
 
-### 1) 运行 Flutter App
+### Run Flutter App
 
 ```bash
 flutter pub get
 flutter run
 ```
 
-常用检查：
-
 ```bash
 flutter analyze
 flutter test
 ```
 
-### 2) 运行 App Backend
+### Run Backend
 
 ```bash
 cd backend
@@ -57,53 +57,49 @@ npm install
 npm run dev
 ```
 
-默认健康检查：
+Health Check:
 
 - `GET http://127.0.0.1:8787/health`
 
-## 关键配置
+## Configuration
 
-### Flutter 请求地址
+### Flutter Base URL
 
-- 文件: `lib/constants/constants.dart`
-- 配置项: `GlobalConstants.BASE_URL`
+- File: `lib/constants/constants.dart`
+- Key: `GlobalConstants.BASE_URL`
 
-开发常见取值：
+常见开发取值：
 
 - Android 模拟器: `http://10.0.2.2:8787`
-- 真机: `http://<局域网IP>:8787`
+- 真机: `http://<LAN-IP>:8787`
 
-### App Backend 环境变量
+### Backend Environment
 
-- 文件: `backend/.env`（需自行创建）
-- 读取逻辑: `backend/src/config/env.ts`
-
-至少需要配置：
-
-- `MYSQL_HOST` / `MYSQL_PORT` / `MYSQL_USER` / `MYSQL_PASSWORD` / `MYSQL_DATABASE`
-- `MONGODB_URI`
-- `JWT_SECRET` / `JWT_REFRESH_SECRET`
-- `DOUBAO_API_KEY`
+- File: `backend/.env`
+- Loader: `backend/src/config/env.ts`
 
 完整部署配置见 [lib/docs/deployment-config.md](lib/docs/deployment-config.md)。
 
-## API 文档
+## Documentation
 
-- App Backend API 总览: [lib/docs/backend-api.md](lib/docs/backend-api.md)
-- 后端学习索引: [BackendMd/README.md](BackendMd/README.md)
+- Backend API: [lib/docs/backend-api.md](lib/docs/backend-api.md)
+- Deployment Guide: [lib/docs/deployment-config.md](lib/docs/deployment-config.md)
+- Backend Runtime: [backend/README.md](backend/README.md)
+- Backend Mapping Docs: [BackendMd/README.md](BackendMd/README.md)
+- Architecture Notes: [Study/README.md](Study/README.md)
 
-## 文档导航
+## Contributing
 
-- 后端部署与运行: [backend/README.md](backend/README.md)
-- 学习型后端文档: [BackendMd/README.md](BackendMd/README.md)
-- 代码学习手册: [Study/README.md](Study/README.md)
-- 项目内文档目录: [lib/docs/README.md](lib/docs/README.md)
+欢迎提交 Issue 与 Pull Request。
 
-## 当前状态说明
+建议流程：
 
-- App 后端当前已实现认证与药品相关核心接口。
-- Flutter 常量中仍保留部分历史接口路径，若联调请以 [lib/docs/backend-api.md](lib/docs/backend-api.md) 为准。
+1. Fork 并创建功能分支。
+2. 提交前执行 `flutter analyze`、`flutter test` 与后端构建检查。
+3. 在 PR 中附上修改说明与验证方式。
 
-## 许可证
+## License
 
-当前仓库未声明开源许可证，默认按私有项目处理。
+当前仓库未附带开源许可证文件。
+
+若计划公开发布，建议新增 `LICENSE`（例如 MIT/Apache-2.0）。

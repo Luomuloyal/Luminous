@@ -1,24 +1,26 @@
-# BackendMd 文档索引
+# BackendMd
 
-`BackendMd` 是后端协议与实现映射文档目录，重点用于：
+后端协议与实现映射文档目录。
 
-- 明确接口协议（请求/响应/场景）
-- 追踪 Flutter 调用入口
-- 对照 `backend/src` 的实际实现
+## Purpose
 
-## 与其他目录的关系
+- 定义接口协议（请求/响应/业务语义）
+- 建立 Flutter 调用与后端实现的映射
+- 为后续 API 变更提供文档基线
 
-- `backend/`: 当前可部署的 App 后端服务代码
-- `lib/Backend/`: 历史草稿文档（保留参考）
-- `lib/docs/`: 面向部署和联调的规范文档
+## Project Relationship
 
-## 推荐阅读顺序
+- `backend/`: 当前可部署后端代码
+- `lib/Backend/`: 历史草稿文档
+- `lib/docs/`: 标准化 API 与部署文档
+
+## Reading Order
 
 1. [../README.md](../README.md)
 2. [../backend/README.md](../backend/README.md)
-3. 本目录按“已实现接口”优先阅读
+3. 本目录“已实现接口”文档
 
-## 已实现接口文档
+## Implemented API Docs
 
 - [medicine-search.md](medicine-search.md)
 - [medicine-detail.md](medicine-detail.md)
@@ -26,12 +28,12 @@
 - [medicine-ai-safety.md](medicine-ai-safety.md)
 - [medicine-scan.md](medicine-scan.md)
 
-对应实现位于：
+Code mapping:
 
 - `backend/src/handlers/*`
 - `backend/src/routes/api.ts`
 
-## 规划中或历史协议文档
+## Planned or Legacy Docs
 
 - [send-code.md](send-code.md)
 - [register-user.md](register-user.md)
@@ -43,20 +45,20 @@
 - [scan-record.md](scan-record.md)
 - [aliyun-sms-auth.md](aliyun-sms-auth.md)
 
-这些文档可能与当前 `backend/` 实现不完全一致，新增接口时请以代码为准并同步回写文档。
+这些文档可能与当前实现存在偏差，联调时请优先以 `backend/src` 为准。
 
-## 文档维护规范
+## Documentation Convention
 
-每篇接口文档建议保持以下结构：
+建议每篇接口文档包含：
 
 1. 接口目的
-2. 请求参数（必填/可选）
-3. 响应示例（成功/失败）
-4. Flutter 调用位置
-5. 后端实现映射
+2. 请求参数
+3. 成功/失败示例
+4. Flutter 调用入口
+5. 后端实现入口
 6. 变更记录
 
-## 快速入口
+## Quick Links
 
-- API 规范总览: [../lib/docs/backend-api.md](../lib/docs/backend-api.md)
-- 部署配置总览: [../lib/docs/deployment-config.md](../lib/docs/deployment-config.md)
+- API 总览: [../lib/docs/backend-api.md](../lib/docs/backend-api.md)
+- 部署配置: [../lib/docs/deployment-config.md](../lib/docs/deployment-config.md)

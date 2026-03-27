@@ -1,49 +1,51 @@
 # Luminous App Backend
 
-Luminous App 后端服务，负责认证与药品相关接口。
+App 后端服务，提供认证与药品能力接口。
 
-## 技术栈
+## Stack
 
 - Node.js + TypeScript
 - Express
-- JWT (AT/RT 双 token)
-- MongoDB (用户)
+- JWT (Access Token + Refresh Token)
+- MongoDB (用户数据)
 - MySQL (药品库)
-- OpenAI SDK (豆包/方舟兼容调用)
+- OpenAI SDK（用于豆包/方舟兼容调用）
 
-## 目录结构
+## Directory Layout
 
 ```text
 backend/
   src/
-    ai/             AI 请求与 Prompt 组装
-    config/         环境变量读取
-    db/             MongoDB/MySQL 访问
-    handlers/       业务处理逻辑
-    http/           请求校验、统一响应、错误处理、JWT
-    models/         Mongoose 模型
-    routes/         路由注册
-    app.ts          Express app 组装
-    server.ts       启动入口
+    ai/
+    config/
+    db/
+    handlers/
+    http/
+    models/
+    routes/
+    app.ts
+    server.ts
 ```
 
-## 环境要求
+更详细的源码分层见 [src/README.md](src/README.md)。
+
+## Requirements
 
 - Node.js 18+
-- 可访问的 MongoDB
-- 可访问的 MySQL
+- 可访问 MongoDB
+- 可访问 MySQL
 
-## 快速开始
+## Getting Started
 
-### 1) 安装依赖
+### Install
 
 ```bash
 npm install
 ```
 
-### 2) 配置环境变量
+### Configure Environment
 
-创建 `backend/.env`，参考如下：
+Create `backend/.env`:
 
 ```env
 PORT=8787
@@ -67,47 +69,39 @@ DOUBAO_VISION_ENDPOINT_ID=ep-vision-xxx
 DOUBAO_TEXT_ENDPOINT_ID=ep-text-xxx
 ```
 
-说明：
+Model selection priority:
 
-- 视觉模型优先级：`DOUBAO_VISION_ENDPOINT_ID` > `DOUBAO_VISION_MODEL_ID`
-- 文本模型优先级：`DOUBAO_TEXT_ENDPOINT_ID` > `DOUBAO_TEXT_MODEL_ID`
+- Vision: `DOUBAO_VISION_ENDPOINT_ID` > `DOUBAO_VISION_MODEL_ID`
+- Text: `DOUBAO_TEXT_ENDPOINT_ID` > `DOUBAO_TEXT_MODEL_ID`
 
-### 3) 开发运行
+### Run in Development
 
 ```bash
 npm run dev
 ```
 
-### 4) 生产构建与启动
+### Build and Run in Production
 
 ```bash
 npm run build
 npm run start
 ```
 
-## 接口概览
-
-健康检查：
+## API Summary
 
 - `GET /health`
-
-认证接口：
-
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `POST /api/auth/refresh`
-
-药品接口：
-
 - `POST /api/medicines/search`
 - `POST /api/medicines/detail`
 - `POST /api/medicines/ai-detail`
 - `POST /api/medicines/ai-safety`
 - `POST /api/medicines/scan`
 
-完整参数与返回示例见 [../lib/docs/backend-api.md](../lib/docs/backend-api.md)。
+Full schema and examples: [../lib/docs/backend-api.md](../lib/docs/backend-api.md)
 
-## 统一返回结构
+## Response Envelope
 
 ```json
 {
@@ -117,39 +111,33 @@ npm run start
 }
 ```
 
-说明：
+## Integration Notes
 
-- `code == "1"` 为业务成功
-- 业务失败通常也会返回 HTTP 200，但 `code != "1"`
-- 中间件级错误（如未授权）可能返回 4xx/5xx
+- Flutter base URL config: `lib/constants/constants.dart`
+- Flutter network parser: `lib/utils/DioRequest.dart`
 
-## 与 Flutter 的联调点
+请确保 Flutter 的 `GlobalConstants.BASE_URL` 指向本服务地址。
 
-- Flutter 基础地址配置：`lib/constants/constants.dart`
-- 网络层解析逻辑：`lib/utils/DioRequest.dart`
+## Troubleshooting
 
-请确保 Flutter 的 `GlobalConstants.BASE_URL` 指向当前后端实例。
+### MySQL connection failed
 
-## 常见问题
+检查 `.env` 中 `MYSQL_*` 与网络白名单。
 
-### 1) 启动时报 MySQL 连接错误
+### MongoDB connection failed
 
-检查 `.env` 中 `MYSQL_*` 是否正确，且数据库白名单已放通。
+检查 `MONGODB_URI` 可达性与账号权限。
 
-### 2) 启动时报 Mongo 连接错误
+### AI endpoints failed
 
-检查 `MONGODB_URI`，并确认 Mongo 服务可访问。
-
-### 3) AI 接口返回失败
-
-检查：
+检查以下配置与网络：
 
 - `DOUBAO_API_KEY`
-- 文本/视觉模型 ID 是否配置
-- 目标环境是否可访问 `DOUBAO_BASE_URL`
+- 文本/视觉模型 ID
+- `DOUBAO_BASE_URL`
 
-## 相关文档
+## Related Docs
 
-- 项目总览：[../README.md](../README.md)
-- 后端学习文档：[../BackendMd/README.md](../BackendMd/README.md)
-- 部署配置清单：[../lib/docs/deployment-config.md](../lib/docs/deployment-config.md)
+- Project README: [../README.md](../README.md)
+- Backend Mapping Docs: [../BackendMd/README.md](../BackendMd/README.md)
+- Deployment Config: [../lib/docs/deployment-config.md](../lib/docs/deployment-config.md)

@@ -1,11 +1,12 @@
-# Luminous App Backend API 文档
+# Luminous App Backend API
 
-## 1. 服务信息
+## 1. Service Info
 
-- 服务根地址: 由部署环境决定，例如 `http://127.0.0.1:8787`
-- 健康检查: `GET /health`
-- 接口风格: RESTful + JSON
-- 统一响应结构:
+- Base URL: 由部署环境决定，例如 `http://127.0.0.1:8787`
+- Health Check: `GET /health`
+- API Style: RESTful + JSON
+
+Unified response envelope:
 
 ```json
 {
@@ -15,36 +16,37 @@
 }
 ```
 
-说明:
+Notes:
+
 - `code = "1"` 表示业务成功。
-- 其他 `code` 表示业务失败，`msg` 为错误信息。
-- 大部分业务处理器会返回 HTTP 200，再通过 `code` 表示成功或失败；中间件/框架级错误会使用 4xx/5xx。
+- `code != "1"` 表示业务失败，`msg` 提供错误信息。
+- 业务失败常见为 HTTP 200 + `code != "1"`；框架或中间件错误可能返回 4xx/5xx。
 
-## 2. 认证机制
+## 2. Authentication
 
-### 2.1 Token 约定
+### 2.1 Token Policy
 
-- Access Token: 有效期 1 天
-- Refresh Token: 有效期 14 天
-- 刷新策略: 通过 refresh 接口换发一对新 token（滑动续期）
+- Access Token: 1 天
+- Refresh Token: 14 天
+- 刷新方式: 使用 refresh 接口换发一对新 token（滑动续期）
 
-### 2.2 请求头
+### 2.2 Auth Header
 
-受保护接口需带:
+Protected endpoints should include:
 
 ```http
 Authorization: Bearer <access_token>
 ```
 
-当前公开路由中暂未启用受保护业务接口，但中间件已可用。
+当前公开业务路由暂未强制鉴权，但后端中间件已可用。
 
-## 3. Auth 接口
+## 3. Auth Endpoints
 
-### 3.1 注册
+### 3.1 Register
 
 - `POST /api/auth/register`
 
-请求体:
+Request body:
 
 ```json
 {
@@ -53,7 +55,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-成功 `result`:
+Success `result`:
 
 ```json
 {
@@ -66,15 +68,16 @@ Authorization: Bearer <access_token>
 }
 ```
 
-失败示例:
+Failure examples:
+
 - `msg: "缺少用户名或密码"`
 - `msg: "用户名已存在"`
 
-### 3.2 登录
+### 3.2 Login
 
 - `POST /api/auth/login`
 
-请求体:
+Request body:
 
 ```json
 {
@@ -83,18 +86,19 @@ Authorization: Bearer <access_token>
 }
 ```
 
-成功 `result` 与注册一致。
+Success `result` 与注册一致。
 
-失败示例:
+Failure examples:
+
 - `msg: "缺少用户名或密码"`
 - `msg: "用户不存在"`
 - `msg: "密码错误"`
 
-### 3.3 刷新 Token
+### 3.3 Refresh Token
 
 - `POST /api/auth/refresh`
 
-请求体:
+Request body:
 
 ```json
 {
@@ -102,7 +106,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-成功 `result`:
+Success `result`:
 
 ```json
 {
@@ -111,17 +115,18 @@ Authorization: Bearer <access_token>
 }
 ```
 
-失败示例:
+Failure examples:
+
 - `msg: "缺少 Refresh Token"`
 - `msg: "Refresh Token 无效或已过期"`
 
-## 4. Medicine 接口
+## 4. Medicine Endpoints
 
-### 4.1 药品搜索
+### 4.1 Search Medicines
 
 - `POST /api/medicines/search`
 
-请求体:
+Request body:
 
 ```json
 {
@@ -131,12 +136,13 @@ Authorization: Bearer <access_token>
 }
 ```
 
-字段说明:
-- `keyword`: 必填，关键字
+Field notes:
+
+- `keyword`: 必填
 - `page`: 可选，默认 1，最小 1
 - `pageSize`: 可选，默认 20，范围 1-50
 
-成功 `result`:
+Success `result`:
 
 ```json
 {
@@ -159,14 +165,15 @@ Authorization: Bearer <access_token>
 }
 ```
 
-失败示例:
+Failure examples:
+
 - `msg: "keyword 不能为空"`
 
-### 4.2 药品详情
+### 4.2 Medicine Detail
 
 - `POST /api/medicines/detail`
 
-请求体（二选一，至少提供一个）:
+Request body（二选一，至少一个）:
 
 ```json
 {
@@ -174,7 +181,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-或
+or
 
 ```json
 {
@@ -182,17 +189,18 @@ Authorization: Bearer <access_token>
 }
 ```
 
-成功 `result`: 单个药品对象（字段同搜索 `items` 元素）。
+Success `result`: 单个药品对象（字段同搜索结果条目）。
 
-失败示例:
+Failure examples:
+
 - `msg: "drugCode 或 approvalNo 不能为空"`
 - `msg: "未找到该药品信息"`
 
-### 4.3 AI 药品解读
+### 4.3 AI Detail
 
 - `POST /api/medicines/ai-detail`
 
-请求体（同详情接口）:
+Request body:
 
 ```json
 {
@@ -200,7 +208,7 @@ Authorization: Bearer <access_token>
 }
 ```
 
-成功 `result`:
+Success `result`:
 
 ```json
 {
@@ -208,16 +216,17 @@ Authorization: Bearer <access_token>
 }
 ```
 
-失败示例:
+Failure examples:
+
 - `msg: "drugCode 或 approvalNo 不能为空"`
 - `msg: "未找到该药品信息"`
 - `msg: "AI 解读生成失败，请稍后重试"`
 
-### 4.4 AI 安全辅助
+### 4.4 AI Safety
 
 - `POST /api/medicines/ai-safety`
 
-请求体:
+Request body:
 
 ```json
 {
@@ -237,11 +246,12 @@ Authorization: Bearer <access_token>
 }
 ```
 
-字段说明:
+Field notes:
+
 - `mode`: `single` 或 `pair`
 - `medicines`: `single` 必须 1 个，`pair` 必须 2 个
 
-成功 `result`:
+Success `result`:
 
 ```json
 {
@@ -249,26 +259,27 @@ Authorization: Bearer <access_token>
 }
 ```
 
-失败示例:
+Failure examples:
+
 - `msg: "mode 必须是 single 或 pair"`
 - `msg: "single 模式 medicines 必须为 1 个"`
 - `msg: "pair 模式 medicines 必须为 2 个"`
 - `msg: "AI 安全分析失败，请稍后重试"`
 
-### 4.5 拍照识别
+### 4.5 Scan Medicine
 
 - `POST /api/medicines/scan`
 
-请求体:
+Request body:
 
 ```json
 {
-  "imageBase64": "<base64或dataUrl>",
+  "imageBase64": "<base64-or-data-url>",
   "mimeType": "image/jpeg"
 }
 ```
 
-成功 `result`:
+Success `result`:
 
 ```json
 {
@@ -290,23 +301,25 @@ Authorization: Bearer <access_token>
 }
 ```
 
-说明:
-- `imageBase64` 支持纯 base64 或 Data URL，服务端会自动剥离 `base64,` 前缀。
-- 目前服务端固定返回 `thumbBase64: ""`，缩略图由 Flutter 本地兜底。
+Notes:
 
-失败示例:
+- `imageBase64` 支持纯 base64 或 Data URL。
+- 当前后端固定返回 `thumbBase64: ""`，缩略图由 Flutter 本地兜底。
+
+Failure examples:
+
 - `msg: "imageBase64 不能为空"`
 - `msg: "药品识别失败，请稍后重试"`
 
-## 5. 错误与状态码约定
+## 5. Error and Status Conventions
 
-- 业务参数/业务失败: 多数为 HTTP 200 + `code != "1"`
-- 中间件未认证: HTTP 401
-- JSON 非法: HTTP 400
+- 业务失败: 常见为 HTTP 200 + `code != "1"`
+- 未认证: HTTP 401
+- 非法 JSON: HTTP 400
 - 路由不存在: HTTP 404
 - 未捕获异常: HTTP 500
 
-## 6. 当前路由总览
+## 6. Current Route List
 
 - `GET /health`
 - `POST /api/auth/register`
@@ -318,6 +331,8 @@ Authorization: Bearer <access_token>
 - `POST /api/medicines/ai-safety`
 - `POST /api/medicines/scan`
 
-## 7. 与 Flutter 端常量的注意事项
+## 7. Flutter Constant Compatibility Note
 
-Flutter 里还保留了部分旧常量路径（如 `send-code`、`my-*`、`reminders/*`、`scan-record-create`），当前后端并未实现这些接口。联调时请以本文件第 6 节路由为准。
+Flutter 端仍保留部分历史路径常量（如 `send-code`、`my-*`、`reminders/*`、`scan-record-create`）。
+
+联调时请以本文件第 6 节为准。
