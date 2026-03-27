@@ -123,9 +123,15 @@ class AppCanvasPageScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final background = baseColor ?? theme.scaffoldBackgroundColor;
+    final toolbarHeight = appBar?.preferredSize.height ?? 0.0;
+    final requestedSpacing = appBarSpacing ?? toolbarHeight;
+    final minimumSafeSpacing = toolbarHeight > 0 ? (toolbarHeight - 8) : 0.0;
+    final resolvedSpacing = requestedSpacing < minimumSafeSpacing
+        ? minimumSafeSpacing
+        : requestedSpacing;
     final topSpacing = appBar == null || !reserveAppBarSpace
         ? 0.0
-        : (appBarSpacing ?? appBar!.preferredSize.height);
+        : resolvedSpacing;
     final isDark = theme.brightness == Brightness.dark;
     final overlayStyle =
         (isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark)
