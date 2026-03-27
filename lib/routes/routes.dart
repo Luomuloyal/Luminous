@@ -170,6 +170,19 @@ ThemeData _buildLightTheme(AppThemeStyle style) {
 
 ThemeData _buildDarkTheme(AppThemeStyle style) {
   final spec = _themeSpecFor(style);
+  final darkOnSurface = const Color(0xFFF2F6FF);
+  final darkOnSurfaceVariant = Color.alphaBlend(
+    spec.darkPrimary.withValues(alpha: 0.24),
+    const Color(0xFFA6B4C7),
+  );
+  final darkOutline = Color.alphaBlend(
+    spec.darkPrimary.withValues(alpha: 0.20),
+    const Color(0xFF32445B),
+  );
+  final darkDivider = Color.alphaBlend(
+    spec.darkPrimary.withValues(alpha: 0.15),
+    const Color(0xFF2A3A4F),
+  );
   final colorScheme =
       ColorScheme.fromSeed(
         seedColor: spec.darkPrimary,
@@ -179,8 +192,10 @@ ThemeData _buildDarkTheme(AppThemeStyle style) {
         surface: spec.darkSurface,
         secondary: spec.darkSecondary,
         tertiary: spec.darkTertiary,
-        onSurfaceVariant: const Color(0xFF97A6BA),
-        outline: const Color(0xFF334155),
+        onSurface: darkOnSurface,
+        onSurfaceVariant: darkOnSurfaceVariant,
+        outline: darkOutline,
+        outlineVariant: darkDivider,
       );
 
   return ThemeData(
@@ -188,7 +203,7 @@ ThemeData _buildDarkTheme(AppThemeStyle style) {
     colorScheme: colorScheme,
     scaffoldBackgroundColor: spec.darkBackground,
     canvasColor: spec.darkBackground,
-    dividerColor: const Color(0xFF334155),
+    dividerColor: darkDivider,
     shadowColor: Colors.black,
     dialogTheme: DialogThemeData(
       backgroundColor: spec.darkSurface,
@@ -205,9 +220,9 @@ ThemeData _buildDarkTheme(AppThemeStyle style) {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
     ),
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       backgroundColor: Colors.transparent,
-      foregroundColor: Colors.white,
+      foregroundColor: darkOnSurface,
       elevation: 0,
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
@@ -216,9 +231,9 @@ ThemeData _buildDarkTheme(AppThemeStyle style) {
       color: spec.darkSurface,
       surfaceTintColor: Colors.transparent,
       margin: EdgeInsets.zero,
-      shape: const RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(20)),
-        side: BorderSide(color: Color(0xFF334155)),
+        side: BorderSide(color: darkOutline),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
@@ -228,8 +243,8 @@ ThemeData _buildDarkTheme(AppThemeStyle style) {
         spec.darkSurfaceAlt,
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      hintStyle: const TextStyle(
-        color: Color(0xFF94A3B8),
+      hintStyle: TextStyle(
+        color: darkOnSurfaceVariant.withValues(alpha: 0.88),
         fontWeight: FontWeight.w500,
       ),
       border: OutlineInputBorder(
@@ -253,7 +268,7 @@ ThemeData _buildDarkTheme(AppThemeStyle style) {
     ),
     checkboxTheme: CheckboxThemeData(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-      side: const BorderSide(color: Color(0xFF475569)),
+      side: BorderSide(color: darkOutline),
       fillColor: WidgetStateProperty.resolveWith<Color?>((states) {
         if (states.contains(WidgetState.selected)) {
           return spec.darkPrimary;
@@ -273,7 +288,9 @@ ThemeData _buildDarkTheme(AppThemeStyle style) {
         return TextStyle(
           fontSize: 12.5,
           fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
-          color: selected ? spec.darkPrimary : const Color(0xFF94A3B8),
+          color: selected
+              ? spec.darkPrimary
+              : darkOnSurfaceVariant.withValues(alpha: 0.92),
         );
       }),
     ),
@@ -284,55 +301,94 @@ _AppThemeSpec _themeSpecFor(AppThemeStyle style) {
   switch (style) {
     case AppThemeStyle.softGlow:
       return const _AppThemeSpec(
-        lightPrimary: Color(0xFF2CA6E8),
-        lightSecondary: Color(0xFFC891EB),
-        lightTertiary: Color(0xFFF2C96E),
-        lightBackground: Color(0xFFF9FBFF),
-        darkPrimary: Color(0xFF8DDAFF),
-        darkSecondary: Color(0xFFE3C5FF),
-        darkTertiary: Color(0xFFF2D887),
-        darkBackground: Color(0xFF0B1526),
-        darkSurface: Color(0xFF152239),
-        darkSurfaceAlt: Color(0xFF203250),
+        lightPrimary: Color(0xFF2DA7E7),
+        lightSecondary: Color(0xFFC78DE8),
+        lightTertiary: Color(0xFFF3C983),
+        lightBackground: Color(0xFFF8FBFF),
+        darkPrimary: Color(0xFF90DBFF),
+        darkSecondary: Color(0xFFD8B8FF),
+        darkTertiary: Color(0xFFF0D184),
+        darkBackground: Color(0xFF0A1424),
+        darkSurface: Color(0xFF13223A),
+        darkSurfaceAlt: Color(0xFF1D3050),
       );
     case AppThemeStyle.moonMist:
       return const _AppThemeSpec(
-        lightPrimary: Color(0xFF5F8FF0),
-        lightSecondary: Color(0xFF79B6E8),
-        lightTertiary: Color(0xFF91B2EA),
-        lightBackground: Color(0xFFF2F7FD),
-        darkPrimary: Color(0xFFB6D5FF),
-        darkSecondary: Color(0xFF8EC5F2),
-        darkTertiary: Color(0xFF7EA6E4),
-        darkBackground: Color(0xFF06111C),
-        darkSurface: Color(0xFF0D1C30),
-        darkSurfaceAlt: Color(0xFF162A44),
+        lightPrimary: Color(0xFF3A82F6),
+        lightSecondary: Color(0xFF7E8EF8),
+        lightTertiary: Color(0xFFA4BCFF),
+        lightBackground: Color(0xFFF1F6FF),
+        darkPrimary: Color(0xFF9DC8FF),
+        darkSecondary: Color(0xFFB0B8FF),
+        darkTertiary: Color(0xFF75A6E9),
+        darkBackground: Color(0xFF061423),
+        darkSurface: Color(0xFF0F233A),
+        darkSurfaceAlt: Color(0xFF17365A),
       );
     case AppThemeStyle.divineTree:
       return const _AppThemeSpec(
-        lightPrimary: Color(0xFF89B559),
-        lightSecondary: Color(0xFFE0C25E),
-        lightTertiary: Color(0xFFB7D96E),
-        lightBackground: Color(0xFFFAFBF1),
-        darkPrimary: Color(0xFFD2E58A),
-        darkSecondary: Color(0xFFE1CA79),
-        darkTertiary: Color(0xFFA8D48E),
-        darkBackground: Color(0xFF09130D),
-        darkSurface: Color(0xFF13231A),
-        darkSurfaceAlt: Color(0xFF1B3124),
+        lightPrimary: Color(0xFF8CAF4B),
+        lightSecondary: Color(0xFFDFC05D),
+        lightTertiary: Color(0xFFAECB63),
+        lightBackground: Color(0xFFFAFBEF),
+        darkPrimary: Color(0xFFD0E386),
+        darkSecondary: Color(0xFFE4C977),
+        darkTertiary: Color(0xFF99C97A),
+        darkBackground: Color(0xFF0A120C),
+        darkSurface: Color(0xFF142218),
+        darkSurfaceAlt: Color(0xFF1F3124),
       );
     case AppThemeStyle.illusion:
       return const _AppThemeSpec(
-        lightPrimary: Color(0xFFA37AF4),
-        lightSecondary: Color(0xFFC596FF),
-        lightTertiary: Color(0xFF7C5CD4),
-        lightBackground: Color(0xFFF9F4FF),
-        darkPrimary: Color(0xFFD6BBFF),
-        darkSecondary: Color(0xFFAA8EF2),
-        darkTertiary: Color(0xFF7B63D6),
-        darkBackground: Color(0xFF11091D),
-        darkSurface: Color(0xFF1A1229),
-        darkSurfaceAlt: Color(0xFF26193B),
+        lightPrimary: Color(0xFF9D68F0),
+        lightSecondary: Color(0xFFC39CFF),
+        lightTertiary: Color(0xFF7D91EB),
+        lightBackground: Color(0xFFF8F3FF),
+        darkPrimary: Color(0xFFD4B8FF),
+        darkSecondary: Color(0xFFAF93F1),
+        darkTertiary: Color(0xFF7A8DE0),
+        darkBackground: Color(0xFF120A20),
+        darkSurface: Color(0xFF1F1632),
+        darkSurfaceAlt: Color(0xFF2C1D46),
+      );
+    case AppThemeStyle.frostDust:
+      return const _AppThemeSpec(
+        lightPrimary: Color(0xFF6E8979),
+        lightSecondary: Color(0xFF8C9F8A),
+        lightTertiary: Color(0xFFD8D1C4),
+        lightBackground: Color(0xFFF4F3EE),
+        darkPrimary: Color(0xFFACC2B5),
+        darkSecondary: Color(0xFF849C8B),
+        darkTertiary: Color(0xFFC7C0B1),
+        darkBackground: Color(0xFF101611),
+        darkSurface: Color(0xFF1A241E),
+        darkSurfaceAlt: Color(0xFF243129),
+      );
+    case AppThemeStyle.lightSand:
+      return const _AppThemeSpec(
+        lightPrimary: Color(0xFFBDA286),
+        lightSecondary: Color(0xFFCDA6A7),
+        lightTertiary: Color(0xFFBD8A6E),
+        lightBackground: Color(0xFFF7EFE7),
+        darkPrimary: Color(0xFFDAC2A9),
+        darkSecondary: Color(0xFFCBA4A8),
+        darkTertiary: Color(0xFFBF9076),
+        darkBackground: Color(0xFF17110D),
+        darkSurface: Color(0xFF231A14),
+        darkSurfaceAlt: Color(0xFF31241D),
+      );
+    case AppThemeStyle.smokeWaves:
+      return const _AppThemeSpec(
+        lightPrimary: Color(0xFF6C8891),
+        lightSecondary: Color(0xFF8098B7),
+        lightTertiary: Color(0xFF5F6F7D),
+        lightBackground: Color(0xFFEDF2F5),
+        darkPrimary: Color(0xFFA8BBC6),
+        darkSecondary: Color(0xFF95ADCC),
+        darkTertiary: Color(0xFF8392A3),
+        darkBackground: Color(0xFF0B1116),
+        darkSurface: Color(0xFF141E26),
+        darkSurfaceAlt: Color(0xFF1F2B35),
       );
   }
 }

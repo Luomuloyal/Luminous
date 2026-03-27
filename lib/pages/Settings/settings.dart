@@ -322,7 +322,9 @@ class _SettingsHeroCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
                 decoration: BoxDecoration(
-                  color: theme.surfaceColor.withValues(alpha: 0.76),
+                  color: theme.surfaceColor.withValues(
+                    alpha: resolvedDark ? 0.90 : 0.76,
+                  ),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: theme.borderColor),
                 ),
@@ -496,7 +498,7 @@ class _DisplayPreferencesSection extends StatelessWidget {
           _SettingsFieldTitle(
             icon: Icons.palette_outlined,
             title: '主题风格',
-            description: '柔岚、月雾、神树、虚幻四套配色会一起影响环境光、横幅和分区块',
+            description: '柔岚、月雾、神树、虚霭、霜尘、浅砂、烟波七套配色会一起影响环境光、横幅和分区块',
             color: scheme.secondary,
           ),
           const SizedBox(height: 8),
@@ -876,20 +878,32 @@ String _themeStyleLabel(AppThemeStyle style) {
     case AppThemeStyle.divineTree:
       return '神树';
     case AppThemeStyle.illusion:
-      return '虚幻';
+      return '虚霭';
+    case AppThemeStyle.frostDust:
+      return '霜尘';
+    case AppThemeStyle.lightSand:
+      return '浅砂';
+    case AppThemeStyle.smokeWaves:
+      return '烟波';
   }
 }
 
 String _themeStyleSubtitle(AppThemeStyle style) {
   switch (style) {
     case AppThemeStyle.softGlow:
-      return '延续现在这套淡黄、淡紫、淡蓝的柔和气质';
+      return '淡蓝、浅紫和暖金同场，明快但不刺眼，整体更轻盈';
     case AppThemeStyle.moonMist:
-      return '更偏冷蓝和雾感月光，和虚幻的紫调区分会更明显';
+      return '主蓝色调里融入一丝紫雾，像月光下的冷蓝薄纱';
     case AppThemeStyle.divineTree:
-      return '浅黄、嫩绿和黄绿色交错，像夜里泛着金光的神树';
+      return '黄绿与柔金交错，像林荫透光，生机感更突出';
     case AppThemeStyle.illusion:
-      return '淡紫到深紫层层递进，像梦境和深夜霓光叠在一起';
+      return '偏紫色主调，带一点点蓝光，像夜雾里的霓虹边缘';
+    case AppThemeStyle.frostDust:
+      return '灰绿、苔色与米白浅亚麻交融，像覆着晨霜的草地与石苔';
+    case AppThemeStyle.lightSand:
+      return '奶茶、枯粉与陶土色杂糅，温暖克制，像干燥砂岩与旧织物';
+    case AppThemeStyle.smokeWaves:
+      return '青灰和雾蓝叠出水汽感，淡墨收尾，冷静又有远山层次';
   }
 }
 
@@ -897,29 +911,41 @@ List<Color> _themeStylePreview(AppThemeStyle style, bool isDark) {
   switch (style) {
     case AppThemeStyle.softGlow:
       return isDark
-          ? const [Color(0xFF112134), Color(0xFF203452), Color(0xFF66599A)]
-          : const [Color(0xFFEAF7FF), Color(0xFFF9EFD4), Color(0xFFEDE5FF)];
+          ? const [Color(0xFF0A1424), Color(0xFF1D3050), Color(0xFF6B5EA3)]
+          : const [Color(0xFFECF7FF), Color(0xFFF9EFD9), Color(0xFFEEE4FF)];
     case AppThemeStyle.moonMist:
       return isDark
-          ? const [Color(0xFF06111C), Color(0xFF162A44), Color(0xFF5B86C7)]
-          : const [Color(0xFFF0F7FF), Color(0xFFE3F0FF), Color(0xFFD5E8FF)];
+          ? const [Color(0xFF061423), Color(0xFF17365A), Color(0xFF7480DB)]
+          : const [Color(0xFFEFF6FF), Color(0xFFDEE9FF), Color(0xFFE8E5FF)];
     case AppThemeStyle.divineTree:
       return isDark
-          ? const [Color(0xFF0D1710), Color(0xFF233A29), Color(0xFF7A6A2F)]
-          : const [Color(0xFFFFF7D8), Color(0xFFF0F7D6), Color(0xFFDDEEB0)];
+          ? const [Color(0xFF0A120C), Color(0xFF1F3124), Color(0xFF7C6A32)]
+          : const [Color(0xFFFEF8DB), Color(0xFFF2F8D8), Color(0xFFDDECB2)];
     case AppThemeStyle.illusion:
       return isDark
           ? const [
-              Color(0xFF11091D),
-              Color(0xFF26193B),
-              Color(0xFF553A8F),
-              Color(0xFFD2B2FF),
+              Color(0xFF120A20),
+              Color(0xFF2C1D46),
+              Color(0xFF4E54A2),
+              Color(0xFFD7BCFF),
             ]
           : const [
-              Color(0xFFF8F1FF),
-              Color(0xFFEEDFFF),
-              Color(0xFFC9A6FF),
-              Color(0xFF8A6AE6),
+              Color(0xFFF8F2FF),
+              Color(0xFFEDE0FF),
+              Color(0xFFC7B0FF),
+              Color(0xFF8495EA),
             ];
+    case AppThemeStyle.frostDust:
+      return isDark
+          ? const [Color(0xFF101611), Color(0xFF243129), Color(0xFF809A8B)]
+          : const [Color(0xFFF4F3EE), Color(0xFFE7E2D8), Color(0xFFD1DED3)];
+    case AppThemeStyle.lightSand:
+      return isDark
+          ? const [Color(0xFF17110D), Color(0xFF31241D), Color(0xFF946F5A)]
+          : const [Color(0xFFF7EFE7), Color(0xFFEAD9CF), Color(0xFFD6B7AA)];
+    case AppThemeStyle.smokeWaves:
+      return isDark
+          ? const [Color(0xFF0B1116), Color(0xFF1F2B35), Color(0xFF6F879C)]
+          : const [Color(0xFFEDF2F5), Color(0xFFDDE6ED), Color(0xFFC1CED8)];
   }
 }
