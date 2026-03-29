@@ -21,9 +21,7 @@ enum AppThemeStyle {
   moonMist,
   divineTree,
   illusion,
-  frostDust,
-  lightSand,
-  smokeWaves;
+  lightSand;
 
   static AppThemeStyle fromStorage(String? value) {
     return AppThemeStyle.values.firstWhere(

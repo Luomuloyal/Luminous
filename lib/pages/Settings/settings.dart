@@ -675,7 +675,7 @@ class _DisplayPreferencesSection extends StatelessWidget {
           _SettingsFieldTitle(
             icon: Icons.palette_outlined,
             title: '主题风格',
-            description: '柔岚、月雾、神树、虚霭、霜尘、浅砂、烟波七套配色会一起影响环境光、横幅和分区块',
+            description: '柔岚、月雾、神树、虚霭、浅砂五套配色会一起影响环境光、横幅和分区块',
             color: scheme.secondary,
           ),
           const SizedBox(height: 8),
@@ -1056,12 +1056,8 @@ String _themeStyleLabel(AppThemeStyle style) {
       return '神树';
     case AppThemeStyle.illusion:
       return '虚霭';
-    case AppThemeStyle.frostDust:
-      return '霜尘';
     case AppThemeStyle.lightSand:
       return '浅砂';
-    case AppThemeStyle.smokeWaves:
-      return '烟波';
   }
 }
 
@@ -1075,12 +1071,8 @@ String _themeStyleSubtitle(AppThemeStyle style) {
       return '黄绿与柔金交错，像林荫透光，生机感更突出';
     case AppThemeStyle.illusion:
       return '偏紫色主调，带一点点蓝光，像夜雾里的霓虹边缘';
-    case AppThemeStyle.frostDust:
-      return '灰绿、苔色与米白浅亚麻交融，像覆着晨霜的草地与石苔';
     case AppThemeStyle.lightSand:
       return '奶茶、枯粉与陶土色杂糅，温暖克制，像干燥砂岩与旧织物';
-    case AppThemeStyle.smokeWaves:
-      return '青灰和雾蓝叠出水汽感，淡墨收尾，冷静又有远山层次';
   }
 }
 
@@ -1112,17 +1104,9 @@ List<Color> _themeStylePreview(AppThemeStyle style, bool isDark) {
               Color(0xFFC7B0FF),
               Color(0xFF8495EA),
             ];
-    case AppThemeStyle.frostDust:
-      return isDark
-          ? const [Color(0xFF101611), Color(0xFF243129), Color(0xFF809A8B)]
-          : const [Color(0xFFF4F3EE), Color(0xFFE7E2D8), Color(0xFFD1DED3)];
     case AppThemeStyle.lightSand:
       return isDark
           ? const [Color(0xFF17110D), Color(0xFF31241D), Color(0xFF946F5A)]
           : const [Color(0xFFF7EFE7), Color(0xFFEAD9CF), Color(0xFFD6B7AA)];
-    case AppThemeStyle.smokeWaves:
-      return isDark
-          ? const [Color(0xFF0B1116), Color(0xFF1F2B35), Color(0xFF6F879C)]
-          : const [Color(0xFFEDF2F5), Color(0xFFDDE6ED), Color(0xFFC1CED8)];
   }
 }

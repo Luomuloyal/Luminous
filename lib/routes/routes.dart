@@ -56,7 +56,7 @@ Map<String, Widget Function(BuildContext)> getRootRoutes() {
 }
 
 ThemeData _buildLightTheme(AppThemeStyle style) {
-  final spec = _themeSpecFor(style);
+  final spec = _safeThemeSpec(style);
   final colorScheme =
       ColorScheme.fromSeed(
         seedColor: spec.lightPrimary,
@@ -169,7 +169,7 @@ ThemeData _buildLightTheme(AppThemeStyle style) {
 }
 
 ThemeData _buildDarkTheme(AppThemeStyle style) {
-  final spec = _themeSpecFor(style);
+  final spec = _safeThemeSpec(style);
   final darkOnSurface = const Color(0xFFF2F6FF);
   final darkOnSurfaceVariant = Color.alphaBlend(
     spec.darkPrimary.withValues(alpha: 0.24),
@@ -351,19 +351,6 @@ _AppThemeSpec _themeSpecFor(AppThemeStyle style) {
         darkSurface: Color(0xFF1F1632),
         darkSurfaceAlt: Color(0xFF2C1D46),
       );
-    case AppThemeStyle.frostDust:
-      return const _AppThemeSpec(
-        lightPrimary: Color(0xFF6E8979),
-        lightSecondary: Color(0xFF8C9F8A),
-        lightTertiary: Color(0xFFD8D1C4),
-        lightBackground: Color(0xFFF4F3EE),
-        darkPrimary: Color(0xFFACC2B5),
-        darkSecondary: Color(0xFF849C8B),
-        darkTertiary: Color(0xFFC7C0B1),
-        darkBackground: Color(0xFF101611),
-        darkSurface: Color(0xFF1A241E),
-        darkSurfaceAlt: Color(0xFF243129),
-      );
     case AppThemeStyle.lightSand:
       return const _AppThemeSpec(
         lightPrimary: Color(0xFFBDA286),
@@ -377,19 +364,28 @@ _AppThemeSpec _themeSpecFor(AppThemeStyle style) {
         darkSurface: Color(0xFF231A14),
         darkSurfaceAlt: Color(0xFF31241D),
       );
-    case AppThemeStyle.smokeWaves:
-      return const _AppThemeSpec(
-        lightPrimary: Color(0xFF6C8891),
-        lightSecondary: Color(0xFF8098B7),
-        lightTertiary: Color(0xFF5F6F7D),
-        lightBackground: Color(0xFFEDF2F5),
-        darkPrimary: Color(0xFFA8BBC6),
-        darkSecondary: Color(0xFF95ADCC),
-        darkTertiary: Color(0xFF8392A3),
-        darkBackground: Color(0xFF0B1116),
-        darkSurface: Color(0xFF141E26),
-        darkSurfaceAlt: Color(0xFF1F2B35),
-      );
+  }
+}
+
+const _AppThemeSpec _fallbackThemeSpec = _AppThemeSpec(
+  lightPrimary: Color(0xFF2DA7E7),
+  lightSecondary: Color(0xFFC78DE8),
+  lightTertiary: Color(0xFFF3C983),
+  lightBackground: Color(0xFFF8FBFF),
+  darkPrimary: Color(0xFF90DBFF),
+  darkSecondary: Color(0xFFD8B8FF),
+  darkTertiary: Color(0xFFF0D184),
+  darkBackground: Color(0xFF0A1424),
+  darkSurface: Color(0xFF13223A),
+  darkSurfaceAlt: Color(0xFF1D3050),
+);
+
+_AppThemeSpec _safeThemeSpec(AppThemeStyle style) {
+  try {
+    final spec = _themeSpecFor(style) as _AppThemeSpec?;
+    return spec ?? _fallbackThemeSpec;
+  } catch (_) {
+    return _fallbackThemeSpec;
   }
 }
 
