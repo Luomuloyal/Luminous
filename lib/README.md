@@ -6,7 +6,6 @@
 
 - `api/`: 接口请求封装
 - `assets/`: App 资源文件
-- `Backend/`: 历史后端草稿文档（保留参考）
 - `components/`: 可复用 UI 组件
 - `constants/`: 全局常量与 API 路径
 - `docs/`: 项目内部规范文档
@@ -20,8 +19,7 @@
 ## 关键入口
 
 - 应用入口: `main.dart`
-- 功能导览: `feature_playbook.dart`
-- 项目导航说明: `project_guide.dart`
+- 网络入口: `utils/dio_request.dart`
 
 ## 开发建议
 

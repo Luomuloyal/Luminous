@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:luminous/pages/Home/home.dart';
 import 'package:luminous/stores/user_controller.dart';
-import 'package:luminous/utils/DioRequest.dart';
+import 'package:luminous/utils/dio_request.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/auth.dart';
 import 'package:luminous/viewmodels/home.dart';

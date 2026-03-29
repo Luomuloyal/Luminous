@@ -60,9 +60,6 @@ class ThemeController extends GetxController {
     }
   }
 
-  /// 兼容旧逻辑的只读暗色状态。
-  bool get isDarkMode => themePreference.value == AppThemeModePreference.dark;
-
   bool get followsSystem =>
       themePreference.value == AppThemeModePreference.system;
 
@@ -72,20 +69,7 @@ class ThemeController extends GetxController {
     final storedThemeMode = prefs.getString(GlobalConstants.THEME_MODE_KEY);
     final storedThemeStyle = prefs.getString(GlobalConstants.THEME_STYLE_KEY);
 
-    if (storedThemeMode != null) {
-      themePreference.value = AppThemeModePreference.fromStorage(
-        storedThemeMode,
-      );
-    } else {
-      final legacyDarkMode = prefs.getBool(GlobalConstants.DARK_MODE_KEY);
-      if (legacyDarkMode == null) {
-        themePreference.value = AppThemeModePreference.system;
-      } else {
-        themePreference.value = legacyDarkMode
-            ? AppThemeModePreference.dark
-            : AppThemeModePreference.light;
-      }
-    }
+    themePreference.value = AppThemeModePreference.fromStorage(storedThemeMode);
 
     themeStyle.value = AppThemeStyle.fromStorage(storedThemeStyle);
   }
@@ -108,12 +92,5 @@ class ThemeController extends GetxController {
     themeStyle.value = style;
     final prefs = await _prefs;
     await prefs.setString(GlobalConstants.THEME_STYLE_KEY, style.name);
-  }
-
-  /// 兼容旧入口：显式切换明暗模式。
-  Future<void> setDarkMode(bool enabled) async {
-    await setThemePreference(
-      enabled ? AppThemeModePreference.dark : AppThemeModePreference.light,
-    );
   }
 }

@@ -9,7 +9,7 @@ import 'package:luminous/pages/Register/register.dart';
 import 'package:luminous/stores/session_sync_service.dart';
 import 'package:luminous/stores/token_manager.dart';
 import 'package:luminous/stores/user_controller.dart';
-import 'package:luminous/utils/DioRequest.dart';
+import 'package:luminous/utils/dio_request.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/auth.dart';
 

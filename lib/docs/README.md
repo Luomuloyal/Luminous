@@ -16,5 +16,4 @@
 ## 相关入口
 
 - 后端服务说明: [../../backend/README.md](../../backend/README.md)
-- 后端学习文档: [../../BackendMd/README.md](../../BackendMd/README.md)
 - 项目总览: [../../README.md](../../README.md)

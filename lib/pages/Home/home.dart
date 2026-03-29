@@ -10,7 +10,7 @@ import 'package:luminous/pages/Picker/medicine_picker.dart';
 import 'package:luminous/pages/Scan/medicine_scan.dart';
 import 'package:luminous/stores/today_reminder_local_store.dart';
 import 'package:luminous/stores/user_controller.dart';
-import 'package:luminous/utils/DioRequest.dart';
+import 'package:luminous/utils/dio_request.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/home.dart';
 import 'package:luminous/viewmodels/medicine.dart';

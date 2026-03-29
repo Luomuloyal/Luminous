@@ -28,7 +28,6 @@ Luminous/
   lib/                Flutter 主代码
   test/               Flutter 测试
   backend/            App 后端服务
-  BackendMd/          后端协议与实现映射文档
   Study/              架构学习与问题定位文档
   android/ios/...     平台工程
 ```
@@ -85,7 +84,6 @@ Health Check:
 - Backend API: [lib/docs/backend-api.md](lib/docs/backend-api.md)
 - Deployment Guide: [lib/docs/deployment-config.md](lib/docs/deployment-config.md)
 - Backend Runtime: [backend/README.md](backend/README.md)
-- Backend Mapping Docs: [BackendMd/README.md](BackendMd/README.md)
 - Architecture Notes: [Study/README.md](Study/README.md)
 
 ## Contributing

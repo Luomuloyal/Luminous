@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:luminous/api/auth_api.dart';
 import 'package:luminous/components/auth.dart';
 import 'package:luminous/components/soft_banner.dart';
-import 'package:luminous/utils/DioRequest.dart';
+import 'package:luminous/utils/dio_request.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/auth.dart';
 

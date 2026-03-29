@@ -41,22 +41,18 @@ class MedicineItem {
   });
 
   /// 从后端 JSON 反序列化为 `MedicineItem`。
-  ///
-  /// 同时兼容英文键和数据库中文字段名。
   factory MedicineItem.fromJson(Map<String, dynamic> json) {
     return MedicineItem(
-      serialNo: (json['serialNo'] ?? json['序号'] ?? '').toString(),
-      approvalNo: (json['approvalNo'] ?? json['批准文号'] ?? '').toString(),
-      productName: (json['productName'] ?? json['产品名称'] ?? '').toString(),
-      dosageForm: (json['dosageForm'] ?? json['剂型'] ?? '').toString(),
-      specification: (json['specification'] ?? json['规格'] ?? '').toString(),
-      marketingAuthorizationHolder:
-          (json['marketingAuthorizationHolder'] ?? json['上市许可持有人'] ?? '')
-              .toString(),
-      manufacturer: (json['manufacturer'] ?? json['生产单位'] ?? '').toString(),
-      drugCode: (json['drugCode'] ?? json['药品编码'] ?? '').toString(),
-      drugCodeRemark: (json['drugCodeRemark'] ?? json['药品编码备注'] ?? '')
+      serialNo: (json['serialNo'] ?? '').toString(),
+      approvalNo: (json['approvalNo'] ?? '').toString(),
+      productName: (json['productName'] ?? '').toString(),
+      dosageForm: (json['dosageForm'] ?? '').toString(),
+      specification: (json['specification'] ?? '').toString(),
+      marketingAuthorizationHolder: (json['marketingAuthorizationHolder'] ?? '')
           .toString(),
+      manufacturer: (json['manufacturer'] ?? '').toString(),
+      drugCode: (json['drugCode'] ?? '').toString(),
+      drugCodeRemark: (json['drugCodeRemark'] ?? '').toString(),
     );
   }
 

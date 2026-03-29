@@ -1,5 +1,5 @@
 import 'package:luminous/constants/constants.dart';
-import 'package:luminous/utils/DioRequest.dart';
+import 'package:luminous/utils/dio_request.dart';
 import 'package:luminous/viewmodels/reminder.dart';
 
 /// 提醒计划接口封装。

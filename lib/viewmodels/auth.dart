@@ -68,12 +68,7 @@ class RegisterResult {
   /// 从后端 JSON 反序列化为 `RegisterResult`。
   factory RegisterResult.fromJson(Map<String, dynamic> json) {
     return RegisterResult(
-      id:
-          (json['id'] ??
-                  json['_id'] ??
-                  (json['user'] != null ? json['user']['id'] : '') ??
-                  '')
-              .toString(),
+      id: (json['id'] ?? json['_id'] ?? '').toString(),
       accessToken: (json['accessToken'] ?? '').toString(),
       refreshToken: (json['refreshToken'] ?? '').toString(),
     );
@@ -81,10 +76,6 @@ class RegisterResult {
 }
 
 /// 登录接口返回对象。
-///
-/// 兼容两种返回结构：
-/// - 旧结构：`result` 直接就是用户对象；
-/// - 新结构：`result.user + result.token` 或者新添加了 refreshToken。
 class LoginResult {
   /// 登录后的用户信息。
   final UserSafe user;
@@ -109,17 +100,11 @@ class LoginResult {
         ? rawUser
         : rawUser is Map
         ? rawUser.map((key, value) => MapEntry(key.toString(), value))
-        : json;
+        : <String, dynamic>{};
 
     return LoginResult(
       user: UserSafe.fromJson(userJson),
-      token:
-          (json['token'] ??
-                  json['accessToken'] ??
-                  json['access_token'] ??
-                  json['jwt'] ??
-                  '')
-              .toString(),
+      token: (json['accessToken'] ?? '').toString(),
       refreshToken: (json['refreshToken'] ?? '').toString(),
     );
   }

@@ -166,5 +166,4 @@ Full schema and examples: [../lib/docs/backend-api.md](../lib/docs/backend-api.m
 ## Related Docs
 
 - Project README: [../README.md](../README.md)
-- Backend Mapping Docs: [../BackendMd/README.md](../BackendMd/README.md)
 - Deployment Config: [../lib/docs/deployment-config.md](../lib/docs/deployment-config.md)

@@ -191,18 +191,20 @@ class _LanguagePlaceholderSection extends StatelessWidget {
           ),
           child: Column(
             children: [
-              RadioListTile<String>(
-                value: 'zh-CN',
-                groupValue: 'zh-CN',
-                onChanged: (_) {},
+              ListTile(
+                leading: Icon(
+                  Icons.check_circle_rounded,
+                  color: scheme.primary,
+                ),
                 title: const Text('简体中文'),
                 subtitle: const Text('当前已启用'),
               ),
               Divider(height: 1, color: scheme.outline),
-              RadioListTile<String>(
-                value: 'en-US',
-                groupValue: 'zh-CN',
-                onChanged: null,
+              ListTile(
+                leading: Icon(
+                  Icons.radio_button_unchecked_rounded,
+                  color: scheme.onSurfaceVariant,
+                ),
                 title: const Text('English'),
                 subtitle: const Text('即将支持'),
               ),

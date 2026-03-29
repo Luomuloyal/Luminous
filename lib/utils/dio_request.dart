@@ -159,9 +159,8 @@ class DioRequest {
                 debugPrint('[DIO][REFRESH_ERR] $e');
               }
 
-              // 刷新失败，清空所有 token 需重新登录
+              // 刷新失败后清空本地 token，后续请求会按未登录态处理。
               await tokenManager.deleteToken();
-              // TODO: 这里抛出广播或通知，可路由重定向去登录页
             }
           }
           // ===============================

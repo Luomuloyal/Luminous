@@ -36,9 +36,6 @@ class GlobalConstants {
   /// `UserController` 会使用这个 key 持久化登录用户信息。
   static const String USER_KEY = 'luminous_user';
 
-  /// 本地存储暗黑模式偏好时使用的 key。
-  static const String DARK_MODE_KEY = 'luminous_dark_mode';
-
   /// 本地存储主题模式偏好时使用的 key。
   static const String THEME_MODE_KEY = 'luminous_theme_mode';
 
