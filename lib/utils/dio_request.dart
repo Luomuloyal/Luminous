@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:luminous/constants/constants.dart';
 import 'package:luminous/stores/token_manager.dart';
+import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/utils/loading_utils.dart';
 
 /// 通用接口返回包装。
@@ -81,7 +82,9 @@ class DioRequest {
           }
           if (options.extra[_showLoadingKey] == true) {
             LoadingUtils.show(
-              text: options.extra[_loadingTextKey]?.toString() ?? '加载中...',
+              text:
+                  options.extra[_loadingTextKey]?.toString() ??
+                  AppI18nText.pick(zh: '加载中...', en: 'Loading...'),
             );
           }
           if (kDebugMode) {
@@ -191,7 +194,7 @@ class DioRequest {
     required T Function(dynamic json) decoder,
     Map<String, dynamic>? queryParameters,
     bool showLoading = false,
-    String loadingText = '加载中...',
+    String? loadingText,
     Options? options,
     CancelToken? cancelToken,
   }) {
@@ -216,7 +219,7 @@ class DioRequest {
     Object? data,
     Map<String, dynamic>? queryParameters,
     bool showLoading = false,
-    String loadingText = '加载中...',
+    String? loadingText,
     Options? options,
     CancelToken? cancelToken,
   }) {
@@ -243,17 +246,22 @@ class DioRequest {
     Object? data,
     Map<String, dynamic>? queryParameters,
     bool showLoading = false,
-    String loadingText = '加载中...',
+    String? loadingText,
     Options? options,
     CancelToken? cancelToken,
   }) async {
     try {
+      final effectiveLoadingText =
+          (loadingText == null || loadingText.trim().isEmpty)
+          ? AppI18nText.pick(zh: '加载中...', en: 'Loading...')
+          : loadingText;
+
       /// 本次请求最终使用的 Dio 配置对象。
       final requestOptions = (options ?? Options()).copyWith(method: method);
       requestOptions.extra = <String, dynamic>{
         ...?requestOptions.extra,
         _showLoadingKey: showLoading,
-        _loadingTextKey: loadingText,
+        _loadingTextKey: effectiveLoadingText,
       };
 
       /// 底层返回的原始 HTTP 响应对象。
@@ -281,7 +289,12 @@ class DioRequest {
       }
 
       if (code != GlobalConstants.SUCCESS_CODE) {
-        throw ApiException(msg.isEmpty ? '请求失败' : msg, code: code);
+        throw ApiException(
+          msg.isEmpty
+              ? AppI18nText.pick(zh: '请求失败', en: 'Request failed')
+              : msg,
+          code: code,
+        );
       }
 
       return ApiResult<T>(
@@ -310,7 +323,12 @@ class DioRequest {
     if (data is String) {
       return _coerceToMap(jsonDecode(data));
     }
-    throw Exception('响应格式异常：${data.runtimeType}');
+    throw Exception(
+      AppI18nText.pick(
+        zh: '响应格式异常：${data.runtimeType}',
+        en: 'Unexpected response format: ${data.runtimeType}',
+      ),
+    );
   }
 
   /// 把 Dio 异常转换成适合展示给用户的消息。
@@ -334,16 +352,16 @@ class DioRequest {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        return '网络请求超时';
+        return AppI18nText.pick(zh: '网络请求超时', en: 'Network request timed out');
       case DioExceptionType.badCertificate:
       case DioExceptionType.connectionError:
-        return '网络请求错误';
+        return AppI18nText.pick(zh: '网络请求错误', en: 'Network request failed');
       case DioExceptionType.cancel:
-        return '请求已取消';
+        return AppI18nText.pick(zh: '请求已取消', en: 'Request was cancelled');
       case DioExceptionType.badResponse:
         return _messageForStatusCode(statusCode);
       case DioExceptionType.unknown:
-        return '网络请求错误';
+        return AppI18nText.pick(zh: '网络请求错误', en: 'Network request failed');
     }
   }
 
@@ -367,7 +385,10 @@ class DioRequest {
         }
       } catch (_) {
         if (serverData.contains('Function Not Found')) {
-          return '接口不存在，请检查云函数名称或部署状态';
+          return AppI18nText.pick(
+            zh: '接口不存在，请检查云函数名称或部署状态',
+            en: 'Endpoint not found. Check the cloud function name or deployment status',
+          );
         }
         return serverData.trim();
       }
@@ -378,15 +399,18 @@ class DioRequest {
 
   String _messageForStatusCode(int? statusCode) {
     if (statusCode == 404) {
-      return '接口不存在';
+      return AppI18nText.pick(zh: '接口不存在', en: 'Endpoint not found');
     }
     if (statusCode != null && statusCode >= 500) {
-      return '服务器开小差了';
+      return AppI18nText.pick(
+        zh: '服务器开小差了',
+        en: 'Server is temporarily unavailable',
+      );
     }
     if (statusCode != null && statusCode >= 400) {
-      return '请求失败';
+      return AppI18nText.pick(zh: '请求失败', en: 'Request failed');
     }
-    return '网络请求错误';
+    return AppI18nText.pick(zh: '网络请求错误', en: 'Network request failed');
   }
 
   bool _containsChinese(String text) {

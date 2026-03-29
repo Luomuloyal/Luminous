@@ -1070,6 +1070,12 @@ abstract class AppLocalizations {
   /// **'Choose from My Medicines or Search Library'**
   String get reminderEditSelectMedicineHint;
 
+  /// No description provided for @reminderEditSelectedIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Drug Code: {drugCode}  Approval No.: {approvalNo}'**
+  String reminderEditSelectedIdentity(Object drugCode, Object approvalNo);
+
   /// No description provided for @reminderEditTimeTitle.
   ///
   /// In en, this message translates to:

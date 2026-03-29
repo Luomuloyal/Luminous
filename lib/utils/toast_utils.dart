@@ -83,7 +83,7 @@ class ToastUtils {
   void showError(
     BuildContext context,
     Object? error, {
-    String fallback = '操作失败，请稍后重试',
+    String? fallback,
     Duration toastduration = const Duration(seconds: 2),
   }) {
     _logError(error);

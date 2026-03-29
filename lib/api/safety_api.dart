@@ -1,4 +1,5 @@
 import 'package:luminous/constants/constants.dart';
+import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/utils/dio_request.dart';
 import 'package:luminous/viewmodels/safety.dart';
 
@@ -26,7 +27,7 @@ class SafetyApi {
       },
       decoder: (json) => MedicineAiSafetyResult.fromJson(_asMap(json)),
       showLoading: true,
-      loadingText: '查询中...',
+      loadingText: AppI18nText.pick(zh: '查询中...', en: 'Querying...'),
     );
   }
 

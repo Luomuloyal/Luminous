@@ -1,3 +1,5 @@
+import 'package:luminous/utils/app_i18n_text.dart';
+
 /// 药品搜索、详情、AI 解读共用的数据模型。
 class MedicineItem {
   /// 药品表中的序号字段。
@@ -62,7 +64,9 @@ class MedicineItem {
   /// 页面展示时的主标题。
   ///
   /// 若产品名称为空，则回退为“未知药品”。
-  String get displayName => productName.isEmpty ? '未知药品' : productName;
+  String get displayName => productName.isEmpty
+      ? AppI18nText.pick(zh: '未知药品', en: 'Unknown medicine')
+      : productName;
 
   /// 页面展示时的副标题。
   ///
@@ -72,7 +76,9 @@ class MedicineItem {
       if (dosageForm.isNotEmpty) dosageForm,
       if (specification.isNotEmpty) specification,
     ];
-    return parts.isEmpty ? '暂无规格信息' : parts.join(' · ');
+    return parts.isEmpty
+        ? AppI18nText.pick(zh: '暂无规格信息', en: 'No specification info')
+        : parts.join(' · ');
   }
 
   /// 页面展示时的补充提示信息。
@@ -95,7 +101,7 @@ class MedicineItem {
     if (dosageForm.isNotEmpty) {
       return dosageForm;
     }
-    return '药品';
+    return AppI18nText.pick(zh: '药品', en: 'Medicine');
   }
 }
 

@@ -7,6 +7,7 @@ import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/stores/locale_controller.dart';
 import 'package:luminous/stores/theme_controller.dart';
 import 'package:luminous/stores/user_controller.dart';
+import 'package:luminous/utils/app_i18n_text.dart';
 
 /// 设置总览页。
 ///
@@ -143,7 +144,7 @@ class ThemeSettingsPage extends StatelessWidget {
 
 /// 语言设置页。
 ///
-/// 当前先提供中文，英文先占位。
+/// 支持跟随系统、简体中文与英文三种语言偏好。
 class LanguageSettingsPage extends StatelessWidget {
   const LanguageSettingsPage({super.key});
 
@@ -724,13 +725,19 @@ class _DisplayPreferencesSection extends StatelessWidget {
                             ? (l10n.settingsThemeModeOptionDark)
                             : (l10n.settingsThemeModeOptionLight),
                       ) ??
-                      '当前跟随系统，系统正在使用${resolvedDark ? '深色' : '浅色'}外观')
+                      AppI18nText.pick(
+                        zh: '当前跟随系统，系统正在使用${resolvedDark ? '深色' : '浅色'}外观',
+                        en: 'Following system setting. The system is using ${resolvedDark ? 'dark' : 'light'} appearance.',
+                      ))
                 : (l10n?.settingsThemeModeCurrentFixed(
                         resolvedDark
                             ? (l10n.settingsThemeModeOptionDark)
                             : (l10n.settingsThemeModeOptionLight),
                       ) ??
-                      '当前固定为${resolvedDark ? '深色' : '浅色'}外观'),
+                      AppI18nText.pick(
+                        zh: '当前固定为${resolvedDark ? '深色' : '浅色'}外观',
+                        en: 'Fixed to ${resolvedDark ? 'dark' : 'light'} appearance.',
+                      )),
             style: TextStyle(
               color: scheme.onSurfaceVariant,
               fontWeight: FontWeight.w600,

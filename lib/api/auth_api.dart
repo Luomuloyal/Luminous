@@ -1,4 +1,5 @@
 import 'package:luminous/constants/constants.dart';
+import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/utils/dio_request.dart';
 import 'package:luminous/viewmodels/auth.dart';
 
@@ -83,7 +84,7 @@ class AuthApi {
         'password': password,
       },
       showLoading: true,
-      loadingText: '登录中...',
+      loadingText: AppI18nText.pick(zh: '登录中...', en: 'Signing in...'),
       decoder: (json) => LoginResult.fromJson(_asMap(json)),
     );
   }
@@ -103,7 +104,7 @@ class AuthApi {
         'code': code.trim(),
       },
       showLoading: true,
-      loadingText: '登录中...',
+      loadingText: AppI18nText.pick(zh: '登录中...', en: 'Signing in...'),
       decoder: (json) => LoginResult.fromJson(_asMap(json)),
     );
   }
@@ -130,7 +131,7 @@ class AuthApi {
         'password': password,
       },
       showLoading: true,
-      loadingText: '注册中...',
+      loadingText: AppI18nText.pick(zh: '注册中...', en: 'Registering...'),
       decoder: (json) => RegisterResult.fromJson(_asMap(json)),
     );
   }

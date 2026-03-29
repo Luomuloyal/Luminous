@@ -3,6 +3,7 @@ import 'package:luminous/api/reminder_api.dart';
 import 'package:luminous/stores/my_medicine_repository.dart';
 import 'package:luminous/stores/reminder_local_store.dart';
 import 'package:luminous/stores/user_controller.dart';
+import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/utils/message_utils.dart';
 import 'package:luminous/utils/notification_service.dart';
 import 'package:luminous/viewmodels/reminder.dart';
@@ -45,7 +46,9 @@ class SessionSyncService {
     try {
       await myMedicineRepository.syncRemote(userId);
     } catch (e) {
-      errors.add(_buildErrorText('我的药品', e));
+      errors.add(
+        _buildErrorText(AppI18nText.pick(zh: '我的药品', en: 'My Medicines'), e),
+      );
     }
 
     if (!_shouldApplySync(userId)) {
@@ -55,7 +58,12 @@ class SessionSyncService {
     try {
       await _syncReminders(userId);
     } catch (e) {
-      errors.add(_buildErrorText('用药提醒', e));
+      errors.add(
+        _buildErrorText(
+          AppI18nText.pick(zh: '用药提醒', en: 'Medication Reminders'),
+          e,
+        ),
+      );
     }
 
     if (!_shouldApplySync(userId)) {
@@ -87,7 +95,10 @@ class SessionSyncService {
   /// 生成同步失败提示文案。
   String _buildErrorText(String module, Object error) {
     final text = MessageUtils.extractError(error);
-    return '$module同步失败：$text';
+    return AppI18nText.pick(
+      zh: '$module同步失败：$text',
+      en: '$module sync failed: $text',
+    );
   }
 }
 

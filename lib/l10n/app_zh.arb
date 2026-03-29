@@ -199,6 +199,13 @@
   "reminderEditSectionDrugTime": "药品与时间",
   "reminderEditSelectMedicine": "选择药品",
   "reminderEditSelectMedicineHint": "可从“我的药品/搜索库”选择",
+  "reminderEditSelectedIdentity": "药品编码: {drugCode}  批准文号: {approvalNo}",
+  "@reminderEditSelectedIdentity": {
+    "placeholders": {
+      "drugCode": {},
+      "approvalNo": {}
+    }
+  },
   "reminderEditTimeTitle": "提醒时间: {time}",
   "@reminderEditTimeTitle": {
     "placeholders": {

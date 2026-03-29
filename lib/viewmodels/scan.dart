@@ -1,3 +1,5 @@
+import 'package:luminous/utils/app_i18n_text.dart';
+
 // 药品识别相关的数据模型。
 //
 // 该文件用于承载 `/medicine-scan` 接口返回的数据结构，并提供一些 UI 友好的展示字段。
@@ -56,8 +58,9 @@ class ScanCandidate {
       drugCode.trim().isNotEmpty || approvalNo.trim().isNotEmpty;
 
   /// 页面展示用的候选标题（优先使用产品名称）。
-  String get displayName =>
-      productName.trim().isEmpty ? '未知药品' : productName.trim();
+  String get displayName => productName.trim().isEmpty
+      ? AppI18nText.pick(zh: '未知药品', en: 'Unknown medicine')
+      : productName.trim();
 
   /// 页面展示用的候选副标题（剂型 + 规格）。
   String get displaySubtitle {
@@ -66,7 +69,9 @@ class ScanCandidate {
       if (dosageForm.trim().isNotEmpty) dosageForm.trim(),
       if (specification.trim().isNotEmpty) specification.trim(),
     ];
-    return parts.isEmpty ? '暂无规格信息' : parts.join(' · ');
+    return parts.isEmpty
+        ? AppI18nText.pick(zh: '暂无规格信息', en: 'No specification info')
+        : parts.join(' · ');
   }
 }
 

@@ -21,7 +21,7 @@ class MineProfileCard extends StatelessWidget {
     required this.user,
     required this.onTapProfile,
     required this.onTapAction,
-    this.loggedInActionLabel = '设置',
+    this.loggedInActionLabel,
   });
 
   /// 顶部横幅配色。
@@ -33,11 +33,11 @@ class MineProfileCard extends StatelessWidget {
   /// 点击头像/昵称区域回调。
   final VoidCallback onTapProfile;
 
-  /// 点击右侧按钮回调（登录时为“退出登录”，未登录时为“去登录”）。
+  /// 点击右侧按钮回调（登录态与未登录态由页面层自行定义跳转）。
   final VoidCallback onTapAction;
 
-  /// 登录后的右侧按钮文案。
-  final String loggedInActionLabel;
+  /// 登录后的右侧按钮文案（可选，未传时使用本地化默认文案）。
+  final String? loggedInActionLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +134,9 @@ class MineProfileCard extends StatelessWidget {
                       ),
                       child: Text(
                         isLoggedIn
-                            ? loggedInActionLabel
+                            ? (loggedInActionLabel ??
+                                  l10n?.mineLoggedInActionLabel ??
+                                  '设置')
                             : (l10n?.mineProfileLoginAction ?? '去登录'),
                       ),
                     ),

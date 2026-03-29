@@ -4,6 +4,7 @@ import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/l10n/app_localizations.dart';
+import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/medicine.dart';
 
@@ -11,7 +12,7 @@ import 'package:luminous/viewmodels/medicine.dart';
 //
 // 页面职责：
 // - 展示基础信息（来自 MySQL 查询）
-// - 预留 AI 详细信息 UI：点击“尝试获取更详细信息”调用后端 /medicine-ai-detail
+// - 按需获取 AI 详细信息：点击“获取更详细信息”调用后端 /medicine-ai-detail
 //
 // 设计注意：
 // - 详情与 AI 是两个请求：detail 用于补齐基础信息，ai-detail 用于后续扩展
@@ -484,7 +485,7 @@ class _AiCard extends StatelessWidget {
   /// AI 解读结果。
   final MedicineAiDetailResult? result;
 
-  /// 点击“尝试获取更详细信息”回调。
+  /// 点击“获取更详细信息”回调。
   final VoidCallback onFetch;
 
   /// 构建 AI 解读卡片 UI。
@@ -525,7 +526,7 @@ class _AiCard extends StatelessWidget {
       child: result == null || !result!.hasText
           ? Text(
               l10n?.medicineDetailAiPlaceholder ??
-                  '点击“尝试获取更详细信息”后，后端会调用 AI 模型补充数据库里未保存的说明书信息，例如成分、禁忌、注意事项等。',
+                  '点击“获取更详细信息”后，后端会调用 AI 模型补充数据库里未保存的说明书信息，例如成分、禁忌、注意事项等。',
               style: TextStyle(
                 fontSize: 13,
                 height: 1.55,
@@ -562,8 +563,10 @@ class _DisclaimerCard extends StatelessWidget {
       ornamentKey: 'medicine.disclaimer',
       child: Text(
         l10n?.medicineDetailSafetyDisclaimer ??
-            '本应用信息仅用于健康科普与辅助查询，不能替代医生诊断与处方。'
-                '如有不适或正在用药，请遵医嘱并咨询专业人士。',
+            AppI18nText.pick(
+              zh: '本应用信息仅用于健康科普与辅助查询，不能替代医生诊断与处方。如有不适或正在用药，请遵医嘱并咨询专业人士。',
+              en: 'This app provides health education and supportive lookup only, and does not replace diagnosis or prescriptions. If you feel unwell or are taking medication, follow medical advice and consult professionals.',
+            ),
         style: TextStyle(
           fontSize: 12.5,
           height: 1.55,

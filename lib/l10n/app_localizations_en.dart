@@ -537,6 +537,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose from My Medicines or Search Library';
 
   @override
+  String reminderEditSelectedIdentity(Object drugCode, Object approvalNo) {
+    return 'Drug Code: $drugCode  Approval No.: $approvalNo';
+  }
+
+  @override
   String reminderEditTimeTitle(Object time) {
     return 'Reminder Time: $time';
   }

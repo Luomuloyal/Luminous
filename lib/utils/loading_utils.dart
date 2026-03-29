@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:luminous/utils/app_i18n_text.dart';
 
 /// 全局 Loading 弹窗工具。
 ///
@@ -24,11 +25,15 @@ class LoadingUtils {
   /// 显示全局 Loading 弹窗。
   ///
   /// 如果已有 Loading 在显示，则只增加计数，不重复弹出。
-  static void show({String text = '加载中...'}) {
+  static void show({String? text}) {
     _loadingCount++;
     if (_isVisible) {
       return;
     }
+
+    final loadingText = (text == null || text.trim().isEmpty)
+        ? AppI18nText.pick(zh: '加载中...', en: 'Loading...')
+        : text;
 
     /// 当前根导航器上下文。
     final context = navigatorKey.currentContext;
@@ -75,7 +80,7 @@ class LoadingUtils {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    text,
+                    loadingText,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: scheme.onSurface,

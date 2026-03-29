@@ -11,6 +11,7 @@ import 'package:luminous/pages/Picker/medicine_picker.dart';
 import 'package:luminous/pages/Scan/medicine_scan.dart';
 import 'package:luminous/stores/today_reminder_local_store.dart';
 import 'package:luminous/stores/user_controller.dart';
+import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/utils/dio_request.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/home.dart';
@@ -22,7 +23,7 @@ typedef FetchTodayReminders =
 // 首页
 //
 // 设计要点：
-// - 顶部色块展示随机温馨提示（纯本地，每次启动应用随机一条）
+// - 顶部色块展示健康提示（默认本地兜底，并随语言切换自动更新）
 // - "常用功能"是本地静态入口（纯 UI）
 // - "今日提醒"来自后端接口 today-reminders
 // - 请求成功后覆盖当天快照，失败时回退到当天快照或首页兜底数据
@@ -52,36 +53,75 @@ class HomeView extends StatefulWidget {
 /// - 中部固定功能入口；
 /// - 底部今日提醒及其本地/远端回退逻辑。
 class _HomeViewState extends State<HomeView> {
-  static const List<String> _defaultHealthTips = [
-    '按时服药，别漏别补',
-    '饭前饭后按说明来',
-    '合并用药先问药师',
-    '漏服勿加倍，咨询放在先',
-    '出现不适，及时就医',
-    '抗生素按疗程，不要擅停',
-    '药品避光防潮，远离高温',
-    '定期清理过期药品',
-    '用药前看禁忌与相互作用',
-    '规律作息，药效更稳',
+  List<String> get _defaultHealthTips => [
+    AppI18nText.pick(
+      zh: '按时服药，别漏别补',
+      en: 'Take your medicine on time; do not miss or double doses.',
+    ),
+    AppI18nText.pick(
+      zh: '饭前饭后按说明来',
+      en: 'Follow instructions on taking medicine before or after meals.',
+    ),
+    AppI18nText.pick(
+      zh: '合并用药先问药师',
+      en: 'Ask a pharmacist before combining medicines.',
+    ),
+    AppI18nText.pick(
+      zh: '漏服勿加倍，咨询放在先',
+      en: 'Do not double-dose after a missed dose. Consult first.',
+    ),
+    AppI18nText.pick(
+      zh: '出现不适，及时就医',
+      en: 'Seek medical attention promptly if you feel unwell.',
+    ),
+    AppI18nText.pick(
+      zh: '抗生素按疗程，不要擅停',
+      en: 'Complete the full antibiotic course; do not stop early.',
+    ),
+    AppI18nText.pick(
+      zh: '药品避光防潮，远离高温',
+      en: 'Store medicines away from light, moisture, and heat.',
+    ),
+    AppI18nText.pick(
+      zh: '定期清理过期药品',
+      en: 'Clear out expired medicines regularly.',
+    ),
+    AppI18nText.pick(
+      zh: '用药前看禁忌与相互作用',
+      en: 'Check contraindications and interactions before use.',
+    ),
+    AppI18nText.pick(
+      zh: '规律作息，药效更稳',
+      en: 'Keep a regular routine for more stable treatment outcomes.',
+    ),
   ];
 
-  static const List<HomeReminderItemData> _defaultFallbackReminders = [
+  List<HomeReminderItemData> _defaultFallbackReminders() => [
     HomeReminderItemData(
       icon: Icons.access_time_rounded,
-      title: '08:30 维生素D',
-      subtitle: '早餐后服用 1 粒',
+      title: AppI18nText.pick(zh: '08:30 维生素D', en: '08:30 Vitamin D'),
+      subtitle: AppI18nText.pick(
+        zh: '早餐后服用 1 粒',
+        en: 'Take 1 capsule after breakfast',
+      ),
       done: true,
     ),
     HomeReminderItemData(
       icon: Icons.access_time_rounded,
-      title: '19:30 阿莫西林',
-      subtitle: '晚餐后服用 1 粒',
+      title: AppI18nText.pick(zh: '19:30 阿莫西林', en: '19:30 Amoxicillin'),
+      subtitle: AppI18nText.pick(
+        zh: '晚餐后服用 1 粒',
+        en: 'Take 1 capsule after dinner',
+      ),
       done: false,
     ),
     HomeReminderItemData(
       icon: Icons.access_time_rounded,
-      title: '22:00 血压记录',
-      subtitle: '睡前记录并上传',
+      title: AppI18nText.pick(zh: '22:00 血压记录', en: '22:00 Blood pressure log'),
+      subtitle: AppI18nText.pick(
+        zh: '睡前记录并上传',
+        en: 'Record and upload before bedtime',
+      ),
       done: false,
     ),
   ];
@@ -132,7 +172,7 @@ class _HomeViewState extends State<HomeView> {
     AppLocalizations? l10n,
   ) {
     if (l10n == null) {
-      return _defaultFallbackReminders;
+      return _defaultFallbackReminders();
     }
 
     return [
@@ -241,7 +281,7 @@ class _HomeViewState extends State<HomeView> {
     super.initState();
     final tips = _healthTipsFor(null);
     final startupTip = tips.isEmpty
-        ? '按时服药，别漏别补'
+        ? _defaultHealthTips.first
         : tips[Random().nextInt(tips.length)];
     _todayTipNotifier = ValueNotifier<String>(startupTip);
     _reminders = _buildFallbackRemindersFor(null);
@@ -330,7 +370,7 @@ class _HomeViewState extends State<HomeView> {
     final nextText = next == null
         ? (l10n?.homeNoReminder ?? '暂无提醒')
         : (l10n?.homeNextReminderPrefix(next.title, next.subtitle) ??
-              '下一次提醒: ${next.title} · ${next.subtitle}');
+              '${next.title} · ${next.subtitle}');
 
     return SafeArea(
       child: RefreshIndicator(

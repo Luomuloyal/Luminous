@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/l10n/app_localizations.dart';
+import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/viewmodels/album.dart';
 
 /// 相册页（Album）的大块 UI 组件集合。
@@ -226,7 +227,10 @@ class AlbumHeaderSliver extends StatelessWidget {
                           : (l10n?.albumHeaderChipOriginalCount(
                                   originalCount,
                                 ) ??
-                                '原图 $originalCount 条'),
+                                AppI18nText.pick(
+                                  zh: '原图 $originalCount 条',
+                                  en: '$originalCount originals',
+                                )),
                       backgroundColor: theme.surfaceColor,
                       foregroundColor: theme.surfaceTextColor,
                     ),
@@ -970,7 +974,10 @@ class AlbumPreviewPage extends StatelessWidget {
                               l10n?.albumPreviewTagRecordedAt(
                                 _formatAlbumDate(entry.takenAt),
                               ) ??
-                              '记录于 ${_formatAlbumDate(entry.takenAt)}',
+                              AppI18nText.pick(
+                                zh: '记录于 ${_formatAlbumDate(entry.takenAt)}',
+                                en: 'Recorded at ${_formatAlbumDate(entry.takenAt)}',
+                              ),
                           backgroundColor: themeChipColor(
                             context,
                             scheme.primary,

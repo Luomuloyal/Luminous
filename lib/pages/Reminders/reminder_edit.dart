@@ -73,6 +73,17 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
 
   AppLocalizations? get _l10n => AppLocalizations.of(context);
 
+  /// 生成已选药品身份信息的副标题文本。
+  ///
+  /// 当选中了药品后，优先展示本地化标签（药品编码/批准文号），
+  /// 便于用户确认当前提醒绑定的是哪条药品记录。
+  String _buildSelectedIdentitySubtitle(AppLocalizations? l10n) {
+    final drugCode = _drugCode.trim().isEmpty ? '-' : _drugCode.trim();
+    final approvalNo = _approvalNo.trim().isEmpty ? '-' : _approvalNo.trim();
+    return l10n?.reminderEditSelectedIdentity(drugCode, approvalNo) ??
+        'Drug Code: $drugCode  Approval No.: $approvalNo';
+  }
+
   /// 当前登录用户 id（未登录时为空字符串）。
   String get _userId => _userController.user.value?.id ?? '';
 
@@ -135,7 +146,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
                   subtitle:
                       _drugCode.trim().isNotEmpty ||
                           _approvalNo.trim().isNotEmpty
-                      ? 'drugCode: ${_drugCode.isEmpty ? '-' : _drugCode}  approvalNo: ${_approvalNo.isEmpty ? '-' : _approvalNo}'
+                      ? _buildSelectedIdentitySubtitle(l10n)
                       : (l10n?.reminderEditSelectMedicineHint ??
                             '可从“我的药品/搜索库”选择'),
                   onTap: _pickMedicine,

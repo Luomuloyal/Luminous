@@ -1,3 +1,5 @@
+import 'package:luminous/utils/app_i18n_text.dart';
+
 /// 用药提醒计划对象。
 ///
 /// 该对象既用于：
@@ -90,7 +92,9 @@ class ReminderPlan {
   /// 例如：`08:30 维生素D`。
   String get displayTitle {
     final t = time.trim();
-    final n = productName.trim().isEmpty ? '未知药品' : productName.trim();
+    final n = productName.trim().isEmpty
+        ? AppI18nText.pick(zh: '未知药品', en: 'Unknown medicine')
+        : productName.trim();
     return t.isEmpty ? n : '$t $n';
   }
 }

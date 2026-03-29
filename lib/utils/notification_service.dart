@@ -5,6 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/viewmodels/reminder.dart';
 
 /// 统一封装本地通知能力的服务类。
@@ -42,12 +43,16 @@ class NotificationService {
   /// Android 通知渠道名称。
   ///
   /// 这是展示给用户看的渠道名。
-  static const String _channelName = '用药提醒';
+  static String get _channelName =>
+      AppI18nText.pick(zh: '用药提醒', en: 'Medication Reminder');
 
   /// Android 通知渠道描述。
   ///
   /// 这是展示在系统通知设置页中的说明文字。
-  static const String _channelDescription = '按计划提醒你按时用药';
+  static String get _channelDescription => AppI18nText.pick(
+    zh: '按计划提醒你按时用药',
+    en: 'Remind you to take medicine on schedule',
+  );
 
   /// 初始化通知服务。
   ///
@@ -92,7 +97,7 @@ class NotificationService {
 
     // 提前创建通知渠道，避免某些 Android 设备在首次调度时漏通知。
     /// Android 平台的用药提醒渠道定义。
-    const androidChannel = AndroidNotificationChannel(
+    final androidChannel = AndroidNotificationChannel(
       _channelId,
       _channelName,
       description: _channelDescription,
@@ -165,20 +170,25 @@ class NotificationService {
       ///
       /// 优先显示药品名称，没有药品名称时回退为通用标题。
       final title = r.productName.trim().isEmpty
-          ? '用药提醒'
+          ? AppI18nText.pick(zh: '用药提醒', en: 'Medication Reminder')
           : r.productName.trim();
 
       /// 通知正文。
       ///
       /// 优先显示提醒副标题，没有副标题时回退为通用提示语。
-      final body = r.subtitle.trim().isEmpty ? '请按时用药' : r.subtitle.trim();
+      final body = r.subtitle.trim().isEmpty
+          ? AppI18nText.pick(
+              zh: '请按时用药',
+              en: 'Please take your medicine on time',
+            )
+          : r.subtitle.trim();
 
       await _plugin.zonedSchedule(
         notificationId,
         title,
         body,
         scheduled,
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             _channelId,
             _channelName,

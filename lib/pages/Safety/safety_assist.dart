@@ -58,6 +58,90 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
 
   AppLocalizations? get _l10n => AppLocalizations.of(context);
 
+  String _safetyTitle(AppLocalizations? l10n) {
+    return l10n?.safetyTitle ?? 'Safety Assist';
+  }
+
+  String _heroSubtitle(AppLocalizations? l10n) {
+    return l10n?.safetyHeroSubtitle ??
+        'Organize single-medicine guidance and two-medicine interaction alerts in a gentler way';
+  }
+
+  String _modeSingleText(AppLocalizations? l10n) {
+    return l10n?.safetyModeSingle ?? 'Single-medicine guidance';
+  }
+
+  String _modePairText(AppLocalizations? l10n) {
+    return l10n?.safetyModePair ?? 'Two-medicine interaction';
+  }
+
+  String _selectedWaitingText(AppLocalizations? l10n) {
+    return l10n?.safetySelectedWaiting ?? 'Waiting for medicine selection';
+  }
+
+  String _selectedCountText(AppLocalizations? l10n, int count) {
+    return l10n?.safetySelectedCount(count) ?? '$count medicines selected';
+  }
+
+  String _cloudWithContextText(AppLocalizations? l10n) {
+    return l10n?.safetyCloudWithContext ?? 'Can include account context';
+  }
+
+  String _cloudQueryText(AppLocalizations? l10n) {
+    return l10n?.safetyCloudQuery ?? 'Cloud AI query';
+  }
+
+  String _pickSubtitleText(AppLocalizations? l10n) {
+    return l10n?.safetyPickSubtitle ??
+        'Select from My Medicines or search library';
+  }
+
+  String _pickPlaceholderText(AppLocalizations? l10n, int slot) {
+    if (slot == 0) {
+      return l10n?.safetyPickPlaceholderA ?? 'Please select Medicine A';
+    }
+    return l10n?.safetyPickPlaceholderB ?? 'Please select Medicine B';
+  }
+
+  String _pickBadgeText(AppLocalizations? l10n, int slot) {
+    if (slot == 0) {
+      return l10n?.safetyPickBadgeA ?? 'Medicine A';
+    }
+    return l10n?.safetyPickBadgeB ?? 'Medicine B';
+  }
+
+  String _actionQueryText(AppLocalizations? l10n) {
+    if (_mode == 'pair') {
+      return l10n?.safetyActionQueryPair ?? 'Check Two-medicine Interaction';
+    }
+    return l10n?.safetyActionQuerySingle ?? 'Check Medication Advice';
+  }
+
+  String _resultPlaceholderText(AppLocalizations? l10n) {
+    return l10n?.safetyResultPlaceholder ??
+        'After selecting medicines, tap "Start Query" and the backend will call AI to return medication advice or interaction alerts.';
+  }
+
+  String _pickerTitleText(AppLocalizations? l10n, int slot) {
+    if (slot == 0) {
+      return l10n?.safetyPickerTitleA ?? 'Select Medicine A';
+    }
+    return l10n?.safetyPickerTitleB ?? 'Select Medicine B';
+  }
+
+  String _toastSelectMedicineText(AppLocalizations? l10n) {
+    return l10n?.safetyToastSelectMedicine ?? 'Please select a medicine first';
+  }
+
+  String _toastSelectSecondMedicineText(AppLocalizations? l10n) {
+    return l10n?.safetyToastSelectSecondMedicine ??
+        'Please select one more medicine';
+  }
+
+  String _toastAiNoContentText(AppLocalizations? l10n) {
+    return l10n?.safetyToastAiNoContent ?? 'AI returned no content';
+  }
+
   /// 构建安全辅助页 UI。
   @override
   Widget build(BuildContext context) {
@@ -70,7 +154,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
     )!;
     return AppCanvasPageScaffold(
       appBar: AppBar(
-        title: Text(l10n?.safetyTitle ?? '安全辅助'),
+        title: Text(_safetyTitle(l10n)),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -138,7 +222,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        l10n?.safetyTitle ?? '安全辅助',
+                        _safetyTitle(l10n),
                         style: TextStyle(
                           color: theme.textColor,
                           fontSize: 18.5,
@@ -147,7 +231,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        l10n?.safetyHeroSubtitle ?? '用更柔和的方式整理单药建议和两药相互作用提示',
+                        _heroSubtitle(l10n),
                         style: TextStyle(
                           color: theme.secondaryTextColor,
                           fontSize: 13,
@@ -169,8 +253,8 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
                         ? Icons.compare_arrows_rounded
                         : Icons.auto_awesome_rounded,
                     text: _mode == 'pair'
-                        ? (l10n?.safetyModePair ?? '两药相互作用')
-                        : (l10n?.safetyModeSingle ?? '单药建议'),
+                        ? _modePairText(l10n)
+                        : _modeSingleText(l10n),
                     backgroundColor: theme.surfaceColor,
                     foregroundColor: theme.surfaceTextColor,
                   ),
@@ -180,9 +264,8 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
                   child: _SafetyInfoChip(
                     icon: Icons.medication_outlined,
                     text: selectedCount == 0
-                        ? (l10n?.safetySelectedWaiting ?? '等待选择药品')
-                        : (l10n?.safetySelectedCount(selectedCount) ??
-                              '已选择 $selectedCount 个药品'),
+                        ? _selectedWaitingText(l10n)
+                        : _selectedCountText(l10n, selectedCount),
                     backgroundColor: theme.surfaceColor,
                     foregroundColor: theme.surfaceTextColor,
                   ),
@@ -194,8 +277,8 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
                         ? Icons.cloud_done_rounded
                         : Icons.cloud_outlined,
                     text: loggedIn
-                        ? (l10n?.safetyCloudWithContext ?? '可附带账号上下文')
-                        : (l10n?.safetyCloudQuery ?? '云端AI查询'),
+                        ? _cloudWithContextText(l10n)
+                        : _cloudQueryText(l10n),
                     backgroundColor: theme.surfaceColor,
                     foregroundColor: theme.surfaceTextColor,
                   ),
@@ -213,7 +296,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
     final l10n = _l10n;
     final scheme = Theme.of(context).colorScheme;
     return _SectionCard(
-      title: l10n?.safetyModeCardTitle ?? '查询模式',
+      title: l10n?.safetyModeCardTitle ?? 'Query Mode',
       accentColor: scheme.secondary,
       secondaryColor: scheme.tertiary,
       ornamentKey: 'safety.mode',
@@ -221,7 +304,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
         accentColor: scheme.secondary,
         items: [
           AuthMethodItem(
-            label: l10n?.safetyModeSingle ?? '单药建议',
+            label: _modeSingleText(l10n),
             selected: _mode == 'single',
             onTap: () => setState(() {
               _mode = 'single';
@@ -230,7 +313,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
             }),
           ),
           AuthMethodItem(
-            label: l10n?.safetyModePair ?? '两药相互作用',
+            label: _modePairText(l10n),
             selected: _mode == 'pair',
             onTap: () => setState(() {
               _mode = 'pair';
@@ -249,35 +332,28 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
     final tileAColor = scheme.primary;
     final tileBColor = Color.lerp(scheme.secondary, scheme.tertiary, 0.35)!;
     return _SectionCard(
-      title: l10n?.safetyPickCardTitle ?? '选择药品',
+      title: l10n?.safetyPickCardTitle ?? 'Select Medicines',
       accentColor: scheme.primary,
       secondaryColor: scheme.secondary,
       ornamentKey: 'safety.pick',
       child: Column(
         children: [
           _pickTile(
-            label:
-                _a?.displayName ?? (l10n?.safetyPickPlaceholderA ?? '请选择药品 A'),
-            subtitle:
-                _a?.displaySubtitle ??
-                (l10n?.safetyPickSubtitle ?? '从我的药品/搜索库选择'),
+            label: _a?.displayName ?? _pickPlaceholderText(l10n, 0),
+            subtitle: _a?.displaySubtitle ?? _pickSubtitleText(l10n),
             color: tileAColor,
             onTap: () => _pickMedicine(slot: 0),
-            badge: l10n?.safetyPickBadgeA ?? '药品 A',
+            badge: _pickBadgeText(l10n, 0),
             note: _a?.displayTips,
           ),
           if (_mode == 'pair') ...[
             const SizedBox(height: 10),
             _pickTile(
-              label:
-                  _b?.displayName ??
-                  (l10n?.safetyPickPlaceholderB ?? '请选择药品 B'),
-              subtitle:
-                  _b?.displaySubtitle ??
-                  (l10n?.safetyPickSubtitle ?? '从我的药品/搜索库选择'),
+              label: _b?.displayName ?? _pickPlaceholderText(l10n, 1),
+              subtitle: _b?.displaySubtitle ?? _pickSubtitleText(l10n),
               color: tileBColor,
               onTap: () => _pickMedicine(slot: 1),
-              badge: l10n?.safetyPickBadgeB ?? '药品 B',
+              badge: _pickBadgeText(l10n, 1),
               note: _b?.displayTips,
             ),
           ],
@@ -416,7 +492,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
     final ready = _a != null && (_mode == 'single' || _b != null);
     final scheme = Theme.of(context).colorScheme;
     return _SectionCard(
-      title: l10n?.safetyActionCardTitle ?? '开始查询',
+      title: l10n?.safetyActionCardTitle ?? 'Start Query',
       accentColor: scheme.tertiary,
       secondaryColor: scheme.primary,
       ornamentKey: 'safety.action',
@@ -439,11 +515,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
                     color: scheme.onPrimary,
                   ),
                 )
-              : Text(
-                  _mode == 'pair'
-                      ? (l10n?.safetyActionQueryPair ?? '查询两药相互作用')
-                      : (l10n?.safetyActionQuerySingle ?? '查询用药建议'),
-                ),
+              : Text(_actionQueryText(l10n)),
         ),
       ),
     );
@@ -455,14 +527,13 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return _SectionCard(
-      title: l10n?.safetyResultCardTitle ?? 'AI 结果',
+      title: l10n?.safetyResultCardTitle ?? 'AI Result',
       accentColor: Color.lerp(scheme.secondary, scheme.primary, 0.5)!,
       secondaryColor: scheme.tertiary,
       ornamentKey: 'safety.result',
       child: _result == null || !_result!.hasText
           ? Text(
-              l10n?.safetyResultPlaceholder ??
-                  '选择药品后点击“开始查询”，后端会调用 AI 模型返回用药建议或相互作用提示。',
+              _resultPlaceholderText(l10n),
               style: TextStyle(
                 fontSize: 13,
                 height: 1.55,
@@ -490,11 +561,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
     final l10n = _l10n;
     final item = await Navigator.of(context).push<MedicineItem>(
       MaterialPageRoute<MedicineItem>(
-        builder: (_) => MedicinePickerPage(
-          title: slot == 0
-              ? (l10n?.safetyPickerTitleA ?? '选择药品 A')
-              : (l10n?.safetyPickerTitleB ?? '选择药品 B'),
-        ),
+        builder: (_) => MedicinePickerPage(title: _pickerTitleText(l10n, slot)),
       ),
     );
     if (!mounted) return;
@@ -521,17 +588,11 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
     /// 当前选择的药品 B（两药模式才需要）。
     final b = _b;
     if (a == null) {
-      ToastUtils.instance.show(
-        context,
-        l10n?.safetyToastSelectMedicine ?? '请先选择药品',
-      );
+      ToastUtils.instance.show(context, _toastSelectMedicineText(l10n));
       return;
     }
     if (_mode == 'pair' && b == null) {
-      ToastUtils.instance.show(
-        context,
-        l10n?.safetyToastSelectSecondMedicine ?? '请再选择一个药品',
-      );
+      ToastUtils.instance.show(context, _toastSelectSecondMedicineText(l10n));
       return;
     }
 
@@ -561,10 +622,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
       if (!mounted) return;
       setState(() => _result = response.result);
       if (!_result!.hasText) {
-        ToastUtils.instance.show(
-          context,
-          l10n?.safetyToastAiNoContent ?? 'AI暂无返回内容',
-        );
+        ToastUtils.instance.show(context, _toastAiNoContentText(l10n));
       }
     } catch (e) {
       if (!mounted) return;
@@ -646,14 +704,15 @@ class _DisclaimerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return _SectionCard(
-      title: l10n?.safetyDisclaimerTitle ?? '安全提示',
+      title: l10n?.safetyDisclaimerTitle ?? 'Safety Notice',
       accentColor: Theme.of(context).colorScheme.tertiary,
       secondaryColor: Theme.of(context).colorScheme.secondary,
       ornamentKey: 'safety.disclaimer',
       child: Text(
         l10n?.safetyDisclaimerText ??
-            '本功能基于 AI 生成内容，仅用于健康科普与辅助查询，不能替代医生诊断与处方。'
-                '如有不适或正在用药，请遵医嘱并咨询专业人士。',
+            'This feature uses AI-generated content for health education and reference only, '
+                'and cannot replace a doctor\'s diagnosis or prescription. '
+                'If you feel unwell or are taking medication, follow medical advice and consult professionals.',
         style: TextStyle(
           fontSize: 12.5,
           height: 1.55,

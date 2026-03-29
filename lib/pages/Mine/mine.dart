@@ -120,7 +120,7 @@ class _MineViewState extends State<MineView> {
           user: _userController.user.value,
           onTapProfile: _onTapProfile,
           onTapAction: _onTapAction,
-          loggedInActionLabel: l10n?.mineLoggedInActionLabel ?? '设置',
+          loggedInActionLabel: l10n?.mineLoggedInActionLabel,
         ),
       ),
       quickActions: _quickActions,

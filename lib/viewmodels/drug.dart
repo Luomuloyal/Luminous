@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/responsive_quick_grid.dart';
 import 'package:luminous/l10n/app_localizations.dart';
+import 'package:luminous/utils/app_i18n_text.dart';
 
 /// 药品页（Drug）相关的数据结构与小组件。
 ///
@@ -65,11 +66,22 @@ class DrugMedicineCardViewModel {
   /// - 创建日期格式化。
   factory DrugMedicineCardViewModel.fromRow(
     Map<String, dynamic> row, {
-    String unknownProductName = '未知药品',
-    String approvalNoLabel = '批准文号',
-    String sourceScanLabel = '拍照识别',
-    String sourceManualSearchLabel = '手动搜索',
+    String? unknownProductName,
+    String? approvalNoLabel,
+    String? sourceScanLabel,
+    String? sourceManualSearchLabel,
   }) {
+    final unknownName =
+        unknownProductName ??
+        AppI18nText.pick(zh: '未知药品', en: 'Unknown medicine');
+    final approvalLabel =
+        approvalNoLabel ?? AppI18nText.pick(zh: '批准文号', en: 'Approval No.');
+    final scanLabel =
+        sourceScanLabel ?? AppI18nText.pick(zh: '拍照识别', en: 'Photo scan');
+    final manualLabel =
+        sourceManualSearchLabel ??
+        AppI18nText.pick(zh: '手动搜索', en: 'Manual search');
+
     // 剂型字段。
     final dosageForm = (row['dosageForm'] ?? '').toString();
     // 规格字段。
@@ -92,16 +104,16 @@ class DrugMedicineCardViewModel {
     // 元信息组成：生产单位 + 批准文号。
     final metaParts = <String>[
       if (manufacturer.isNotEmpty) manufacturer,
-      if (approvalNo.isNotEmpty) '$approvalNoLabel: $approvalNo',
+      if (approvalNo.isNotEmpty) '$approvalLabel: $approvalNo',
     ];
 
     return DrugMedicineCardViewModel(
-      productName: (row['productName'] ?? unknownProductName).toString(),
+      productName: (row['productName'] ?? unknownName).toString(),
       subtitle: subtitleParts.join(' · '),
       metaText: metaParts.join('  '),
       sourceLabel: source.isEmpty
           ? ''
-          : (source == 'scan' ? sourceScanLabel : sourceManualSearchLabel),
+          : (source == 'scan' ? scanLabel : manualLabel),
       sourceColor: source == 'scan'
           ? const Color(0xFF10B981)
           : const Color(0xFF0EA5E9),

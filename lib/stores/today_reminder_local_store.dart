@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:luminous/stores/app_database.dart';
+import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/viewmodels/home.dart';
 import 'package:luminous/viewmodels/reminder.dart';
 import 'package:sqflite/sqflite.dart';
@@ -301,7 +302,9 @@ class TodayReminderLocalStore implements TodayReminderStore {
           (item) => ReminderItem(
             id: item.id,
             time: item.time,
-            title: item.title.trim().isEmpty ? '用药提醒' : item.title.trim(),
+            title: item.title.trim().isEmpty
+                ? AppI18nText.pick(zh: '用药提醒', en: 'Medication Reminder')
+                : item.title.trim(),
             subtitle: item.subtitle,
             done: resolveDoneState(
               remoteId: item.id,
@@ -325,7 +328,7 @@ class TodayReminderLocalStore implements TodayReminderStore {
             id: plan.id.trim(),
             time: plan.time.trim(),
             title: plan.productName.trim().isEmpty
-                ? '用药提醒'
+                ? AppI18nText.pick(zh: '用药提醒', en: 'Medication Reminder')
                 : plan.productName.trim(),
             subtitle: plan.subtitle.trim(),
             done: false,
@@ -373,7 +376,9 @@ class TodayReminderLocalStore implements TodayReminderStore {
           return ReminderItem(
             id: remoteId,
             time: time,
-            title: title.isEmpty ? '用药提醒' : title,
+            title: title.isEmpty
+                ? AppI18nText.pick(zh: '用药提醒', en: 'Medication Reminder')
+                : title,
             subtitle: subtitle,
             done: (row['serverDone'] as int? ?? 0) == 1,
           );

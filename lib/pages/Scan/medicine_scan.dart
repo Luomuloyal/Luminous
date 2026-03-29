@@ -210,6 +210,99 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
 
   AppLocalizations? get _l10n => AppLocalizations.of(context);
 
+  String _pageTitle(AppLocalizations? l10n) {
+    if (widget.mode == ScanEntryMode.actions) {
+      return l10n?.scanPageTitleActions ?? 'Medicine Scan';
+    }
+    return l10n?.scanPageTitleResult ?? 'Scan Result';
+  }
+
+  String _headerSubtitle(AppLocalizations? l10n) {
+    if (_scanning) {
+      return l10n?.scanHeaderSubtitleScanning ?? 'Scanning, please wait...';
+    }
+    if (_scanResult == null) {
+      return l10n?.scanHeaderSubtitleNoResult ??
+          'Upload an image and the vision model will identify medicine information';
+    }
+    final count = _scanResult!.candidates.length;
+    return l10n?.scanHeaderSubtitleResultCount(count) ??
+        '$count candidates identified';
+  }
+
+  String _approvalNoText(AppLocalizations? l10n, String approvalNo) {
+    return l10n?.scanApprovalNoPrefix(approvalNo) ??
+        'Approval No.: $approvalNo';
+  }
+
+  String _infoNoResultText(AppLocalizations? l10n) {
+    return l10n?.scanInfoNoResult ??
+        'Choose a medicine package image and the backend will send it to the vision model for recognition.\n'
+            'If multiple candidates are found, select the closest one first before taking further actions.';
+  }
+
+  String _infoNoCandidateText(AppLocalizations? l10n) {
+    return l10n?.scanInfoNoCandidate ??
+        'No valid result identified. Please try again with a clearer image.';
+  }
+
+  String _resultSectionTitle(AppLocalizations? l10n) {
+    return l10n?.scanResultSectionTitle ?? 'Recognition Results';
+  }
+
+  String _actionRescanLabel(AppLocalizations? l10n) {
+    return l10n?.scanActionRescanLabel ?? 'Scan Again';
+  }
+
+  String _actionRescanSubtitle(AppLocalizations? l10n) {
+    return l10n?.scanActionRescanSubtitle ?? 'Retake or choose another image';
+  }
+
+  String _actionSaveAlbumLabel(AppLocalizations? l10n) {
+    return l10n?.scanActionSaveAlbumLabel ?? 'Add to Album';
+  }
+
+  String _actionSaveAlbumSubtitle(AppLocalizations? l10n) {
+    if (_savingToAlbum) {
+      return l10n?.scanActionSaveAlbumSavingSubtitle ?? 'Saving...';
+    }
+    return l10n?.scanActionSaveAlbumSubtitle ?? 'Save to in-app album list';
+  }
+
+  String _actionSearchLabel(AppLocalizations? l10n) {
+    return l10n?.scanActionSearchLabel ?? 'Search This Medicine';
+  }
+
+  String _actionSearchSubtitle(AppLocalizations? l10n, bool hasKeyword) {
+    if (!hasKeyword) {
+      return l10n?.scanActionSearchNoKeywordSubtitle ??
+          'Selected candidate has no searchable fields';
+    }
+    return l10n?.scanActionSearchSubtitle ??
+        'Open Search page and query automatically';
+  }
+
+  String _actionCancelLabel(AppLocalizations? l10n) {
+    return l10n?.scanActionCancelLabel ?? 'Cancel';
+  }
+
+  String _actionCancelSubtitle(AppLocalizations? l10n) {
+    return l10n?.scanActionCancelSubtitle ?? 'Close current recognition page';
+  }
+
+  String _savedToastText(AppLocalizations? l10n) {
+    return l10n?.scanSavedToAlbumToast ?? 'Added to in-app album';
+  }
+
+  String _saveFailedToastText(AppLocalizations? l10n) {
+    return l10n?.scanSaveToAlbumFailedToast ?? 'Failed to add to album';
+  }
+
+  String _searchMissingKeywordToastText(AppLocalizations? l10n) {
+    return l10n?.scanSearchMissingKeywordToast ??
+        'Selected candidate has no searchable fields';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -262,11 +355,7 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        title: Text(
-          widget.mode == ScanEntryMode.actions
-              ? (l10n?.scanPageTitleActions ?? '药物识别')
-              : (l10n?.scanPageTitleResult ?? '识别结果'),
-        ),
+        title: Text(_pageTitle(l10n)),
         centerTitle: true,
       ),
       body: LayoutBuilder(
@@ -340,7 +429,7 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  l10n?.scanPhotoPlaceholderTitle ?? '准备识别药物',
+                  l10n?.scanPhotoPlaceholderTitle ?? 'Ready to scan medicine',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 14,
@@ -400,17 +489,8 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
   Widget _buildHeaderRow() {
     final l10n = _l10n;
     final scheme = Theme.of(context).colorScheme;
-    final title = widget.mode == ScanEntryMode.actions
-        ? (l10n?.scanPageTitleActions ?? '药物识别')
-        : (l10n?.scanPageTitleResult ?? '识别结果');
-    final subtitle = _scanning
-        ? (l10n?.scanHeaderSubtitleScanning ?? '识别中，请稍等...')
-        : _scanResult == null
-        ? (l10n?.scanHeaderSubtitleNoResult ?? '选择图片后上传，由豆包视觉模型识别药物信息')
-        : (l10n?.scanHeaderSubtitleResultCount(
-                _scanResult!.candidates.length,
-              ) ??
-              '共识别 ${_scanResult!.candidates.length} 个候选结果');
+    final title = _pageTitle(l10n);
+    final subtitle = _headerSubtitle(l10n);
 
     return Row(
       children: [
@@ -459,7 +539,7 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
         FilledButton.tonalIcon(
           onPressed: _scanning ? null : _pickAndScan,
           icon: const Icon(Icons.camera_alt_rounded, size: 16),
-          label: Text(l10n?.scanRetakeAction ?? '重拍'),
+          label: Text(l10n?.scanRetakeAction ?? 'Retake'),
         ),
       ],
     );
@@ -530,17 +610,11 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
       );
     }
     if (result == null) {
-      return _buildInfoCard(
-        l10n?.scanInfoNoResult ??
-            '选一张药盒或药品包装图片，后端会把图片交给豆包视觉模型做识别。\n'
-                '如识别到多个候选，你可以先在列表里选择更接近的一项，再执行后续动作。',
-      );
+      return _buildInfoCard(_infoNoResultText(l10n));
     }
 
     if (result.candidates.isEmpty) {
-      return _buildInfoCard(
-        l10n?.scanInfoNoCandidate ?? '未识别到有效结果，请尝试重新选择更清晰的图片。',
-      );
+      return _buildInfoCard(_infoNoCandidateText(l10n));
     }
 
     return AppSurfaceCard(
@@ -551,7 +625,7 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              l10n?.scanResultSectionTitle ?? '识别结果',
+              _resultSectionTitle(l10n),
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w800,
@@ -628,10 +702,7 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
                                 c.manufacturer.trim().isEmpty
                                     ? (c.approvalNo.trim().isEmpty
                                           ? ''
-                                          : (l10n?.scanApprovalNoPrefix(
-                                                  c.approvalNo,
-                                                ) ??
-                                                '批准文号: ${c.approvalNo}'))
+                                          : _approvalNoText(l10n, c.approvalNo))
                                     : c.manufacturer,
                                 style: TextStyle(
                                   fontSize: 11.5,
@@ -709,36 +780,32 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
         _ActionTile(
           icon: Icons.refresh_rounded,
           color: const Color(0xFF0EA5E9),
-          label: l10n?.scanActionRescanLabel ?? '再次识别',
-          subtitle: l10n?.scanActionRescanSubtitle ?? '重新选择拍摄或相册图片',
+          label: _actionRescanLabel(l10n),
+          subtitle: _actionRescanSubtitle(l10n),
           onTap: _scanning ? null : _pickAndScan,
         ),
         const SizedBox(height: 10),
         _ActionTile(
           icon: Icons.photo_library_outlined,
           color: const Color(0xFF6366F1),
-          label: l10n?.scanActionSaveAlbumLabel ?? '添加到相册',
-          subtitle: _savingToAlbum
-              ? (l10n?.scanActionSaveAlbumSavingSubtitle ?? '写入中...')
-              : (l10n?.scanActionSaveAlbumSubtitle ?? '保存到软件相册列表'),
+          label: _actionSaveAlbumLabel(l10n),
+          subtitle: _actionSaveAlbumSubtitle(l10n),
           onTap: hasResult && !_savingToAlbum ? _saveToAppAlbum : null,
         ),
         const SizedBox(height: 10),
         _ActionTile(
           icon: Icons.search_rounded,
           color: const Color(0xFF10B981),
-          label: l10n?.scanActionSearchLabel ?? '搜索该药物',
-          subtitle: searchKeyword.isEmpty
-              ? (l10n?.scanActionSearchNoKeywordSubtitle ?? '当前候选缺少可搜索字段')
-              : (l10n?.scanActionSearchSubtitle ?? '跳转搜索页并自动查询'),
+          label: _actionSearchLabel(l10n),
+          subtitle: _actionSearchSubtitle(l10n, searchKeyword.isNotEmpty),
           onTap: searchKeyword.isEmpty ? null : _searchSelectedMedicine,
         ),
         const SizedBox(height: 10),
         _ActionTile(
           icon: Icons.close_rounded,
           color: const Color(0xFF94A3B8),
-          label: l10n?.scanActionCancelLabel ?? '取消',
-          subtitle: l10n?.scanActionCancelSubtitle ?? '关闭当前识别页面',
+          label: _actionCancelLabel(l10n),
+          subtitle: _actionCancelSubtitle(l10n),
           onTap: _scanning ? null : () => Navigator.maybePop(context),
         ),
       ],
@@ -809,16 +876,13 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     try {
       await _persistAlbumRecord(bytes, result);
       if (!mounted) return;
-      ToastUtils.instance.show(
-        context,
-        l10n?.scanSavedToAlbumToast ?? '已添加到软件相册',
-      );
+      ToastUtils.instance.show(context, _savedToastText(l10n));
     } catch (e) {
       if (!mounted) return;
       ToastUtils.instance.showError(
         context,
         e,
-        fallback: l10n?.scanSaveToAlbumFailedToast ?? '添加到相册失败',
+        fallback: _saveFailedToastText(l10n),
       );
     } finally {
       if (mounted) {
@@ -870,10 +934,7 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     final selected = _getSelectedCandidateOrNull();
     final keyword = _buildSearchKeyword(selected);
     if (keyword.isEmpty) {
-      ToastUtils.instance.show(
-        context,
-        l10n?.scanSearchMissingKeywordToast ?? '当前候选缺少可搜索字段',
-      );
+      ToastUtils.instance.show(context, _searchMissingKeywordToastText(l10n));
       return;
     }
 

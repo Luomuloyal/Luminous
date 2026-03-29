@@ -508,6 +508,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get reminderEditSelectMedicineHint => '可从“我的药品/搜索库”选择';
 
   @override
+  String reminderEditSelectedIdentity(Object drugCode, Object approvalNo) {
+    return '药品编码: $drugCode  批准文号: $approvalNo';
+  }
+
+  @override
   String reminderEditTimeTitle(Object time) {
     return '提醒时间: $time';
   }

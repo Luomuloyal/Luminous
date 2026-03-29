@@ -1,3 +1,5 @@
+import 'package:luminous/utils/app_i18n_text.dart';
+
 /// 相册（识别记录）相关的数据模型。
 class IdResult {
   /// 创建记录/资源后返回的 id。
@@ -71,8 +73,9 @@ class AlbumEntry {
   }
 
   /// 页面展示用名称。
-  String get displayName =>
-      productName.trim().isEmpty ? '未知药品' : productName.trim();
+  String get displayName => productName.trim().isEmpty
+      ? AppI18nText.pick(zh: '未知药品', en: 'Unknown medicine')
+      : productName.trim();
 
   /// 当前记录是否有本地原图。
   bool get hasOriginalImage => imagePath.trim().isNotEmpty;

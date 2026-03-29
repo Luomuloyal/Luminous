@@ -199,6 +199,13 @@
   "reminderEditSectionDrugTime": "Medicine & Time",
   "reminderEditSelectMedicine": "Select medicine",
   "reminderEditSelectMedicineHint": "Choose from My Medicines or Search Library",
+  "reminderEditSelectedIdentity": "Drug Code: {drugCode}  Approval No.: {approvalNo}",
+  "@reminderEditSelectedIdentity": {
+    "placeholders": {
+      "drugCode": {},
+      "approvalNo": {}
+    }
+  },
   "reminderEditTimeTitle": "Reminder Time: {time}",
   "@reminderEditTimeTitle": {
     "placeholders": {

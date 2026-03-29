@@ -1,3 +1,5 @@
+import 'package:luminous/utils/app_i18n_text.dart';
+
 /// 认证模块相关的数据模型集合。
 ///
 /// 该文件主要承载：
@@ -14,13 +16,17 @@ extension AuthIdentifierTypeValue on AuthIdentifierType {
   String get backendValue =>
       this == AuthIdentifierType.phone ? 'phone' : 'email';
 
-  String get label => this == AuthIdentifierType.phone ? '手机号' : '邮箱';
+  String get label => this == AuthIdentifierType.phone
+      ? AppI18nText.pick(zh: '手机号', en: 'Phone')
+      : AppI18nText.pick(zh: '邮箱', en: 'Email');
 
-  String get alternateActionText =>
-      this == AuthIdentifierType.phone ? '切换邮箱登录' : '切换手机号登录';
+  String get alternateActionText => this == AuthIdentifierType.phone
+      ? AppI18nText.pick(zh: '切换邮箱登录', en: 'Switch to email login')
+      : AppI18nText.pick(zh: '切换手机号登录', en: 'Switch to phone login');
 
-  String get registerLabel =>
-      this == AuthIdentifierType.phone ? '手机号注册' : '邮箱注册';
+  String get registerLabel => this == AuthIdentifierType.phone
+      ? AppI18nText.pick(zh: '手机号注册', en: 'Phone registration')
+      : AppI18nText.pick(zh: '邮箱注册', en: 'Email registration');
 }
 
 extension AuthCodeSceneValue on AuthCodeScene {
@@ -29,7 +35,9 @@ extension AuthCodeSceneValue on AuthCodeScene {
 }
 
 extension AuthLoginModeValue on AuthLoginMode {
-  String get label => this == AuthLoginMode.password ? '密码登录' : '验证码登录';
+  String get label => this == AuthLoginMode.password
+      ? AppI18nText.pick(zh: '密码登录', en: 'Password login')
+      : AppI18nText.pick(zh: '验证码登录', en: 'Code login');
 
   String get backendValue =>
       this == AuthLoginMode.password ? 'password' : 'code';
@@ -191,7 +199,7 @@ class UserSafe {
     if (phone.isNotEmpty) {
       return phone;
     }
-    return '未登录';
+    return AppI18nText.pick(zh: '未登录', en: 'Not signed in');
   }
 
   /// 页面上用于展示的副标题（把 username/email/phone 以 ` · ` 连接）。
@@ -205,7 +213,12 @@ class UserSafe {
       if (phone.isNotEmpty && phone != title) phone,
     };
     if (values.isEmpty) {
-      return hasData ? '账号信息已同步' : '登录后可同步你的账号信息';
+      return hasData
+          ? AppI18nText.pick(zh: '账号信息已同步', en: 'Account info synced')
+          : AppI18nText.pick(
+              zh: '登录后可同步你的账号信息',
+              en: 'Sign in to sync your account info',
+            );
     }
     return values.join(' · ');
   }

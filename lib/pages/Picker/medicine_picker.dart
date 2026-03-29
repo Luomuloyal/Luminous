@@ -16,7 +16,7 @@ class MedicinePickerPage extends StatefulWidget {
   /// 创建药品选择器页面。
   const MedicinePickerPage({super.key, this.title});
 
-  /// 顶部 AppBar 标题。
+  /// 顶部 AppBar 标题（可由上层覆盖）。
   final String? title;
 
   /// 创建药品选择页对应的状态对象。
@@ -44,7 +44,7 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
     _load();
   }
 
-  /// 从本地数据库加载“我的药品”。
+  /// 加载“我的药品”：先读本地，再在登录态下尝试云端同步后刷新本地视图。
   Future<void> _load() async {
     if (_loading) return;
     setState(() => _loading = true);
@@ -85,7 +85,7 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
     final scheme = Theme.of(context).colorScheme;
     return AppCanvasPageScaffold(
       appBar: AppBar(
-        title: Text(widget.title ?? l10n?.homeMedicinePickerTitle ?? '选择药品'),
+        title: Text(widget.title ?? l10n?.drugPickerTitle ?? '选择药品'),
         centerTitle: true,
       ),
       appBarSpacing: 32,

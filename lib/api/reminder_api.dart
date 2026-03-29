@@ -1,4 +1,5 @@
 import 'package:luminous/constants/constants.dart';
+import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/utils/dio_request.dart';
 import 'package:luminous/viewmodels/reminder.dart';
 
@@ -58,7 +59,7 @@ class ReminderApi {
       },
       decoder: (json) => ReminderPlan.fromJson(_asMap(json)),
       showLoading: true,
-      loadingText: '保存中...',
+      loadingText: AppI18nText.pick(zh: '保存中...', en: 'Saving...'),
     );
   }
 
