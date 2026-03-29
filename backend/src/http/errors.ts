@@ -44,6 +44,18 @@ export function resolveServiceError(
     return '数据库配置不完整，请检查 MySQL 环境变量';
   }
 
+  if (message.includes('REDIS_') || message.includes('缺少环境变量: REDIS')) {
+    return 'Redis 配置不完整，请检查 REDIS_URL 等环境变量';
+  }
+
+  if (message.includes('Redis')) {
+    return 'Redis 连接失败，请检查 REDIS_URL/白名单/网络策略';
+  }
+
+  if (message.includes('验证码发送配置')) {
+    return message;
+  }
+
   return fallback;
 }
 

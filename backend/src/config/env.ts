@@ -10,6 +10,21 @@ function readNumber(name: string, fallback: number): number {
   return Number.isFinite(value) ? value : fallback;
 }
 
+function readBoolean(name: string, fallback: boolean): boolean {
+  const raw = readString(name);
+  if (!raw) {
+    return fallback;
+  }
+  const value = raw.toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(value)) {
+    return true;
+  }
+  if (['0', 'false', 'no', 'off'].includes(value)) {
+    return false;
+  }
+  return fallback;
+}
+
 function requireEnv(name: string): string {
   const value = readString(name);
   if (!value) {
@@ -30,6 +45,22 @@ export const env = {
     table: readString('MYSQL_TABLE', '国产本位码'),
   },
   mongoUri: readString('MONGODB_URI', 'mongodb://localhost:27017/luminous'),
+  redis: {
+    url: readString('REDIS_URL', 'redis://127.0.0.1:6379'),
+  },
+  authCode: {
+    ttlSeconds: readNumber('AUTH_CODE_TTL_SECONDS', 300),
+    deliveryMode: readString('AUTH_CODE_DELIVERY_MODE', 'log'),
+    smsWebhookUrl: readString('AUTH_CODE_SMS_WEBHOOK_URL'),
+    email: {
+      host: readString('AUTH_CODE_EMAIL_HOST'),
+      port: readNumber('AUTH_CODE_EMAIL_PORT', 465),
+      secure: readBoolean('AUTH_CODE_EMAIL_SECURE', true),
+      user: readString('AUTH_CODE_EMAIL_USER'),
+      pass: readString('AUTH_CODE_EMAIL_PASS'),
+      from: readString('AUTH_CODE_EMAIL_FROM'),
+    },
+  },
   jwtSecret: readString('JWT_SECRET', 'your_jwt_secret_key_here_for_dev'),
   jwtRefreshSecret: readString('JWT_REFRESH_SECRET', 'your_jwt_refresh_secret_key_here_for_dev'),
   doubao: {

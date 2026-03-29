@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:luminous/api/auth_api.dart';
 import 'package:luminous/components/auth.dart';
 import 'package:luminous/components/soft_banner.dart';
+import 'package:luminous/utils/DioRequest.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/auth.dart';
 
@@ -17,14 +18,12 @@ class RegisterView extends StatefulWidget {
     this.initialIdentifierType = AuthIdentifierType.phone,
     this.initialIdentifier = '',
     this.initialCode = '',
-    this.initialCodeId = '',
   });
 
   final AuthApi authApi;
   final AuthIdentifierType initialIdentifierType;
   final String initialIdentifier;
   final String initialCode;
-  final String initialCodeId;
 
   @override
   State<RegisterView> createState() => _RegisterViewState();
@@ -45,7 +44,6 @@ class _RegisterViewState extends State<RegisterView> {
   bool _obscureConfirm = true;
   bool _sendingCode = false;
   bool _submitting = false;
-  String _codeId = '';
   String _codeTarget = '';
   Timer? _codeCountdownTimer;
   int _codeCountdownSeconds = 0;
@@ -61,7 +59,6 @@ class _RegisterViewState extends State<RegisterView> {
     _identifierType = widget.initialIdentifierType;
     _identifierController.text = widget.initialIdentifier;
     _codeController.text = widget.initialCode;
-    _codeId = widget.initialCodeId.trim();
     _codeTarget = widget.initialIdentifier.trim();
   }
 
@@ -145,7 +142,6 @@ class _RegisterViewState extends State<RegisterView> {
 
   void _clearCodeSession({required bool clearInput}) {
     _resetCodeCooldown();
-    _codeId = '';
     _codeTarget = '';
     if (clearInput) {
       _codeController.clear();
@@ -217,7 +213,6 @@ class _RegisterViewState extends State<RegisterView> {
       }
 
       setState(() {
-        _codeId = response.result.id.trim();
         _codeTarget = identifier;
       });
       _startCodeCooldown();
@@ -225,6 +220,11 @@ class _RegisterViewState extends State<RegisterView> {
         context,
         response.msg.isEmpty ? '验证码发送成功' : response.msg,
       );
+    } on ApiException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ToastUtils.instance.show(context, _resolveAuthErrorMessage(e));
     } catch (e) {
       if (!mounted) {
         return;
@@ -251,7 +251,7 @@ class _RegisterViewState extends State<RegisterView> {
     }
 
     final identifier = _identifierController.text.trim();
-    if (_codeId.isEmpty || _codeTarget != identifier) {
+    if (_codeTarget != identifier) {
       ToastUtils.instance.show(context, '请先获取当前账号的验证码');
       return;
     }
@@ -269,13 +269,11 @@ class _RegisterViewState extends State<RegisterView> {
           ? await widget.authApi.registerWithPhone(
               phone: identifier,
               code: _codeController.text.trim(),
-              codeId: _codeId,
               password: _passwordController.text,
             )
           : await widget.authApi.registerWithEmail(
               email: identifier,
               code: _codeController.text.trim(),
-              codeId: _codeId,
               password: _passwordController.text,
             );
 
@@ -291,6 +289,11 @@ class _RegisterViewState extends State<RegisterView> {
       if (mounted) {
         Navigator.maybePop(context);
       }
+    } on ApiException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ToastUtils.instance.show(context, _resolveAuthErrorMessage(e));
     } catch (e) {
       if (!mounted) {
         return;
@@ -302,6 +305,30 @@ class _RegisterViewState extends State<RegisterView> {
           _submitting = false;
         });
       }
+    }
+  }
+
+  String _resolveAuthErrorMessage(ApiException error) {
+    switch (error.code) {
+      case 'CODE_INVALID':
+        return '验证码错误，请检查后重试';
+      case 'CODE_EXPIRED':
+        return '验证码已过期，请重新获取';
+      case 'CODE_REQUIRED':
+        return '请输入验证码';
+      case 'IDENTIFIER_EXISTS':
+        return _identifierType == AuthIdentifierType.phone
+            ? '手机号已经注册'
+            : '邮箱已经注册';
+      case 'CODE_SEND_TOO_FREQUENT':
+        return '发送过于频繁，请稍后再试';
+      case 'INVALID_IDENTIFIER':
+      case 'INVALID_TARGET':
+        return _identifierType == AuthIdentifierType.phone
+            ? '手机号格式不正确'
+            : '邮箱地址格式错误';
+      default:
+        return error.message.trim().isEmpty ? '请求失败，请稍后重试' : error.message;
     }
   }
 
@@ -433,8 +460,7 @@ class _RegisterViewState extends State<RegisterView> {
                 validator: _identifierValidator,
                 onChanged: (value) {
                   final identifier = value.trim();
-                  final hasActiveCodeSession =
-                      _codeId.isNotEmpty || _codeTarget.isNotEmpty;
+                  final hasActiveCodeSession = _codeTarget.isNotEmpty;
                   if (hasActiveCodeSession && identifier != _codeTarget) {
                     setState(() {
                       _clearCodeSession(clearInput: false);

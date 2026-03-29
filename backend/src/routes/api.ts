@@ -1,5 +1,10 @@
 import { Express } from 'express';
-import { handleLogin, handleRefreshToken, handleRegister } from '../handlers/auth';
+import {
+  handleLogin,
+  handleRefreshToken,
+  handleRegister,
+  handleSendCode,
+} from '../handlers/auth';
 import { handleMedicineAiDetail } from '../handlers/medicine-ai-detail';
 import { handleMedicineAiSafety } from '../handlers/medicine-ai-safety';
 import { handleMedicineDetail } from '../handlers/medicine-detail';
@@ -10,6 +15,7 @@ import { authMiddleware } from '../http/jwt';
 
 export function registerApiRoutes(app: Express): void {
   // --- Auth endpoints ---
+  app.post('/api/auth/codes', createPostHandler(handleSendCode));
   app.post('/api/auth/register', createPostHandler(handleRegister));
   app.post('/api/auth/login', createPostHandler(handleLogin));
   app.post('/api/auth/refresh', createPostHandler(handleRefreshToken));

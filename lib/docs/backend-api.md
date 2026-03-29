@@ -30,7 +30,16 @@ Notes:
 - Refresh Token: 14 天
 - 刷新方式: 使用 refresh 接口换发一对新 token（滑动续期）
 
-### 2.2 Auth Header
+### 2.2 Verification Code Policy
+
+- 验证码存储: Redis
+- Redis key: `auth:code:{target}`
+- value: `{ channel, target, scene, code, createdAt }`
+- TTL: 默认 300 秒（5 分钟）
+- 发送频率限制: 同一 target 60 秒内最多发送 1 次
+- 校验口径: 仅校验 `手机号/邮箱 + 验证码 + 场景(scene)`
+
+### 2.3 Auth Header
 
 Protected endpoints should include:
 
@@ -42,7 +51,46 @@ Authorization: Bearer <access_token>
 
 ## 3. Auth Endpoints
 
-### 3.1 Register
+### 3.1 Send Verification Code
+
+- `POST /api/auth/codes`
+
+Request body:
+
+```json
+{
+  "channel": "phone",
+  "scene": "login",
+  "target": "13800138000"
+}
+```
+
+字段说明:
+
+- `channel`: `email | phone`
+- `scene`: `register | login`
+- `target`: 邮箱或手机号
+
+Success `result`:
+
+```json
+{
+  "id": "13800138000",
+  "target": "13800138000",
+  "expiresInSeconds": 300
+}
+```
+
+Failure examples:
+
+- `code: "INVALID_CHANNEL"`, `msg: "channel 无效"`
+- `code: "INVALID_SCENE"`, `msg: "scene 无效"`
+- `code: "INVALID_TARGET"`, `msg: "邮箱地址格式错误"`
+- `code: "INVALID_TARGET"`, `msg: "手机号格式不正确"`
+- `code: "CODE_SEND_TOO_FREQUENT"`, `msg: "发送过于频繁，请 xx 秒后重试"`
+- `code: "CODE_SEND_FAILED"`, `msg: "验证码发送失败，请稍后重试"`
+
+### 3.2 Register
 
 - `POST /api/auth/register`
 
@@ -50,30 +98,49 @@ Request body:
 
 ```json
 {
-  "username": "test_user",
-  "password": "your_password"
+  "identifierType": "phone",
+  "phone": "13800138000",
+  "email": "",
+  "code": "123456",
+  "password": "abc123"
 }
 ```
+
+字段说明:
+
+- `identifierType`: `email | phone`
+- `phone/email`: 按 `identifierType` 传入
+- `code`: 验证码
+- `password`: 6-12 位字母或数字
 
 Success `result`:
 
 ```json
 {
+  "id": "...",
   "accessToken": "...",
   "refreshToken": "...",
   "user": {
     "id": "...",
-    "username": "test_user"
+    "username": "13800138000",
+    "email": "",
+    "phone": "13800138000",
+    "name": "13***00",
+    "type": 3
   }
 }
 ```
 
 Failure examples:
 
-- `msg: "缺少用户名或密码"`
-- `msg: "用户名已存在"`
+- `code: "INVALID_IDENTIFIER_TYPE"`, `msg: "identifierType 无效"`
+- `code: "INVALID_IDENTIFIER"`, `msg: "手机号不能为空"`
+- `code: "PASSWORD_INVALID"`, `msg: "密码需为6-12位字母或数字"`
+- `code: "CODE_INVALID"`, `msg: "验证码错误"`
+- `code: "CODE_EXPIRED"`, `msg: "验证码已过期，请重新获取"`
+- `code: "IDENTIFIER_EXISTS"`, `msg: "手机号已经注册"`
 
-### 3.2 Login
+### 3.3 Login
 
 - `POST /api/auth/login`
 
@@ -81,20 +148,33 @@ Request body:
 
 ```json
 {
-  "username": "test_user",
-  "password": "your_password"
+  "identifierType": "phone",
+  "loginMode": "code",
+  "identifier": "13800138000",
+  "password": "",
+  "code": "123456"
 }
 ```
+
+字段说明:
+
+- `identifierType`: `email | phone`
+- `loginMode`: `password | code`
+- `identifier`: 手机号或邮箱
+- `password`: `password` 模式必填
+- `code`: `code` 模式必填
 
 Success `result` 与注册一致。
 
 Failure examples:
 
-- `msg: "缺少用户名或密码"`
-- `msg: "用户不存在"`
-- `msg: "密码错误"`
+- `code: "INVALID_LOGIN_MODE"`, `msg: "loginMode 无效"`
+- `code: "LOGIN_FAILED"`, `msg: "账号或密码错误"`
+- `code: "CODE_INVALID"`, `msg: "验证码错误"`
+- `code: "CODE_EXPIRED"`, `msg: "验证码已过期，请重新获取"`
+- `code: "NOT_REGISTERED"`, `msg: "该账号尚未注册，是否前往注册？"`
 
-### 3.3 Refresh Token
+### 3.4 Refresh Token
 
 - `POST /api/auth/refresh`
 
@@ -117,8 +197,8 @@ Success `result`:
 
 Failure examples:
 
-- `msg: "缺少 Refresh Token"`
-- `msg: "Refresh Token 无效或已过期"`
+- `code: "MISSING_REFRESH_TOKEN"`, `msg: "缺少 Refresh Token"`
+- `code: "REFRESH_TOKEN_INVALID"`, `msg: "Refresh Token 无效或已过期"`
 
 ## 4. Medicine Endpoints
 
@@ -322,6 +402,7 @@ Failure examples:
 ## 6. Current Route List
 
 - `GET /health`
+- `POST /api/auth/codes`
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `POST /api/auth/refresh`
@@ -333,6 +414,4 @@ Failure examples:
 
 ## 7. Flutter Constant Compatibility Note
 
-Flutter 端仍保留部分历史路径常量（如 `send-code`、`my-*`、`reminders/*`、`scan-record-create`）。
-
-联调时请以本文件第 6 节为准。
+Flutter 验证码路径统一为 `/api/auth/codes`。

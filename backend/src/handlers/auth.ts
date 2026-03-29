@@ -1,9 +1,27 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import nodemailer from 'nodemailer';
 import { env } from '../config/env';
-import { AppError } from '../http/errors';
-import { success } from '../http/response';
-import { User } from '../models/user';
+import { getRedisClient } from '../db/redis';
+import { fail, success } from '../http/response';
+import { IUser, User } from '../models/user';
+
+type IdentifierType = 'email' | 'phone';
+type LoginMode = 'password' | 'code';
+type AuthCodeScene = 'register' | 'login';
+
+interface VerificationCodePayload {
+  channel: IdentifierType;
+  target: string;
+  scene: AuthCodeScene;
+  code: string;
+  createdAt: number;
+}
+
+const sendCodeCooldownSeconds = 60;
+const emailRegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const phoneRegExp = /^1[3-9]\d{9}$/;
+const passwordRegExp = /^[A-Za-z0-9]{6,12}$/;
 
 function generateTokens(user: { _id: unknown; username: string }) {
   const accessToken = jwt.sign({ id: user._id, username: user.username }, env.jwtSecret, {
@@ -15,74 +33,487 @@ function generateTokens(user: { _id: unknown; username: string }) {
   return { accessToken, refreshToken };
 }
 
-export async function handleRegister(body: any) {
-  const { username, password } = body;
-  if (!username || !password) {
-    throw new AppError('缺少用户名或密码', '400');
+function parseBody(body: unknown): Record<string, unknown> {
+  if (!body || typeof body !== 'object') {
+    return {};
+  }
+  return body as Record<string, unknown>;
+}
+
+function parseIdentifierType(raw: unknown): IdentifierType | null {
+  const value = String(raw || '').trim().toLowerCase();
+  if (value === 'email' || value === 'phone') {
+    return value;
+  }
+  return null;
+}
+
+function parseLoginMode(raw: unknown): LoginMode | null {
+  const value = String(raw || '').trim().toLowerCase();
+  if (value === 'password' || value === 'code') {
+    return value;
+  }
+  return null;
+}
+
+function resolveIdentifier(type: IdentifierType, body: Record<string, unknown>): string {
+  if (type === 'email') {
+    return String(body.email || body.identifier || '').trim().toLowerCase();
+  }
+  return String(body.phone || body.identifier || '').trim();
+}
+
+function buildIdentifierQuery(type: IdentifierType, identifier: string) {
+  if (type === 'email') {
+    return { $or: [{ email: identifier }, { username: identifier }] };
+  }
+  return { $or: [{ phone: identifier }, { username: identifier }] };
+}
+
+function buildVerificationCodeKey(target: string): string {
+  return `auth:code:${target}`;
+}
+
+function buildSendCooldownKey(target: string): string {
+  return `auth:code:cooldown:${target}`;
+}
+
+function generateVerificationCode(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+async function dispatchVerificationCode({
+  channel,
+  scene,
+  target,
+  code,
+}: {
+  channel: IdentifierType;
+  scene: AuthCodeScene;
+  target: string;
+  code: string;
+}): Promise<void> {
+  const mode = env.authCode.deliveryMode.trim().toLowerCase();
+  if (mode === 'log') {
+    console.log(`[auth-code][${channel}][${scene}] target=${target} code=${code}`);
+    return;
   }
 
-  const existing = await User.findOne({ username });
+  if (channel === 'email') {
+    await dispatchEmailCode({ target, scene, code });
+    return;
+  }
+
+  await dispatchPhoneCode({ target, scene, code });
+}
+
+async function dispatchEmailCode({
+  target,
+  scene,
+  code,
+}: {
+  target: string;
+  scene: AuthCodeScene;
+  code: string;
+}): Promise<void> {
+  if (
+    !env.authCode.email.host ||
+    !env.authCode.email.user ||
+    !env.authCode.email.pass ||
+    !env.authCode.email.from
+  ) {
+    throw new Error('缺少邮箱验证码发送配置');
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: env.authCode.email.host,
+    port: env.authCode.email.port,
+    secure: env.authCode.email.secure,
+    auth: {
+      user: env.authCode.email.user,
+      pass: env.authCode.email.pass,
+    },
+  });
+
+  await transporter.sendMail({
+    from: env.authCode.email.from,
+    to: target,
+    subject: scene === 'register' ? 'Luminous 注册验证码' : 'Luminous 登录验证码',
+    html: `您好，您的${scene === 'register' ? '注册' : '登录'}验证码为：<b>${code}</b>，5分钟内有效。`,
+  });
+}
+
+async function dispatchPhoneCode({
+  target,
+  scene,
+  code,
+}: {
+  target: string;
+  scene: AuthCodeScene;
+  code: string;
+}): Promise<void> {
+  const webhookUrl = env.authCode.smsWebhookUrl;
+  if (!webhookUrl) {
+    throw new Error('缺少短信验证码发送配置');
+  }
+
+  const response = await fetch(webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      target,
+      scene,
+      code,
+      ttlSeconds: env.authCode.ttlSeconds,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`短信网关调用失败: ${response.status}`);
+  }
+}
+
+function verifyIdentifierFormat(type: IdentifierType, identifier: string): string | null {
+  if (!identifier) {
+    return type === 'email' ? '邮箱不能为空' : '手机号不能为空';
+  }
+
+  if (type === 'email' && !emailRegExp.test(identifier)) {
+    return '邮箱地址格式错误';
+  }
+
+  if (type === 'phone' && !phoneRegExp.test(identifier)) {
+    return '手机号格式不正确';
+  }
+
+  return null;
+}
+
+function toSafeUser(user: IUser) {
+  return {
+    id: user._id.toString(),
+    username: user.username,
+    email: user.email || '',
+    phone: user.phone || '',
+    name: user.name || '',
+    type: user.type || 0,
+  };
+}
+
+function maskName(name: string): string {
+  if (!name) {
+    return '';
+  }
+  if (name.length > 10) {
+    return `${name.substring(0, 3)}****${name.substring(7)}`;
+  }
+  if (name.length > 6) {
+    return `${name.substring(0, 2)}***${name.substring(name.length - 2)}`;
+  }
+  return name;
+}
+
+async function readVerificationCode(target: string): Promise<VerificationCodePayload | null> {
+  const redis = getRedisClient();
+  const key = buildVerificationCodeKey(target);
+  const raw = await redis.get(key);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(raw) as VerificationCodePayload;
+    if (!payload || typeof payload !== 'object') {
+      return null;
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+async function consumeVerificationCode(target: string): Promise<void> {
+  const redis = getRedisClient();
+  const key = buildVerificationCodeKey(target);
+  await redis.del(key);
+}
+
+export async function handleSendCode(body: unknown) {
+  const data = parseBody(body);
+  const channel = parseIdentifierType(data.channel);
+  const sceneRaw = String(data.scene || 'login').trim().toLowerCase();
+  const scene = sceneRaw === 'register' || sceneRaw === 'login' ? sceneRaw : null;
+
+  if (!channel) {
+    return fail('channel 无效', 'INVALID_CHANNEL');
+  }
+  if (!scene) {
+    return fail('scene 无效', 'INVALID_SCENE');
+  }
+
+  const target = channel === 'email'
+    ? String(data.target || '').trim().toLowerCase()
+    : String(data.target || '').trim();
+  const identifierError = verifyIdentifierFormat(channel, target);
+  if (identifierError != null) {
+    return fail(identifierError, 'INVALID_TARGET');
+  }
+
+  const code = generateVerificationCode();
+  const key = buildVerificationCodeKey(target);
+  const cooldownKey = buildSendCooldownKey(target);
+  const redis = getRedisClient();
+
+  const cooldownSet = await redis.set(cooldownKey, Date.now().toString(), {
+    EX: sendCodeCooldownSeconds,
+    NX: true,
+  });
+  if (cooldownSet !== 'OK') {
+    const remainSeconds = await redis.ttl(cooldownKey);
+    const waitSeconds = remainSeconds > 0 ? remainSeconds : sendCodeCooldownSeconds;
+    return fail(`发送过于频繁，请 ${waitSeconds} 秒后重试`, 'CODE_SEND_TOO_FREQUENT');
+  }
+
+  await redis.setEx(
+    key,
+    env.authCode.ttlSeconds,
+    JSON.stringify({
+      channel,
+      target,
+      scene,
+      code,
+      createdAt: Date.now(),
+    } satisfies VerificationCodePayload),
+  );
+
+  try {
+    await dispatchVerificationCode({
+      channel,
+      scene,
+      target,
+      code,
+    });
+  } catch (error) {
+    await redis.del(key);
+    await redis.del(cooldownKey);
+    const message = String((error as { message?: string })?.message || '').trim();
+    return fail(message || '验证码发送失败，请稍后重试', 'CODE_SEND_FAILED');
+  }
+
+  return success(
+    {
+      id: target,
+      target,
+      expiresInSeconds: env.authCode.ttlSeconds,
+    },
+    channel === 'email' ? '验证码已发送到邮箱，请注意查收' : '验证码已发送到手机，请注意查收',
+  );
+}
+
+function verifyCodePayload({
+  payload,
+  code,
+  scene,
+  channel,
+}: {
+  payload: VerificationCodePayload | null;
+  code: string;
+  scene: AuthCodeScene;
+  channel: IdentifierType;
+}) {
+  if (!code) {
+    return fail('验证码不能为空', 'CODE_REQUIRED');
+  }
+  if (!payload) {
+    return fail('验证码已过期，请重新获取', 'CODE_EXPIRED');
+  }
+  if (payload.channel !== channel || payload.scene !== scene) {
+    return fail('验证码场景不匹配，请重新获取', 'CODE_INVALID');
+  }
+  if (payload.code !== code) {
+    return fail('验证码错误', 'CODE_INVALID');
+  }
+  return null;
+}
+
+export async function handleRegister(body: unknown) {
+  const data = parseBody(body);
+
+  const identifierType = parseIdentifierType(data.identifierType);
+  if (!identifierType) {
+    return fail('identifierType 无效', 'INVALID_IDENTIFIER_TYPE');
+  }
+
+  const identifier = resolveIdentifier(identifierType, data);
+  const identifierError = verifyIdentifierFormat(identifierType, identifier);
+  if (identifierError != null) {
+    return fail(identifierError, 'INVALID_IDENTIFIER');
+  }
+
+  const password = String(data.password || '');
+  if (!passwordRegExp.test(password)) {
+    return fail('密码需为6-12位字母或数字', 'PASSWORD_INVALID');
+  }
+
+  const code = String(data.code || '').trim();
+  const codePayload = await readVerificationCode(identifier);
+  const codeError = verifyCodePayload({
+    payload: codePayload,
+    code,
+    scene: 'register',
+    channel: identifierType,
+  });
+  if (codeError) {
+    return codeError;
+  }
+
+  const existing = await User.findOne(buildIdentifierQuery(identifierType, identifier));
   if (existing) {
-    throw new AppError('用户名已存在', '400');
+    return fail(identifierType === 'email' ? '邮箱已经注册' : '手机号已经注册', 'IDENTIFIER_EXISTS');
   }
 
   const salt = await bcrypt.genSalt(10);
   const passwordHash = await bcrypt.hash(password, salt);
-
   const user = new User({
-    username,
+    username: identifier,
     passwordHash,
+    email: identifierType === 'email' ? identifier : undefined,
+    phone: identifierType === 'phone' ? identifier : undefined,
+    type: identifierType === 'email' ? 2 : 3,
+    name: maskName(identifier),
+    lock: 0,
+    lastLoginTime: Date.now(),
   });
 
-  await user.save();
-
-  const tokens = generateTokens(user);
-
-  return success({
-    ...tokens,
-    user: { id: user._id, username: user.username }
-  });
-}
-
-export async function handleLogin(body: any) {
-  const { username, password } = body;
-  if (!username || !password) {
-    throw new AppError('缺少用户名或密码', '400');
+  try {
+    await user.save();
+  } catch (error) {
+    const message = String((error as { message?: string })?.message || '');
+    if (message.includes('E11000')) {
+      return fail(identifierType === 'email' ? '邮箱已经注册' : '手机号已经注册', 'IDENTIFIER_EXISTS');
+    }
+    throw error;
   }
 
-  const user = await User.findOne({ username });
+  await consumeVerificationCode(identifier);
+  const tokens = generateTokens(user);
+
+  return success(
+    {
+      id: user._id.toString(),
+      ...tokens,
+      user: toSafeUser(user),
+    },
+    '注册成功',
+  );
+}
+
+export async function handleLogin(body: unknown) {
+  const data = parseBody(body);
+
+  const identifierType = parseIdentifierType(data.identifierType);
+  if (!identifierType) {
+    return fail('identifierType 无效', 'INVALID_IDENTIFIER_TYPE');
+  }
+
+  const loginMode = parseLoginMode(data.loginMode);
+  if (!loginMode) {
+    return fail('loginMode 无效', 'INVALID_LOGIN_MODE');
+  }
+
+  const identifier = resolveIdentifier(identifierType, data);
+  const identifierError = verifyIdentifierFormat(identifierType, identifier);
+  if (identifierError != null) {
+    return fail(identifierError, 'INVALID_IDENTIFIER');
+  }
+
+  if (loginMode === 'password') {
+    const password = String(data.password || '');
+    if (!password) {
+      return fail('密码不能为空', 'PASSWORD_REQUIRED');
+    }
+
+    const user = await User.findOne(buildIdentifierQuery(identifierType, identifier));
+    if (!user) {
+      return fail('账号或密码错误', 'LOGIN_FAILED');
+    }
+
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) {
+      return fail('账号或密码错误', 'LOGIN_FAILED');
+    }
+
+    if (user.lock === 1) {
+      return fail('用户已被锁定，请联系管理员', 'ACCOUNT_LOCKED');
+    }
+
+    user.lastLoginTime = Date.now();
+    await user.save();
+    const tokens = generateTokens(user);
+
+    return success(
+      {
+        ...tokens,
+        user: toSafeUser(user),
+      },
+      '登录成功',
+    );
+  }
+
+  const code = String(data.code || '').trim();
+  const payload = await readVerificationCode(identifier);
+  const codeError = verifyCodePayload({
+    payload,
+    code,
+    scene: 'login',
+    channel: identifierType,
+  });
+  if (codeError) {
+    return codeError;
+  }
+
+  const user = await User.findOne(buildIdentifierQuery(identifierType, identifier));
   if (!user) {
-    throw new AppError('用户不存在', '404');
+    return fail('该账号尚未注册，是否前往注册？', 'NOT_REGISTERED');
   }
 
-  const valid = await bcrypt.compare(password, user.passwordHash);
-  if (!valid) {
-    throw new AppError('密码错误', '401');
+  if (user.lock === 1) {
+    return fail('用户已被锁定，请联系管理员', 'ACCOUNT_LOCKED');
   }
 
+  await consumeVerificationCode(identifier);
+
+  user.lastLoginTime = Date.now();
+  await user.save();
   const tokens = generateTokens(user);
 
-  return success({
-    ...tokens,
-    user: { id: user._id, username: user.username }
-  });
+  return success(
+    {
+      ...tokens,
+      user: toSafeUser(user),
+    },
+    '登录成功',
+  );
 }
 
-export async function handleRefreshToken(body: any) {
-  const { refreshToken } = body;
+export async function handleRefreshToken(body: unknown) {
+  const data = parseBody(body);
+  const refreshToken = String(data.refreshToken || '').trim();
   if (!refreshToken) {
-    throw new AppError('缺少 Refresh Token', '400');
+    return fail('缺少 Refresh Token', 'MISSING_REFRESH_TOKEN');
   }
 
   try {
-    const decoded = jwt.verify(refreshToken, env.jwtRefreshSecret) as any;
-    // Issue a new pair of tokens (sliding expiration)
+    const decoded = jwt.verify(refreshToken, env.jwtRefreshSecret) as {
+      id: string;
+      username: string;
+    };
     const tokens = generateTokens({ _id: decoded.id, username: decoded.username });
-    
+
     return success({
       ...tokens,
     });
-  } catch (error) {
-    throw new AppError('Refresh Token 无效或已过期', '401');
+  } catch {
+    return fail('Refresh Token 无效或已过期', 'REFRESH_TOKEN_INVALID');
   }
 }

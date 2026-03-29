@@ -8,6 +8,7 @@ App 后端服务，提供认证与药品能力接口。
 - Express
 - JWT (Access Token + Refresh Token)
 - MongoDB (用户数据)
+- Redis（验证码存储，5 分钟过期）
 - MySQL (药品库)
 - OpenAI SDK（用于豆包/方舟兼容调用）
 
@@ -33,6 +34,7 @@ backend/
 
 - Node.js 18+
 - 可访问 MongoDB
+- 可访问 Redis
 - 可访问 MySQL
 
 ## Getting Started
@@ -59,6 +61,17 @@ MYSQL_DATABASE=medicine_db
 MYSQL_TABLE=国产本位码
 
 MONGODB_URI=mongodb://127.0.0.1:27017/luminous
+REDIS_URL=redis://127.0.0.1:6379
+
+AUTH_CODE_TTL_SECONDS=300
+AUTH_CODE_DELIVERY_MODE=log
+AUTH_CODE_SMS_WEBHOOK_URL=
+AUTH_CODE_EMAIL_HOST=smtp.qq.com
+AUTH_CODE_EMAIL_PORT=465
+AUTH_CODE_EMAIL_SECURE=true
+AUTH_CODE_EMAIL_USER=
+AUTH_CODE_EMAIL_PASS=
+AUTH_CODE_EMAIL_FROM=
 
 JWT_SECRET=replace_with_strong_secret
 JWT_REFRESH_SECRET=replace_with_another_strong_secret
@@ -90,6 +103,7 @@ npm run start
 ## API Summary
 
 - `GET /health`
+- `POST /api/auth/codes`
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `POST /api/auth/refresh`
@@ -127,6 +141,10 @@ Full schema and examples: [../lib/docs/backend-api.md](../lib/docs/backend-api.m
 ### MongoDB connection failed
 
 检查 `MONGODB_URI` 可达性与账号权限。
+
+### Redis connection failed
+
+检查 `REDIS_URL` 可达性与白名单配置。
 
 ### AI endpoints failed
 

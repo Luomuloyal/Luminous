@@ -98,6 +98,16 @@ Required keys:
 - `MYSQL_DATABASE`
 - `MYSQL_TABLE`
 - `MONGODB_URI`
+- `REDIS_URL`
+- `AUTH_CODE_TTL_SECONDS`
+- `AUTH_CODE_DELIVERY_MODE`（`log` 或 `provider`）
+- `AUTH_CODE_SMS_WEBHOOK_URL`（phone 通道，可选）
+- `AUTH_CODE_EMAIL_HOST`（email 通道，provider 模式必填）
+- `AUTH_CODE_EMAIL_PORT`
+- `AUTH_CODE_EMAIL_SECURE`
+- `AUTH_CODE_EMAIL_USER`
+- `AUTH_CODE_EMAIL_PASS`
+- `AUTH_CODE_EMAIL_FROM`
 - `JWT_SECRET`
 - `JWT_REFRESH_SECRET`
 - `DOUBAO_API_KEY`
@@ -119,6 +129,17 @@ MYSQL_DATABASE=medicine_db
 MYSQL_TABLE=国产本位码
 
 MONGODB_URI=mongodb://127.0.0.1:27017/luminous
+REDIS_URL=redis://127.0.0.1:6379
+
+AUTH_CODE_TTL_SECONDS=300
+AUTH_CODE_DELIVERY_MODE=log
+AUTH_CODE_SMS_WEBHOOK_URL=
+AUTH_CODE_EMAIL_HOST=smtp.qq.com
+AUTH_CODE_EMAIL_PORT=465
+AUTH_CODE_EMAIL_SECURE=true
+AUTH_CODE_EMAIL_USER=
+AUTH_CODE_EMAIL_PASS=
+AUTH_CODE_EMAIL_FROM=
 
 JWT_SECRET=replace_with_long_random_secret
 JWT_REFRESH_SECRET=replace_with_another_long_random_secret
@@ -152,10 +173,12 @@ Location:
 
 - MySQL: `backend/src/db/mysql.ts`
 - MongoDB: `backend/src/db/mongodb.ts`
+- Redis: `backend/src/db/redis.ts`
 
 Notes:
 
-- MongoDB 用于用户认证与用户数据。
+- MongoDB 用于用户账户与资料。
+- Redis 用于验证码缓存（手机号/邮箱为 key，验证码为 value，默认 5 分钟过期）。
 - MySQL 用于药品数据检索。
 
 ## 4. Website Frontend (LuminousWebsite/luminousvue)

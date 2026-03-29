@@ -44,14 +44,12 @@ class AuthApi {
   Future<ApiResult<RegisterResult>> registerWithEmail({
     required String email,
     required String code,
-    required String codeId,
     required String password,
   }) {
     return _register(
       identifierType: AuthIdentifierType.email,
       identifier: email,
       code: code,
-      codeId: codeId,
       password: password,
     );
   }
@@ -60,14 +58,12 @@ class AuthApi {
   Future<ApiResult<RegisterResult>> registerWithPhone({
     required String phone,
     required String code,
-    required String codeId,
     required String password,
   }) {
     return _register(
       identifierType: AuthIdentifierType.phone,
       identifier: phone,
       code: code,
-      codeId: codeId,
       password: password,
     );
   }
@@ -97,7 +93,6 @@ class AuthApi {
     required AuthIdentifierType identifierType,
     required String identifier,
     required String code,
-    required String codeId,
   }) {
     return dioRequest.post<LoginResult>(
       HttpConstants.LOGIN_USER,
@@ -106,7 +101,6 @@ class AuthApi {
         'loginMode': AuthLoginMode.code.backendValue,
         'identifier': identifier.trim(),
         'code': code.trim(),
-        'codeId': codeId.trim(),
       },
       showLoading: true,
       loadingText: '登录中...',
@@ -118,7 +112,6 @@ class AuthApi {
     required AuthIdentifierType identifierType,
     required String identifier,
     required String code,
-    required String codeId,
     required String password,
   }) {
     final trimmedIdentifier = identifier.trim();
@@ -134,7 +127,6 @@ class AuthApi {
             ? trimmedIdentifier
             : '',
         'code': code.trim(),
-        'codeId': codeId.trim(),
         'password': password,
       },
       showLoading: true,

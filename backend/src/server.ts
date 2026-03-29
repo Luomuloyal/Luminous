@@ -1,9 +1,11 @@
 import { createApp } from './app';
 import { env } from './config/env';
 import { connectMongoDB } from './db/mongodb';
+import { connectRedis } from './db/redis';
 
 async function startServer() {
   await connectMongoDB();
+  await connectRedis();
 
   const app = createApp();
 

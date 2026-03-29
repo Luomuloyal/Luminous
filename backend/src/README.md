@@ -6,7 +6,7 @@
 
 - `ai/`: AI 服务调用与 prompt 构造
 - `config/`: 环境变量读取与配置解析
-- `db/`: MySQL 与 MongoDB 数据访问层
+- `db/`: MySQL / MongoDB / Redis 数据访问层
 - `handlers/`: 业务处理核心（接口逻辑主体）
 - `http/`: 统一响应、参数读取、错误处理、JWT 中间件
 - `models/`: Mongoose 数据模型
@@ -14,7 +14,7 @@
 
 ## 启动链路
 
-1. `server.ts`: 启动入口，先连接 Mongo，再启动 HTTP 服务
+1. `server.ts`: 启动入口，先连接 Mongo + Redis，再启动 HTTP 服务
 2. `app.ts`: 组装 Express 中间件与路由
 3. `routes/api.ts`: 注册 `/api/*` 接口
 4. `handlers/*`: 执行业务逻辑

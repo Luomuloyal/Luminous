@@ -17,7 +17,9 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.3.3",
     "mysql2": "^3.20.0",
-    "openai": "^5.20.3"
+    "nodemailer": "^8.0.4",
+    "openai": "^5.20.3",
+    "redis": "^5.11.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -25,6 +27,7 @@
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.7.2",
+    "@types/nodemailer": "^7.0.11",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   }

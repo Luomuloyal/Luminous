@@ -51,7 +51,7 @@ class GlobalConstants {
 /// API 层统一引用这里的路径，避免在业务代码里散落硬编码接口字符串。
 class HttpConstants {
   /// 获取验证码接口。
-  static const String SEND_CODE = '/api/auth/send-code';
+  static const String SEND_CODE = '/api/auth/codes';
 
   /// 用户注册接口。
   static const String REGISTER_USER = '/api/auth/register';
