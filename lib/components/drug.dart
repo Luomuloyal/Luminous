@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:luminous/components/app_surface.dart';
-import 'package:luminous/components/quick_entry_style.dart';
 import 'package:luminous/components/responsive_quick_grid.dart';
+import 'package:luminous/components/shared_quick_entry_card.dart';
 import 'package:luminous/components/soft_banner.dart';
+import 'package:luminous/components/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/viewmodels/drug.dart';
 
@@ -269,8 +270,11 @@ class DrugQuickEntrySectionSliver extends StatelessWidget {
                       gridDelegate: metrics.gridDelegate,
                       itemBuilder: (context, index) {
                         final item = entries[index];
-                        return DrugQuickEntryCard(
-                          item: item,
+                        return SharedQuickEntryCard(
+                          icon: item.icon,
+                          title: item.title,
+                          subtitle: item.subtitle,
+                          color: item.color,
                           metrics: metrics,
                           onTap: () => onTapEntry(item),
                         );
@@ -630,9 +634,19 @@ class DrugMyMedicineCard extends StatelessWidget {
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               if (item.sourceLabel.isNotEmpty)
-                                _DrugBadge(
+                                TintedStatusChip(
                                   text: item.sourceLabel,
                                   color: item.sourceColor,
+                                  backgroundColor: item.sourceColor.withValues(
+                                    alpha: 0.12,
+                                  ),
+                                  showBorder: false,
+                                  fontSize: compact ? 10.5 : 11,
+                                  fontWeight: FontWeight.w600,
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: compact ? 6 : 7,
+                                    vertical: compact ? 2.5 : 3,
+                                  ),
                                 ),
                               if (item.dateText.isNotEmpty)
                                 Text(
@@ -667,146 +681,6 @@ class DrugMyMedicineCard extends StatelessWidget {
             ),
           );
         },
-      ),
-    );
-  }
-}
-
-/// 药品页“快捷入口”区域的单个入口卡片组件。
-class DrugQuickEntryCard extends StatelessWidget {
-  /// 创建一个快捷入口卡片组件。
-  const DrugQuickEntryCard({
-    super.key,
-    required this.item,
-    required this.onTap,
-    this.metrics,
-  });
-
-  /// 当前入口的数据对象。
-  final DrugQuickEntry item;
-
-  /// 点击回调。
-  final VoidCallback onTap;
-
-  /// 由外层网格计算好的响应式尺寸。
-  final ResponsiveQuickGridMetrics? metrics;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final resolvedMetrics =
-            metrics ??
-            ResponsiveQuickGridMetrics.fromWidth(constraints.maxWidth);
-        final compact = resolvedMetrics.isCompact;
-        final style = resolveQuickEntryVisualStyle(context, item.color);
-
-        return InkWell(
-          borderRadius: BorderRadius.circular(kQuickEntryCardRadius),
-          onTap: onTap,
-          child: Ink(
-            padding: resolvedMetrics.itemPadding,
-            decoration: BoxDecoration(
-              color: style.background,
-              borderRadius: BorderRadius.circular(kQuickEntryCardRadius),
-              border: Border.all(color: style.border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Align(
-                  child: SizedBox(
-                    width: resolvedMetrics.iconBoxSize,
-                    child: AspectRatio(
-                      aspectRatio: 1,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: style.iconBackground,
-                          borderRadius: BorderRadius.circular(
-                            resolvedMetrics.iconBorderRadius,
-                          ),
-                          border: Border.all(color: style.iconBorder),
-                        ),
-                        child: Icon(
-                          item.icon,
-                          color: style.iconColor,
-                          size: resolvedMetrics.iconSize,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: resolvedMetrics.titleSpacing),
-                Expanded(
-                  child: Column(
-                    children: [
-                      Text(
-                        item.title,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: compact ? 14 : 14.5,
-                          fontWeight: FontWeight.w800,
-                          color: style.titleColor,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: resolvedMetrics.subtitleSpacing),
-                      Flexible(
-                        child: Text(
-                          item.subtitle,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: compact ? 11.5 : 12,
-                            fontWeight: FontWeight.w600,
-                            color: style.subtitleColor,
-                            height: compact ? 1.2 : 1.25,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _DrugBadge extends StatelessWidget {
-  const _DrugBadge({required this.text, required this.color});
-
-  /// 徽标显示文本。
-  final String text;
-
-  /// 徽标主题色。
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final compact = isCompactLayoutWidth(MediaQuery.sizeOf(context).width);
-
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: compact ? 6 : 7,
-        vertical: compact ? 2.5 : 3,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: compact ? 10.5 : 11,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
       ),
     );
   }

@@ -228,6 +228,50 @@
     }
   },
   "reminderEditTimeSubtitle": "Send a system notification at this time every day",
+  "reminderEditSectionEffectiveDate": "Effective Date",
+  "reminderDateUnlimited": "Unlimited",
+  "reminderEditStartDateTitle": "Start Date: {value}",
+  "@reminderEditStartDateTitle": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "reminderEditEndDateTitle": "End Date: {value}",
+  "@reminderEditEndDateTitle": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "reminderEditStartDateSubtitle": "Leave empty to remove start date limit",
+  "reminderEditEndDateSubtitle": "Leave empty to remove end date limit",
+  "reminderEditDateBadgeUnset": "Unset",
+  "reminderEditDateBadgeSet": "Set",
+  "reminderEditClearDateLimit": "Clear date limits",
+  "reminderEditStatusEnabled": "Enabled",
+  "reminderEditStatusDisabled": "Disabled",
+  "reminderEditStatusBoundMedicine": "Medicine linked",
+  "reminderEditStatusManualInput": "Manual input",
+  "reminderEditDateRangeInvalidToast": "Start date cannot be later than end date",
+  "reminderDateRangeAllTime": "All time",
+  "reminderDateRangeBetweenShort": "{start} - {end}",
+  "@reminderDateRangeBetweenShort": {
+    "placeholders": {
+      "start": {},
+      "end": {}
+    }
+  },
+  "reminderDateRangeFromShort": "From {date}",
+  "@reminderDateRangeFromShort": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "reminderDateRangeUntilShort": "Until {date}",
+  "@reminderDateRangeUntilShort": {
+    "placeholders": {
+      "date": {}
+    }
+  },
   "reminderEditSectionContent": "Reminder Content",
   "reminderEditNameLabel": "Medicine Name (required)",
   "reminderEditSubtitleLabel": "Note (optional)",
@@ -300,6 +344,28 @@
   "searchHeaderSubtitleManual": "Search by product name, approval number, or manufacturer",
   "searchInputHint": "Product Name / Approval No. / Manufacturer",
   "searchActionSearch": "Search",
+  "searchQueryModeTitle": "Query Mode",
+  "searchQueryModeDetecting": "Checking network...",
+  "searchQueryModeCurrent": "Current: {mode}",
+  "@searchQueryModeCurrent": {
+    "placeholders": {
+      "mode": {}
+    }
+  },
+  "searchQueryModeOnline": "Online",
+  "searchQueryModeLocal": "Local",
+  "searchDatabaseTitle": "Database",
+  "searchDatabaseSourceNmpa": "NMPA",
+  "searchDatabaseSourceDrugbank": "Drugbank",
+  "searchDatabaseCurrentHint": "Current database: {database}. Drugbank is not connected yet. Online queries still use NMPA (MySQL).",
+  "@searchDatabaseCurrentHint": {
+    "placeholders": {
+      "database": {}
+    }
+  },
+  "searchDatabaseNotConnectedToast": "Drugbank is not connected yet. NMPA is still used.",
+  "searchModeTagOnline": "Online",
+  "searchModeTagLocal": "Local",
   "searchQuickTagsTitle": "Popular Searches",
   "searchQuickTagAmoxicillin": "Amoxicillin",
   "searchQuickTagIbuprofen": "Ibuprofen",
@@ -339,6 +405,56 @@
   "searchAddFailedToast": "Add failed. Please try again",
   "searchResultAddedLabel": "Added",
   "searchResultAddActionLabel": "Add to My Medicines",
+  "reminderListCountLabel": "{count} reminders",
+  "@reminderListCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reminderListEnabledCountLabel": "{count} enabled",
+  "@reminderListEnabledCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reminderListDisabledCountLabel": "{count} disabled",
+  "@reminderListDisabledCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reminderRangeLabel": "Effective range: {range}",
+  "@reminderRangeLabel": {
+    "placeholders": {
+      "range": {}
+    }
+  },
+  "reminderRangeUnlimited": "Unlimited",
+  "reminderRangeBetween": "{start} to {end}",
+  "@reminderRangeBetween": {
+    "placeholders": {
+      "start": {},
+      "end": {}
+    }
+  },
+  "reminderRangeFrom": "From {start}",
+  "@reminderRangeFrom": {
+    "placeholders": {
+      "start": {}
+    }
+  },
+  "reminderRangeUntil": "Until {end}",
+  "@reminderRangeUntil": {
+    "placeholders": {
+      "end": {}
+    }
+  },
   "splashTitleMain": "Smart Medication",
   "splashTitleSubtitle": "Luminous · Health Guard",
   "splashBadgeScan": "Scan",

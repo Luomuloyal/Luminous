@@ -540,6 +540,70 @@ class AppLocalizationsZh extends AppLocalizations {
   String get reminderEditTimeSubtitle => '每天在该时间通过系统通知提醒';
 
   @override
+  String get reminderEditSectionEffectiveDate => '生效日期';
+
+  @override
+  String get reminderDateUnlimited => '不限制';
+
+  @override
+  String reminderEditStartDateTitle(Object value) {
+    return '开始日期: $value';
+  }
+
+  @override
+  String reminderEditEndDateTitle(Object value) {
+    return '结束日期: $value';
+  }
+
+  @override
+  String get reminderEditStartDateSubtitle => '留空表示不限制开始日期';
+
+  @override
+  String get reminderEditEndDateSubtitle => '留空表示不限制结束日期';
+
+  @override
+  String get reminderEditDateBadgeUnset => '未设置';
+
+  @override
+  String get reminderEditDateBadgeSet => '已设置';
+
+  @override
+  String get reminderEditClearDateLimit => '清空日期限制';
+
+  @override
+  String get reminderEditStatusEnabled => '启用';
+
+  @override
+  String get reminderEditStatusDisabled => '停用';
+
+  @override
+  String get reminderEditStatusBoundMedicine => '已绑定药品';
+
+  @override
+  String get reminderEditStatusManualInput => '手动输入';
+
+  @override
+  String get reminderEditDateRangeInvalidToast => '开始日期不能晚于结束日期';
+
+  @override
+  String get reminderDateRangeAllTime => '全时段';
+
+  @override
+  String reminderDateRangeBetweenShort(Object start, Object end) {
+    return '$start~$end';
+  }
+
+  @override
+  String reminderDateRangeFromShort(Object date) {
+    return '$date起';
+  }
+
+  @override
+  String reminderDateRangeUntilShort(Object date) {
+    return '至$date';
+  }
+
+  @override
   String get reminderEditSectionContent => '提醒内容';
 
   @override
@@ -737,6 +801,46 @@ class AppLocalizationsZh extends AppLocalizations {
   String get searchActionSearch => '搜索';
 
   @override
+  String get searchQueryModeTitle => '查询方式';
+
+  @override
+  String get searchQueryModeDetecting => '检测网络中...';
+
+  @override
+  String searchQueryModeCurrent(Object mode) {
+    return '当前: $mode';
+  }
+
+  @override
+  String get searchQueryModeOnline => '联网查询';
+
+  @override
+  String get searchQueryModeLocal => '本地查询';
+
+  @override
+  String get searchDatabaseTitle => '数据库';
+
+  @override
+  String get searchDatabaseSourceNmpa => 'NMPA';
+
+  @override
+  String get searchDatabaseSourceDrugbank => 'Drugbank';
+
+  @override
+  String searchDatabaseCurrentHint(Object database) {
+    return '当前数据库: $database。Drugbank 暂未接入，联网查询仍走 NMPA（MySQL）。';
+  }
+
+  @override
+  String get searchDatabaseNotConnectedToast => 'Drugbank 暂未接入，当前仍使用 NMPA 数据源。';
+
+  @override
+  String get searchModeTagOnline => '联网';
+
+  @override
+  String get searchModeTagLocal => '本地';
+
+  @override
   String get searchQuickTagsTitle => '常用搜索';
 
   @override
@@ -839,6 +943,44 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get searchResultAddActionLabel => '添加到我的药品';
+
+  @override
+  String reminderListCountLabel(int count) {
+    return '$count 条提醒';
+  }
+
+  @override
+  String reminderListEnabledCountLabel(int count) {
+    return '$count 启用';
+  }
+
+  @override
+  String reminderListDisabledCountLabel(int count) {
+    return '$count 关闭';
+  }
+
+  @override
+  String reminderRangeLabel(Object range) {
+    return '生效区间: $range';
+  }
+
+  @override
+  String get reminderRangeUnlimited => '不限制';
+
+  @override
+  String reminderRangeBetween(Object start, Object end) {
+    return '$start 至 $end';
+  }
+
+  @override
+  String reminderRangeFrom(Object start) {
+    return '$start 起';
+  }
+
+  @override
+  String reminderRangeUntil(Object end) {
+    return '截止 $end';
+  }
 
   @override
   String get splashTitleMain => '智慧用药';

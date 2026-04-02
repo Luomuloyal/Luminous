@@ -3,9 +3,19 @@ import 'package:luminous/api/medicine_api.dart';
 import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/l10n/app_localizations.dart';
-import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/medicine.dart';
+
+String _pickDetailTextByLocale(
+  BuildContext context, {
+  required String zh,
+  required String en,
+}) {
+  final languageCode = Localizations.localeOf(
+    context,
+  ).languageCode.toLowerCase();
+  return languageCode.startsWith('zh') ? zh : en;
+}
 
 // 药品详情页
 //
@@ -177,7 +187,7 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
         ),
         centerTitle: true,
       ),
-      appBarSpacing: 36,
+      appBarSpacing: 30,
       accentColor: scheme.primary,
       secondaryAccentColor: Color.lerp(
         scheme.secondary,
@@ -447,7 +457,8 @@ class _DisclaimerCard extends StatelessWidget {
       ornamentKey: 'medicine.disclaimer',
       child: Text(
         l10n?.medicineDetailSafetyDisclaimer ??
-            AppI18nText.pick(
+            _pickDetailTextByLocale(
+              context,
               zh: '本应用信息仅用于健康科普与辅助查询，不能替代医生诊断与处方。如有不适或正在用药，请遵医嘱并咨询专业人士。',
               en: 'This app provides health education and supportive lookup only, and does not replace diagnosis or prescriptions. If you feel unwell or are taking medication, follow medical advice and consult professionals.',
             ),

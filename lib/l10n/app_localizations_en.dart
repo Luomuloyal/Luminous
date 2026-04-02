@@ -572,6 +572,73 @@ class AppLocalizationsEn extends AppLocalizations {
       'Send a system notification at this time every day';
 
   @override
+  String get reminderEditSectionEffectiveDate => 'Effective Date';
+
+  @override
+  String get reminderDateUnlimited => 'Unlimited';
+
+  @override
+  String reminderEditStartDateTitle(Object value) {
+    return 'Start Date: $value';
+  }
+
+  @override
+  String reminderEditEndDateTitle(Object value) {
+    return 'End Date: $value';
+  }
+
+  @override
+  String get reminderEditStartDateSubtitle =>
+      'Leave empty to remove start date limit';
+
+  @override
+  String get reminderEditEndDateSubtitle =>
+      'Leave empty to remove end date limit';
+
+  @override
+  String get reminderEditDateBadgeUnset => 'Unset';
+
+  @override
+  String get reminderEditDateBadgeSet => 'Set';
+
+  @override
+  String get reminderEditClearDateLimit => 'Clear date limits';
+
+  @override
+  String get reminderEditStatusEnabled => 'Enabled';
+
+  @override
+  String get reminderEditStatusDisabled => 'Disabled';
+
+  @override
+  String get reminderEditStatusBoundMedicine => 'Medicine linked';
+
+  @override
+  String get reminderEditStatusManualInput => 'Manual input';
+
+  @override
+  String get reminderEditDateRangeInvalidToast =>
+      'Start date cannot be later than end date';
+
+  @override
+  String get reminderDateRangeAllTime => 'All time';
+
+  @override
+  String reminderDateRangeBetweenShort(Object start, Object end) {
+    return '$start - $end';
+  }
+
+  @override
+  String reminderDateRangeFromShort(Object date) {
+    return 'From $date';
+  }
+
+  @override
+  String reminderDateRangeUntilShort(Object date) {
+    return 'Until $date';
+  }
+
+  @override
   String get reminderEditSectionContent => 'Reminder Content';
 
   @override
@@ -785,6 +852,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchActionSearch => 'Search';
 
   @override
+  String get searchQueryModeTitle => 'Query Mode';
+
+  @override
+  String get searchQueryModeDetecting => 'Checking network...';
+
+  @override
+  String searchQueryModeCurrent(Object mode) {
+    return 'Current: $mode';
+  }
+
+  @override
+  String get searchQueryModeOnline => 'Online';
+
+  @override
+  String get searchQueryModeLocal => 'Local';
+
+  @override
+  String get searchDatabaseTitle => 'Database';
+
+  @override
+  String get searchDatabaseSourceNmpa => 'NMPA';
+
+  @override
+  String get searchDatabaseSourceDrugbank => 'Drugbank';
+
+  @override
+  String searchDatabaseCurrentHint(Object database) {
+    return 'Current database: $database. Drugbank is not connected yet. Online queries still use NMPA (MySQL).';
+  }
+
+  @override
+  String get searchDatabaseNotConnectedToast =>
+      'Drugbank is not connected yet. NMPA is still used.';
+
+  @override
+  String get searchModeTagOnline => 'Online';
+
+  @override
+  String get searchModeTagLocal => 'Local';
+
+  @override
   String get searchQuickTagsTitle => 'Popular Searches';
 
   @override
@@ -893,6 +1001,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchResultAddActionLabel => 'Add to My Medicines';
+
+  @override
+  String reminderListCountLabel(int count) {
+    return '$count reminders';
+  }
+
+  @override
+  String reminderListEnabledCountLabel(int count) {
+    return '$count enabled';
+  }
+
+  @override
+  String reminderListDisabledCountLabel(int count) {
+    return '$count disabled';
+  }
+
+  @override
+  String reminderRangeLabel(Object range) {
+    return 'Effective range: $range';
+  }
+
+  @override
+  String get reminderRangeUnlimited => 'Unlimited';
+
+  @override
+  String reminderRangeBetween(Object start, Object end) {
+    return '$start to $end';
+  }
+
+  @override
+  String reminderRangeFrom(Object start) {
+    return 'From $start';
+  }
+
+  @override
+  String reminderRangeUntil(Object end) {
+    return 'Until $end';
+  }
 
   @override
   String get splashTitleMain => 'Smart Medication';

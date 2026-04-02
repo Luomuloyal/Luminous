@@ -1118,6 +1118,114 @@ abstract class AppLocalizations {
   /// **'Send a system notification at this time every day'**
   String get reminderEditTimeSubtitle;
 
+  /// No description provided for @reminderEditSectionEffectiveDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Effective Date'**
+  String get reminderEditSectionEffectiveDate;
+
+  /// No description provided for @reminderDateUnlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited'**
+  String get reminderDateUnlimited;
+
+  /// No description provided for @reminderEditStartDateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Date: {value}'**
+  String reminderEditStartDateTitle(Object value);
+
+  /// No description provided for @reminderEditEndDateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'End Date: {value}'**
+  String reminderEditEndDateTitle(Object value);
+
+  /// No description provided for @reminderEditStartDateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty to remove start date limit'**
+  String get reminderEditStartDateSubtitle;
+
+  /// No description provided for @reminderEditEndDateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty to remove end date limit'**
+  String get reminderEditEndDateSubtitle;
+
+  /// No description provided for @reminderEditDateBadgeUnset.
+  ///
+  /// In en, this message translates to:
+  /// **'Unset'**
+  String get reminderEditDateBadgeUnset;
+
+  /// No description provided for @reminderEditDateBadgeSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Set'**
+  String get reminderEditDateBadgeSet;
+
+  /// No description provided for @reminderEditClearDateLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear date limits'**
+  String get reminderEditClearDateLimit;
+
+  /// No description provided for @reminderEditStatusEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get reminderEditStatusEnabled;
+
+  /// No description provided for @reminderEditStatusDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get reminderEditStatusDisabled;
+
+  /// No description provided for @reminderEditStatusBoundMedicine.
+  ///
+  /// In en, this message translates to:
+  /// **'Medicine linked'**
+  String get reminderEditStatusBoundMedicine;
+
+  /// No description provided for @reminderEditStatusManualInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual input'**
+  String get reminderEditStatusManualInput;
+
+  /// No description provided for @reminderEditDateRangeInvalidToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Start date cannot be later than end date'**
+  String get reminderEditDateRangeInvalidToast;
+
+  /// No description provided for @reminderDateRangeAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get reminderDateRangeAllTime;
+
+  /// No description provided for @reminderDateRangeBetweenShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} - {end}'**
+  String reminderDateRangeBetweenShort(Object start, Object end);
+
+  /// No description provided for @reminderDateRangeFromShort.
+  ///
+  /// In en, this message translates to:
+  /// **'From {date}'**
+  String reminderDateRangeFromShort(Object date);
+
+  /// No description provided for @reminderDateRangeUntilShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Until {date}'**
+  String reminderDateRangeUntilShort(Object date);
+
   /// No description provided for @reminderEditSectionContent.
   ///
   /// In en, this message translates to:
@@ -1508,6 +1616,78 @@ abstract class AppLocalizations {
   /// **'Search'**
   String get searchActionSearch;
 
+  /// No description provided for @searchQueryModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Query Mode'**
+  String get searchQueryModeTitle;
+
+  /// No description provided for @searchQueryModeDetecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking network...'**
+  String get searchQueryModeDetecting;
+
+  /// No description provided for @searchQueryModeCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current: {mode}'**
+  String searchQueryModeCurrent(Object mode);
+
+  /// No description provided for @searchQueryModeOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get searchQueryModeOnline;
+
+  /// No description provided for @searchQueryModeLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Local'**
+  String get searchQueryModeLocal;
+
+  /// No description provided for @searchDatabaseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Database'**
+  String get searchDatabaseTitle;
+
+  /// No description provided for @searchDatabaseSourceNmpa.
+  ///
+  /// In en, this message translates to:
+  /// **'NMPA'**
+  String get searchDatabaseSourceNmpa;
+
+  /// No description provided for @searchDatabaseSourceDrugbank.
+  ///
+  /// In en, this message translates to:
+  /// **'Drugbank'**
+  String get searchDatabaseSourceDrugbank;
+
+  /// No description provided for @searchDatabaseCurrentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Current database: {database}. Drugbank is not connected yet. Online queries still use NMPA (MySQL).'**
+  String searchDatabaseCurrentHint(Object database);
+
+  /// No description provided for @searchDatabaseNotConnectedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Drugbank is not connected yet. NMPA is still used.'**
+  String get searchDatabaseNotConnectedToast;
+
+  /// No description provided for @searchModeTagOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get searchModeTagOnline;
+
+  /// No description provided for @searchModeTagLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Local'**
+  String get searchModeTagLocal;
+
   /// No description provided for @searchQuickTagsTitle.
   ///
   /// In en, this message translates to:
@@ -1711,6 +1891,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add to My Medicines'**
   String get searchResultAddActionLabel;
+
+  /// No description provided for @reminderListCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} reminders'**
+  String reminderListCountLabel(int count);
+
+  /// No description provided for @reminderListEnabledCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} enabled'**
+  String reminderListEnabledCountLabel(int count);
+
+  /// No description provided for @reminderListDisabledCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} disabled'**
+  String reminderListDisabledCountLabel(int count);
+
+  /// No description provided for @reminderRangeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Effective range: {range}'**
+  String reminderRangeLabel(Object range);
+
+  /// No description provided for @reminderRangeUnlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited'**
+  String get reminderRangeUnlimited;
+
+  /// No description provided for @reminderRangeBetween.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} to {end}'**
+  String reminderRangeBetween(Object start, Object end);
+
+  /// No description provided for @reminderRangeFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From {start}'**
+  String reminderRangeFrom(Object start);
+
+  /// No description provided for @reminderRangeUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Until {end}'**
+  String reminderRangeUntil(Object end);
 
   /// No description provided for @splashTitleMain.
   ///

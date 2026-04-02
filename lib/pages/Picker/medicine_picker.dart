@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/components/app_surface.dart';
+import 'package:luminous/components/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Search/search.dart';
 import 'package:luminous/stores/my_medicine_repository.dart';
@@ -119,20 +120,50 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
       spacing: 8,
       runSpacing: 8,
       children: [
-        _PickerHintChip(
+        TintedStatusChip(
           icon: Icons.offline_bolt_rounded,
-          label: l10n?.pickerHintLocalPriority ?? '本地优先选择',
-          accent: scheme.primary,
+          text: l10n?.pickerHintLocalPriority ?? '本地优先选择',
+          color: scheme.primary,
+          textColor: scheme.onSurfaceVariant,
+          iconColor: scheme.primary,
+          surfaceLightAlpha: 0.06,
+          surfaceDarkAlpha: 0.11,
+          borderLightAlpha: 0.08,
+          borderDarkAlpha: 0.16,
+          iconSize: 15,
+          fontSize: 11.5,
+          fontWeight: FontWeight.w700,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         ),
-        _PickerHintChip(
+        TintedStatusChip(
           icon: Icons.cloud_sync_outlined,
-          label: l10n?.pickerHintCloudFallback ?? '需要时再补查云端',
-          accent: scheme.secondary,
+          text: l10n?.pickerHintCloudFallback ?? '需要时再补查云端',
+          color: scheme.secondary,
+          textColor: scheme.onSurfaceVariant,
+          iconColor: scheme.secondary,
+          surfaceLightAlpha: 0.06,
+          surfaceDarkAlpha: 0.11,
+          borderLightAlpha: 0.08,
+          borderDarkAlpha: 0.16,
+          iconSize: 15,
+          fontSize: 11.5,
+          fontWeight: FontWeight.w700,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         ),
-        _PickerHintChip(
+        TintedStatusChip(
           icon: Icons.inventory_2_outlined,
-          label: itemCountText,
-          accent: scheme.tertiary,
+          text: itemCountText,
+          color: scheme.tertiary,
+          textColor: scheme.onSurfaceVariant,
+          iconColor: scheme.tertiary,
+          surfaceLightAlpha: 0.06,
+          surfaceDarkAlpha: 0.11,
+          borderLightAlpha: 0.08,
+          borderDarkAlpha: 0.16,
+          iconSize: 15,
+          fontSize: 11.5,
+          fontWeight: FontWeight.w700,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         ),
       ],
     );
@@ -263,10 +294,19 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
               ),
               const SizedBox(width: 10),
               if (_rows.isNotEmpty)
-                _PickerCountChip(
-                  label:
+                TintedStatusChip(
+                  text:
                       l10n?.pickerCount(_rows.length) ?? '共 ${_rows.length} 项',
-                  accent: scheme.tertiary,
+                  color: scheme.tertiary,
+                  showBorder: false,
+                  surfaceLightAlpha: 0.08,
+                  surfaceDarkAlpha: 0.16,
+                  fontSize: 11.3,
+                  fontWeight: FontWeight.w700,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 5,
+                  ),
                 ),
               const Spacer(),
               if (_loading) ...[
@@ -420,9 +460,18 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  _MedicineBadge(
-                                    label: item.displayBadge,
-                                    accent: scheme.primary,
+                                  TintedStatusChip(
+                                    text: item.displayBadge,
+                                    color: scheme.primary,
+                                    showBorder: false,
+                                    surfaceLightAlpha: 0.08,
+                                    surfaceDarkAlpha: 0.16,
+                                    fontSize: 10.8,
+                                    fontWeight: FontWeight.w700,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -500,119 +549,5 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
     if (!mounted) return;
     if (result == null) return;
     Navigator.pop(context, result);
-  }
-}
-
-class _PickerHintChip extends StatelessWidget {
-  const _PickerHintChip({
-    required this.icon,
-    required this.label,
-    required this.accent,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    final background = appTintedSurface(
-      context,
-      accent,
-      lightAlpha: 0.06,
-      darkAlpha: 0.11,
-    );
-    final border = appTintedBorder(
-      context,
-      accent,
-      lightAlpha: 0.08,
-      darkAlpha: 0.16,
-    );
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 15, color: accent),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PickerCountChip extends StatelessWidget {
-  const _PickerCountChip({required this.label, required this.accent});
-
-  final String label;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: appTintedSurface(
-          context,
-          accent,
-          lightAlpha: 0.08,
-          darkAlpha: 0.16,
-        ),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11.3,
-          fontWeight: FontWeight.w700,
-          color: accent,
-        ),
-      ),
-    );
-  }
-}
-
-class _MedicineBadge extends StatelessWidget {
-  const _MedicineBadge({required this.label, required this.accent});
-
-  final String label;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: appTintedSurface(
-          context,
-          accent,
-          lightAlpha: 0.08,
-          darkAlpha: 0.16,
-        ),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 10.8,
-          fontWeight: FontWeight.w700,
-          color: accent,
-        ),
-      ),
-    );
   }
 }

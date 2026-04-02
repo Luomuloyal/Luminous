@@ -1,9 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:luminous/components/app_surface.dart';
-import 'package:luminous/components/quick_entry_style.dart';
 import 'package:luminous/components/responsive_quick_grid.dart';
+import 'package:luminous/components/shared_quick_entry_card.dart';
 import 'package:luminous/components/soft_banner.dart';
+import 'package:luminous/components/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/viewmodels/home.dart';
 
@@ -35,20 +36,14 @@ class HomeStatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return TintedStatusChip(
+      text: text,
+      color: textColor,
+      backgroundColor: backgroundColor,
+      showBorder: false,
+      fontSize: 12,
+      fontWeight: FontWeight.w600,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        color: backgroundColor,
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: textColor,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
     );
   }
 }
@@ -82,20 +77,14 @@ class HomeInfoPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = Container(
+    final content = TintedStatusChip(
+      text: text,
+      color: textColor,
+      backgroundColor: backgroundColor,
+      showBorder: false,
+      fontSize: 12.5,
+      fontWeight: FontWeight.w600,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        color: backgroundColor,
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: textColor,
-          fontSize: 12.5,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
     );
 
     if (onTap == null && onLongPress == null) {
@@ -180,8 +169,11 @@ class HomeFeatureSection extends StatelessWidget {
                   gridDelegate: metrics.gridDelegate,
                   itemBuilder: (context, index) {
                     final item = items[index];
-                    return _HomeFeatureGridItem(
-                      item: item,
+                    return SharedQuickEntryCard(
+                      icon: item.icon,
+                      title: item.title,
+                      subtitle: item.subtitle,
+                      color: item.color,
                       metrics: metrics,
                       onTap: () => onTap(item),
                     );
@@ -728,101 +720,6 @@ class _HomeReminderTile extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _HomeFeatureGridItem extends StatelessWidget {
-  const _HomeFeatureGridItem({
-    required this.item,
-    required this.metrics,
-    required this.onTap,
-  });
-
-  final HomeFeatureItemData item;
-  final ResponsiveQuickGridMetrics metrics;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final compact = metrics.isCompact;
-    final style = resolveQuickEntryVisualStyle(context, item.color);
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(kQuickEntryCardRadius),
-      onTap: onTap,
-      child: Ink(
-        decoration: BoxDecoration(
-          color: style.background,
-          borderRadius: BorderRadius.circular(kQuickEntryCardRadius),
-          border: Border.all(color: style.border),
-        ),
-        child: Padding(
-          padding: metrics.itemPadding,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Align(
-                child: SizedBox(
-                  width: metrics.iconBoxSize,
-                  child: AspectRatio(
-                    aspectRatio: 1,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: style.iconBackground,
-                        borderRadius: BorderRadius.circular(
-                          metrics.iconBorderRadius,
-                        ),
-                        border: Border.all(color: style.iconBorder),
-                      ),
-                      child: Icon(
-                        item.icon,
-                        size: metrics.iconSize,
-                        color: style.iconColor,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(height: metrics.titleSpacing),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      item.title,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: compact ? 14 : 14.5,
-                        fontWeight: FontWeight.w800,
-                        color: style.titleColor,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: metrics.subtitleSpacing),
-                    Flexible(
-                      child: Text(
-                        item.subtitle,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: compact ? 11.5 : 12,
-                          color: style.subtitleColor,
-                          fontWeight: FontWeight.w600,
-                          height: compact ? 1.2 : 1.25,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

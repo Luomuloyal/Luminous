@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/soft_banner.dart';
+import 'package:luminous/components/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/stores/locale_controller.dart';
 import 'package:luminous/stores/ornament_controller.dart';
@@ -25,7 +26,7 @@ class SettingsPage extends StatelessWidget {
       accentColor: scheme.secondary,
       secondaryAccentColor: scheme.primary,
       safeAreaBottom: true,
-      appBarSpacing: 36,
+      appBarSpacing: 30,
       appBar: AppBar(
         title: Text(l10n?.settingsTitle ?? '设置'),
         backgroundColor: Colors.transparent,
@@ -34,7 +35,7 @@ class SettingsPage extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
       ),
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 2, 16, 28),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
         children: [
           _SettingsHubHeroCard(
             accentColor: scheme.primary,
@@ -109,7 +110,7 @@ class ThemeSettingsPage extends StatelessWidget {
       accentColor: scheme.secondary,
       secondaryAccentColor: scheme.primary,
       safeAreaBottom: true,
-      appBarSpacing: 36,
+      appBarSpacing: 30,
       appBar: AppBar(
         title: Text(l10n?.settingsThemeTitle ?? '主题设置'),
         backgroundColor: Colors.transparent,
@@ -118,7 +119,7 @@ class ThemeSettingsPage extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
       ),
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 2, 16, 28),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
         children: [
           _SettingsHeroCard(
             themeController: themeController,
@@ -162,7 +163,7 @@ class LanguageSettingsPage extends StatelessWidget {
       accentColor: scheme.tertiary,
       secondaryAccentColor: scheme.primary,
       safeAreaBottom: true,
-      appBarSpacing: 36,
+      appBarSpacing: 30,
       appBar: AppBar(
         title: Text(l10n?.languagePageTitle ?? '语言设置'),
         backgroundColor: Colors.transparent,
@@ -171,7 +172,7 @@ class LanguageSettingsPage extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
       ),
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 2, 16, 28),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
         children: [
           _LanguageHeroCard(localeController: localeController),
           const SizedBox(height: 12),
@@ -465,13 +466,18 @@ class _LanguageHeroCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              _SettingsInfoChip(
+              TintedStatusChip(
                 icon: Icons.language_rounded,
                 text:
                     l10n?.languageSelectedLabel(selectedLabel) ??
                     '已选：$selectedLabel',
+                color: theme.surfaceTextColor,
                 backgroundColor: theme.surfaceColor,
-                foregroundColor: theme.surfaceTextColor,
+                showBorder: false,
+                iconSize: 16,
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
               ),
             ],
           );
@@ -740,11 +746,16 @@ class _SettingsHeroCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  _SettingsInfoChip(
+                  TintedStatusChip(
                     icon: _themeModeIcon(preference),
                     text: _themeModeLabel(preference, l10n: l10n),
+                    color: theme.surfaceTextColor,
                     backgroundColor: theme.surfaceColor,
-                    foregroundColor: theme.surfaceTextColor,
+                    showBorder: false,
+                    iconSize: 16,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
                   ),
                 ],
               ),
@@ -753,21 +764,31 @@ class _SettingsHeroCard extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _SettingsInfoChip(
+                  TintedStatusChip(
                     icon: Icons.auto_awesome_rounded,
                     text: _themeStyleLabel(style, l10n: l10n),
+                    color: theme.surfaceTextColor,
                     backgroundColor: theme.surfaceColor,
-                    foregroundColor: theme.surfaceTextColor,
+                    showBorder: false,
+                    iconSize: 16,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
                   ),
-                  _SettingsInfoChip(
+                  TintedStatusChip(
                     icon: loggedIn
                         ? Icons.cloud_done_rounded
                         : Icons.cloud_off_rounded,
                     text: loggedIn
                         ? (l10n?.settingsHeroAccountLoggedIn ?? '账号已登录')
                         : (l10n?.settingsHeroLocalMode ?? '本地模式'),
+                    color: theme.surfaceTextColor,
                     backgroundColor: theme.surfaceColor,
-                    foregroundColor: theme.surfaceTextColor,
+                    showBorder: false,
+                    iconSize: 16,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
                   ),
                 ],
               ),
@@ -827,46 +848,6 @@ class _SettingsHeroCard extends StatelessWidget {
         },
       );
     });
-  }
-}
-
-class _SettingsInfoChip extends StatelessWidget {
-  const _SettingsInfoChip({
-    required this.icon,
-    required this.text,
-    required this.backgroundColor,
-    required this.foregroundColor,
-  });
-
-  final IconData icon;
-  final String text;
-  final Color backgroundColor;
-  final Color foregroundColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: foregroundColor),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: TextStyle(
-              color: foregroundColor,
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 

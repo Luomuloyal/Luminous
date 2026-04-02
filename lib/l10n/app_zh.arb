@@ -228,6 +228,50 @@
     }
   },
   "reminderEditTimeSubtitle": "每天在该时间通过系统通知提醒",
+  "reminderEditSectionEffectiveDate": "生效日期",
+  "reminderDateUnlimited": "不限制",
+  "reminderEditStartDateTitle": "开始日期: {value}",
+  "@reminderEditStartDateTitle": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "reminderEditEndDateTitle": "结束日期: {value}",
+  "@reminderEditEndDateTitle": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+  "reminderEditStartDateSubtitle": "留空表示不限制开始日期",
+  "reminderEditEndDateSubtitle": "留空表示不限制结束日期",
+  "reminderEditDateBadgeUnset": "未设置",
+  "reminderEditDateBadgeSet": "已设置",
+  "reminderEditClearDateLimit": "清空日期限制",
+  "reminderEditStatusEnabled": "启用",
+  "reminderEditStatusDisabled": "停用",
+  "reminderEditStatusBoundMedicine": "已绑定药品",
+  "reminderEditStatusManualInput": "手动输入",
+  "reminderEditDateRangeInvalidToast": "开始日期不能晚于结束日期",
+  "reminderDateRangeAllTime": "全时段",
+  "reminderDateRangeBetweenShort": "{start}~{end}",
+  "@reminderDateRangeBetweenShort": {
+    "placeholders": {
+      "start": {},
+      "end": {}
+    }
+  },
+  "reminderDateRangeFromShort": "{date}起",
+  "@reminderDateRangeFromShort": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "reminderDateRangeUntilShort": "至{date}",
+  "@reminderDateRangeUntilShort": {
+    "placeholders": {
+      "date": {}
+    }
+  },
   "reminderEditSectionContent": "提醒内容",
   "reminderEditNameLabel": "药品名称(必填)",
   "reminderEditSubtitleLabel": "备注(可选)",
@@ -300,6 +344,28 @@
   "searchHeaderSubtitleManual": "支持按药品名称、批准文号、生产单位搜索",
   "searchInputHint": "产品名称 / 批准文号 / 生产单位",
   "searchActionSearch": "搜索",
+  "searchQueryModeTitle": "查询方式",
+  "searchQueryModeDetecting": "检测网络中...",
+  "searchQueryModeCurrent": "当前: {mode}",
+  "@searchQueryModeCurrent": {
+    "placeholders": {
+      "mode": {}
+    }
+  },
+  "searchQueryModeOnline": "联网查询",
+  "searchQueryModeLocal": "本地查询",
+  "searchDatabaseTitle": "数据库",
+  "searchDatabaseSourceNmpa": "NMPA",
+  "searchDatabaseSourceDrugbank": "Drugbank",
+  "searchDatabaseCurrentHint": "当前数据库: {database}。Drugbank 暂未接入，联网查询仍走 NMPA（MySQL）。",
+  "@searchDatabaseCurrentHint": {
+    "placeholders": {
+      "database": {}
+    }
+  },
+  "searchDatabaseNotConnectedToast": "Drugbank 暂未接入，当前仍使用 NMPA 数据源。",
+  "searchModeTagOnline": "联网",
+  "searchModeTagLocal": "本地",
   "searchQuickTagsTitle": "常用搜索",
   "searchQuickTagAmoxicillin": "阿莫西林",
   "searchQuickTagIbuprofen": "布洛芬",
@@ -339,6 +405,56 @@
   "searchAddFailedToast": "添加失败，请重试",
   "searchResultAddedLabel": "已添加",
   "searchResultAddActionLabel": "添加到我的药品",
+  "reminderListCountLabel": "{count} 条提醒",
+  "@reminderListCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reminderListEnabledCountLabel": "{count} 启用",
+  "@reminderListEnabledCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reminderListDisabledCountLabel": "{count} 关闭",
+  "@reminderListDisabledCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "reminderRangeLabel": "生效区间: {range}",
+  "@reminderRangeLabel": {
+    "placeholders": {
+      "range": {}
+    }
+  },
+  "reminderRangeUnlimited": "不限制",
+  "reminderRangeBetween": "{start} 至 {end}",
+  "@reminderRangeBetween": {
+    "placeholders": {
+      "start": {},
+      "end": {}
+    }
+  },
+  "reminderRangeFrom": "{start} 起",
+  "@reminderRangeFrom": {
+    "placeholders": {
+      "start": {}
+    }
+  },
+  "reminderRangeUntil": "截止 {end}",
+  "@reminderRangeUntil": {
+    "placeholders": {
+      "end": {}
+    }
+  },
   "splashTitleMain": "智慧用药",
   "splashTitleSubtitle": "Luminous · 健康守护",
   "splashBadgeScan": "扫描",

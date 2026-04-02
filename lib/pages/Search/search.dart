@@ -4,6 +4,7 @@ import 'package:luminous/api/medicine_api.dart';
 import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/search.dart';
+import 'package:luminous/components/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Drug/medicine_detail.dart';
 import 'package:luminous/stores/local_medicine_store.dart';
@@ -332,11 +333,15 @@ class _SearchViewState extends State<SearchView> {
     _draftKeywordNotifier.value = next;
   }
 
-  String get _queryModeLabel =>
-      _queryMode == MedicineQueryMode.online ? '联网查询' : '本地查询';
+  String _queryModeLabel(AppLocalizations? l10n) =>
+      _queryMode == MedicineQueryMode.online
+      ? (l10n?.searchQueryModeOnline ?? '联网查询')
+      : (l10n?.searchQueryModeLocal ?? '本地查询');
 
-  String get _databaseSourceLabel =>
-      _databaseSource == MedicineDatabaseSource.nmpa ? 'NMPA' : 'Drugbank';
+  String _databaseSourceLabel(AppLocalizations? l10n) =>
+      _databaseSource == MedicineDatabaseSource.nmpa
+      ? (l10n?.searchDatabaseSourceNmpa ?? 'NMPA')
+      : (l10n?.searchDatabaseSourceDrugbank ?? 'Drugbank');
 
   Future<void> _detectInitialQueryMode() async {
     final reachable = await MedicineApi.isBackendReachable();
@@ -376,7 +381,12 @@ class _SearchViewState extends State<SearchView> {
       _databaseSource = source;
     });
     if (source == MedicineDatabaseSource.drugbank) {
-      ToastUtils.instance.show(context, 'Drugbank 暂未接入，当前仍使用 NMPA 数据源。');
+      final l10n = _l10n;
+      ToastUtils.instance.show(
+        context,
+        l10n?.searchDatabaseNotConnectedToast ??
+            'Drugbank 暂未接入，当前仍使用 NMPA 数据源。',
+      );
     }
   }
 
@@ -519,15 +529,9 @@ class _SearchViewState extends State<SearchView> {
     final l10n = _l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final badgeBackground = appTintedSurface(
-      context,
-      scheme.primary,
-      lightAlpha: 0.06,
-      darkAlpha: 0.12,
-    );
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -558,7 +562,7 @@ class _SearchViewState extends State<SearchView> {
                         ? (l10n?.searchTitlePicker ?? '选择药品')
                         : (l10n?.searchTitleManual ?? '手动搜索'),
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: 22,
                       fontWeight: FontWeight.w800,
                       color: scheme.onSurface,
                     ),
@@ -569,32 +573,20 @@ class _SearchViewState extends State<SearchView> {
             const SizedBox(height: 4),
             Row(
               children: [
-                Container(
+                TintedStatusChip(
+                  text: widget.pickerMode
+                      ? (l10n?.searchBadgePicker ?? '药品库选择')
+                      : (l10n?.searchBadgeManual ?? '关键词检索'),
+                  color: scheme.primary,
+                  surfaceLightAlpha: 0.06,
+                  surfaceDarkAlpha: 0.12,
+                  borderLightAlpha: 0.08,
+                  borderDarkAlpha: 0.16,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
                     vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: badgeBackground,
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(
-                      color: appTintedBorder(
-                        context,
-                        scheme.primary,
-                        lightAlpha: 0.08,
-                        darkAlpha: 0.16,
-                      ),
-                    ),
-                  ),
-                  child: Text(
-                    widget.pickerMode
-                        ? (l10n?.searchBadgePicker ?? '药品库选择')
-                        : (l10n?.searchBadgeManual ?? '关键词检索'),
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
-                      color: scheme.primary,
-                    ),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -707,6 +699,9 @@ class _SearchViewState extends State<SearchView> {
   Widget _buildQueryModeSliver() {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final l10n = _l10n;
+    final modeLabel = _queryModeLabel(l10n);
+    final databaseLabel = _databaseSourceLabel(l10n);
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -719,7 +714,7 @@ class _SearchViewState extends State<SearchView> {
                 Row(
                   children: [
                     Text(
-                      '查询方式',
+                      l10n?.searchQueryModeTitle ?? '查询方式',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -729,7 +724,7 @@ class _SearchViewState extends State<SearchView> {
                     const SizedBox(width: 8),
                     if (!_queryModeResolved)
                       Text(
-                        '检测网络中...',
+                        l10n?.searchQueryModeDetecting ?? '检测网络中...',
                         style: TextStyle(
                           fontSize: 12,
                           color: scheme.onSurfaceVariant,
@@ -738,7 +733,8 @@ class _SearchViewState extends State<SearchView> {
                       ),
                     const Spacer(),
                     Text(
-                      '当前: $_queryModeLabel',
+                      l10n?.searchQueryModeCurrent(modeLabel) ??
+                          '当前: $modeLabel',
                       style: TextStyle(
                         fontSize: 12,
                         color: scheme.onSurfaceVariant,
@@ -752,7 +748,7 @@ class _SearchViewState extends State<SearchView> {
                   children: [
                     Expanded(
                       child: _buildDualOptionButton(
-                        label: '联网查询',
+                        label: l10n?.searchQueryModeOnline ?? '联网查询',
                         selected: _queryMode == MedicineQueryMode.online,
                         onPressed: () =>
                             _switchQueryMode(MedicineQueryMode.online),
@@ -761,7 +757,7 @@ class _SearchViewState extends State<SearchView> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: _buildDualOptionButton(
-                        label: '本地查询',
+                        label: l10n?.searchQueryModeLocal ?? '本地查询',
                         selected: _queryMode == MedicineQueryMode.local,
                         onPressed: () =>
                             _switchQueryMode(MedicineQueryMode.local),
@@ -771,7 +767,7 @@ class _SearchViewState extends State<SearchView> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  '数据库',
+                  l10n?.searchDatabaseTitle ?? '数据库',
                   style: TextStyle(
                     fontSize: 13,
                     color: scheme.onSurface,
@@ -783,7 +779,7 @@ class _SearchViewState extends State<SearchView> {
                   children: [
                     Expanded(
                       child: _buildDualOptionButton(
-                        label: 'NMPA',
+                        label: l10n?.searchDatabaseSourceNmpa ?? 'NMPA',
                         selected:
                             _databaseSource == MedicineDatabaseSource.nmpa,
                         onPressed: () =>
@@ -793,7 +789,7 @@ class _SearchViewState extends State<SearchView> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: _buildDualOptionButton(
-                        label: 'Drugbank',
+                        label: l10n?.searchDatabaseSourceDrugbank ?? 'Drugbank',
                         selected:
                             _databaseSource == MedicineDatabaseSource.drugbank,
                         onPressed: () => _switchDatabaseSource(
@@ -805,7 +801,8 @@ class _SearchViewState extends State<SearchView> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '当前数据库: $_databaseSourceLabel。Drugbank 暂未接入，联网查询仍走 NMPA（MySQL）。',
+                  l10n?.searchDatabaseCurrentHint(databaseLabel) ??
+                      '当前数据库: $databaseLabel。Drugbank 暂未接入，联网查询仍走 NMPA（MySQL）。',
                   style: TextStyle(
                     fontSize: 11.8,
                     color: scheme.onSurfaceVariant,
@@ -1033,29 +1030,19 @@ class _SearchViewState extends State<SearchView> {
               ),
             ),
             const SizedBox(width: 8),
-            Container(
+            TintedStatusChip(
+              text: _queryMode == MedicineQueryMode.online
+                  ? (_l10n?.searchModeTagOnline ?? '联网')
+                  : (_l10n?.searchModeTagLocal ?? '本地'),
+              color: _queryMode == MedicineQueryMode.online
+                  ? scheme.primary
+                  : scheme.tertiary,
+              showBorder: false,
+              surfaceLightAlpha: 0.08,
+              surfaceDarkAlpha: 0.16,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: appTintedSurface(
-                  context,
-                  _queryMode == MedicineQueryMode.online
-                      ? scheme.primary
-                      : scheme.tertiary,
-                  lightAlpha: 0.08,
-                  darkAlpha: 0.16,
-                ),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                _queryMode == MedicineQueryMode.online ? '联网' : '本地',
-                style: TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  color: _queryMode == MedicineQueryMode.online
-                      ? scheme.primary
-                      : scheme.tertiary,
-                ),
-              ),
             ),
           ],
         ),
@@ -1112,7 +1099,7 @@ class _SearchViewState extends State<SearchView> {
     final scheme = Theme.of(context).colorScheme;
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 26, 16, 10),
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
         child: _buildSearchDecorCard(
           ornamentKey: widget.pickerMode
               ? 'search.picker.guide'
@@ -1208,7 +1195,7 @@ class _SearchViewState extends State<SearchView> {
   Widget _buildLoadingSliver() {
     return const SliverToBoxAdapter(
       child: Padding(
-        padding: EdgeInsets.fromLTRB(16, 26, 16, 10),
+        padding: EdgeInsets.fromLTRB(16, 20, 16, 10),
         child: Center(
           child: SizedBox(
             width: 22,
@@ -1242,7 +1229,7 @@ class _SearchViewState extends State<SearchView> {
     final scheme = Theme.of(context).colorScheme;
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 30, 16, 12),
+        padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
         child: Center(
           child: Column(
             children: [

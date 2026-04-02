@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:luminous/api/reminder_api.dart';
 import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/components/app_surface.dart';
+import 'package:luminous/components/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Picker/medicine_picker.dart';
 import 'package:luminous/stores/user_controller.dart';
@@ -99,16 +100,23 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
   }
 
   String get _dateRangeChipText {
+    final l10n = _l10n;
     if (_startDate.isEmpty && _endDate.isEmpty) {
-      return '全时段';
+      return l10n?.reminderDateRangeAllTime ?? '全时段';
     }
     if (_startDate.isNotEmpty && _endDate.isNotEmpty) {
-      return '${_shortDate(_startDate)}~${_shortDate(_endDate)}';
+      return l10n?.reminderDateRangeBetweenShort(
+            _shortDate(_startDate),
+            _shortDate(_endDate),
+          ) ??
+          '${_shortDate(_startDate)}~${_shortDate(_endDate)}';
     }
     if (_startDate.isNotEmpty) {
-      return '${_shortDate(_startDate)}起';
+      return l10n?.reminderDateRangeFromShort(_shortDate(_startDate)) ??
+          '${_shortDate(_startDate)}起';
     }
-    return '至${_shortDate(_endDate)}';
+    return l10n?.reminderDateRangeUntilShort(_shortDate(_endDate)) ??
+        '至${_shortDate(_endDate)}';
   }
 
   /// 生成已选药品身份信息的副标题文本。
@@ -194,7 +202,9 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
                       ? _buildSelectedIdentitySubtitle(l10n)
                       : (l10n?.reminderEditSelectMedicineHint ??
                             '可从“我的药品/搜索库”选择'),
-                  badgeText: _hasLinkedIdentity ? '已绑定药品' : '手动输入',
+                  badgeText: _hasLinkedIdentity
+                      ? (l10n?.reminderEditStatusBoundMedicine ?? '已绑定药品')
+                      : (l10n?.reminderEditStatusManualInput ?? '手动输入'),
                   onTap: _pickMedicine,
                 ),
                 const SizedBox(height: 10),
@@ -210,7 +220,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
           ),
           const SizedBox(height: 12),
           _buildSectionCard(
-            title: '生效日期',
+            title: l10n?.reminderEditSectionEffectiveDate ?? '生效日期',
             accentColor: const Color(0xFF14B8A6),
             secondaryColor: const Color(0xFF0EA5E9),
             ornamentKey: 'reminders.edit.date-range',
@@ -219,18 +229,35 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
                 _tile(
                   icon: Icons.event_available_rounded,
                   color: const Color(0xFF14B8A6),
-                  title: _startDate.isEmpty ? '开始日期: 不限制' : '开始日期: $_startDate',
-                  subtitle: '留空表示不限制开始日期',
-                  badgeText: _startDate.isEmpty ? '未设置' : '已设置',
+                  title:
+                      l10n?.reminderEditStartDateTitle(
+                        _startDate.isEmpty
+                            ? (l10n?.reminderDateUnlimited ?? '不限制')
+                            : _startDate,
+                      ) ??
+                      (_startDate.isEmpty ? '开始日期: 不限制' : '开始日期: $_startDate'),
+                  subtitle:
+                      l10n?.reminderEditStartDateSubtitle ?? '留空表示不限制开始日期',
+                  badgeText: _startDate.isEmpty
+                      ? (l10n?.reminderEditDateBadgeUnset ?? '未设置')
+                      : (l10n?.reminderEditDateBadgeSet ?? '已设置'),
                   onTap: _pickStartDate,
                 ),
                 const SizedBox(height: 10),
                 _tile(
                   icon: Icons.event_busy_rounded,
                   color: const Color(0xFF0EA5E9),
-                  title: _endDate.isEmpty ? '结束日期: 不限制' : '结束日期: $_endDate',
-                  subtitle: '留空表示不限制结束日期',
-                  badgeText: _endDate.isEmpty ? '未设置' : '已设置',
+                  title:
+                      l10n?.reminderEditEndDateTitle(
+                        _endDate.isEmpty
+                            ? (l10n?.reminderDateUnlimited ?? '不限制')
+                            : _endDate,
+                      ) ??
+                      (_endDate.isEmpty ? '结束日期: 不限制' : '结束日期: $_endDate'),
+                  subtitle: l10n?.reminderEditEndDateSubtitle ?? '留空表示不限制结束日期',
+                  badgeText: _endDate.isEmpty
+                      ? (l10n?.reminderEditDateBadgeUnset ?? '未设置')
+                      : (l10n?.reminderEditDateBadgeSet ?? '已设置'),
                   onTap: _pickEndDate,
                 ),
                 if (_startDate.isNotEmpty || _endDate.isNotEmpty) ...<Widget>[
@@ -245,7 +272,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
                         });
                       },
                       icon: const Icon(Icons.clear_rounded, size: 16),
-                      label: const Text('清空日期限制'),
+                      label: Text(l10n?.reminderEditClearDateLimit ?? '清空日期限制'),
                     ),
                   ),
                 ],
@@ -406,84 +433,45 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
                   spacing: 8,
                   runSpacing: 8,
                   children: <Widget>[
-                    _statusChip(
-                      context,
+                    TintedStatusChip(
                       icon: Icons.schedule_rounded,
                       text: _time,
                       color: const Color(0xFF10B981),
+                      surfaceLightAlpha: 0.09,
                     ),
-                    _statusChip(
-                      context,
+                    TintedStatusChip(
                       icon: _enabled
                           ? Icons.notifications_active_rounded
                           : Icons.notifications_off_rounded,
-                      text: _enabled ? 'Enabled' : 'Disabled',
+                      text: _enabled
+                          ? (l10n?.reminderEditStatusEnabled ?? '启用')
+                          : (l10n?.reminderEditStatusDisabled ?? '停用'),
                       color: _enabled
                           ? const Color(0xFF0EA5E9)
                           : const Color(0xFF64748B),
+                      surfaceLightAlpha: 0.09,
                     ),
-                    _statusChip(
-                      context,
+                    TintedStatusChip(
                       icon: _hasLinkedIdentity
                           ? Icons.verified_rounded
                           : Icons.edit_note_rounded,
-                      text: _hasLinkedIdentity ? '已绑定药品' : '手动输入',
+                      text: _hasLinkedIdentity
+                          ? (l10n?.reminderEditStatusBoundMedicine ?? '已绑定药品')
+                          : (l10n?.reminderEditStatusManualInput ?? '手动输入'),
                       color: _hasLinkedIdentity
                           ? const Color(0xFF14B8A6)
                           : const Color(0xFFF59E0B),
+                      surfaceLightAlpha: 0.09,
                     ),
-                    _statusChip(
-                      context,
+                    TintedStatusChip(
                       icon: Icons.date_range_rounded,
                       text: _dateRangeChipText,
                       color: const Color(0xFF0EA5E9),
+                      surfaceLightAlpha: 0.09,
                     ),
                   ],
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _statusChip(
-    BuildContext context, {
-    required IconData icon,
-    required String text,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: appTintedSurface(
-          context,
-          color,
-          lightAlpha: 0.09,
-          darkAlpha: 0.18,
-        ),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: appTintedBorder(
-            context,
-            color,
-            lightAlpha: 0.14,
-            darkAlpha: 0.24,
-          ),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 11.8,
-              fontWeight: FontWeight.w700,
-              color: color,
             ),
           ),
         ],
@@ -793,7 +781,10 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
     if (_startDate.isNotEmpty &&
         _endDate.isNotEmpty &&
         _startDate.compareTo(_endDate) > 0) {
-      ToastUtils.instance.show(context, '开始日期不能晚于结束日期');
+      ToastUtils.instance.show(
+        context,
+        _l10n?.reminderEditDateRangeInvalidToast ?? '开始日期不能晚于结束日期',
+      );
       return;
     }
 

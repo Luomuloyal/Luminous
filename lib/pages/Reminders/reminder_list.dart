@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:luminous/api/reminder_api.dart';
 import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/components/app_surface.dart';
+import 'package:luminous/components/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Reminders/reminder_edit.dart';
 import 'package:luminous/stores/reminder_local_store.dart';
@@ -83,7 +84,8 @@ class _ReminderListPageState extends State<ReminderListPage> {
 
   int get _disabledCount => _items.length - _enabledCount;
 
-  String get _itemsCountLabel => '${_items.length} 条提醒';
+  String _itemsCountLabel(AppLocalizations? l10n) =>
+      l10n?.reminderListCountLabel(_items.length) ?? '${_items.length} 条提醒';
 
   /// 加载提醒计划列表。
   ///
@@ -297,64 +299,26 @@ class _ReminderListPageState extends State<ReminderListPage> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _buildStatChip(
+              TintedStatusChip(
                 icon: Icons.library_books_rounded,
-                text: _itemsCountLabel,
+                text: _itemsCountLabel(l10n),
                 color: const Color(0xFF0EA5E9),
               ),
-              _buildStatChip(
+              TintedStatusChip(
                 icon: Icons.notifications_active_rounded,
-                text: '$_enabledCount 启用',
+                text:
+                    l10n?.reminderListEnabledCountLabel(_enabledCount) ??
+                    '$_enabledCount 启用',
                 color: const Color(0xFF10B981),
               ),
-              _buildStatChip(
+              TintedStatusChip(
                 icon: Icons.notifications_off_rounded,
-                text: '$_disabledCount 关闭',
+                text:
+                    l10n?.reminderListDisabledCountLabel(_disabledCount) ??
+                    '$_disabledCount 关闭',
                 color: const Color(0xFF64748B),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatChip({
-    required IconData icon,
-    required String text,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: appTintedSurface(
-          context,
-          color,
-          lightAlpha: 0.1,
-          darkAlpha: 0.18,
-        ),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: appTintedBorder(
-            context,
-            color,
-            lightAlpha: 0.14,
-            darkAlpha: 0.24,
-          ),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 11.8,
-              fontWeight: FontWeight.w700,
-              color: color,
-            ),
           ),
         ],
       ),
@@ -778,7 +742,11 @@ class _ReminderCard extends StatelessWidget {
     final accent = item.enabled
         ? const Color(0xFF10B981)
         : const Color(0xFF64748B);
-    final rangeText = _formatDateRange(item.startDate, item.endDate);
+    final rangeText = _formatDateRange(
+      item.startDate,
+      item.endDate,
+      l10n: l10n,
+    );
     return AppSurfaceCard(
       radius: 18,
       child: InkWell(
@@ -877,7 +845,7 @@ class _ReminderCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '生效区间: $rangeText',
+                      l10n?.reminderRangeLabel(rangeText) ?? '生效区间: $rangeText',
                       style: TextStyle(
                         fontSize: 11.8,
                         height: 1.35,
@@ -941,18 +909,22 @@ class _ReminderCard extends StatelessWidget {
     );
   }
 
-  String _formatDateRange(String startDate, String endDate) {
+  String _formatDateRange(
+    String startDate,
+    String endDate, {
+    AppLocalizations? l10n,
+  }) {
     final start = startDate.trim();
     final end = endDate.trim();
     if (start.isEmpty && end.isEmpty) {
-      return '不限制';
+      return l10n?.reminderRangeUnlimited ?? '不限制';
     }
     if (start.isNotEmpty && end.isNotEmpty) {
-      return '$start 至 $end';
+      return l10n?.reminderRangeBetween(start, end) ?? '$start 至 $end';
     }
     if (start.isNotEmpty) {
-      return '$start 起';
+      return l10n?.reminderRangeFrom(start) ?? '$start 起';
     }
-    return '截止 $end';
+    return l10n?.reminderRangeUntil(end) ?? '截止 $end';
   }
 }

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:luminous/components/app_surface.dart';
-import 'package:luminous/components/quick_entry_style.dart';
 import 'package:luminous/components/responsive_quick_grid.dart';
+import 'package:luminous/components/shared_quick_entry_card.dart';
 import 'package:luminous/components/soft_banner.dart';
+import 'package:luminous/components/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/viewmodels/auth.dart';
 import 'package:luminous/viewmodels/mine.dart';
@@ -55,6 +56,7 @@ class MineProfileCard extends StatelessWidget {
           ornamentKey: 'mine.profile',
           padding: EdgeInsets.all(compact ? 16 : 18),
           builder: (context, theme) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -148,29 +150,50 @@ class MineProfileCard extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    _MineInfoChip(
+                    TintedStatusChip(
                       icon: isLoggedIn
                           ? Icons.cloud_done_rounded
                           : Icons.phone_android_rounded,
                       text: isLoggedIn
                           ? (l10n?.mineProfileChipAccountConnected ?? '账号已连接')
                           : (l10n?.mineProfileChipLocalOnly ?? '当前本地体验'),
+                      color: theme.surfaceTextColor,
                       backgroundColor: theme.surfaceColor,
-                      foregroundColor: theme.surfaceTextColor,
+                      borderColor: theme.surfaceTextColor.withValues(
+                        alpha: isDark ? 0.28 : 0.20,
+                      ),
+                      iconSize: 16,
+                      fontSize: 12.2,
+                      fontWeight: FontWeight.w700,
+                      padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
                     ),
-                    _MineInfoChip(
+                    TintedStatusChip(
                       icon: Icons.image_outlined,
                       text: l10n?.mineProfileChipImageLocalOnly ?? '原图仅本机保存',
+                      color: theme.surfaceTextColor,
                       backgroundColor: theme.surfaceColor,
-                      foregroundColor: theme.surfaceTextColor,
+                      borderColor: theme.surfaceTextColor.withValues(
+                        alpha: isDark ? 0.28 : 0.20,
+                      ),
+                      iconSize: 16,
+                      fontSize: 12.2,
+                      fontWeight: FontWeight.w700,
+                      padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
                     ),
-                    _MineInfoChip(
+                    TintedStatusChip(
                       icon: Icons.auto_awesome_rounded,
                       text: isLoggedIn
                           ? (l10n?.mineProfileChipSyncEnabled ?? '可同步轻量结果')
                           : (l10n?.mineProfileChipSyncAfterLogin ?? '登录后开启轻同步'),
+                      color: theme.surfaceTextColor,
                       backgroundColor: theme.surfaceColor,
-                      foregroundColor: theme.surfaceTextColor,
+                      borderColor: theme.surfaceTextColor.withValues(
+                        alpha: isDark ? 0.28 : 0.20,
+                      ),
+                      iconSize: 16,
+                      fontSize: 12.2,
+                      fontWeight: FontWeight.w700,
+                      padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
                     ),
                   ],
                 ),
@@ -245,114 +268,6 @@ class MinePage extends StatelessWidget {
             onTapAbout: onTapAbout,
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// 我的页顶部“快捷入口”区域中的单个卡片组件。
-class MineQuickActionCard extends StatelessWidget {
-  /// 创建一个快捷操作卡片组件。
-  const MineQuickActionCard({
-    super.key,
-    required this.data,
-    required this.onTap,
-    this.metrics,
-  });
-
-  /// 当前卡片使用的数据对象。
-  final MineQuickActionData data;
-
-  /// 点击卡片回调。
-  final VoidCallback onTap;
-
-  /// 由外层网格计算好的响应式尺寸。
-  final ResponsiveQuickGridMetrics? metrics;
-
-  @override
-  Widget build(BuildContext context) {
-    return RepaintBoundary(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final resolvedMetrics =
-              metrics ??
-              ResponsiveQuickGridMetrics.fromWidth(constraints.maxWidth);
-          final compact = resolvedMetrics.isCompact;
-          final style = resolveQuickEntryVisualStyle(context, data.color);
-
-          return InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(kQuickEntryCardRadius),
-            child: Ink(
-              padding: resolvedMetrics.itemPadding,
-              decoration: BoxDecoration(
-                color: style.background,
-                borderRadius: BorderRadius.circular(kQuickEntryCardRadius),
-                border: Border.all(color: style.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Align(
-                    child: SizedBox(
-                      width: resolvedMetrics.iconBoxSize,
-                      child: AspectRatio(
-                        aspectRatio: 1,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: style.iconBackground,
-                            borderRadius: BorderRadius.circular(
-                              resolvedMetrics.iconBorderRadius,
-                            ),
-                            border: Border.all(color: style.iconBorder),
-                          ),
-                          child: Icon(
-                            data.icon,
-                            color: style.iconColor,
-                            size: resolvedMetrics.iconSize,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: resolvedMetrics.titleSpacing),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        Text(
-                          data.title,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: compact ? 14 : 14.5,
-                            fontWeight: FontWeight.w800,
-                            color: style.titleColor,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: resolvedMetrics.subtitleSpacing),
-                        Flexible(
-                          child: Text(
-                            data.subtitle,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: compact ? 11.5 : 12,
-                              fontWeight: FontWeight.w600,
-                              color: style.subtitleColor,
-                              height: compact ? 1.2 : 1.25,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
       ),
     );
   }
@@ -450,9 +365,13 @@ class MineQuickActionsSection extends StatelessWidget {
                 gridDelegate: metrics.gridDelegate,
                 itemBuilder: (context, index) {
                   final item = items[index];
-                  return MineQuickActionCard(
-                    data: item,
+                  return SharedQuickEntryCard(
+                    icon: item.icon,
+                    title: item.title,
+                    subtitle: item.subtitle,
+                    color: item.color,
                     metrics: metrics,
+                    repaintBoundary: true,
                     onTap: () => onTap(item),
                   );
                 },
@@ -662,50 +581,6 @@ class _MineMenuItem extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _MineInfoChip extends StatelessWidget {
-  const _MineInfoChip({
-    required this.icon,
-    required this.text,
-    required this.backgroundColor,
-    required this.foregroundColor,
-  });
-
-  final IconData icon;
-  final String text;
-  final Color backgroundColor;
-  final Color foregroundColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: foregroundColor.withValues(alpha: isDark ? 0.28 : 0.20),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: foregroundColor),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: TextStyle(
-              color: foregroundColor,
-              fontSize: 12.2,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
       ),
     );
   }

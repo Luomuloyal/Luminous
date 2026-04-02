@@ -5,6 +5,7 @@ import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/auth.dart';
 import 'package:luminous/components/soft_banner.dart';
+import 'package:luminous/components/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Picker/medicine_picker.dart';
 import 'package:luminous/stores/user_controller.dart';
@@ -794,38 +795,20 @@ class _SafetyInfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return TintedStatusChip(
+      icon: icon,
+      text: text,
+      color: foregroundColor,
+      backgroundColor: backgroundColor,
+      showBorder: false,
+      iconSize: 16,
+      fontSize: 12.3,
+      fontWeight: FontWeight.w700,
+      textMaxLines: 2,
+      textOverflow: TextOverflow.ellipsis,
+      expandText: true,
+      mainAxisSize: MainAxisSize.max,
       padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 18),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 1),
-              child: Icon(icon, size: 16, color: foregroundColor),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                text,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: foregroundColor,
-                  fontSize: 12.3,
-                  fontWeight: FontWeight.w700,
-                  height: 1.15,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

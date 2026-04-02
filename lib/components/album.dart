@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/soft_banner.dart';
+import 'package:luminous/components/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
-import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/viewmodels/album.dart';
 
 /// 相册页（Album）的大块 UI 组件集合。
@@ -107,6 +107,17 @@ class AlbumPage extends StatelessWidget {
       ),
     );
   }
+}
+
+String _pickByCurrentLocale(
+  BuildContext context, {
+  required String zh,
+  required String en,
+}) {
+  final languageCode = Localizations.localeOf(
+    context,
+  ).languageCode.toLowerCase();
+  return languageCode.startsWith('zh') ? zh : en;
 }
 
 /// 相册页顶部 header sliver。
@@ -227,7 +238,8 @@ class AlbumHeaderSliver extends StatelessWidget {
                           : (l10n?.albumHeaderChipOriginalCount(
                                   originalCount,
                                 ) ??
-                                AppI18nText.pick(
+                                _pickByCurrentLocale(
+                                  context,
                                   zh: '原图 $originalCount 条',
                                   en: '$originalCount originals',
                                 )),
@@ -749,27 +761,16 @@ class _AlbumInfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return TintedStatusChip(
+      icon: icon,
+      text: text,
+      color: foregroundColor,
+      backgroundColor: backgroundColor,
+      showBorder: false,
+      iconSize: 16,
+      fontSize: 12.3,
+      fontWeight: FontWeight.w700,
       padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: foregroundColor),
-          const SizedBox(width: 6),
-          Text(
-            text,
-            style: TextStyle(
-              color: foregroundColor,
-              fontSize: 12.3,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -782,27 +783,17 @@ class _AlbumOverlayBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return TintedStatusChip(
+      icon: icon,
+      text: text,
+      color: Colors.white,
+      backgroundColor: Colors.black.withValues(alpha: 0.34),
+      showBorder: false,
+      iconSize: 13,
+      iconTextSpacing: 4,
+      fontSize: 11.3,
+      fontWeight: FontWeight.w700,
       padding: const EdgeInsets.fromLTRB(8, 5, 8, 5),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.34),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: Colors.white),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11.3,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -974,7 +965,8 @@ class AlbumPreviewPage extends StatelessWidget {
                               l10n?.albumPreviewTagRecordedAt(
                                 _formatAlbumDate(entry.takenAt),
                               ) ??
-                              AppI18nText.pick(
+                              _pickByCurrentLocale(
+                                context,
                                 zh: '记录于 ${_formatAlbumDate(entry.takenAt)}',
                                 en: 'Recorded at ${_formatAlbumDate(entry.takenAt)}',
                               ),
