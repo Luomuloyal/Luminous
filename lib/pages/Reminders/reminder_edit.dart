@@ -63,6 +63,12 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
   /// 页面内部统一保留为字符串，便于直接回填 UI、写入接口和本地缓存。
   String _time = '08:00';
 
+  /// 生效开始日期（yyyy-MM-dd，留空表示不限制）。
+  String _startDate = '';
+
+  /// 生效结束日期（yyyy-MM-dd，留空表示不限制）。
+  String _endDate = '';
+
   /// 当前提醒是否启用。
   ///
   /// 之所以作为表单状态保存，是因为新增时就允许用户决定这条计划是否立即生效。
@@ -83,6 +89,27 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
       _drugCode.trim().isNotEmpty || _approvalNo.trim().isNotEmpty;
 
   bool get _canSave => !_saving && _normalizedProductName.isNotEmpty;
+
+  String _shortDate(String value) {
+    final text = value.trim();
+    if (text.length >= 10) {
+      return text.substring(5, 10);
+    }
+    return text;
+  }
+
+  String get _dateRangeChipText {
+    if (_startDate.isEmpty && _endDate.isEmpty) {
+      return '全时段';
+    }
+    if (_startDate.isNotEmpty && _endDate.isNotEmpty) {
+      return '${_shortDate(_startDate)}~${_shortDate(_endDate)}';
+    }
+    if (_startDate.isNotEmpty) {
+      return '${_shortDate(_startDate)}起';
+    }
+    return '至${_shortDate(_endDate)}';
+  }
 
   /// 生成已选药品身份信息的副标题文本。
   ///
@@ -112,6 +139,8 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
     _selectedProductName = init?.productName.trim() ?? '';
     _time = init?.time ?? '08:00';
     _enabled = init?.enabled ?? true;
+    _startDate = init?.startDate ?? '';
+    _endDate = init?.endDate ?? '';
   }
 
   /// 释放文本控制器资源。
@@ -176,6 +205,50 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
                   subtitle: l10n?.reminderEditTimeSubtitle ?? '每天在该时间通过系统通知提醒',
                   onTap: _pickTime,
                 ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildSectionCard(
+            title: '生效日期',
+            accentColor: const Color(0xFF14B8A6),
+            secondaryColor: const Color(0xFF0EA5E9),
+            ornamentKey: 'reminders.edit.date-range',
+            child: Column(
+              children: <Widget>[
+                _tile(
+                  icon: Icons.event_available_rounded,
+                  color: const Color(0xFF14B8A6),
+                  title: _startDate.isEmpty ? '开始日期: 不限制' : '开始日期: $_startDate',
+                  subtitle: '留空表示不限制开始日期',
+                  badgeText: _startDate.isEmpty ? '未设置' : '已设置',
+                  onTap: _pickStartDate,
+                ),
+                const SizedBox(height: 10),
+                _tile(
+                  icon: Icons.event_busy_rounded,
+                  color: const Color(0xFF0EA5E9),
+                  title: _endDate.isEmpty ? '结束日期: 不限制' : '结束日期: $_endDate',
+                  subtitle: '留空表示不限制结束日期',
+                  badgeText: _endDate.isEmpty ? '未设置' : '已设置',
+                  onTap: _pickEndDate,
+                ),
+                if (_startDate.isNotEmpty || _endDate.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _startDate = '';
+                          _endDate = '';
+                        });
+                      },
+                      icon: const Icon(Icons.clear_rounded, size: 16),
+                      label: const Text('清空日期限制'),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -358,6 +431,12 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
                       color: _hasLinkedIdentity
                           ? const Color(0xFF14B8A6)
                           : const Color(0xFFF59E0B),
+                    ),
+                    _statusChip(
+                      context,
+                      icon: Icons.date_range_rounded,
+                      text: _dateRangeChipText,
+                      color: const Color(0xFF0EA5E9),
                     ),
                   ],
                 ),
@@ -643,6 +722,53 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
     });
   }
 
+  DateTime _resolvePickerInitial(String raw) {
+    final now = DateTime.now();
+    final minDate = DateTime(2000, 1, 1);
+    final maxDate = DateTime(now.year + 5, 12, 31);
+    final parsed = DateTime.tryParse(raw);
+    if (parsed == null) {
+      return now;
+    }
+    if (parsed.isBefore(minDate)) {
+      return minDate;
+    }
+    if (parsed.isAfter(maxDate)) {
+      return maxDate;
+    }
+    return parsed;
+  }
+
+  Future<String?> _pickDate(String initialRaw) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _resolvePickerInitial(initialRaw),
+      firstDate: DateTime(2000, 1, 1),
+      lastDate: DateTime(now.year + 5, 12, 31),
+    );
+    if (picked == null) {
+      return null;
+    }
+    return '${picked.year.toString().padLeft(4, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _pickStartDate() async {
+    final picked = await _pickDate(_startDate.isEmpty ? _endDate : _startDate);
+    if (picked == null || !mounted) {
+      return;
+    }
+    setState(() => _startDate = picked);
+  }
+
+  Future<void> _pickEndDate() async {
+    final picked = await _pickDate(_endDate.isEmpty ? _startDate : _endDate);
+    if (picked == null || !mounted) {
+      return;
+    }
+    setState(() => _endDate = picked);
+  }
+
   /// 保存提醒计划。
   ///
   /// 会先做前端校验，再调用 `ReminderApi.upsert`，成功后把结果返回上一页。
@@ -664,6 +790,12 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
       );
       return;
     }
+    if (_startDate.isNotEmpty &&
+        _endDate.isNotEmpty &&
+        _startDate.compareTo(_endDate) > 0) {
+      ToastUtils.instance.show(context, '开始日期不能晚于结束日期');
+      return;
+    }
 
     setState(() => _saving = true);
     try {
@@ -679,6 +811,8 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
         enabled: _enabled,
         repeatRule: 'daily',
         method: 'notification',
+        startDate: _startDate,
+        endDate: _endDate,
       );
       if (!mounted) return;
       Navigator.pop(context, response.result);

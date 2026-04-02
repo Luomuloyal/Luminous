@@ -35,6 +35,7 @@
 - 识别或药品详情: 先看 `05`、`06`
 - 本地缓存与同步: 先看 `08`
 - 接口联调: 先看 `lib/docs/backend-api.md`，再看 `backend/src/handlers`
+- 后端端口占用或服务编排: 先看 `../backend/README.md` 的 Docker 与端口排查章节
 
 ## Related Docs
 

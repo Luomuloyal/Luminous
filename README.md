@@ -60,6 +60,27 @@ Health Check:
 
 - `GET http://127.0.0.1:8787/health`
 
+### Run With Docker Compose
+
+在项目根目录执行：
+
+```bash
+docker compose up -d --build
+```
+
+默认会启动以下服务：
+
+- `backend`（8787）
+- `mongodb`（27017）
+- `redis`（6379）
+- `mysql`（3306）
+
+停止服务：
+
+```bash
+docker compose down
+```
+
 ## Configuration
 
 ### Flutter Base URL
@@ -85,6 +106,25 @@ Health Check:
 - Deployment Guide: [lib/docs/deployment-config.md](lib/docs/deployment-config.md)
 - Backend Runtime: [backend/README.md](backend/README.md)
 - Architecture Notes: [Study/README.md](Study/README.md)
+
+## Troubleshooting
+
+### Backend port 8787 already in use
+
+如果本地执行 `npm run dev` 报 `EADDRINUSE: 8787`，通常是另一个 Node 进程还在运行（常见于此前的 `tsx watch` 终端未关闭）。
+
+PowerShell 排查命令：
+
+```powershell
+Get-NetTCPConnection -LocalPort 8787 -State Listen | Select-Object OwningProcess
+Get-CimInstance Win32_Process -Filter "ProcessId = <PID>" | Select-Object Name,CommandLine
+```
+
+确认后可结束占用进程：
+
+```powershell
+Stop-Process -Id <PID> -Force
+```
 
 ## Contributing
 

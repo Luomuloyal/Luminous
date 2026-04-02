@@ -82,6 +82,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageEnglishSubtitle => 'Use English for app text';
 
   @override
+  String languageCurrentLabel(Object language) {
+    return 'Current language: $language';
+  }
+
+  @override
+  String languageSelectedLabel(Object language) {
+    return 'Selected: $language';
+  }
+
+  @override
+  String get languageHeroHintSystem =>
+      'App language follows device language automatically';
+
+  @override
+  String get languageHeroHintChinese =>
+      'Interface text is fixed to Simplified Chinese';
+
+  @override
+  String get languageHeroHintEnglish => 'Interface text is fixed to English';
+
+  @override
   String get languageNote =>
       'When Follow System is enabled, changing your device language will apply automatically the next time you open the app (and also while app is running when system locale updates).';
 
@@ -1165,6 +1186,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get medicineDetailAiNoContentToast => 'AI returned no content';
+
+  @override
+  String get medicineDetailAiNetworkErrorToast =>
+      'Network request failed. Please check your connection and try again.';
+
+  @override
+  String get medicineDetailPageTitle => 'Medicine Details';
 
   @override
   String get medicineDetailHeaderRefreshing => 'Refreshing';

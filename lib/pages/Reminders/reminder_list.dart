@@ -8,6 +8,7 @@ import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Reminders/reminder_edit.dart';
 import 'package:luminous/stores/reminder_local_store.dart';
+import 'package:luminous/stores/today_reminder_local_store.dart';
 import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/message_utils.dart';
 import 'package:luminous/utils/notification_service.dart';
@@ -120,6 +121,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
         _items = items;
       });
       await reminderLocalStore.replaceForUser(userId, items);
+      await _syncTodaySnapshotForUser(userId);
       if (!_canApplyLoadResult(requestId, userId)) return;
       await NotificationService.instance.rescheduleAll(items);
     } catch (e) {
@@ -146,6 +148,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
     setState(() {
       _items = items;
     });
+    await _syncTodaySnapshotForUser(userId);
   }
 
   /// 当前请求结果是否仍然可以安全落到界面上。
@@ -174,6 +177,21 @@ class _ReminderListPageState extends State<ReminderListPage> {
       return;
     }
     await reminderLocalStore.replaceForUser(uid, _sortedPlans(_items));
+  }
+
+  Future<void> _syncTodaySnapshotForUser(String userId) async {
+    final uid = userId.trim();
+    if (uid.isEmpty) {
+      return;
+    }
+    final items = await todayReminderLocalStore.buildTodayItemsFromPlans(
+      uid,
+      _items,
+    );
+    await todayReminderLocalStore.replaceTodaySnapshot(
+      userId: uid,
+      items: items,
+    );
   }
 
   /// 构建提醒列表页 UI。
@@ -346,7 +364,16 @@ class _ReminderListPageState extends State<ReminderListPage> {
   /// 构建未登录时的引导视图。
   Widget _buildNeedLogin() {
     final l10n = _l10n;
+    final theme = Theme.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final iconAccent = Color.lerp(scheme.primary, scheme.tertiary, 0.4)!;
+    final iconBackground = appTintedSurface(
+      context,
+      iconAccent,
+      lightAlpha: 0.12,
+      darkAlpha: 0.24,
+      baseColor: theme.cardTheme.color ?? scheme.surface,
+    );
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 22),
@@ -363,14 +390,18 @@ class _ReminderListPageState extends State<ReminderListPage> {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                  color: iconBackground,
                   shape: BoxShape.circle,
+                  border: Border.all(
+                    color: appTintedBorder(
+                      context,
+                      iconAccent,
+                      lightAlpha: 0.16,
+                      darkAlpha: 0.26,
+                    ),
+                  ),
                 ),
-                child: const Icon(
-                  Icons.alarm_rounded,
-                  color: Color(0xFF10B981),
-                  size: 30,
-                ),
+                child: Icon(Icons.alarm_rounded, color: iconAccent, size: 30),
               ),
               const SizedBox(height: 12),
               Text(
@@ -378,7 +409,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F172A),
+                  color: scheme.onSurface,
                 ),
               ),
               const SizedBox(height: 6),
@@ -388,7 +419,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
                 style: TextStyle(
                   fontSize: 13,
                   height: 1.5,
-                  color: Color(0xFF64748B),
+                  color: scheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -398,8 +429,8 @@ class _ReminderListPageState extends State<ReminderListPage> {
                 child: FilledButton(
                   onPressed: () => Navigator.pushNamed(context, '/login'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF0EA5E9),
-                    foregroundColor: Colors.white,
+                    backgroundColor: scheme.primary,
+                    foregroundColor: scheme.onPrimary,
                     minimumSize: const Size(double.infinity, 46),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -512,6 +543,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
       _items = _sortedPlans(_items);
     });
     await _persistCurrentItems(userId: plan.userId);
+    await _syncTodaySnapshotForUser(plan.userId);
     await NotificationService.instance.rescheduleAll(_items);
   }
 
@@ -555,6 +587,8 @@ class _ReminderListPageState extends State<ReminderListPage> {
           enabled: enabled,
           repeatRule: plan.repeatRule,
           method: plan.method,
+          startDate: plan.startDate,
+          endDate: plan.endDate,
         );
         if (!mounted) return;
         await _upsertPlanAndReschedule(next.result);
@@ -581,6 +615,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
           _items = _sortedPlans(_items);
         });
         await _persistCurrentItems(userId: plan.userId);
+        await _syncTodaySnapshotForUser(plan.userId);
         await NotificationService.instance.rescheduleAll(_items);
         if (mounted) {
           ToastUtils.instance.show(
@@ -743,6 +778,7 @@ class _ReminderCard extends StatelessWidget {
     final accent = item.enabled
         ? const Color(0xFF10B981)
         : const Color(0xFF64748B);
+    final rangeText = _formatDateRange(item.startDate, item.endDate);
     return AppSurfaceCard(
       radius: 18,
       child: InkWell(
@@ -839,6 +875,16 @@ class _ReminderCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '生效区间: $rangeText',
+                      style: TextStyle(
+                        fontSize: 11.8,
+                        height: 1.35,
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     const SizedBox(height: 10),
                     Row(
                       children: [
@@ -893,5 +939,20 @@ class _ReminderCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatDateRange(String startDate, String endDate) {
+    final start = startDate.trim();
+    final end = endDate.trim();
+    if (start.isEmpty && end.isEmpty) {
+      return '不限制';
+    }
+    if (start.isNotEmpty && end.isNotEmpty) {
+      return '$start 至 $end';
+    }
+    if (start.isNotEmpty) {
+      return '$start 起';
+    }
+    return '截止 $end';
   }
 }

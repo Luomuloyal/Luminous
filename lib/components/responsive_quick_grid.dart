@@ -22,40 +22,40 @@ class ResponsiveQuickGridMetrics {
 
   factory ResponsiveQuickGridMetrics.fromWidth(double maxWidth) {
     final compact = isCompactLayoutWidth(maxWidth);
-    final spacing = compact ? 10.0 : 12.0;
+    final spacing = compact ? 8.0 : 12.0;
     final safeWidth = maxWidth.isFinite && maxWidth > 0 ? maxWidth : 360.0;
     final cellWidth = ((safeWidth - (spacing * 2)) / 3).clamp(
       0.0,
       double.infinity,
     );
-    final compactIconBox = (cellWidth * 0.56).clamp(52.0, 64.0).toDouble();
+    final compactIconBox = (cellWidth * 0.50).clamp(46.0, 58.0).toDouble();
 
     return ResponsiveQuickGridMetrics._(
       isCompact: compact,
-      sectionPadding: compact ? 12.0 : 14.0,
+      sectionPadding: compact ? 10.0 : 14.0,
       gridSpacing: spacing,
       itemPadding: compact
-          ? const EdgeInsets.fromLTRB(8, 8, 8, 8)
+          ? const EdgeInsets.fromLTRB(7, 7, 7, 7)
           : const EdgeInsets.fromLTRB(10, 12, 10, 12),
       iconBoxSize: compact ? compactIconBox : 74.0,
       iconSize: compact
-          ? (compactIconBox * 0.5).clamp(26.0, 32.0).toDouble()
+          ? (compactIconBox * 0.5).clamp(24.0, 30.0).toDouble()
           : 38.0,
-      iconBorderRadius: compact ? 18.0 : 22.0,
-      titleSpacing: compact ? 8.0 : 12.0,
-      subtitleSpacing: compact ? 2.0 : 3.0,
+      iconBorderRadius: compact ? 16.0 : 22.0,
+      titleSpacing: compact ? 6.0 : 12.0,
+      subtitleSpacing: compact ? 1.5 : 3.0,
       gridDelegate: compact
           ? SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               mainAxisSpacing: spacing,
               crossAxisSpacing: spacing,
-              childAspectRatio: 0.75,
+              childAspectRatio: 0.93,
             )
           : const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              mainAxisExtent: 156,
+              mainAxisExtent: 150,
             ),
     );
   }

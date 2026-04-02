@@ -28,6 +28,11 @@
 3. API 路径统一使用 `constants/constants.dart`，不要在业务代码中硬编码。
 4. 公共组件抽到 `components/`，并保持参数语义清晰。
 
+## 联调提示
+
+- 后端可直接本机运行（`cd backend && npm run dev`），也可用根目录 `docker compose up -d --build` 启动整套服务。
+- App 端联调地址通过 `constants/constants.dart` 的 `GlobalConstants.BASE_URL` 或 `--dart-define=API_BASE_URL` 控制。
+
 ## 相关文档
 
 - 文档目录: [docs/README.md](docs/README.md)

@@ -13,30 +13,108 @@ import 'package:luminous/viewmodels/home.dart';
 /// - 数据加载与状态维护；
 /// - 路由跳转；
 /// 具体 UI（卡片布局、列表样式等）在这里统一维护。
-class HomeFeatureItemData {
-  /// 功能入口的唯一 id（用于点击分发）。
-  final String id;
 
-  /// 功能入口标题。
-  final String title;
-
-  /// 功能入口副标题。
-  final String subtitle;
-
-  /// 功能入口图标。
-  final IconData icon;
-
-  /// 功能入口主题色。
-  final Color color;
-
-  /// 创建一个“常用功能”入口数据对象。
-  const HomeFeatureItemData({
-    required this.id,
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.color,
+/// 首页顶部卡片中的状态 chip（例如“已同步”）。
+class HomeStatusChip extends StatelessWidget {
+  /// 创建一个状态 chip。
+  const HomeStatusChip({
+    super.key,
+    required this.text,
+    this.backgroundColor = const Color(0x33FFFFFF),
+    this.textColor = Colors.white,
   });
+
+  /// chip 上展示的文本。
+  final String text;
+
+  /// chip 背景色。
+  final Color backgroundColor;
+
+  /// chip 文字色。
+  final Color textColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: backgroundColor,
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+/// 首页顶部卡片中的信息 pill（例如“今日提醒 3 条”）。
+class HomeInfoPill extends StatelessWidget {
+  /// 创建一个信息 pill。
+  const HomeInfoPill({
+    super.key,
+    required this.text,
+    this.backgroundColor = const Color(0x29FFFFFF),
+    this.textColor = Colors.white,
+    this.onTap,
+    this.onLongPress,
+  });
+
+  /// pill 上展示的文本。
+  final String text;
+
+  /// pill 背景色。
+  final Color backgroundColor;
+
+  /// pill 文字色。
+  final Color textColor;
+
+  /// 点击回调。
+  final VoidCallback? onTap;
+
+  /// 长按回调。
+  final VoidCallback? onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    final content = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: backgroundColor,
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 12.5,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+
+    if (onTap == null && onLongPress == null) {
+      return content;
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        borderRadius: BorderRadius.circular(999),
+        child: Ink(
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(999)),
+          child: content,
+        ),
+      ),
+    );
+  }
 }
 
 /// “常用功能”卡片区域。
@@ -62,7 +140,7 @@ class HomeFeatureSection extends StatelessWidget {
     final accent = Color.lerp(scheme.primary, scheme.secondary, 0.35)!;
     final secondary = Color.lerp(scheme.secondary, scheme.tertiary, 0.45)!;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+      padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final compact = isCompactLayoutWidth(constraints.maxWidth);
@@ -94,7 +172,7 @@ class HomeFeatureSection extends StatelessWidget {
                     color: scheme.onSurfaceVariant,
                   ),
                 ),
-                SizedBox(height: compact ? 12 : 14),
+                SizedBox(height: compact ? 10 : 12),
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -152,7 +230,7 @@ class HomeReminderSection extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                SizedBox(height: compact ? 8 : 10),
+                SizedBox(height: compact ? 7 : 9),
                 ...items.asMap().entries.map((entry) {
                   final index = entry.key;
                   final item = entry.value;
@@ -212,7 +290,7 @@ class HomeTopSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final compact = isCompactLayoutWidth(constraints.maxWidth);
@@ -225,7 +303,7 @@ class HomeTopSection extends StatelessWidget {
           return SoftBannerCard(
             palette: palette,
             ornamentKey: 'home.banner',
-            padding: EdgeInsets.all(compact ? 16 : 18),
+            padding: EdgeInsets.all(compact ? 14 : 17),
             builder: (context, theme) {
               final pills = <Widget>[
                 HomeInfoPill(
@@ -270,7 +348,7 @@ class HomeTopSection extends StatelessWidget {
                           l10n?.homeHeroTitle ?? '健康助手',
                           style: TextStyle(
                             color: theme.textColor,
-                            fontSize: compact ? 19 : 20,
+                            fontSize: compact ? 18 : 20,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -282,7 +360,7 @@ class HomeTopSection extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(height: compact ? 14 : 16),
+                  SizedBox(height: compact ? 12 : 15),
                   Text(
                     l10n?.homeHeroIntro ?? '今天已经为你整理好',
                     style: TextStyle(
@@ -291,7 +369,7 @@ class HomeTopSection extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  SizedBox(height: compact ? 5 : 6),
+                  SizedBox(height: compact ? 4 : 6),
                   ValueListenableBuilder<String>(
                     valueListenable: todayTipListenable,
                     builder: (context, todayTip, _) {
@@ -342,7 +420,7 @@ class HomeTopSection extends StatelessWidget {
                               key: ValueKey<String>(todayTip),
                               style: TextStyle(
                                 color: theme.textColor,
-                                fontSize: compact ? 16 : 17,
+                                fontSize: compact ? 15.2 : 17,
                                 fontWeight: FontWeight.w800,
                                 height: 1.4,
                               ),
@@ -352,7 +430,7 @@ class HomeTopSection extends StatelessWidget {
                       );
                     },
                   ),
-                  SizedBox(height: compact ? 12 : 14),
+                  SizedBox(height: compact ? 10 : 13),
                   _HomeTopSummaryCard(
                     bannerTheme: theme,
                     compact: compact,
@@ -360,7 +438,7 @@ class HomeTopSection extends StatelessWidget {
                     loadingReminders: loadingReminders,
                     reminderCount: reminderCount,
                   ),
-                  SizedBox(height: compact ? 12 : 14),
+                  SizedBox(height: compact ? 10 : 12),
                   compact
                       ? Wrap(spacing: 8, runSpacing: 8, children: pills)
                       : Row(
@@ -421,10 +499,10 @@ class _HomeTopSummaryCard extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.fromLTRB(
-        compact ? 12 : 14,
-        compact ? 12 : 13,
-        compact ? 12 : 14,
-        compact ? 12 : 13,
+        compact ? 10 : 13,
+        compact ? 10 : 12,
+        compact ? 10 : 13,
+        compact ? 10 : 12,
       ),
       decoration: BoxDecoration(
         color: bannerTheme.surfaceColor.withValues(alpha: 0.78),
@@ -443,7 +521,7 @@ class _HomeTopSummaryCard extends StatelessWidget {
             ),
             child: Icon(
               icon,
-              size: compact ? 18 : 19,
+              size: compact ? 17 : 19,
               color: bannerTheme.accentColor,
             ),
           ),
@@ -461,7 +539,7 @@ class _HomeTopSummaryCard extends StatelessWidget {
                       title,
                       style: TextStyle(
                         color: bannerTheme.textColor,
-                        fontSize: compact ? 13.5 : 14,
+                        fontSize: compact ? 13 : 14,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -490,7 +568,7 @@ class _HomeTopSummaryCard extends StatelessWidget {
                   detail,
                   style: TextStyle(
                     color: bannerTheme.secondaryTextColor,
-                    fontSize: compact ? 13 : 13.5,
+                    fontSize: compact ? 12.5 : 13.5,
                     height: 1.45,
                     fontWeight: FontWeight.w600,
                   ),
@@ -590,8 +668,8 @@ class _HomeReminderTile extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: compact ? 10 : 12,
-        vertical: compact ? 9 : 10,
+        horizontal: compact ? 9 : 12,
+        vertical: compact ? 7 : 10,
       ),
       decoration: BoxDecoration(
         color: item.done ? doneBackground : idleBackground,
@@ -601,8 +679,8 @@ class _HomeReminderTile extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: compact ? 30 : 32,
-            height: compact ? 30 : 32,
+            width: compact ? 28 : 32,
+            height: compact ? 28 : 32,
             decoration: BoxDecoration(
               color: item.done ? doneIconBackground : idleIconBackground,
               borderRadius: BorderRadius.circular(compact ? 8 : 9),
@@ -610,10 +688,10 @@ class _HomeReminderTile extends StatelessWidget {
             child: Icon(
               item.icon,
               color: item.done ? doneIconColor : idleIconColor,
-              size: compact ? 17 : 18,
+              size: compact ? 16 : 18,
             ),
           ),
-          SizedBox(width: compact ? 8 : 10),
+          SizedBox(width: compact ? 7 : 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -621,7 +699,7 @@ class _HomeReminderTile extends StatelessWidget {
                 Text(
                   item.title,
                   style: TextStyle(
-                    fontSize: compact ? 13.5 : 14,
+                    fontSize: compact ? 13.2 : 14,
                     fontWeight: FontWeight.w600,
                     color: titleColor,
                   ),
@@ -632,7 +710,7 @@ class _HomeReminderTile extends StatelessWidget {
                 Text(
                   item.subtitle,
                   style: TextStyle(
-                    fontSize: compact ? 11.5 : 12,
+                    fontSize: compact ? 11.2 : 12,
                     color: subtitleColor,
                   ),
                   maxLines: 2,

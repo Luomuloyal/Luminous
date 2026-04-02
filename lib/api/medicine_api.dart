@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:luminous/constants/constants.dart';
 import 'package:luminous/utils/dio_request.dart';
 import 'package:luminous/viewmodels/medicine.dart';
@@ -40,6 +41,34 @@ class MedicineApi {
       },
       showLoading: false,
     );
+  }
+
+  /// 探测后端是否可达。
+  ///
+  /// 兼容两种健康检查响应：
+  /// - 标准 `{code,msg,result}` 包装；
+  /// - 纯 HTTP 200 + 任意 JSON。
+  static Future<bool> isBackendReachable() async {
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: GlobalConstants.BASE_URL,
+        connectTimeout: const Duration(milliseconds: 1600),
+        receiveTimeout: const Duration(milliseconds: 1600),
+      ),
+    );
+    try {
+      final response = await dio.get<dynamic>('/health');
+      if (response.statusCode != 200) {
+        return false;
+      }
+      final data = response.data;
+      if (data is Map && data['code'] != null) {
+        return data['code'].toString() == GlobalConstants.SUCCESS_CODE;
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// 查询药品详情。

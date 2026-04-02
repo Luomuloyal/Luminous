@@ -18,7 +18,7 @@ class ToastUtils {
   ToastUtils._();
 
   static const double _topSafeGap = 34;
-  static const double _bottomSafeGap = 92;
+  static const double _bottomSafeGap = 68;
 
   /// 全局单例实例。
   static final ToastUtils instance = ToastUtils._();
@@ -216,6 +216,8 @@ class _ToastOverlay extends StatelessWidget {
                   Flexible(
                     child: Text(
                       message,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: style.textColor,
                         fontSize: 13,

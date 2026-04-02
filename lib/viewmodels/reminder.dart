@@ -36,6 +36,12 @@ class ReminderPlan {
   /// 提醒方式（当前主要支持 notification）。
   final String method;
 
+  /// 生效开始日期（yyyy-MM-dd，留空表示不限制）。
+  final String startDate;
+
+  /// 生效结束日期（yyyy-MM-dd，留空表示不限制）。
+  final String endDate;
+
   /// 创建一个提醒计划对象。
   const ReminderPlan({
     required this.id,
@@ -48,6 +54,8 @@ class ReminderPlan {
     required this.enabled,
     required this.repeatRule,
     required this.method,
+    this.startDate = '',
+    this.endDate = '',
   });
 
   /// 从后端 JSON 反序列化为 `ReminderPlan`。
@@ -63,6 +71,8 @@ class ReminderPlan {
       enabled: json['enabled'] != false,
       repeatRule: (json['repeatRule'] ?? 'daily').toString(),
       method: (json['method'] ?? 'notification').toString(),
+      startDate: (json['startDate'] ?? '').toString(),
+      endDate: (json['endDate'] ?? '').toString(),
     );
   }
 
@@ -79,6 +89,8 @@ class ReminderPlan {
       'enabled': enabled,
       'repeatRule': repeatRule,
       'method': method,
+      'startDate': startDate,
+      'endDate': endDate,
     };
   }
 

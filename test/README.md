@@ -27,6 +27,7 @@ flutter test test/<file_name>.dart
 
 - 若出现依赖初始化问题，先执行 `flutter pub get`。
 - 若出现平台插件相关报错，优先检查是否可用 mock 替代平台调用。
+- 若涉及真实后端联调场景，可先在根目录执行 `docker compose up -d --build` 启动后端与数据库依赖。
 
 ## 相关文档
 

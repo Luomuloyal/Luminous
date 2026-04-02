@@ -23,6 +23,21 @@
   "languageChineseSubtitle": "Use Chinese for app text",
   "languageEnglish": "English",
   "languageEnglishSubtitle": "Use English for app text",
+  "languageCurrentLabel": "Current language: {language}",
+  "@languageCurrentLabel": {
+    "placeholders": {
+      "language": {}
+    }
+  },
+  "languageSelectedLabel": "Selected: {language}",
+  "@languageSelectedLabel": {
+    "placeholders": {
+      "language": {}
+    }
+  },
+  "languageHeroHintSystem": "App language follows device language automatically",
+  "languageHeroHintChinese": "Interface text is fixed to Simplified Chinese",
+  "languageHeroHintEnglish": "Interface text is fixed to English",
   "languageNote": "When Follow System is enabled, changing your device language will apply automatically the next time you open the app (and also while app is running when system locale updates).",
   "authPhoneLabel": "Phone",
   "authEmailLabel": "Email",
@@ -441,6 +456,8 @@
   "settingsThemeStyleOptionIllusionDesc": "Purple-led palette with hints of blue glow, like neon edges in night mist.",
   "settingsThemeStyleOptionLightSandDesc": "Tea, dusty rose, and clay tones. Warm and restrained like dry sandstone and old fabric.",
   "medicineDetailAiNoContentToast": "AI returned no content",
+  "medicineDetailAiNetworkErrorToast": "Network request failed. Please check your connection and try again.",
+  "medicineDetailPageTitle": "Medicine Details",
   "medicineDetailHeaderRefreshing": "Refreshing",
   "medicineDetailHeaderRefresh": "Refresh",
   "medicineDetailLabelApprovalNo": "Approval No.",

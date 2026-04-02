@@ -21,6 +21,8 @@ type ReminderDocLike = {
   enabled?: boolean;
   repeatRule?: string;
   method?: string;
+  startDate?: string;
+  endDate?: string;
 };
 
 const timeRegExp = /^\d{2}:\d{2}$/;
@@ -66,6 +68,18 @@ function resolveDate(raw: string): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+function isPlanActiveOnDate(doc: ReminderDocLike, date: string): boolean {
+  const startDate = String(doc.startDate ?? '').trim();
+  const endDate = String(doc.endDate ?? '').trim();
+  if (startDate && date < startDate) {
+    return false;
+  }
+  if (endDate && date > endDate) {
+    return false;
+  }
+  return true;
+}
+
 function toPlanRecord(doc: ReminderDocLike): ReminderPlanRecord {
   return {
     id: String(doc._id ?? '').trim(),
@@ -78,6 +92,8 @@ function toPlanRecord(doc: ReminderDocLike): ReminderPlanRecord {
     enabled: doc.enabled !== false,
     repeatRule: String(doc.repeatRule ?? 'daily').trim() || 'daily',
     method: String(doc.method ?? 'notification').trim() || 'notification',
+    startDate: String(doc.startDate ?? '').trim(),
+    endDate: String(doc.endDate ?? '').trim(),
   };
 }
 
@@ -119,6 +135,19 @@ export async function handleReminderUpsert(
     const repeatRule = readTrimmedString(data, 'repeatRule', 'daily') || 'daily';
     const method =
       readTrimmedString(data, 'method', 'notification') || 'notification';
+    const startDate = readTrimmedString(data, 'startDate');
+    const endDate = readTrimmedString(data, 'endDate');
+
+    if (startDate && !dateRegExp.test(startDate)) {
+      return fail('startDate 格式错误，应为 YYYY-MM-DD');
+    }
+    if (endDate && !dateRegExp.test(endDate)) {
+      return fail('endDate 格式错误，应为 YYYY-MM-DD');
+    }
+    if (startDate && endDate && startDate > endDate) {
+      return fail('startDate 不能晚于 endDate');
+    }
+
     const now = Date.now();
 
     if (id) {
@@ -143,6 +172,8 @@ export async function handleReminderUpsert(
             enabled,
             repeatRule,
             method,
+            startDate,
+            endDate,
             updatedAt: now,
           },
         },
@@ -159,6 +190,8 @@ export async function handleReminderUpsert(
           enabled,
           repeatRule,
           method,
+          startDate,
+          endDate,
         }),
       );
     }
@@ -173,6 +206,8 @@ export async function handleReminderUpsert(
       enabled,
       repeatRule,
       method,
+      startDate,
+      endDate,
       createdAt: now,
       updatedAt: now,
     });
@@ -256,7 +291,7 @@ export async function handleTodayReminders(
 
     return success({
       date,
-      items: rows.map(item => toTodayItem(item)),
+      items: rows.filter(item => isPlanActiveOnDate(item, date)).map(item => toTodayItem(item)),
     });
   } catch (error) {
     console.error('today-reminders failed:', error);

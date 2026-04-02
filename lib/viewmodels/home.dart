@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// 首页模块相关的数据模型与轻量 UI 小组件。
+/// 首页模块相关的数据模型。
 ///
-/// 注意：
-/// - `ReminderItem/TodayRemindersResult` 用于承载接口返回；
-/// - `HomeStatusChip/HomeInfoPill` 是首页顶部卡片复用的小组件。
+/// 仅放置页面与组件共享的数据结构，不包含 Widget 实现。
 class ReminderItem {
   /// 提醒 id（后端可能返回 `id` 或 `_id`）。
   final String id;
@@ -40,6 +38,33 @@ class ReminderItem {
       done: json['done'] == true,
     );
   }
+}
+
+/// 首页“常用功能”入口数据。
+class HomeFeatureItemData {
+  /// 功能入口的唯一 id（用于点击分发）。
+  final String id;
+
+  /// 功能入口标题。
+  final String title;
+
+  /// 功能入口副标题。
+  final String subtitle;
+
+  /// 功能入口图标。
+  final IconData icon;
+
+  /// 功能入口主题色。
+  final Color color;
+
+  /// 创建一个“常用功能”入口数据对象。
+  const HomeFeatureItemData({
+    required this.id,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+  });
 }
 
 /// 首页“今日提醒”区域使用的展示数据。
@@ -91,109 +116,6 @@ class TodayRemindersResult {
     return TodayRemindersResult(
       date: (json['date'] ?? '').toString(),
       items: items,
-    );
-  }
-}
-
-/// 首页顶部卡片中的状态 chip（例如“已同步”）。
-class HomeStatusChip extends StatelessWidget {
-  /// 创建一个状态 chip。
-  const HomeStatusChip({
-    super.key,
-    required this.text,
-    this.backgroundColor = const Color(0x33FFFFFF),
-    this.textColor = Colors.white,
-  });
-
-  /// chip 上展示的文本。
-  final String text;
-
-  /// chip 背景色。
-  final Color backgroundColor;
-
-  /// chip 文字色。
-  final Color textColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        color: backgroundColor,
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: textColor,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-}
-
-/// 首页顶部卡片中的信息 pill（例如“今日提醒 3 条”）。
-class HomeInfoPill extends StatelessWidget {
-  /// 创建一个信息 pill。
-  const HomeInfoPill({
-    super.key,
-    required this.text,
-    this.backgroundColor = const Color(0x29FFFFFF),
-    this.textColor = Colors.white,
-    this.onTap,
-    this.onLongPress,
-  });
-
-  /// pill 上展示的文本。
-  final String text;
-
-  /// pill 背景色。
-  final Color backgroundColor;
-
-  /// pill 文字色。
-  final Color textColor;
-
-  /// 点击回调。
-  final VoidCallback? onTap;
-
-  /// 长按回调。
-  final VoidCallback? onLongPress;
-
-  @override
-  Widget build(BuildContext context) {
-    final content = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        color: backgroundColor,
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: textColor,
-          fontSize: 12.5,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-
-    if (onTap == null && onLongPress == null) {
-      return content;
-    }
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        borderRadius: BorderRadius.circular(999),
-        child: Ink(
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(999)),
-          child: content,
-        ),
-      ),
     );
   }
 }

@@ -12,6 +12,7 @@
 1. 联调接口前先看 `backend-api.md`，确认路径、参数和返回结构。
 2. 上线前按 `deployment-config.md` 的核对清单逐项确认。
 3. 如果代码和文档不一致，以代码为准并及时回写文档。
+4. 本地整套服务建议使用根目录 `docker compose up -d --build` 启动（backend + MongoDB + Redis + MySQL）。
 
 ## 相关入口
 

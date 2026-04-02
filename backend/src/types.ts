@@ -73,6 +73,8 @@ export interface ReminderPlanRecord {
   enabled: boolean;
   repeatRule: string;
   method: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface ReminderListPayload {

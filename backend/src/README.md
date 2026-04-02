@@ -31,3 +31,8 @@
 - 后端服务说明: [../README.md](../README.md)
 - API 文档: [../../lib/docs/backend-api.md](../../lib/docs/backend-api.md)
 - 部署文档: [../../lib/docs/deployment-config.md](../../lib/docs/deployment-config.md)
+
+## 运行补充
+
+- 单服务调试可在 `backend/` 目录执行 `npm run dev`。
+- 本地整套服务（含数据库）建议在仓库根目录执行 `docker compose up -d --build`。

@@ -321,8 +321,14 @@ class TodayReminderLocalStore implements TodayReminderStore {
     String? userId,
     List<ReminderPlan> plans,
   ) async {
+    final today = resolveDateKey();
     final baseItems = plans
-        .where((plan) => plan.enabled && _supportsLocalCheckin(plan))
+        .where(
+          (plan) =>
+              plan.enabled &&
+              _supportsLocalCheckin(plan) &&
+              _isPlanActiveOnDate(plan, today),
+        )
         .map(
           (plan) => ReminderItem(
             id: plan.id.trim(),
@@ -338,6 +344,14 @@ class TodayReminderLocalStore implements TodayReminderStore {
 
     final overrides = await loadTodayOverrides(userId);
     return applyTodayState(userId, items: baseItems, overrides: overrides);
+  }
+
+  bool _isPlanActiveOnDate(ReminderPlan plan, String dateKey) {
+    final start = plan.startDate.trim();
+    final end = plan.endDate.trim();
+    final afterStart = start.isEmpty || dateKey.compareTo(start) >= 0;
+    final beforeEnd = end.isEmpty || dateKey.compareTo(end) <= 0;
+    return afterStart && beforeEnd;
   }
 
   Future<List<ReminderItem>> _loadBaseSnapshotItems(

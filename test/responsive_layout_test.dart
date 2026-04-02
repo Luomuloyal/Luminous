@@ -6,6 +6,7 @@ import 'package:luminous/components/mine.dart';
 import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/viewmodels/auth.dart';
 import 'package:luminous/viewmodels/drug.dart';
+import 'package:luminous/viewmodels/home.dart';
 import 'package:luminous/viewmodels/mine.dart';
 
 void main() {

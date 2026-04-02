@@ -78,6 +78,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get languageEnglishSubtitle => '应用文案使用英文';
 
   @override
+  String languageCurrentLabel(Object language) {
+    return '当前语言：$language';
+  }
+
+  @override
+  String languageSelectedLabel(Object language) {
+    return '已选：$language';
+  }
+
+  @override
+  String get languageHeroHintSystem => '应用将自动跟随设备语言切换';
+
+  @override
+  String get languageHeroHintChinese => '界面文案固定为简体中文';
+
+  @override
+  String get languageHeroHintEnglish => '界面文案固定为英文';
+
+  @override
   String get languageNote =>
       '开启“跟随系统”后，当你把系统语言从中文切到英文，应用在下次打开时会自动切换；系统在运行中变更语言时也会同步更新。';
 
@@ -1091,6 +1110,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get medicineDetailAiNoContentToast => 'AI接口暂无返回内容';
+
+  @override
+  String get medicineDetailAiNetworkErrorToast => '网络访问失败，请检查网络后重试';
+
+  @override
+  String get medicineDetailPageTitle => '药品详情';
 
   @override
   String get medicineDetailHeaderRefreshing => '更新中';

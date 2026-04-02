@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:luminous/api/medicine_api.dart';
 import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/components/app_surface.dart';
-import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/utils/toast_utils.dart';
@@ -132,7 +131,17 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
       if (!mounted) {
         return;
       }
-      ToastUtils.instance.showError(context, e);
+      final l10n = AppLocalizations.of(context);
+      if (_isLikelyNetworkFailure(e)) {
+        ToastUtils.instance.showError(
+          context,
+          e,
+          fallback:
+              l10n?.medicineDetailAiNetworkErrorToast ?? '网络访问失败，请检查网络后重试',
+        );
+      } else {
+        ToastUtils.instance.showError(context, e);
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -142,15 +151,32 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
     }
   }
 
+  bool _isLikelyNetworkFailure(Object error) {
+    final text = error.toString().toLowerCase();
+    return text.contains('timeout') ||
+        text.contains('socket') ||
+        text.contains('connection') ||
+        text.contains('network') ||
+        text.contains('xmlhttprequest') ||
+        text.contains('failed host lookup');
+  }
+
   /// 构建药品详情页 UI。
   @override
   Widget build(BuildContext context) {
-    /// AppBar 使用的标题文案。
-    final title = _item.displayName;
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
 
     return AppCanvasPageScaffold(
-      appBar: AppBar(title: Text(title), centerTitle: true),
+      appBar: AppBar(
+        toolbarHeight: 44,
+        title: Text(
+          l10n?.medicineDetailPageTitle ?? '药品详情',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        centerTitle: true,
+      ),
       appBarSpacing: 36,
       accentColor: scheme.primary,
       secondaryAccentColor: Color.lerp(
@@ -162,7 +188,7 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
         onRefresh: _loadDetail,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
           children: [
             _HeaderCard(
               item: _item,
@@ -211,196 +237,54 @@ class _HeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return SoftBannerCard(
-      palette: SoftBannerPalettes.drugOf(context),
-      ornamentKey: 'medicine.header',
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-      borderRadius: BorderRadius.circular(18),
-      builder: (context, theme) {
-        final refreshButton = FilledButton.tonalIcon(
-          onPressed: loading ? null : onRefresh,
-          icon: loading
-              ? SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: theme.surfaceTextColor,
-                  ),
-                )
-              : const Icon(Icons.refresh_rounded, size: 16),
-          label: Text(
-            loading
-                ? (l10n?.medicineDetailHeaderRefreshing ?? '更新中')
-                : (l10n?.medicineDetailHeaderRefresh ?? '刷新'),
-          ),
-          style: FilledButton.styleFrom(
-            backgroundColor: theme.surfaceColor,
-            foregroundColor: theme.surfaceTextColor,
-            minimumSize: const Size(92, 40),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(999),
-            ),
-          ),
-        );
-        final pills = [
-          if (item.approvalNo.isNotEmpty)
-            _pill(
-              label: l10n?.medicineDetailLabelApprovalNo ?? '批准文号',
-              value: item.approvalNo,
-              backgroundColor: theme.surfaceColor,
-              textColor: theme.surfaceTextColor,
-            ),
-          if (item.drugCode.isNotEmpty)
-            _pill(
-              label: l10n?.medicineDetailLabelDrugCode ?? '药品编码',
-              value: item.drugCode,
-              backgroundColor: theme.surfaceColor,
-              textColor: theme.surfaceTextColor,
-            ),
-        ];
-
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            final compact = constraints.maxWidth < 470;
-            final content = Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 9,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.surfaceColor,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    l10n?.medicineDetailHeaderBadge ?? '药物信息',
-                    style: TextStyle(
-                      color: theme.surfaceTextColor,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
+    final scheme = Theme.of(context).colorScheme;
+    return AppSectionCard(
+      accentColor: scheme.primary,
+      secondaryColor: Color.lerp(scheme.secondary, scheme.tertiary, 0.5)!,
+      ornamentKey: 'medicine.header.compact',
+      radius: 16,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                item.displayName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: scheme.onSurface,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
                 ),
-                const SizedBox(height: 9),
-                Text(
-                  item.displayName,
-                  style: TextStyle(
-                    color: theme.textColor,
-                    fontSize: compact ? 17.5 : 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  item.displaySubtitle,
-                  style: TextStyle(
-                    color: theme.secondaryTextColor,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    height: 1.4,
-                  ),
-                ),
-                if (item.displayTips.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    item.displayTips,
-                    style: TextStyle(
-                      color: theme.secondaryTextColor.withValues(alpha: 0.94),
-                      fontSize: 12.2,
-                      fontWeight: FontWeight.w600,
-                      height: 1.35,
-                    ),
-                  ),
-                ],
-                if (pills.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Wrap(spacing: 8, runSpacing: 8, children: pills),
-                ],
-              ],
-            );
-
-            if (compact) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: theme.surfaceColor,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: theme.borderColor),
-                        ),
-                        child: Icon(
-                          Icons.medication_rounded,
-                          color: theme.accentColor,
-                          size: 24,
-                        ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            FilledButton.tonalIcon(
+              onPressed: loading ? null : onRefresh,
+              icon: loading
+                  ? SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: scheme.primary,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(child: content),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  refreshButton,
-                ],
-              );
-            }
-
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: theme.surfaceColor,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: theme.borderColor),
-                  ),
-                  child: Icon(
-                    Icons.medication_rounded,
-                    color: theme.accentColor,
-                    size: 24,
-                  ),
+                    )
+                  : const Icon(Icons.refresh_rounded, size: 16),
+              label: Text(
+                loading
+                    ? (l10n?.medicineDetailHeaderRefreshing ?? '更新中')
+                    : (l10n?.medicineDetailHeaderRefresh ?? '刷新'),
+              ),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(92, 38),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(width: 12),
-                Expanded(child: content),
-                const SizedBox(width: 12),
-                refreshButton,
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  /// 渲染顶部卡片中的信息 pill（例如批准文号/药品编码）。
-  Widget _pill({
-    required String label,
-    required String value,
-    required Color backgroundColor,
-    required Color textColor,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        '$label: $value',
-        style: TextStyle(
-          color: textColor,
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -684,7 +568,7 @@ class _InfoRow extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact = constraints.maxWidth < 360;
+        final compact = constraints.maxWidth < 320;
         if (compact) {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 6),
@@ -720,7 +604,7 @@ class _InfoRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
-                width: 108,
+                width: 116,
                 child: Text(
                   label,
                   style: TextStyle(

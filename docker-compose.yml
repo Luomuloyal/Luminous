@@ -1,4 +1,18 @@
 services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8787:8787"
+    env_file:
+      - ./backend/.env.development
+    depends_on:
+      - mongodb
+      - redis
+      - mysql
+    restart: unless-stopped
+
   mongodb:
     image: mongo:7
     ports:

@@ -100,6 +100,30 @@ npm run build
 npm run start
 ```
 
+## Docker
+
+### Build Backend Image
+
+在项目根目录执行：
+
+```bash
+docker build -f backend/Dockerfile -t luminous-backend:local backend
+```
+
+### Run Backend Container Only
+
+```bash
+docker run --rm -p 8787:8787 --env-file backend/.env.development luminous-backend:local
+```
+
+### Run Full Stack With Compose
+
+```bash
+docker compose up -d --build
+```
+
+`docker-compose.yml` 会同时启动 backend、mongodb、redis、mysql。
+
 ## API Summary
 
 - `GET /health`
@@ -162,6 +186,23 @@ Full schema and examples: [../lib/docs/backend-api.md](../lib/docs/backend-api.m
 - `DOUBAO_API_KEY`
 - 文本/视觉模型 ID
 - `DOUBAO_BASE_URL`
+
+### Port 8787 occupied (EADDRINUSE)
+
+若 `npm run dev` 报端口占用，通常是旧的 Node 进程仍在监听（例如之前开过 `tsx watch src/server.ts`）。
+
+PowerShell 排查：
+
+```powershell
+Get-NetTCPConnection -LocalPort 8787 -State Listen | Select-Object OwningProcess
+Get-CimInstance Win32_Process -Filter "ProcessId = <PID>" | Select-Object Name,CommandLine
+```
+
+结束占用进程：
+
+```powershell
+Stop-Process -Id <PID> -Force
+```
 
 ## Related Docs
 

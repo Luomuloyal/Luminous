@@ -23,6 +23,21 @@
   "languageChineseSubtitle": "应用文案使用中文",
   "languageEnglish": "English",
   "languageEnglishSubtitle": "应用文案使用英文",
+  "languageCurrentLabel": "当前语言：{language}",
+  "@languageCurrentLabel": {
+    "placeholders": {
+      "language": {}
+    }
+  },
+  "languageSelectedLabel": "已选：{language}",
+  "@languageSelectedLabel": {
+    "placeholders": {
+      "language": {}
+    }
+  },
+  "languageHeroHintSystem": "应用将自动跟随设备语言切换",
+  "languageHeroHintChinese": "界面文案固定为简体中文",
+  "languageHeroHintEnglish": "界面文案固定为英文",
   "languageNote": "开启“跟随系统”后，当你把系统语言从中文切到英文，应用在下次打开时会自动切换；系统在运行中变更语言时也会同步更新。",
   "authPhoneLabel": "手机号",
   "authEmailLabel": "邮箱",
@@ -441,6 +456,8 @@
   "settingsThemeStyleOptionIllusionDesc": "偏紫色主调，带一点点蓝光，像夜雾里的霓虹边缘",
   "settingsThemeStyleOptionLightSandDesc": "奶茶、枯粉与陶土色杂糅，温暖克制，像干燥砂岩与旧织物",
   "medicineDetailAiNoContentToast": "AI接口暂无返回内容",
+  "medicineDetailAiNetworkErrorToast": "网络访问失败，请检查网络后重试",
+  "medicineDetailPageTitle": "药品详情",
   "medicineDetailHeaderRefreshing": "更新中",
   "medicineDetailHeaderRefresh": "刷新",
   "medicineDetailLabelApprovalNo": "批准文号",

@@ -12,7 +12,7 @@ import 'package:luminous/viewmodels/mine.dart';
 // 设计要点：
 // - 页面只负责交互/登录态判断
 // - 具体 UI（背景、卡片布局、QuickActions/Menu）拆到 components/mine.dart
-// - QuickAction 卡片等小组件下沉到 viewmodels/mine.dart
+// - QuickAction 数据模型放在 viewmodels/mine.dart
 /// 我的页。
 ///
 /// 负责登录态相关交互，以及“提醒/搜索/设置”等个人中心入口。

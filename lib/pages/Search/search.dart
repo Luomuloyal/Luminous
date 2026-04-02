@@ -6,11 +6,13 @@ import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/search.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Drug/medicine_detail.dart';
+import 'package:luminous/stores/local_medicine_store.dart';
 import 'package:luminous/stores/my_medicine_repository.dart';
 import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/message_utils.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/medicine.dart';
+import 'package:luminous/viewmodels/search.dart';
 
 typedef MedicineSearchExecutor =
     Future<MedicineSearchResult> Function({
@@ -18,6 +20,10 @@ typedef MedicineSearchExecutor =
       required int page,
       required int pageSize,
     });
+
+enum MedicineQueryMode { online, local }
+
+enum MedicineDatabaseSource { nmpa, drugbank }
 
 // 手动搜索页（对接 MySQL 药品库）
 //
@@ -169,6 +175,15 @@ class _SearchViewState extends State<SearchView> {
   /// 每页大小常量。
   static const int _pageSize = 20;
 
+  /// 当前查询模式：联网查询或本地 JSON 查询。
+  MedicineQueryMode _queryMode = MedicineQueryMode.online;
+
+  /// 是否已经完成首帧后的网络可达性探测。
+  bool _queryModeResolved = false;
+
+  /// 数据源选择（Drugbank 入口预留，尚未接入实际查询）。
+  MedicineDatabaseSource _databaseSource = MedicineDatabaseSource.nmpa;
+
   /// 监听登录用户变化的 worker。
   Worker? _userWorker;
 
@@ -190,6 +205,7 @@ class _SearchViewState extends State<SearchView> {
     }
     _searchController.addListener(_syncDraftKeyword);
     _loadAddedKeys();
+    _detectInitialQueryMode();
     _userWorker = ever<dynamic>(_userController.user, (_) {
       _loadAddedKeys();
     });
@@ -316,6 +332,103 @@ class _SearchViewState extends State<SearchView> {
     _draftKeywordNotifier.value = next;
   }
 
+  String get _queryModeLabel =>
+      _queryMode == MedicineQueryMode.online ? '联网查询' : '本地查询';
+
+  String get _databaseSourceLabel =>
+      _databaseSource == MedicineDatabaseSource.nmpa ? 'NMPA' : 'Drugbank';
+
+  Future<void> _detectInitialQueryMode() async {
+    final reachable = await MedicineApi.isBackendReachable();
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _queryModeResolved = true;
+      if (!reachable) {
+        _queryMode = MedicineQueryMode.local;
+      }
+    });
+  }
+
+  void _switchQueryMode(MedicineQueryMode mode) {
+    if (_queryMode == mode) {
+      return;
+    }
+    setState(() {
+      _queryMode = mode;
+      _lastError = null;
+      _results.clear();
+      _hasMore = false;
+      _page = 1;
+    });
+
+    if (_keyword.trim().isNotEmpty) {
+      _search(reset: true);
+    }
+  }
+
+  void _switchDatabaseSource(MedicineDatabaseSource source) {
+    if (_databaseSource == source) {
+      return;
+    }
+    setState(() {
+      _databaseSource = source;
+    });
+    if (source == MedicineDatabaseSource.drugbank) {
+      ToastUtils.instance.show(context, 'Drugbank 暂未接入，当前仍使用 NMPA 数据源。');
+    }
+  }
+
+  Widget _buildDualOptionButton({
+    required String label,
+    required bool selected,
+    required VoidCallback onPressed,
+  }) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final borderColor = selected
+        ? appTintedBorder(
+            context,
+            scheme.primary,
+            lightAlpha: 0.16,
+            darkAlpha: 0.24,
+          )
+        : scheme.outline;
+    final foreground = selected ? scheme.primary : scheme.onSurface;
+    final background = selected
+        ? appTintedSurface(
+            context,
+            scheme.primary,
+            lightAlpha: 0.12,
+            darkAlpha: 0.22,
+            baseColor: theme.cardTheme.color ?? scheme.surface,
+          )
+        : theme.cardTheme.color ?? scheme.surface;
+
+    return SizedBox(
+      height: 44,
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: borderColor),
+          backgroundColor: background,
+          foregroundColor: foreground,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+      ),
+    );
+  }
+
   /// 当前登录用户 id（未登录时为空字符串）。
   String get _userId => _userController.user.value?.id ?? '';
 
@@ -385,6 +498,7 @@ class _SearchViewState extends State<SearchView> {
               slivers: [
                 _buildHeaderSliver(),
                 _buildSearchBarSliver(),
+                _buildQueryModeSliver(),
                 _buildQuickTagsSliver(),
                 _buildHistorySliver(),
                 _buildResultTitleSliver(),
@@ -587,6 +701,122 @@ class _SearchViewState extends State<SearchView> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildQueryModeSliver() {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        child: SearchSurfaceCard(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      '查询方式',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: scheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (!_queryModeResolved)
+                      Text(
+                        '检测网络中...',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    const Spacer(),
+                    Text(
+                      '当前: $_queryModeLabel',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildDualOptionButton(
+                        label: '联网查询',
+                        selected: _queryMode == MedicineQueryMode.online,
+                        onPressed: () =>
+                            _switchQueryMode(MedicineQueryMode.online),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildDualOptionButton(
+                        label: '本地查询',
+                        selected: _queryMode == MedicineQueryMode.local,
+                        onPressed: () =>
+                            _switchQueryMode(MedicineQueryMode.local),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '数据库',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: scheme.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildDualOptionButton(
+                        label: 'NMPA',
+                        selected:
+                            _databaseSource == MedicineDatabaseSource.nmpa,
+                        onPressed: () =>
+                            _switchDatabaseSource(MedicineDatabaseSource.nmpa),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildDualOptionButton(
+                        label: 'Drugbank',
+                        selected:
+                            _databaseSource == MedicineDatabaseSource.drugbank,
+                        onPressed: () => _switchDatabaseSource(
+                          MedicineDatabaseSource.drugbank,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '当前数据库: $_databaseSourceLabel。Drugbank 暂未接入，联网查询仍走 NMPA（MySQL）。',
+                  style: TextStyle(
+                    fontSize: 11.8,
+                    color: scheme.onSurfaceVariant,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -800,6 +1030,31 @@ class _SearchViewState extends State<SearchView> {
                 fontSize: 13,
                 color: scheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: appTintedSurface(
+                  context,
+                  _queryMode == MedicineQueryMode.online
+                      ? scheme.primary
+                      : scheme.tertiary,
+                  lightAlpha: 0.08,
+                  darkAlpha: 0.16,
+                ),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                _queryMode == MedicineQueryMode.online ? '联网' : '本地',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  color: _queryMode == MedicineQueryMode.online
+                      ? scheme.primary
+                      : scheme.tertiary,
+                ),
               ),
             ),
           ],
@@ -1298,8 +1553,14 @@ class _SearchViewState extends State<SearchView> {
     }
 
     try {
-      /// 调用药品搜索接口获取当前页结果。
-      final result = widget.searchExecutor != null
+      /// 根据查询模式执行联网或本地查询。
+      final result = _queryMode == MedicineQueryMode.local
+          ? await localMedicineStore.search(
+              keyword: keyword,
+              page: requestPage,
+              pageSize: _pageSize,
+            )
+          : widget.searchExecutor != null
           ? await widget.searchExecutor!(
               keyword: keyword,
               page: requestPage,
@@ -1327,6 +1588,16 @@ class _SearchViewState extends State<SearchView> {
       if (!mounted) {
         return;
       }
+
+      if (_queryMode == MedicineQueryMode.online &&
+          _isLikelyNetworkError(e.toString())) {
+        setState(() {
+          _queryMode = MedicineQueryMode.local;
+        });
+        await _search(reset: true);
+        return;
+      }
+
       final msg = MessageUtils.extractError(e);
       ToastUtils.instance.show(context, msg);
       if (reset) {
@@ -1361,6 +1632,16 @@ class _SearchViewState extends State<SearchView> {
 
   bool _isActiveSearchRequest(int requestId) {
     return requestId == _searchRequestId;
+  }
+
+  bool _isLikelyNetworkError(String message) {
+    final text = message.toLowerCase();
+    return text.contains('socket') ||
+        text.contains('network') ||
+        text.contains('connection') ||
+        text.contains('xmlhttprequest') ||
+        text.contains('timeout') ||
+        text.contains('failed host lookup');
   }
 }
 

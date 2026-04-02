@@ -10,6 +10,8 @@ export interface IReminder extends Document {
   enabled: boolean;
   repeatRule: string;
   method: string;
+  startDate: string;
+  endDate: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -24,6 +26,8 @@ const ReminderSchema = new Schema<IReminder>({
   enabled: { type: Boolean, default: true },
   repeatRule: { type: String, default: 'daily' },
   method: { type: String, default: 'notification' },
+  startDate: { type: String, default: '' },
+  endDate: { type: String, default: '' },
   createdAt: { type: Number, default: () => Date.now() },
   updatedAt: { type: Number, default: () => Date.now() },
 });

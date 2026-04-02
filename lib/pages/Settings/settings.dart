@@ -8,7 +8,6 @@ import 'package:luminous/stores/locale_controller.dart';
 import 'package:luminous/stores/ornament_controller.dart';
 import 'package:luminous/stores/theme_controller.dart';
 import 'package:luminous/stores/user_controller.dart';
-import 'package:luminous/utils/app_i18n_text.dart';
 
 /// 设置总览页。
 ///
@@ -345,10 +344,8 @@ class _LanguagePreferenceSection extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    AppI18nText.pick(
-                      zh: '当前语言：$selectedLabel',
-                      en: 'Current language: $selectedLabel',
-                    ),
+                    l10n?.languageCurrentLabel(selectedLabel) ??
+                        '当前语言：$selectedLabel',
                     style: TextStyle(
                       color: scheme.onSurface,
                       fontSize: 13,
@@ -409,18 +406,11 @@ class _LanguageHeroCard extends StatelessWidget {
       final selected = localeController.localePreference.value;
       final selectedLabel = _languagePreferenceLabel(selected, l10n: l10n);
       final selectedHint = switch (selected) {
-        AppLocalePreference.system => AppI18nText.pick(
-          zh: '应用将自动跟随设备语言切换',
-          en: 'App language follows device language automatically',
-        ),
-        AppLocalePreference.zh => AppI18nText.pick(
-          zh: '界面文案固定为简体中文',
-          en: 'Interface text is fixed to Simplified Chinese',
-        ),
-        AppLocalePreference.en => AppI18nText.pick(
-          zh: '界面文案固定为英文',
-          en: 'Interface text is fixed to English',
-        ),
+        AppLocalePreference.system =>
+          l10n?.languageHeroHintSystem ?? '应用将自动跟随设备语言切换',
+        AppLocalePreference.zh =>
+          l10n?.languageHeroHintChinese ?? '界面文案固定为简体中文',
+        AppLocalePreference.en => l10n?.languageHeroHintEnglish ?? '界面文案固定为英文',
       };
 
       return SoftBannerCard(
@@ -477,10 +467,9 @@ class _LanguageHeroCard extends StatelessWidget {
               const SizedBox(height: 12),
               _SettingsInfoChip(
                 icon: Icons.language_rounded,
-                text: AppI18nText.pick(
-                  zh: '已选：$selectedLabel',
-                  en: 'Selected: $selectedLabel',
-                ),
+                text:
+                    l10n?.languageSelectedLabel(selectedLabel) ??
+                    '已选：$selectedLabel',
                 backgroundColor: theme.surfaceColor,
                 foregroundColor: theme.surfaceTextColor,
               ),
@@ -973,19 +962,13 @@ class _DisplayPreferencesSection extends StatelessWidget {
                             ? (l10n.settingsThemeModeOptionDark)
                             : (l10n.settingsThemeModeOptionLight),
                       ) ??
-                      AppI18nText.pick(
-                        zh: '当前跟随系统，系统正在使用${resolvedDark ? '深色' : '浅色'}外观',
-                        en: 'Following system setting. The system is using ${resolvedDark ? 'dark' : 'light'} appearance.',
-                      ))
+                      '当前跟随系统，系统正在使用${resolvedDark ? '深色' : '浅色'}外观')
                 : (l10n?.settingsThemeModeCurrentFixed(
                         resolvedDark
                             ? (l10n.settingsThemeModeOptionDark)
                             : (l10n.settingsThemeModeOptionLight),
                       ) ??
-                      AppI18nText.pick(
-                        zh: '当前固定为${resolvedDark ? '深色' : '浅色'}外观',
-                        en: 'Fixed to ${resolvedDark ? 'dark' : 'light'} appearance.',
-                      )),
+                      '当前固定为${resolvedDark ? '深色' : '浅色'}外观'),
             style: TextStyle(
               color: scheme.onSurfaceVariant,
               fontWeight: FontWeight.w600,

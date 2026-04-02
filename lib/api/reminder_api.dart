@@ -40,6 +40,8 @@ class ReminderApi {
     bool enabled = true,
     String repeatRule = 'daily',
     String method = 'notification',
+    String? startDate,
+    String? endDate,
   }) {
     return dioRequest.post<ReminderPlan>(
       HttpConstants.REMINDER_UPSERT,
@@ -56,6 +58,10 @@ class ReminderApi {
         'enabled': enabled,
         'repeatRule': repeatRule,
         'method': method,
+        if (startDate != null && startDate.trim().isNotEmpty)
+          'startDate': startDate.trim(),
+        if (endDate != null && endDate.trim().isNotEmpty)
+          'endDate': endDate.trim(),
       },
       decoder: (json) => ReminderPlan.fromJson(_asMap(json)),
       showLoading: true,

@@ -188,7 +188,16 @@ class _CheckInPageState extends State<CheckInPage> {
 
   Widget _buildNeedLogin() {
     final l10n = _l10n;
+    final theme = Theme.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final iconAccent = Color.lerp(scheme.tertiary, scheme.primary, 0.32)!;
+    final iconBackground = appTintedSurface(
+      context,
+      iconAccent,
+      lightAlpha: 0.12,
+      darkAlpha: 0.24,
+      baseColor: theme.cardTheme.color ?? scheme.surface,
+    );
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 22),
@@ -205,12 +214,20 @@ class _CheckInPageState extends State<CheckInPage> {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                  color: iconBackground,
                   shape: BoxShape.circle,
+                  border: Border.all(
+                    color: appTintedBorder(
+                      context,
+                      iconAccent,
+                      lightAlpha: 0.16,
+                      darkAlpha: 0.26,
+                    ),
+                  ),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.fact_check_outlined,
-                  color: Color(0xFFF59E0B),
+                  color: iconAccent,
                   size: 30,
                 ),
               ),
@@ -220,7 +237,7 @@ class _CheckInPageState extends State<CheckInPage> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F172A),
+                  color: scheme.onSurface,
                 ),
               ),
               const SizedBox(height: 6),
@@ -231,7 +248,7 @@ class _CheckInPageState extends State<CheckInPage> {
                 style: TextStyle(
                   fontSize: 13,
                   height: 1.5,
-                  color: Color(0xFF64748B),
+                  color: scheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -241,8 +258,8 @@ class _CheckInPageState extends State<CheckInPage> {
                 child: FilledButton(
                   onPressed: () => Navigator.pushNamed(context, '/login'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF0EA5E9),
-                    foregroundColor: Colors.white,
+                    backgroundColor: scheme.primary,
+                    foregroundColor: scheme.onPrimary,
                     minimumSize: const Size(double.infinity, 46),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),

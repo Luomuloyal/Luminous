@@ -236,6 +236,36 @@ abstract class AppLocalizations {
   /// **'Use English for app text'**
   String get languageEnglishSubtitle;
 
+  /// No description provided for @languageCurrentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current language: {language}'**
+  String languageCurrentLabel(Object language);
+
+  /// No description provided for @languageSelectedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected: {language}'**
+  String languageSelectedLabel(Object language);
+
+  /// No description provided for @languageHeroHintSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'App language follows device language automatically'**
+  String get languageHeroHintSystem;
+
+  /// No description provided for @languageHeroHintChinese.
+  ///
+  /// In en, this message translates to:
+  /// **'Interface text is fixed to Simplified Chinese'**
+  String get languageHeroHintChinese;
+
+  /// No description provided for @languageHeroHintEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'Interface text is fixed to English'**
+  String get languageHeroHintEnglish;
+
   /// No description provided for @languageNote.
   ///
   /// In en, this message translates to:
@@ -2191,6 +2221,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'AI returned no content'**
   String get medicineDetailAiNoContentToast;
+
+  /// No description provided for @medicineDetailAiNetworkErrorToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Network request failed. Please check your connection and try again.'**
+  String get medicineDetailAiNetworkErrorToast;
+
+  /// No description provided for @medicineDetailPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Medicine Details'**
+  String get medicineDetailPageTitle;
 
   /// No description provided for @medicineDetailHeaderRefreshing.
   ///

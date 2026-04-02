@@ -89,6 +89,8 @@ class ReminderLocalStore {
       enabled: (row['enabled'] ?? 1) == 1,
       repeatRule: (row['repeatRule'] ?? 'daily').toString(),
       method: (row['method'] ?? 'notification').toString(),
+      startDate: (row['startDate'] ?? '').toString(),
+      endDate: (row['endDate'] ?? '').toString(),
     );
   }
 
@@ -109,6 +111,8 @@ class ReminderLocalStore {
       'enabled': item.enabled ? 1 : 0,
       'repeatRule': item.repeatRule,
       'method': item.method,
+      'startDate': item.startDate,
+      'endDate': item.endDate,
       'updatedAt': updatedAt,
     };
   }

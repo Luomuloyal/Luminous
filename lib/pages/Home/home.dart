@@ -94,6 +94,38 @@ class _HomeViewState extends State<HomeView> {
       zh: '规律作息，药效更稳',
       en: 'Keep a regular routine for more stable treatment outcomes.',
     ),
+    AppI18nText.pick(
+      zh: '温水送服更稳妥，避免酒精同服',
+      en: 'Use water for medication and avoid taking with alcohol.',
+    ),
+    AppI18nText.pick(
+      zh: '慢病药物按计划，勿自行停药',
+      en: 'For chronic conditions, follow the plan and do not stop on your own.',
+    ),
+    AppI18nText.pick(
+      zh: '不同药物间隔服用，减少相互影响',
+      en: 'Space different medicines to reduce interaction risks.',
+    ),
+    AppI18nText.pick(
+      zh: '出门前检查当天药盒，避免漏带',
+      en: 'Check your pillbox before leaving to avoid missing doses.',
+    ),
+    AppI18nText.pick(
+      zh: '儿童与老人用药，剂量更要核对',
+      en: 'Double-check doses for children and older adults.',
+    ),
+    AppI18nText.pick(
+      zh: '不同厂家同成分也要核对剂量单位',
+      en: 'Even with the same ingredient, verify dosage units across brands.',
+    ),
+    AppI18nText.pick(
+      zh: '就诊时携带正在服用药物清单',
+      en: 'Bring your current medication list to clinical visits.',
+    ),
+    AppI18nText.pick(
+      zh: '睡前服药留意是否影响夜间休息',
+      en: 'For bedtime medication, monitor impact on sleep quality.',
+    ),
   ];
 
   List<HomeReminderItemData> _defaultFallbackReminders() => [
@@ -170,7 +202,7 @@ class _HomeViewState extends State<HomeView> {
     if (l10n == null) {
       return _defaultHealthTips;
     }
-    return [
+    return <String>[
       l10n.homeTip1,
       l10n.homeTip2,
       l10n.homeTip3,

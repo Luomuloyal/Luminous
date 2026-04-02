@@ -1,30 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/l10n/app_localizations.dart';
+import 'package:luminous/viewmodels/search.dart';
 
 /// 搜索页（Search）可复用 UI 组件集合。
-class SearchResultItemData {
-  /// 药品/结果名称。
-  final String name;
-
-  /// 结果副标题（剂型 + 规格等）。
-  final String subtitle;
-
-  /// 结果补充提示（厂家等）。
-  final String tips;
-
-  /// 右上角徽标文本。
-  final String badge;
-
-  /// 创建一个搜索结果展示数据对象。
-  const SearchResultItemData({
-    required this.name,
-    required this.subtitle,
-    required this.tips,
-    required this.badge,
-  });
-}
-
 /// 搜索页统一使用的白色表面卡片容器。
 ///
 /// 用于保持搜索框、结果卡片等区域的视觉一致性。

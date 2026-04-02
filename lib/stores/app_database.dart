@@ -20,7 +20,7 @@ class AppDatabase {
   static const String _dbName = 'luminous.db';
 
   /// 当前数据库 schema 版本号。
-  static const int _version = 10;
+  static const int _version = 11;
 
   /// 已打开的数据库实例缓存。
   Database? _db;
@@ -141,6 +141,8 @@ class AppDatabase {
         enabled INTEGER NOT NULL,
         repeatRule TEXT NOT NULL,
         method TEXT NOT NULL,
+        startDate TEXT,
+        endDate TEXT,
         updatedAt INTEGER NOT NULL
       )
     ''');
