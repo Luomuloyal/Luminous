@@ -99,6 +99,14 @@ class MessageUtils {
   static String? _classifyCommonError(String text) {
     final lower = text.toLowerCase();
 
+    if (lower.contains('databasefactory not initialized') ||
+        lower.contains('databasefactory not init')) {
+      return AppI18nText.pick(
+        zh: '本地缓存尚未就绪，请稍后重试',
+        en: 'Local cache is not ready. Please try again shortly',
+      );
+    }
+
     if (lower.contains('timeout') || text.contains('超时')) {
       return AppI18nText.pick(zh: '网络请求超时', en: 'Network request timed out');
     }

@@ -526,12 +526,15 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
     final l10n = _l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final paragraphs = _result == null
+        ? const <String>[]
+        : _splitResultParagraphs(_result!.text);
     return _SectionCard(
       title: l10n?.safetyResultCardTitle ?? 'AI Result',
       accentColor: Color.lerp(scheme.secondary, scheme.primary, 0.5)!,
       secondaryColor: scheme.tertiary,
       ornamentKey: 'safety.result',
-      child: _result == null || !_result!.hasText
+      child: paragraphs.isEmpty
           ? Text(
               _resultPlaceholderText(l10n),
               style: TextStyle(
@@ -541,16 +544,68 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
                 fontWeight: FontWeight.w600,
               ),
             )
-          : Text(
-              _result!.text,
-              style: TextStyle(
-                fontSize: 13,
-                height: 1.6,
-                color: scheme.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (var i = 0; i < paragraphs.length; i++) ...[
+                  Text(
+                    paragraphs[i],
+                    style: TextStyle(
+                      fontSize: 13,
+                      height: 1.6,
+                      color: scheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (i != paragraphs.length - 1) const SizedBox(height: 8),
+                ],
+              ],
             ),
     );
+  }
+
+  /// 把 AI 长文本拆分成更易读的段落。
+  List<String> _splitResultParagraphs(String raw) {
+    var text = raw.replaceAll('\r\n', '\n').replaceAll('\r', '\n').trim();
+    if (text.isEmpty) {
+      return const <String>[];
+    }
+
+    const sectionMarkers = <String>[
+      '是否存在相互作用',
+      '可能风险',
+      '联用建议',
+      '何时需要咨询医生或药师',
+      '风险提示',
+      '用药建议',
+    ];
+
+    for (final marker in sectionMarkers) {
+      final escaped = RegExp.escape(marker);
+      text = text.replaceAllMapped(
+        RegExp('(?<!\\n)($escaped[：:])'),
+        (match) => '\n${match.group(1)}',
+      );
+    }
+
+    var parts = text
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList(growable: false);
+
+    if (parts.length <= 1) {
+      final sentences = text
+          .split(RegExp(r'(?<=[。！？])\s*'))
+          .map((line) => line.trim())
+          .where((line) => line.isNotEmpty)
+          .toList(growable: false);
+      if (sentences.length > 1) {
+        parts = sentences;
+      }
+    }
+
+    return parts;
   }
 
   /// 打开药品选择器并把结果写入 A 或 B。

@@ -1,4 +1,29 @@
-import 'dotenv/config';
+import { config as loadEnv } from 'dotenv';
+
+function readEnvFileFromArgv(): string {
+  const inlineArgPrefix = '--env-file=';
+  const inlineArg = process.argv.find((arg) => arg.startsWith(inlineArgPrefix));
+  if (inlineArg) {
+    return inlineArg.slice(inlineArgPrefix.length).trim();
+  }
+
+  const envFileFlagIndex = process.argv.indexOf('--env-file');
+  if (envFileFlagIndex !== -1) {
+    return (process.argv[envFileFlagIndex + 1] ?? '').trim();
+  }
+
+  return '';
+}
+
+const envFile = readEnvFileFromArgv();
+if (envFile) {
+  const loaded = loadEnv({ path: envFile });
+  if (loaded.error) {
+    throw new Error(`加载环境变量文件失败: ${envFile}`);
+  }
+} else {
+  loadEnv();
+}
 
 function readString(name: string, fallback = ''): string {
   const value = process.env[name];
@@ -61,8 +86,8 @@ export const env = {
       from: readString('AUTH_CODE_EMAIL_FROM'),
     },
   },
-  jwtSecret: readString('JWT_SECRET', 'your_jwt_secret_key_here_for_dev'),
-  jwtRefreshSecret: readString('JWT_REFRESH_SECRET', 'your_jwt_refresh_secret_key_here_for_dev'),
+  jwtSecret: requireEnv('JWT_SECRET'),
+  jwtRefreshSecret: requireEnv('JWT_REFRESH_SECRET'),
   doubao: {
     apiKey: readString('DOUBAO_API_KEY'),
     baseUrl: readString(

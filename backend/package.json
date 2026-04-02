@@ -6,8 +6,9 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "dev": "tsx watch src/server.ts",
-    "start": "node dist/server.js"
+    "dev": "tsx watch src/server.ts --env-file=.env.development",
+    "start": "node dist/server.js",
+    "start:prod": "node dist/server.js --env-file=.env.production"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -19,7 +20,8 @@
     "mysql2": "^3.20.0",
     "nodemailer": "^8.0.4",
     "openai": "^5.20.3",
-    "redis": "^5.11.0"
+    "redis": "^5.11.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

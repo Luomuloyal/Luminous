@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 
 // ignore_for_file: constant_identifier_names, non_constant_identifier_names
@@ -12,8 +14,25 @@ import 'package:flutter/material.dart';
 class GlobalConstants {
   /// 当前后端服务根地址。
   ///
-  /// 已经修改为本地后端地址，如使用 Android 模拟器请用 10.0.2.2，真机用局域网 IP
-  static const String BASE_URL = 'http://10.0.2.2:8787';
+  /// 可通过 `--dart-define=API_BASE_URL=...` 强制覆盖；
+  /// 若未覆盖，默认按平台选择本地联调地址。
+  static String get BASE_URL {
+    const String override = String.fromEnvironment(
+      'API_BASE_URL',
+      defaultValue: '',
+    );
+    if (override.isNotEmpty) {
+      return override;
+    }
+
+    if (kIsWeb) {
+      return 'http://127.0.0.1:8787';
+    }
+
+    return defaultTargetPlatform == TargetPlatform.android
+        ? 'http://10.0.2.2:8787'
+        : 'http://127.0.0.1:8787';
+  }
 
   /// 网络请求默认超时时间，单位是秒。
   ///

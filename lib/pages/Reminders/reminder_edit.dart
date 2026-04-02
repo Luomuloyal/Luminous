@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/api/reminder_api.dart';
+import 'package:luminous/components/app_canvas.dart';
+import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Picker/medicine_picker.dart';
 import 'package:luminous/stores/user_controller.dart';
@@ -73,6 +75,15 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
 
   AppLocalizations? get _l10n => AppLocalizations.of(context);
 
+  bool get _isEdit => widget.initial != null;
+
+  String get _normalizedProductName => _nameController.text.trim();
+
+  bool get _hasLinkedIdentity =>
+      _drugCode.trim().isNotEmpty || _approvalNo.trim().isNotEmpty;
+
+  bool get _canSave => !_saving && _normalizedProductName.isNotEmpty;
+
   /// 生成已选药品身份信息的副标题文本。
   ///
   /// 当选中了药品后，优先展示本地化标签（药品编码/批准文号），
@@ -115,40 +126,46 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = _l10n;
-
-    /// 当前是否为编辑模式。
-    final isEdit = widget.initial != null;
-    return Scaffold(
-      backgroundColor: const Color(0xFFF3F7FB),
+    final scheme = Theme.of(context).colorScheme;
+    return AppCanvasPageScaffold(
       appBar: AppBar(
         title: Text(
-          isEdit
+          _isEdit
               ? (l10n?.reminderEditTitle ?? '编辑提醒')
               : (l10n?.reminderCreateTitle ?? '新增提醒'),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        children: [
-          _buildSection(
+      appBarSpacing: 30,
+      safeAreaBottom: true,
+      accentColor: const Color(0xFF10B981),
+      secondaryAccentColor: const Color(0xFF0EA5E9),
+      child: ListView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 2, 16, 26),
+        children: <Widget>[
+          _buildHeroCard(),
+          const SizedBox(height: 12),
+          _buildSectionCard(
             title: l10n?.reminderEditSectionDrugTime ?? '药品与时间',
+            accentColor: const Color(0xFF10B981),
+            secondaryColor: const Color(0xFF06B6D4),
+            ornamentKey: 'reminders.edit.drug-time',
             child: Column(
-              children: [
+              children: <Widget>[
                 _tile(
                   icon: Icons.medication_outlined,
                   color: const Color(0xFF0EA5E9),
-                  title: _nameController.text.trim().isEmpty
+                  title: _normalizedProductName.isEmpty
                       ? (l10n?.reminderEditSelectMedicine ?? '选择药品')
-                      : _nameController.text.trim(),
-                  subtitle:
-                      _drugCode.trim().isNotEmpty ||
-                          _approvalNo.trim().isNotEmpty
+                      : _normalizedProductName,
+                  subtitle: _hasLinkedIdentity
                       ? _buildSelectedIdentitySubtitle(l10n)
                       : (l10n?.reminderEditSelectMedicineHint ??
                             '可从“我的药品/搜索库”选择'),
+                  badgeText: _hasLinkedIdentity ? '已绑定药品' : '手动输入',
                   onTap: _pickMedicine,
                 ),
                 const SizedBox(height: 10),
@@ -163,56 +180,45 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
             ),
           ),
           const SizedBox(height: 12),
-          _buildSection(
+          _buildSectionCard(
             title: l10n?.reminderEditSectionContent ?? '提醒内容',
+            accentColor: const Color(0xFF3B82F6),
+            secondaryColor: const Color(0xFF14B8A6),
+            ornamentKey: 'reminders.edit.content',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
+              children: <Widget>[
+                _buildInputField(
                   controller: _nameController,
-                  decoration: InputDecoration(
-                    labelText: l10n?.reminderEditNameLabel ?? '药品名称(必填)',
-                    border: const OutlineInputBorder(),
-                  ),
-                  onChanged: (value) {
-                    final nextName = value.trim();
-                    final shouldClearIdentity =
-                        _selectedProductName.isNotEmpty &&
-                        nextName != _selectedProductName;
-                    setState(() {
-                      if (shouldClearIdentity) {
-                        _selectedProductName = '';
-                        _drugCode = '';
-                        _approvalNo = '';
-                      }
-                    });
-                  },
+                  labelText: l10n?.reminderEditNameLabel ?? '药品名称(必填)',
+                  maxLines: 1,
+                  onChanged: _onNameChanged,
                 ),
                 const SizedBox(height: 10),
-                TextField(
+                _buildInputField(
                   controller: _subtitleController,
-                  decoration: InputDecoration(
-                    labelText: l10n?.reminderEditSubtitleLabel ?? '备注(可选)',
-                    hintText: l10n?.reminderEditSubtitleHint ?? '例如 早餐后服用 1 粒',
-                    border: const OutlineInputBorder(),
-                  ),
+                  labelText: l10n?.reminderEditSubtitleLabel ?? '备注(可选)',
+                  hintText: l10n?.reminderEditSubtitleHint ?? '例如 早餐后服用 1 粒',
                   maxLines: 2,
                 ),
               ],
             ),
           ),
           const SizedBox(height: 12),
-          _buildSection(
+          _buildSectionCard(
             title: l10n?.reminderEditSectionSwitch ?? '开关',
+            accentColor: const Color(0xFFF59E0B),
+            secondaryColor: const Color(0xFF10B981),
+            ornamentKey: 'reminders.edit.switch',
             child: Row(
-              children: [
+              children: <Widget>[
                 Expanded(
                   child: Text(
                     l10n?.reminderEditEnableSwitch ?? '启用提醒',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14.5,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
+                      color: scheme.onSurface,
                     ),
                   ),
                 ),
@@ -223,11 +229,11 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: _saving ? null : _save,
+              onPressed: _canSave ? _save : null,
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF10B981),
                 foregroundColor: Colors.white,
@@ -249,13 +255,19 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
             ),
           ),
           const SizedBox(height: 10),
-          Text(
-            l10n?.reminderEditTip ?? '提示：提醒信息仅用于辅助管理，不能替代医生处方。如有不适请及时就医。',
-            style: TextStyle(
-              fontSize: 12.5,
-              height: 1.5,
-              color: Color(0xFF64748B),
-              fontWeight: FontWeight.w600,
+          _buildSectionCard(
+            title: l10n?.safetyDisclaimerTitle ?? '提示',
+            accentColor: const Color(0xFFF59E0B),
+            secondaryColor: const Color(0xFF38BDF8),
+            ornamentKey: 'reminders.edit.tip',
+            child: Text(
+              l10n?.reminderEditTip ?? '提示：提醒信息仅用于辅助管理，不能替代医生处方。如有不适请及时就医。',
+              style: TextStyle(
+                fontSize: 12.5,
+                height: 1.5,
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -263,36 +275,216 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
     );
   }
 
-  /// 构建一个统一风格的白色 section 卡片。
-  Widget _buildSection({required String title, required Widget child}) {
-    return Container(
+  Widget _buildHeroCard() {
+    final l10n = _l10n;
+    final scheme = Theme.of(context).colorScheme;
+    return AppSectionCard(
+      accentColor: const Color(0xFF10B981),
+      secondaryColor: const Color(0xFF0EA5E9),
+      ornamentKey: 'reminders.edit.hero',
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: appTintedSurface(
+                context,
+                const Color(0xFF10B981),
+                lightAlpha: 0.13,
+                darkAlpha: 0.22,
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(
+              Icons.notifications_active_outlined,
+              color: Color(0xFF10B981),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  _isEdit
+                      ? (l10n?.reminderEditTitle ?? '编辑提醒')
+                      : (l10n?.reminderCreateTitle ?? '新增提醒'),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: scheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  l10n?.reminderEditTimeSubtitle ?? '每天在该时间通过系统通知提醒',
+                  style: TextStyle(
+                    fontSize: 12.8,
+                    height: 1.45,
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: <Widget>[
+                    _statusChip(
+                      context,
+                      icon: Icons.schedule_rounded,
+                      text: _time,
+                      color: const Color(0xFF10B981),
+                    ),
+                    _statusChip(
+                      context,
+                      icon: _enabled
+                          ? Icons.notifications_active_rounded
+                          : Icons.notifications_off_rounded,
+                      text: _enabled ? 'Enabled' : 'Disabled',
+                      color: _enabled
+                          ? const Color(0xFF0EA5E9)
+                          : const Color(0xFF64748B),
+                    ),
+                    _statusChip(
+                      context,
+                      icon: _hasLinkedIdentity
+                          ? Icons.verified_rounded
+                          : Icons.edit_note_rounded,
+                      text: _hasLinkedIdentity ? '已绑定药品' : '手动输入',
+                      color: _hasLinkedIdentity
+                          ? const Color(0xFF14B8A6)
+                          : const Color(0xFFF59E0B),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _statusChip(
+    BuildContext context, {
+    required IconData icon,
+    required String text,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: appTintedSurface(
+          context,
+          color,
+          lightAlpha: 0.09,
+          darkAlpha: 0.18,
+        ),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: appTintedBorder(
+            context,
+            color,
+            lightAlpha: 0.14,
+            darkAlpha: 0.24,
+          ),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 11.8,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionCard({
+    required String title,
+    required Widget child,
+    required Color accentColor,
+    required Color secondaryColor,
+    required String ornamentKey,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    return AppSectionCard(
+      accentColor: accentColor,
+      secondaryColor: secondaryColor,
+      ornamentKey: ornamentKey,
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15.5,
               fontWeight: FontWeight.w800,
-              color: Color(0xFF0F172A),
+              color: scheme.onSurface,
             ),
           ),
           const SizedBox(height: 10),
           child,
         ],
+      ),
+    );
+  }
+
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String labelText,
+    String? hintText,
+    int maxLines = 1,
+    ValueChanged<String>? onChanged,
+  }) {
+    final scheme = Theme.of(context).colorScheme;
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: labelText,
+        hintText: hintText,
+        labelStyle: TextStyle(
+          color: scheme.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
+        ),
+        hintStyle: TextStyle(
+          color: scheme.onSurfaceVariant.withValues(alpha: 0.78),
+          fontWeight: FontWeight.w600,
+        ),
+        filled: true,
+        fillColor: appTintedSurface(
+          context,
+          const Color(0xFF0EA5E9),
+          lightAlpha: 0.04,
+          darkAlpha: 0.11,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: scheme.outline.withValues(alpha: 0.6)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: scheme.outline.withValues(alpha: 0.6)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Color(0xFF0EA5E9), width: 1.4),
+        ),
       ),
     );
   }
@@ -303,20 +495,34 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
     required Color color,
     required String title,
     required String subtitle,
+    String? badgeText,
     required VoidCallback onTap,
   }) {
+    final scheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Ink(
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
+          color: appTintedSurface(
+            context,
+            color,
+            lightAlpha: 0.05,
+            darkAlpha: 0.12,
+          ),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(
+            color: appTintedBorder(
+              context,
+              color,
+              lightAlpha: 0.12,
+              darkAlpha: 0.22,
+            ),
+          ),
         ),
         child: Row(
-          children: [
+          children: <Widget>[
             Container(
               width: 40,
               height: 40,
@@ -330,32 +536,71 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: <Widget>[
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14.5,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
+                      color: scheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12.5,
-                      color: Color(0xFF64748B),
+                      color: scheme.onSurfaceVariant,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                  if (badgeText != null && badgeText.trim().isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: appTintedSurface(
+                          context,
+                          color,
+                          lightAlpha: 0.08,
+                          darkAlpha: 0.16,
+                        ),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        badgeText,
+                        style: TextStyle(
+                          fontSize: 10.8,
+                          fontWeight: FontWeight.w700,
+                          color: color,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
+            Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
           ],
         ),
       ),
     );
+  }
+
+  void _onNameChanged(String value) {
+    final nextName = value.trim();
+    final shouldClearIdentity =
+        _selectedProductName.isNotEmpty && nextName != _selectedProductName;
+    setState(() {
+      if (shouldClearIdentity) {
+        _selectedProductName = '';
+        _drugCode = '';
+        _approvalNo = '';
+      }
+    });
   }
 
   /// 打开药品选择器并把结果回填到表单。
@@ -371,7 +616,6 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
     if (item == null) return;
     setState(() {
       _nameController.text = item.productName;
-      _subtitleController.text = _subtitleController.text.trim();
       _drugCode = item.drugCode;
       _approvalNo = item.approvalNo;
       _selectedProductName = item.productName.trim();
@@ -412,7 +656,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
     }
 
     /// 表单中的药品名称。
-    final productName = _nameController.text.trim();
+    final productName = _normalizedProductName;
     if (productName.isEmpty) {
       ToastUtils.instance.show(
         context,

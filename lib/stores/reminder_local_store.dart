@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:luminous/stores/app_database.dart';
 import 'package:luminous/viewmodels/reminder.dart';
 import 'package:sqflite/sqflite.dart';
@@ -15,11 +16,20 @@ class ReminderLocalStore {
   /// 全局单例入口。
   static final ReminderLocalStore instance = ReminderLocalStore._();
 
+  /// Web 端本地缓存兜底（避免依赖 SQLite 工厂初始化）。
+  final Map<String, List<ReminderPlan>> _webCache =
+      <String, List<ReminderPlan>>{};
+
   /// 读取指定用户的本地提醒缓存。
   Future<List<ReminderPlan>> loadForUser(String userId) async {
     final uid = userId.trim();
     if (uid.isEmpty) {
       return const [];
+    }
+
+    if (kIsWeb) {
+      return List<ReminderPlan>.from(_webCache[uid] ?? const <ReminderPlan>[])
+        ..sort((a, b) => a.time.compareTo(b.time));
     }
 
     final db = await AppDatabase.instance.database;
@@ -40,6 +50,12 @@ class ReminderLocalStore {
   Future<void> replaceForUser(String userId, List<ReminderPlan> items) async {
     final uid = userId.trim();
     if (uid.isEmpty) {
+      return;
+    }
+
+    if (kIsWeb) {
+      _webCache[uid] = List<ReminderPlan>.from(items)
+        ..sort((a, b) => a.time.compareTo(b.time));
       return;
     }
 
