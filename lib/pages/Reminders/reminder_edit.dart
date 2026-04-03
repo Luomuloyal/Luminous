@@ -6,6 +6,7 @@ import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Picker/medicine_picker.dart';
+import 'package:luminous/stores/my_medicine_repository.dart';
 import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/medicine.dart';
@@ -38,26 +39,18 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
   final UserController _userController = Get.find<UserController>();
 
   /// 药品名称输入框控制器。
+  ///
+  /// 当前仅用于持有已选药品名称，不再直接暴露可编辑输入框。
   late final TextEditingController _nameController;
 
-  /// 备注输入框控制器。
+  /// 额外提醒内容输入框控制器。
   late final TextEditingController _subtitleController;
 
-  /// 当前选中药品的 drugCode。
-  ///
-  /// 单独保存它是因为药品名称输入框允许手动编辑，但接口提交和后续跳转更依赖稳定的身份字段。
-  String _drugCode = '';
+  /// 剂量输入框控制器。
+  late final TextEditingController _dosageController;
 
-  /// 当前选中药品的 approvalNo。
-  ///
-  /// 与 `drugCode` 一起作为“这个提醒关联的是哪款药”的身份信息。
-  String _approvalNo = '';
-
-  /// 当前名称字段所对应的“已确认药品名”。
-  ///
-  /// 当用户手动改名后，如果名称和这个值不一致，就说明身份字段已经不再可信，
-  /// 需要把 `drugCode/approvalNo` 一并清空，避免名称和身份错配。
-  String _selectedProductName = '';
+  /// 当前提醒已选择的药品列表（支持一条提醒绑定多个药品）。
+  final List<MedicineItem> _selectedMedicines = <MedicineItem>[];
 
   /// 当前选择的提醒时间（HH:mm）。
   ///
@@ -84,12 +77,15 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
 
   bool get _isEdit => widget.initial != null;
 
-  String get _normalizedProductName => _nameController.text.trim();
+  String get _normalizedProductName => _composeSelectedMedicineNames();
 
-  bool get _hasLinkedIdentity =>
-      _drugCode.trim().isNotEmpty || _approvalNo.trim().isNotEmpty;
+  String get _normalizedDosage => _dosageController.text.trim();
 
-  bool get _canSave => !_saving && _normalizedProductName.isNotEmpty;
+  String get _normalizedExtraContent => _subtitleController.text.trim();
+
+  bool get _hasLinkedIdentity => _selectedMedicines.isNotEmpty;
+
+  bool get _canSave => !_saving && _selectedMedicines.isNotEmpty;
 
   String _shortDate(String value) {
     final text = value.trim();
@@ -124,10 +120,26 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
   /// 当选中了药品后，优先展示本地化标签（药品编码/批准文号），
   /// 便于用户确认当前提醒绑定的是哪条药品记录。
   String _buildSelectedIdentitySubtitle(AppLocalizations? l10n) {
-    final drugCode = _drugCode.trim().isEmpty ? '-' : _drugCode.trim();
-    final approvalNo = _approvalNo.trim().isEmpty ? '-' : _approvalNo.trim();
-    return l10n?.reminderEditSelectedIdentity(drugCode, approvalNo) ??
-        'Drug Code: $drugCode  Approval No.: $approvalNo';
+    if (_selectedMedicines.isEmpty) {
+      return l10n?.reminderEditSelectMedicineHint ?? '可从“我的药品/搜索库”选择';
+    }
+    if (_selectedMedicines.length == 1) {
+      final selected = _selectedMedicines.first;
+      final drugCode = selected.drugCode.trim().isEmpty
+          ? '-'
+          : selected.drugCode.trim();
+      final approvalNo = selected.approvalNo.trim().isEmpty
+          ? '-'
+          : selected.approvalNo.trim();
+      return l10n?.reminderEditSelectedIdentity(drugCode, approvalNo) ??
+          'Drug Code: $drugCode  Approval No.: $approvalNo';
+    }
+    final first = _selectedMedicines.first;
+    final locale = (l10n?.localeName ?? 'zh').toLowerCase();
+    if (locale.startsWith('zh')) {
+      return '已选择 ${_selectedMedicines.length} 种药品，首项: ${first.productName}';
+    }
+    return '${_selectedMedicines.length} medicines selected, first: ${first.productName}';
   }
 
   /// 当前登录用户 id（未登录时为空字符串）。
@@ -142,13 +154,12 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
     final init = widget.initial;
     _nameController = TextEditingController(text: init?.productName ?? '');
     _subtitleController = TextEditingController(text: init?.subtitle ?? '');
-    _drugCode = init?.drugCode ?? '';
-    _approvalNo = init?.approvalNo ?? '';
-    _selectedProductName = init?.productName.trim() ?? '';
+    _dosageController = TextEditingController(text: init?.dosage ?? '');
     _time = init?.time ?? '08:00';
     _enabled = init?.enabled ?? true;
     _startDate = init?.startDate ?? '';
     _endDate = init?.endDate ?? '';
+    _hydrateInitialMedicines(init);
   }
 
   /// 释放文本控制器资源。
@@ -156,7 +167,72 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
   void dispose() {
     _nameController.dispose();
     _subtitleController.dispose();
+    _dosageController.dispose();
     super.dispose();
+  }
+
+  void _hydrateInitialMedicines(ReminderPlan? init) {
+    final refs = init?.medicines ?? const <ReminderMedicineRef>[];
+    if (refs.isNotEmpty) {
+      _selectedMedicines.addAll(
+        refs
+            .where((item) => item.productName.trim().isNotEmpty)
+            .map(_toMedicineItem)
+            .toList(growable: false),
+      );
+    } else if ((init?.productName ?? '').trim().isNotEmpty) {
+      _selectedMedicines.add(
+        MedicineItem(
+          serialNo: '',
+          approvalNo: init?.approvalNo ?? '',
+          productName: init?.productName ?? '',
+          dosageForm: '',
+          specification: init?.dosage ?? '',
+          marketingAuthorizationHolder: '',
+          manufacturer: '',
+          drugCode: init?.drugCode ?? '',
+          drugCodeRemark: '',
+        ),
+      );
+    }
+    _nameController.text = _normalizedProductName;
+  }
+
+  MedicineItem _toMedicineItem(ReminderMedicineRef ref) {
+    return MedicineItem(
+      serialNo: '',
+      approvalNo: ref.approvalNo,
+      productName: ref.productName,
+      dosageForm: '',
+      specification: _normalizedDosage,
+      marketingAuthorizationHolder: '',
+      manufacturer: '',
+      drugCode: ref.drugCode,
+      drugCodeRemark: '',
+    );
+  }
+
+  String _composeSelectedMedicineNames() {
+    final names = _selectedMedicines
+        .map((item) => item.productName.trim())
+        .where((name) => name.isNotEmpty)
+        .toList(growable: false);
+    if (names.isEmpty) {
+      return _nameController.text.trim();
+    }
+    return names.toSet().join('、');
+  }
+
+  String _medicineIdentityKey(MedicineItem item) {
+    final drugCode = item.drugCode.trim();
+    if (drugCode.isNotEmpty) {
+      return 'drug:$drugCode';
+    }
+    final approvalNo = item.approvalNo.trim();
+    if (approvalNo.isNotEmpty) {
+      return 'approval:$approvalNo';
+    }
+    return 'name:${item.productName.trim()}';
   }
 
   /// 构建提醒编辑页 UI。
@@ -174,6 +250,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
         centerTitle: true,
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
+        foregroundColor: const Color(0xFF0F172A),
       ),
       appBarSpacing: 30,
       safeAreaBottom: true,
@@ -181,10 +258,10 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
       secondaryAccentColor: const Color(0xFF0EA5E9),
       child: ListView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 2, 16, 26),
+        padding: const EdgeInsets.fromLTRB(14, 0, 14, 20),
         children: <Widget>[
           _buildHeroCard(),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           _buildSectionCard(
             title: l10n?.reminderEditSectionDrugTime ?? '药品与时间',
             accentColor: const Color(0xFF10B981),
@@ -195,19 +272,23 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
                 _tile(
                   icon: Icons.medication_outlined,
                   color: const Color(0xFF0EA5E9),
-                  title: _normalizedProductName.isEmpty
+                  title: _selectedMedicines.isEmpty
                       ? (l10n?.reminderEditSelectMedicine ?? '选择药品')
                       : _normalizedProductName,
-                  subtitle: _hasLinkedIdentity
-                      ? _buildSelectedIdentitySubtitle(l10n)
-                      : (l10n?.reminderEditSelectMedicineHint ??
-                            '可从“我的药品/搜索库”选择'),
-                  badgeText: _hasLinkedIdentity
-                      ? (l10n?.reminderEditStatusBoundMedicine ?? '已绑定药品')
-                      : (l10n?.reminderEditStatusManualInput ?? '手动输入'),
+                  subtitle: _buildSelectedIdentitySubtitle(l10n),
+                  badgeText: _selectedMedicines.isEmpty
+                      ? (l10n?.reminderEditStatusManualInput ?? '待选择')
+                      : (_selectedMedicines.length == 1
+                            ? (l10n?.reminderEditStatusBoundMedicine ?? '已绑定药品')
+                            : '已绑定 ${_selectedMedicines.length} 种'),
+                  trailingIcon: Icons.add_circle_outline_rounded,
                   onTap: _pickMedicine,
                 ),
-                const SizedBox(height: 10),
+                if (_selectedMedicines.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 8),
+                  _buildSelectedMedicineChips(),
+                ],
+                const SizedBox(height: 8),
                 _tile(
                   icon: Icons.access_time_rounded,
                   color: const Color(0xFF10B981),
@@ -218,7 +299,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           _buildSectionCard(
             title: l10n?.reminderEditSectionEffectiveDate ?? '生效日期',
             accentColor: const Color(0xFF14B8A6),
@@ -232,7 +313,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
                   title:
                       l10n?.reminderEditStartDateTitle(
                         _startDate.isEmpty
-                            ? (l10n?.reminderDateUnlimited ?? '不限制')
+                            ? l10n.reminderDateUnlimited
                             : _startDate,
                       ) ??
                       (_startDate.isEmpty ? '开始日期: 不限制' : '开始日期: $_startDate'),
@@ -243,14 +324,14 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
                       : (l10n?.reminderEditDateBadgeSet ?? '已设置'),
                   onTap: _pickStartDate,
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 _tile(
                   icon: Icons.event_busy_rounded,
                   color: const Color(0xFF0EA5E9),
                   title:
                       l10n?.reminderEditEndDateTitle(
                         _endDate.isEmpty
-                            ? (l10n?.reminderDateUnlimited ?? '不限制')
+                            ? l10n.reminderDateUnlimited
                             : _endDate,
                       ) ??
                       (_endDate.isEmpty ? '结束日期: 不限制' : '结束日期: $_endDate'),
@@ -261,7 +342,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
                   onTap: _pickEndDate,
                 ),
                 if (_startDate.isNotEmpty || _endDate.isNotEmpty) ...<Widget>[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton.icon(
@@ -279,7 +360,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           _buildSectionCard(
             title: l10n?.reminderEditSectionContent ?? '提醒内容',
             accentColor: const Color(0xFF3B82F6),
@@ -289,22 +370,22 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 _buildInputField(
-                  controller: _nameController,
-                  labelText: l10n?.reminderEditNameLabel ?? '药品名称(必填)',
+                  controller: _dosageController,
+                  labelText: _doseLabel(l10n),
+                  hintText: _doseHint(l10n),
                   maxLines: 1,
-                  onChanged: _onNameChanged,
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 _buildInputField(
                   controller: _subtitleController,
-                  labelText: l10n?.reminderEditSubtitleLabel ?? '备注(可选)',
-                  hintText: l10n?.reminderEditSubtitleHint ?? '例如 早餐后服用 1 粒',
+                  labelText: _extraContentLabel(l10n),
+                  hintText: _extraContentHint(l10n),
                   maxLines: 2,
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           _buildSectionCard(
             title: l10n?.reminderEditSectionSwitch ?? '开关',
             accentColor: const Color(0xFFF59E0B),
@@ -329,7 +410,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: FilledButton(
@@ -354,7 +435,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
                   : Text(l10n?.reminderEditSave ?? '保存'),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           _buildSectionCard(
             title: l10n?.safetyDisclaimerTitle ?? '提示',
             accentColor: const Color(0xFFF59E0B),
@@ -375,6 +456,50 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
     );
   }
 
+  Widget _buildSelectedMedicineChips() {
+    final scheme = Theme.of(context).colorScheme;
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: _selectedMedicines
+          .asMap()
+          .entries
+          .map((entry) {
+            final index = entry.key;
+            final medicine = entry.value;
+            return InputChip(
+              label: Text(
+                medicine.productName.trim().isEmpty
+                    ? '未知药品'
+                    : medicine.productName.trim(),
+              ),
+              onDeleted: () {
+                setState(() {
+                  _selectedMedicines.removeAt(index);
+                  _nameController.text = _normalizedProductName;
+                });
+              },
+              deleteIconColor: scheme.error,
+              backgroundColor: appTintedSurface(
+                context,
+                const Color(0xFF0EA5E9),
+                lightAlpha: 0.08,
+                darkAlpha: 0.14,
+              ),
+              side: BorderSide(
+                color: appTintedBorder(
+                  context,
+                  const Color(0xFF0EA5E9),
+                  lightAlpha: 0.12,
+                  darkAlpha: 0.2,
+                ),
+              ),
+            );
+          })
+          .toList(growable: false),
+    );
+  }
+
   Widget _buildHeroCard() {
     final l10n = _l10n;
     final scheme = Theme.of(context).colorScheme;
@@ -382,13 +507,13 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
       accentColor: const Color(0xFF10B981),
       secondaryColor: const Color(0xFF0EA5E9),
       ornamentKey: 'reminders.edit.hero',
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Container(
-            width: 44,
-            height: 44,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: appTintedSurface(
                 context,
@@ -401,9 +526,10 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
             child: const Icon(
               Icons.notifications_active_outlined,
               color: Color(0xFF10B981),
+              size: 20,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -431,7 +557,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
-                  runSpacing: 8,
+                  runSpacing: 6,
                   children: <Widget>[
                     TintedStatusChip(
                       icon: Icons.schedule_rounded,
@@ -439,6 +565,13 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
                       color: const Color(0xFF10B981),
                       surfaceLightAlpha: 0.09,
                     ),
+                    if (_normalizedDosage.isNotEmpty)
+                      TintedStatusChip(
+                        icon: Icons.scale_rounded,
+                        text: _normalizedDosage,
+                        color: const Color(0xFF0EA5E9),
+                        surfaceLightAlpha: 0.09,
+                      ),
                     TintedStatusChip(
                       icon: _enabled
                           ? Icons.notifications_active_rounded
@@ -491,19 +624,19 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
       accentColor: accentColor,
       secondaryColor: secondaryColor,
       ornamentKey: ornamentKey,
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
             title,
             style: TextStyle(
-              fontSize: 15.5,
+              fontSize: 15,
               fontWeight: FontWeight.w800,
               color: scheme.onSurface,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           child,
         ],
       ),
@@ -563,6 +696,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
     required String title,
     required String subtitle,
     String? badgeText,
+    IconData? trailingIcon,
     required VoidCallback onTap,
   }) {
     final scheme = Theme.of(context).colorScheme;
@@ -570,7 +704,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Ink(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+        padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
         decoration: BoxDecoration(
           color: appTintedSurface(
             context,
@@ -591,15 +725,15 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
         child: Row(
           children: <Widget>[
             Container(
-              width: 40,
-              height: 40,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: color),
+              child: Icon(icon, color: color, size: 20),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -607,7 +741,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: 14.5,
+                      fontSize: 14,
                       fontWeight: FontWeight.w800,
                       color: scheme.onSurface,
                     ),
@@ -622,7 +756,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
                     ),
                   ),
                   if (badgeText != null && badgeText.trim().isNotEmpty) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8,
@@ -651,23 +785,15 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
               ),
             ),
             Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+            if (trailingIcon != null)
+              Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: Icon(trailingIcon, color: color, size: 19),
+              ),
           ],
         ),
       ),
     );
-  }
-
-  void _onNameChanged(String value) {
-    final nextName = value.trim();
-    final shouldClearIdentity =
-        _selectedProductName.isNotEmpty && nextName != _selectedProductName;
-    setState(() {
-      if (shouldClearIdentity) {
-        _selectedProductName = '';
-        _drugCode = '';
-        _approvalNo = '';
-      }
-    });
   }
 
   /// 打开药品选择器并把结果回填到表单。
@@ -681,11 +807,18 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
     );
     if (!mounted) return;
     if (item == null) return;
+    final identity = _medicineIdentityKey(item);
+    if (_selectedMedicines.any((e) => _medicineIdentityKey(e) == identity)) {
+      ToastUtils.instance.show(
+        context,
+        _l10n?.searchAlreadyAddedToast ?? '该药品已选择',
+      );
+      return;
+    }
+
     setState(() {
-      _nameController.text = item.productName;
-      _drugCode = item.drugCode;
-      _approvalNo = item.approvalNo;
-      _selectedProductName = item.productName.trim();
+      _selectedMedicines.add(item);
+      _nameController.text = _normalizedProductName;
     });
   }
 
@@ -769,15 +902,34 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
       return;
     }
 
-    /// 表单中的药品名称。
-    final productName = _normalizedProductName;
-    if (productName.isEmpty) {
+    if (_selectedMedicines.isEmpty) {
       ToastUtils.instance.show(
         context,
-        _l10n?.reminderEditNameRequired ?? '药品名称不能为空',
+        _l10n?.reminderEditNameRequired ?? '请至少选择一种药品',
       );
       return;
     }
+    final productName = _normalizedProductName;
+    final medicines = _selectedMedicines
+        .where((item) => item.productName.trim().isNotEmpty)
+        .map(
+          (item) => ReminderMedicineRef(
+            drugCode: item.drugCode.trim(),
+            approvalNo: item.approvalNo.trim(),
+            productName: item.productName.trim(),
+          ),
+        )
+        .toList(growable: false);
+
+    if (medicines.isEmpty) {
+      ToastUtils.instance.show(
+        context,
+        _l10n?.reminderEditNameRequired ?? '请至少选择一种药品',
+      );
+      return;
+    }
+
+    final primaryMedicine = medicines.first;
     if (_startDate.isNotEmpty &&
         _endDate.isNotEmpty &&
         _startDate.compareTo(_endDate) > 0) {
@@ -795,16 +947,19 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
         userId: userId,
         id: widget.initial?.id,
         time: _time,
-        drugCode: _drugCode,
-        approvalNo: _approvalNo,
+        drugCode: primaryMedicine.drugCode,
+        approvalNo: primaryMedicine.approvalNo,
         productName: productName,
-        subtitle: _subtitleController.text.trim(),
+        medicines: medicines,
+        dosage: _normalizedDosage,
+        subtitle: _normalizedExtraContent,
         enabled: _enabled,
         repeatRule: 'daily',
         method: 'notification',
         startDate: _startDate,
         endDate: _endDate,
       );
+      await _syncReminderMedicinesToLocal(userId);
       if (!mounted) return;
       Navigator.pop(context, response.result);
     } catch (e) {
@@ -813,5 +968,57 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  Future<void> _syncReminderMedicinesToLocal(String userId) async {
+    if (userId.trim().isEmpty || _selectedMedicines.isEmpty) {
+      return;
+    }
+    for (final item in _selectedMedicines) {
+      final normalized = MedicineItem(
+        serialNo: item.serialNo,
+        approvalNo: item.approvalNo,
+        productName: item.productName,
+        dosageForm: item.dosageForm,
+        specification: item.specification.isNotEmpty
+            ? item.specification
+            : _normalizedDosage,
+        marketingAuthorizationHolder: item.marketingAuthorizationHolder,
+        manufacturer: item.manufacturer,
+        drugCode: item.drugCode,
+        drugCodeRemark: item.drugCodeRemark,
+      );
+      try {
+        await myMedicineRepository.addMedicine(
+          item: normalized,
+          source: 'reminder',
+          userId: userId,
+        );
+      } catch (_) {}
+    }
+  }
+
+  String _doseLabel(AppLocalizations? l10n) {
+    final locale = (l10n?.localeName ?? 'zh').toLowerCase();
+    return locale.startsWith('zh') ? '服用剂量(可选)' : 'Dose (optional)';
+  }
+
+  String _doseHint(AppLocalizations? l10n) {
+    final locale = (l10n?.localeName ?? 'zh').toLowerCase();
+    return locale.startsWith('zh') ? '例如 1 粒 / 5 ml' : 'e.g. 1 tablet / 5 ml';
+  }
+
+  String _extraContentLabel(AppLocalizations? l10n) {
+    final locale = (l10n?.localeName ?? 'zh').toLowerCase();
+    return locale.startsWith('zh')
+        ? '额外提醒内容(可选)'
+        : 'Extra reminder content (optional)';
+  }
+
+  String _extraContentHint(AppLocalizations? l10n) {
+    final locale = (l10n?.localeName ?? 'zh').toLowerCase();
+    return locale.startsWith('zh')
+        ? '例如 饭后服用，注意多喝水'
+        : 'e.g. Take after meals and drink more water';
   }
 }

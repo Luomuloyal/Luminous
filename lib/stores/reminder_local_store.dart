@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:luminous/stores/app_database.dart';
 import 'package:luminous/viewmodels/reminder.dart';
@@ -78,6 +80,13 @@ class ReminderLocalStore {
 
   /// 把数据库行转换为提醒计划对象。
   ReminderPlan rowToPlan(Map<String, dynamic> row) {
+    final medicines = _decodeMedicines(
+      row['medicinesJson'],
+      fallbackDrugCode: (row['drugCode'] ?? '').toString(),
+      fallbackApprovalNo: (row['approvalNo'] ?? '').toString(),
+      fallbackProductName: (row['productName'] ?? '').toString(),
+    );
+
     return ReminderPlan(
       id: (row['remoteId'] ?? '').toString(),
       userId: (row['userId'] ?? '').toString(),
@@ -85,6 +94,8 @@ class ReminderLocalStore {
       drugCode: (row['drugCode'] ?? '').toString(),
       approvalNo: (row['approvalNo'] ?? '').toString(),
       productName: (row['productName'] ?? '').toString(),
+      medicines: medicines,
+      dosage: (row['dosage'] ?? '').toString(),
       subtitle: (row['subtitle'] ?? '').toString(),
       enabled: (row['enabled'] ?? 1) == 1,
       repeatRule: (row['repeatRule'] ?? 'daily').toString(),
@@ -107,6 +118,10 @@ class ReminderLocalStore {
       'drugCode': item.drugCode,
       'approvalNo': item.approvalNo,
       'productName': item.productName,
+      'medicinesJson': jsonEncode(
+        item.medicines.map((medicine) => medicine.toJson()).toList(),
+      ),
+      'dosage': item.dosage,
       'subtitle': item.subtitle,
       'enabled': item.enabled ? 1 : 0,
       'repeatRule': item.repeatRule,
@@ -115,6 +130,51 @@ class ReminderLocalStore {
       'endDate': item.endDate,
       'updatedAt': updatedAt,
     };
+  }
+
+  List<ReminderMedicineRef> _decodeMedicines(
+    dynamic raw, {
+    required String fallbackDrugCode,
+    required String fallbackApprovalNo,
+    required String fallbackProductName,
+  }) {
+    final medicines = <ReminderMedicineRef>[];
+    final text = (raw ?? '').toString().trim();
+    if (text.isNotEmpty) {
+      try {
+        final parsed = jsonDecode(text);
+        if (parsed is List) {
+          for (final item in parsed) {
+            if (item is! Map) {
+              continue;
+            }
+            final medicine = ReminderMedicineRef.fromJson(
+              item.cast<String, dynamic>(),
+            );
+            if (medicine.productName.trim().isEmpty) {
+              continue;
+            }
+            medicines.add(medicine);
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (medicines.isNotEmpty) {
+      return medicines;
+    }
+
+    final fallbackName = fallbackProductName.trim();
+    if (fallbackName.isEmpty) {
+      return const [];
+    }
+    return <ReminderMedicineRef>[
+      ReminderMedicineRef(
+        drugCode: fallbackDrugCode.trim(),
+        approvalNo: fallbackApprovalNo.trim(),
+        productName: fallbackName,
+      ),
+    ];
   }
 }
 

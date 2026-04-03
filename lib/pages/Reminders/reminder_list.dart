@@ -206,6 +206,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
         centerTitle: true,
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
+        foregroundColor: const Color(0xFF0F172A),
         actions: [
           IconButton(
             onPressed: _loggedIn && !_loading ? _load : null,
@@ -237,10 +238,10 @@ class _ReminderListPageState extends State<ReminderListPage> {
               onRefresh: _load,
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 2, 16, 24),
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 20),
                 children: [
                   _buildHeroCard(),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   if (_error != null) _buildErrorBanner(_error!),
                   if (_items.isEmpty && !_loading) _buildEmpty(),
                   ..._items.asMap().entries.map((entry) {
@@ -248,7 +249,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
                     final item = entry.value;
                     return Padding(
                       padding: EdgeInsets.only(
-                        bottom: index == _items.length - 1 ? 0 : 10,
+                        bottom: index == _items.length - 1 ? 0 : 8,
                       ),
                       child: _ReminderCard(
                         item: item,
@@ -272,7 +273,7 @@ class _ReminderListPageState extends State<ReminderListPage> {
       accentColor: const Color(0xFF10B981),
       secondaryColor: const Color(0xFF38BDF8),
       ornamentKey: 'reminders.list.hero',
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -294,10 +295,10 @@ class _ReminderListPageState extends State<ReminderListPage> {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Wrap(
             spacing: 8,
-            runSpacing: 8,
+            runSpacing: 6,
             children: [
               TintedStatusChip(
                 icon: Icons.library_books_rounded,
@@ -547,6 +548,8 @@ class _ReminderListPageState extends State<ReminderListPage> {
           drugCode: plan.drugCode,
           approvalNo: plan.approvalNo,
           productName: plan.productName,
+          medicines: plan.medicines,
+          dosage: plan.dosage,
           subtitle: plan.subtitle,
           enabled: enabled,
           repeatRule: plan.repeatRule,
@@ -747,104 +750,106 @@ class _ReminderCard extends StatelessWidget {
       item.endDate,
       l10n: l10n,
     );
-    return AppSurfaceCard(
+    return AppSectionCard(
+      accentColor: accent,
+      secondaryColor: Color.lerp(accent, scheme.primary, 0.36)!,
+      ornamentKey: 'reminders.list.item',
       radius: 18,
+      padding: EdgeInsets.zero,
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: busy ? null : onTap,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-          child: Row(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: appTintedSurface(
-                    context,
-                    accent,
-                    lightAlpha: 0.12,
-                    darkAlpha: 0.22,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(Icons.alarm_rounded, color: accent),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: appTintedSurface(
-                              context,
-                              accent,
-                              lightAlpha: 0.1,
-                              darkAlpha: 0.2,
-                            ),
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(
-                              color: appTintedBorder(
-                                context,
-                                accent,
-                                lightAlpha: 0.12,
-                                darkAlpha: 0.22,
-                              ),
-                            ),
-                          ),
-                          child: Text(
-                            item.time,
-                            style: TextStyle(
-                              fontSize: 11.6,
-                              fontWeight: FontWeight.w700,
-                              color: accent,
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        if (busy)
-                          SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: scheme.primary,
-                            ),
-                          ),
-                      ],
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: appTintedSurface(
+                        context,
+                        accent,
+                        lightAlpha: 0.12,
+                        darkAlpha: 0.22,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      item.displayTitle,
+                    child: Icon(Icons.alarm_rounded, color: accent, size: 19),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      item.productName.trim().isEmpty
+                          ? (l10n?.reminderListTitle ?? '用药提醒')
+                          : item.productName.trim(),
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.w800,
                         color: scheme.onSurface,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item.subtitle.trim().isEmpty
-                          ? (l10n?.reminderSystemNotificationSubtitle ??
-                                '系统通知提醒')
-                          : item.subtitle.trim(),
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        height: 1.4,
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
+                  ),
+                  const SizedBox(width: 4),
+                  SizedBox(
+                    height: 28,
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      child: Switch(
+                        value: item.enabled,
+                        onChanged: busy ? null : onToggle,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
+                  ),
+                ],
+              ),
+              if (busy)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: scheme.primary,
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 4),
+              Text(
+                _buildScheduleLine(item, l10n),
+                style: TextStyle(
+                  fontSize: 12.2,
+                  height: 1.35,
+                  color: scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _buildExtraContentLine(item, l10n),
+                style: TextStyle(
+                  fontSize: 12.3,
+                  height: 1.4,
+                  color: scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
                       l10n?.reminderRangeLabel(rangeText) ?? '生效区间: $rangeText',
                       style: TextStyle(
                         fontSize: 11.8,
@@ -852,55 +857,47 @@ class _ReminderCard extends StatelessWidget {
                         color: scheme.onSurfaceVariant,
                         fontWeight: FontWeight.w600,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Switch(
-                          value: item.enabled,
-                          onChanged: busy ? null : onToggle,
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: appTintedSurface(
+                        context,
+                        scheme.error,
+                        lightAlpha: 0.06,
+                        darkAlpha: 0.14,
+                      ),
+                      borderRadius: BorderRadius.circular(11),
+                      border: Border.all(
+                        color: appTintedBorder(
+                          context,
+                          scheme.error,
+                          lightAlpha: 0.11,
+                          darkAlpha: 0.2,
                         ),
-                        const Spacer(),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: appTintedSurface(
-                              context,
-                              scheme.error,
-                              lightAlpha: 0.06,
-                              darkAlpha: 0.14,
-                            ),
-                            borderRadius: BorderRadius.circular(11),
-                            border: Border.all(
-                              color: appTintedBorder(
-                                context,
-                                scheme.error,
-                                lightAlpha: 0.11,
-                                darkAlpha: 0.2,
-                              ),
-                            ),
-                          ),
-                          child: IconButton(
-                            onPressed: busy ? null : onDelete,
-                            constraints: const BoxConstraints.tightFor(
-                              width: 38,
-                              height: 38,
-                            ),
-                            padding: EdgeInsets.zero,
-                            splashRadius: 18,
-                            tooltip: l10n?.reminderDeleteConfirm ?? '删除',
-                            icon: Icon(
-                              Icons.delete_outline_rounded,
-                              size: 19,
-                              color: busy
-                                  ? scheme.error.withValues(alpha: 0.34)
-                                  : scheme.error.withValues(alpha: 0.78),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ],
-                ),
+                    child: IconButton(
+                      onPressed: busy ? null : onDelete,
+                      constraints: const BoxConstraints.tightFor(
+                        width: 34,
+                        height: 34,
+                      ),
+                      padding: EdgeInsets.zero,
+                      splashRadius: 18,
+                      tooltip: l10n?.reminderDeleteConfirm ?? '删除',
+                      icon: Icon(
+                        Icons.delete_outline_rounded,
+                        size: 18,
+                        color: busy
+                            ? scheme.error.withValues(alpha: 0.34)
+                            : scheme.error.withValues(alpha: 0.78),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -926,5 +923,34 @@ class _ReminderCard extends StatelessWidget {
       return l10n?.reminderRangeFrom(start) ?? '$start 起';
     }
     return l10n?.reminderRangeUntil(end) ?? '截止 $end';
+  }
+
+  String _buildScheduleLine(ReminderPlan item, AppLocalizations? l10n) {
+    final dosage = item.dosage.trim();
+    final parts = <String>[];
+    if (item.time.trim().isNotEmpty) {
+      parts.add(item.time.trim());
+    }
+    if (dosage.isNotEmpty) {
+      parts.add(
+        (l10n?.localeName ?? 'zh').toLowerCase().startsWith('zh')
+            ? '剂量: $dosage'
+            : 'Dose: $dosage',
+      );
+    }
+    if (parts.isEmpty) {
+      return l10n?.reminderSystemNotificationSubtitle ?? '系统通知提醒';
+    }
+    return parts.join(' · ');
+  }
+
+  String _buildExtraContentLine(ReminderPlan item, AppLocalizations? l10n) {
+    final extra = item.subtitle.trim();
+    if (extra.isNotEmpty) {
+      return extra;
+    }
+    return (l10n?.localeName ?? 'zh').toLowerCase().startsWith('zh')
+        ? '未设置额外提醒内容'
+        : 'No extra reminder content';
   }
 }

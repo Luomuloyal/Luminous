@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import 'package:luminous/api/medicine_api.dart';
 import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/components/app_surface.dart';
@@ -63,12 +64,22 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
   /// 是否正在请求 AI 解读内容。
   bool _loadingAi = false;
 
+  /// 当前 AI 解读请求取消令牌。
+  CancelToken? _aiCancelToken;
+
   /// 初始化时设置初始药品对象，并尝试加载基础详情。
   @override
   void initState() {
     super.initState();
     _item = widget.initialItem;
     _loadDetail();
+  }
+
+  @override
+  void dispose() {
+    _aiCancelToken?.cancel('page disposed');
+    _aiCancelToken = null;
+    super.dispose();
   }
 
   /// 加载药品基础详情信息。
@@ -116,6 +127,11 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
     if (_loadingAi || !_item.hasIdentity) {
       return;
     }
+
+    _aiCancelToken?.cancel('new ai detail request started');
+    final cancelToken = CancelToken();
+    _aiCancelToken = cancelToken;
+
     setState(() {
       _loadingAi = true;
     });
@@ -123,6 +139,7 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
       final response = await MedicineApi.fetchAiDetail(
         drugCode: _item.drugCode,
         approvalNo: _item.approvalNo,
+        cancelToken: cancelToken,
       );
       if (!mounted) {
         return;
@@ -141,6 +158,9 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
       if (!mounted) {
         return;
       }
+      if (_isCanceledError(e)) {
+        return;
+      }
       final l10n = AppLocalizations.of(context);
       if (_isLikelyNetworkFailure(e)) {
         ToastUtils.instance.showError(
@@ -153,12 +173,39 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
         ToastUtils.instance.showError(context, e);
       }
     } finally {
+      if (identical(_aiCancelToken, cancelToken)) {
+        _aiCancelToken = null;
+      }
       if (mounted) {
         setState(() {
           _loadingAi = false;
         });
       }
     }
+  }
+
+  void _cancelAiDetail() {
+    _aiCancelToken?.cancel('user canceled');
+    _aiCancelToken = null;
+    if (mounted) {
+      setState(() {
+        _loadingAi = false;
+      });
+      final l10n = AppLocalizations.of(context);
+      final locale = (l10n?.localeName ?? 'zh').toLowerCase();
+      ToastUtils.instance.show(
+        context,
+        locale.startsWith('zh') ? '已取消获取详细信息' : 'Detailed query canceled',
+      );
+    }
+  }
+
+  bool _isCanceledError(Object error) {
+    if (error is DioException && error.type == DioExceptionType.cancel) {
+      return true;
+    }
+    final text = error.toString().toLowerCase();
+    return text.contains('cancel') || text.contains('canceled');
   }
 
   bool _isLikelyNetworkFailure(Object error) {
@@ -186,6 +233,7 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
           overflow: TextOverflow.ellipsis,
         ),
         centerTitle: true,
+        foregroundColor: const Color(0xFF0F172A),
       ),
       appBarSpacing: 30,
       accentColor: scheme.primary,
@@ -213,6 +261,7 @@ class _MedicineDetailPageState extends State<MedicineDetailPage> {
               loading: _loadingAi,
               result: _aiResult,
               onFetch: _loadAiDetail,
+              onCancel: _cancelAiDetail,
             ),
             const SizedBox(height: 12),
             const _DisclaimerCard(),
@@ -368,6 +417,7 @@ class _AiCard extends StatelessWidget {
     required this.loading,
     required this.result,
     required this.onFetch,
+    required this.onCancel,
   });
 
   /// 是否具备身份字段（用于决定按钮是否可点击）。
@@ -382,62 +432,161 @@ class _AiCard extends StatelessWidget {
   /// 点击“获取更详细信息”回调。
   final VoidCallback onFetch;
 
+  /// 点击“取消”回调。
+  final VoidCallback onCancel;
+
   /// 构建 AI 解读卡片 UI。
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final hasFetched = result != null;
     final scheme = Theme.of(context).colorScheme;
+    final entries = result == null
+        ? const <String>[]
+        : _splitAiEntries(result!.text);
 
     return _SurfaceCard(
       title: l10n?.medicineDetailAiTitle ?? 'AI 智能解读',
       accentColor: Color.lerp(scheme.secondary, scheme.primary, 0.5)!,
       secondaryColor: scheme.tertiary,
       ornamentKey: 'medicine.ai',
-      trailing: FilledButton(
-        onPressed: !hasIdentity || loading ? null : onFetch,
-        style: FilledButton.styleFrom(
-          minimumSize: const Size(110, 40),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: loading
-            ? SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: scheme.onPrimary,
-                ),
-              )
-            : Text(
-                hasFetched
-                    ? (l10n?.medicineDetailAiRefetch ?? '再次获取')
-                    : (l10n?.medicineDetailAiFetch ?? '获取更详细信息'),
+      titleFontSize: 20,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FilledButton(
+            onPressed: !hasIdentity || loading ? null : onFetch,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(110, 40),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
+            ),
+            child: loading
+                ? SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: scheme.onPrimary,
+                    ),
+                  )
+                : Text(
+                    hasFetched
+                        ? (l10n?.medicineDetailAiRefetch ?? '再次获取')
+                        : (l10n?.medicineDetailAiFetch ?? '获取更详细信息'),
+                  ),
+          ),
+          if (loading) ...[
+            const SizedBox(width: 8),
+            FilledButton.tonal(
+              onPressed: onCancel,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(72, 40),
+                backgroundColor: const Color(
+                  0xFFEF4444,
+                ).withValues(alpha: 0.12),
+                foregroundColor: const Color(0xFFB91C1C),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: const BorderSide(color: Color(0xFFEF4444)),
+                ),
+              ),
+              child: Text(l10n?.reminderDeleteCancel ?? '取消'),
+            ),
+          ],
+        ],
       ),
-      child: result == null || !result!.hasText
+      child: entries.isEmpty
           ? Text(
               l10n?.medicineDetailAiPlaceholder ??
                   '点击“获取更详细信息”后，后端会调用 AI 模型补充数据库里未保存的说明书信息，例如成分、禁忌、注意事项等。',
               style: TextStyle(
-                fontSize: 13,
-                height: 1.55,
-                color: scheme.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
-            )
-          : Text(
-              result!.text,
-              style: TextStyle(
-                fontSize: 13,
+                fontSize: 15,
                 height: 1.6,
                 color: scheme.onSurface,
                 fontWeight: FontWeight.w600,
               ),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (var i = 0; i < entries.length; i++) ...[
+                  _AiDetailEntryCard(
+                    index: i + 1,
+                    text: entries[i],
+                    isHeading: _looksLikeAiHeading(entries[i]),
+                  ),
+                  if (i != entries.length - 1) const SizedBox(height: 9),
+                ],
+              ],
             ),
     );
+  }
+
+  List<String> _splitAiEntries(String raw) {
+    var text = raw.replaceAll('\r\n', '\n').replaceAll('\r', '\n').trim();
+    if (text.isEmpty) {
+      return const <String>[];
+    }
+
+    const sectionMarkers = <String>[
+      '一、',
+      '二、',
+      '三、',
+      '四、',
+      '五、',
+      '六、',
+      '七、',
+      '八、',
+      '九、',
+      '十、',
+      '常见用途',
+      '禁忌',
+      '注意事项',
+      '用药建议',
+    ];
+
+    for (final marker in sectionMarkers) {
+      final escaped = RegExp.escape(marker);
+      text = text.replaceAllMapped(
+        RegExp('(?<!\\n)($escaped)'),
+        (match) => '\n${match.group(1)}',
+      );
+    }
+
+    var lines = text
+        .split('\n')
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList(growable: false);
+
+    if (lines.length <= 1) {
+      final sentences = text
+          .split(RegExp(r'(?<=[。！？])\s*'))
+          .map((line) => line.trim())
+          .where((line) => line.isNotEmpty)
+          .toList(growable: false);
+      if (sentences.length > 1) {
+        lines = sentences;
+      }
+    }
+
+    return lines;
+  }
+
+  bool _looksLikeAiHeading(String text) {
+    final line = text.trim();
+    if (line.isEmpty || line.length > 28) {
+      return false;
+    }
+    final headingPattern = RegExp(
+      r'^(第[一二三四五六七八九十]+[章节部分]|[一二三四五六七八九十]+[、.．]|\d+[、.．])',
+    );
+    if (headingPattern.hasMatch(line)) {
+      return true;
+    }
+    return line.endsWith('建议') || line.endsWith('事项') || line.endsWith('人群');
   }
 }
 
@@ -485,6 +634,7 @@ class _SurfaceCard extends StatelessWidget {
     required this.secondaryColor,
     required this.ornamentKey,
     this.trailing,
+    this.titleFontSize = 15.5,
   });
 
   /// 卡片标题。
@@ -499,6 +649,7 @@ class _SurfaceCard extends StatelessWidget {
 
   /// 右上角 trailing 区域（可选），例如按钮。
   final Widget? trailing;
+  final double titleFontSize;
 
   /// 构建表面卡片 UI。
   @override
@@ -522,7 +673,7 @@ class _SurfaceCard extends StatelessWidget {
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: 15.5,
+                      fontSize: titleFontSize,
                       fontWeight: FontWeight.w800,
                       color: scheme.onSurface,
                     ),
@@ -537,7 +688,7 @@ class _SurfaceCard extends StatelessWidget {
                         child: Text(
                           title,
                           style: TextStyle(
-                            fontSize: 15.5,
+                            fontSize: titleFontSize,
                             fontWeight: FontWeight.w800,
                             color: scheme.onSurface,
                           ),
@@ -555,6 +706,88 @@ class _SurfaceCard extends StatelessWidget {
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+class _AiDetailEntryCard extends StatelessWidget {
+  const _AiDetailEntryCard({
+    required this.index,
+    required this.text,
+    required this.isHeading,
+  });
+
+  final int index;
+  final String text;
+  final bool isHeading;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final accent = isHeading
+        ? Color.lerp(scheme.secondary, scheme.primary, 0.4)!
+        : scheme.primary;
+    final headingColor = isDark ? scheme.onSurface : const Color(0xFF0F172A);
+    final bodyColor = isDark
+        ? scheme.onSurface.withValues(alpha: 0.92)
+        : const Color(0xFF334155);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: appTintedSurface(
+          context,
+          accent,
+          lightAlpha: isHeading ? 0.09 : 0.05,
+          darkAlpha: isHeading ? 0.18 : 0.12,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: appTintedBorder(
+            context,
+            accent,
+            lightAlpha: 0.14,
+            darkAlpha: 0.24,
+          ),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 1),
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              '$index',
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w800,
+                color: accent,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: isHeading ? 19 : 16,
+                height: 1.55,
+                color: isHeading ? headingColor : bodyColor,
+                fontWeight: isHeading ? FontWeight.w800 : FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

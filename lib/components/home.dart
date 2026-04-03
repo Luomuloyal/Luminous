@@ -201,6 +201,10 @@ class HomeReminderSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final locale = Localizations.localeOf(context).languageCode.toLowerCase();
+    final emptyText = locale.startsWith('zh')
+        ? '暂未设置任何提醒'
+        : (l10n?.homeNoReminder ?? 'No reminders');
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
       child: LayoutBuilder(
@@ -223,16 +227,67 @@ class HomeReminderSection extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: compact ? 7 : 9),
-                ...items.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final item = entry.value;
-                  return Padding(
-                    padding: EdgeInsets.only(
-                      bottom: index == items.length - 1 ? 0 : (compact ? 6 : 8),
+                if (items.isEmpty)
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: compact ? 10 : 12,
+                      vertical: compact ? 10 : 12,
                     ),
-                    child: _HomeReminderTile(item: item, compact: compact),
-                  );
-                }),
+                    decoration: BoxDecoration(
+                      color: appTintedSurface(
+                        context,
+                        scheme.primary,
+                        lightAlpha: 0.08,
+                        darkAlpha: 0.16,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: appTintedBorder(
+                          context,
+                          scheme.primary,
+                          lightAlpha: 0.12,
+                          darkAlpha: 0.22,
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      emptyText,
+                      style: TextStyle(
+                        fontSize: compact ? 13 : 13.5,
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  )
+                else
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight:
+                          (compact ? 48 : 54) * 3 + (compact ? 6 : 8) * 2,
+                    ),
+                    child: Column(
+                      children: items
+                          .asMap()
+                          .entries
+                          .map((entry) {
+                            final index = entry.key;
+                            final item = entry.value;
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                bottom: index == items.length - 1
+                                    ? 0
+                                    : (compact ? 6 : 8),
+                              ),
+                              child: _HomeReminderTile(
+                                item: item,
+                                compact: compact,
+                              ),
+                            );
+                          })
+                          .toList(growable: false),
+                    ),
+                  ),
               ],
             ),
           );
@@ -657,6 +712,11 @@ class _HomeReminderTile extends StatelessWidget {
       scheme.tertiary,
       0.30,
     )!;
+    final subtitleText = item.subtitle.trim().isNotEmpty
+        ? item.subtitle.trim()
+        : item.dosage.trim().isNotEmpty
+        ? '剂量: ${item.dosage.trim()}'
+        : '-';
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -700,12 +760,12 @@ class _HomeReminderTile extends StatelessWidget {
                 ),
                 SizedBox(height: compact ? 1.5 : 2),
                 Text(
-                  item.subtitle,
+                  subtitleText,
                   style: TextStyle(
                     fontSize: compact ? 11.2 : 12,
                     color: subtitleColor,
                   ),
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],

@@ -36,6 +36,8 @@ class ReminderApi {
     String? drugCode,
     String? approvalNo,
     required String productName,
+    List<ReminderMedicineRef> medicines = const [],
+    String? dosage,
     String? subtitle,
     bool enabled = true,
     String repeatRule = 'daily',
@@ -43,17 +45,38 @@ class ReminderApi {
     String? startDate,
     String? endDate,
   }) {
+    final normalizedMedicines = medicines
+        .where((item) => item.productName.trim().isNotEmpty)
+        .toList(growable: false);
+
+    final resolvedProductName = normalizedMedicines.isNotEmpty
+        ? normalizedMedicines
+              .map((item) => item.productName.trim())
+              .where((name) => name.isNotEmpty)
+              .toSet()
+              .join('、')
+        : productName.trim();
+
+    final primary = normalizedMedicines.isNotEmpty
+        ? normalizedMedicines.first
+        : null;
+    final resolvedDrugCode = (primary?.drugCode ?? drugCode ?? '').trim();
+    final resolvedApprovalNo = (primary?.approvalNo ?? approvalNo ?? '').trim();
+
     return dioRequest.post<ReminderPlan>(
       HttpConstants.REMINDER_UPSERT,
       data: <String, dynamic>{
         'userId': userId.trim(),
         if (id != null && id.trim().isNotEmpty) 'id': id.trim(),
         'time': time.trim(),
-        if (drugCode != null && drugCode.trim().isNotEmpty)
-          'drugCode': drugCode.trim(),
-        if (approvalNo != null && approvalNo.trim().isNotEmpty)
-          'approvalNo': approvalNo.trim(),
-        'productName': productName.trim(),
+        if (resolvedDrugCode.isNotEmpty) 'drugCode': resolvedDrugCode,
+        if (resolvedApprovalNo.isNotEmpty) 'approvalNo': resolvedApprovalNo,
+        'productName': resolvedProductName,
+        if (normalizedMedicines.isNotEmpty)
+          'medicines': normalizedMedicines
+              .map((item) => item.toJson())
+              .toList(growable: false),
+        'dosage': (dosage ?? '').trim(),
         'subtitle': (subtitle ?? '').trim(),
         'enabled': enabled,
         'repeatRule': repeatRule,

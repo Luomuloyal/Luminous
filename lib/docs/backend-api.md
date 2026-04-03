@@ -100,6 +100,7 @@ Request body:
 {
   "identifierType": "phone",
   "phone": "13800138000",
+  "username": "luminous_user",
   "email": "",
   "code": "123456",
   "password": "abc123"
@@ -110,6 +111,7 @@ Request body:
 
 - `identifierType`: `email | phone`
 - `phone/email`: 按 `identifierType` 传入
+- `username`: 可选，自定义用户名（2-30 字符，不能含空格）
 - `code`: 验证码
 - `password`: 6-12 位字母或数字
 
@@ -136,6 +138,8 @@ Failure examples:
 - `code: "INVALID_IDENTIFIER_TYPE"`, `msg: "identifierType 无效"`
 - `code: "INVALID_IDENTIFIER"`, `msg: "手机号不能为空"`
 - `code: "PASSWORD_INVALID"`, `msg: "密码需为6-12位字母或数字"`
+- `code: "USERNAME_INVALID"`, `msg: "用户名长度需为2-30个字符"`
+- `code: "USERNAME_EXISTS"`, `msg: "用户名已被占用"`
 - `code: "CODE_INVALID"`, `msg: "验证码错误"`
 - `code: "CODE_EXPIRED"`, `msg: "验证码已过期，请重新获取"`
 - `code: "IDENTIFIER_EXISTS"`, `msg: "手机号已经注册"`

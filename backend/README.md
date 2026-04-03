@@ -131,6 +131,8 @@ docker compose up -d --build
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `POST /api/auth/refresh`
+- `POST /api/user/profile`
+- `POST /api/user/profile-update`
 - `POST /api/medicines/search`
 - `POST /api/medicines/detail`
 - `POST /api/medicines/ai-detail`

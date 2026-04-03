@@ -10,6 +10,12 @@ import {
   TodayRemindersPayload,
 } from '../types';
 
+type ReminderMedicineRefLike = {
+  drugCode: string;
+  approvalNo: string;
+  productName: string;
+};
+
 type ReminderDocLike = {
   _id: unknown;
   userId?: string;
@@ -17,6 +23,8 @@ type ReminderDocLike = {
   drugCode?: string;
   approvalNo?: string;
   productName?: string;
+  medicines?: unknown;
+  dosage?: string;
   subtitle?: string;
   enabled?: boolean;
   repeatRule?: string;
@@ -68,6 +76,112 @@ function resolveDate(raw: string): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+function toTrimmedString(value: unknown): string {
+  return String(value ?? '').trim();
+}
+
+function normalizeMedicineRefs(raw: unknown): ReminderMedicineRefLike[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+
+  const normalized: ReminderMedicineRefLike[] = [];
+  const dedupe = new Set<string>();
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') {
+      continue;
+    }
+    const record = item as Record<string, unknown>;
+    const productName = toTrimmedString(record.productName);
+    if (!productName) {
+      continue;
+    }
+    const drugCode = toTrimmedString(record.drugCode);
+    const approvalNo = toTrimmedString(record.approvalNo);
+    const key = `${drugCode}|${approvalNo}|${productName}`;
+    if (dedupe.has(key)) {
+      continue;
+    }
+    dedupe.add(key);
+    normalized.push({ drugCode, approvalNo, productName });
+  }
+  return normalized;
+}
+
+function deriveMedicinesFromLegacy(
+  drugCode: string,
+  approvalNo: string,
+  productName: string,
+): ReminderMedicineRefLike[] {
+  const name = productName.trim();
+  if (!name) {
+    return [];
+  }
+  return [
+    {
+      drugCode: drugCode.trim(),
+      approvalNo: approvalNo.trim(),
+      productName: name,
+    },
+  ];
+}
+
+function composeProductName(
+  medicines: ReminderMedicineRefLike[],
+  fallback: string,
+): string {
+  const names = medicines
+    .map(item => item.productName.trim())
+    .filter(Boolean);
+  const uniqueNames = [...new Set(names)];
+  if (uniqueNames.length > 0) {
+    return uniqueNames.join('、');
+  }
+  return fallback.trim();
+}
+
+function normalizeMedicinesFromDoc(doc: ReminderDocLike): ReminderMedicineRefLike[] {
+  const medicines = normalizeMedicineRefs(doc.medicines);
+  if (medicines.length > 0) {
+    return medicines;
+  }
+  return deriveMedicinesFromLegacy(
+    String(doc.drugCode ?? '').trim(),
+    String(doc.approvalNo ?? '').trim(),
+    String(doc.productName ?? '').trim(),
+  );
+}
+
+function pickPrimaryIdentity(
+  medicines: ReminderMedicineRefLike[],
+  fallbackDrugCode: string,
+  fallbackApprovalNo: string,
+): { drugCode: string; approvalNo: string } {
+  let primary: ReminderMedicineRefLike | null = null;
+  for (const item of medicines) {
+    if (item.drugCode.trim() || item.approvalNo.trim()) {
+      primary = item;
+      break;
+    }
+  }
+  primary ??= medicines.length > 0
+    ? medicines[0]
+    : {
+        drugCode: fallbackDrugCode,
+        approvalNo: fallbackApprovalNo,
+        productName: '',
+      };
+
+  return {
+    drugCode: primary.drugCode.trim().length > 0
+        ? primary.drugCode.trim()
+        : fallbackDrugCode,
+    approvalNo: primary.approvalNo.trim().length > 0
+        ? primary.approvalNo.trim()
+        : fallbackApprovalNo,
+  };
+}
+
 function isPlanActiveOnDate(doc: ReminderDocLike, date: string): boolean {
   const startDate = String(doc.startDate ?? '').trim();
   const endDate = String(doc.endDate ?? '').trim();
@@ -81,13 +195,27 @@ function isPlanActiveOnDate(doc: ReminderDocLike, date: string): boolean {
 }
 
 function toPlanRecord(doc: ReminderDocLike): ReminderPlanRecord {
+  const medicines = normalizeMedicinesFromDoc(doc);
+  const legacyDrugCode = String(doc.drugCode ?? '').trim();
+  const legacyApprovalNo = String(doc.approvalNo ?? '').trim();
+  const primaryIdentity = pickPrimaryIdentity(
+    medicines,
+    legacyDrugCode,
+    legacyApprovalNo,
+  );
+  const productName = composeProductName(
+    medicines,
+    String(doc.productName ?? '').trim(),
+  );
   return {
     id: String(doc._id ?? '').trim(),
     userId: String(doc.userId ?? '').trim(),
     time: String(doc.time ?? '').trim(),
-    drugCode: String(doc.drugCode ?? '').trim(),
-    approvalNo: String(doc.approvalNo ?? '').trim(),
-    productName: String(doc.productName ?? '').trim(),
+    drugCode: primaryIdentity.drugCode,
+    approvalNo: primaryIdentity.approvalNo,
+    productName,
+    medicines,
+    dosage: String(doc.dosage ?? '').trim(),
     subtitle: String(doc.subtitle ?? '').trim(),
     enabled: doc.enabled !== false,
     repeatRule: String(doc.repeatRule ?? 'daily').trim() || 'daily',
@@ -98,11 +226,12 @@ function toPlanRecord(doc: ReminderDocLike): ReminderPlanRecord {
 }
 
 function toTodayItem(doc: ReminderDocLike): TodayReminderItemRecord {
-  const productName = String(doc.productName ?? '').trim();
+  const plan = toPlanRecord(doc);
   return {
     id: String(doc._id ?? '').trim(),
     time: String(doc.time ?? '').trim(),
-    title: productName || '用药提醒',
+    title: plan.productName || '用药提醒',
+    dosage: String(doc.dosage ?? '').trim(),
     subtitle: String(doc.subtitle ?? '').trim(),
     done: false,
   };
@@ -116,7 +245,23 @@ export async function handleReminderUpsert(
     const userId = readTrimmedString(data, 'userId');
     const id = readTrimmedString(data, 'id');
     const time = readTrimmedString(data, 'time');
-    const productName = readTrimmedString(data, 'productName');
+    const legacyProductName = readTrimmedString(data, 'productName');
+    const legacyDrugCode = readTrimmedString(data, 'drugCode');
+    const legacyApprovalNo = readTrimmedString(data, 'approvalNo');
+    const medicinesFromBody = normalizeMedicineRefs(data['medicines']);
+    const medicines = medicinesFromBody.length > 0
+        ? medicinesFromBody
+        : deriveMedicinesFromLegacy(
+            legacyDrugCode,
+            legacyApprovalNo,
+            legacyProductName,
+          );
+    const productName = composeProductName(medicines, legacyProductName);
+    const primaryIdentity = pickPrimaryIdentity(
+      medicines,
+      legacyDrugCode,
+      legacyApprovalNo,
+    );
 
     if (!userId) {
       return fail('userId 不能为空');
@@ -128,8 +273,9 @@ export async function handleReminderUpsert(
       return fail('productName 不能为空');
     }
 
-    const drugCode = readTrimmedString(data, 'drugCode');
-    const approvalNo = readTrimmedString(data, 'approvalNo');
+    const drugCode = primaryIdentity.drugCode;
+    const approvalNo = primaryIdentity.approvalNo;
+    const dosage = readTrimmedString(data, 'dosage');
     const subtitle = readTrimmedString(data, 'subtitle');
     const enabled = readBooleanLoose(data, 'enabled', true);
     const repeatRule = readTrimmedString(data, 'repeatRule', 'daily') || 'daily';
@@ -168,6 +314,8 @@ export async function handleReminderUpsert(
             drugCode,
             approvalNo,
             productName,
+            medicines,
+            dosage,
             subtitle,
             enabled,
             repeatRule,
@@ -186,6 +334,8 @@ export async function handleReminderUpsert(
           drugCode,
           approvalNo,
           productName,
+          medicines,
+          dosage,
           subtitle,
           enabled,
           repeatRule,
@@ -202,6 +352,8 @@ export async function handleReminderUpsert(
       drugCode,
       approvalNo,
       productName,
+      medicines,
+      dosage,
       subtitle,
       enabled,
       repeatRule,

@@ -5,6 +5,7 @@ import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/components/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
+import 'package:luminous/pages/Settings/profile_settings.dart';
 import 'package:luminous/stores/locale_controller.dart';
 import 'package:luminous/stores/ornament_controller.dart';
 import 'package:luminous/stores/theme_controller.dart';
@@ -37,11 +38,6 @@ class SettingsPage extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
         children: [
-          _SettingsHubHeroCard(
-            accentColor: scheme.primary,
-            secondaryColor: scheme.secondary,
-          ),
-          const SizedBox(height: 12),
           _SettingsSectionCard(
             title: l10n?.settingsGeneralTitle ?? '通用设置',
             subtitle:
@@ -52,12 +48,26 @@ class SettingsPage extends StatelessWidget {
             ornamentKey: 'settings.hub',
             children: [
               _SettingsActionTile(
+                icon: Icons.person_outline_rounded,
+                accentColor: const Color(0xFF0EA5E9),
+                title: '个人设置',
+                subtitle: '完善头像、昵称、性别、生日和职业等个人资料',
+                enabled: true,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const ProfileSettingsPage(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+              _SettingsActionTile(
                 icon: Icons.palette_outlined,
                 accentColor: scheme.primary,
                 title: l10n?.settingsThemeTitle ?? '主题设置',
                 subtitle:
                     l10n?.settingsThemeSubtitle ?? '调整主题模式与主题风格，影响全局页面与组件视觉',
-                caption: l10n?.settingsThemeEnter ?? '进入主题设置',
                 enabled: true,
                 onTap: () {
                   Navigator.of(context).push(
@@ -74,7 +84,6 @@ class SettingsPage extends StatelessWidget {
                 title: l10n?.settingsLanguageTitle ?? '语言设置',
                 subtitle:
                     l10n?.settingsLanguageSubtitle ?? '可自动跟随系统语言，也可手动固定应用语言',
-                caption: l10n?.settingsLanguageEnter ?? '进入语言设置',
                 enabled: true,
                 onTap: () {
                   Navigator.of(context).push(
@@ -484,83 +493,6 @@ class _LanguageHeroCard extends StatelessWidget {
         },
       );
     });
-  }
-}
-
-class _SettingsHubHeroCard extends StatelessWidget {
-  const _SettingsHubHeroCard({
-    required this.accentColor,
-    required this.secondaryColor,
-  });
-
-  final Color accentColor;
-  final Color secondaryColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
-
-    return AppSectionCard(
-      accentColor: accentColor,
-      secondaryColor: secondaryColor,
-      ornamentKey: 'settings.hub.hero',
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-      radius: 18,
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: appTintedSurface(
-                context,
-                accentColor,
-                lightAlpha: 0.10,
-                darkAlpha: 0.18,
-              ),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: appTintedBorder(
-                  context,
-                  accentColor,
-                  lightAlpha: 0.18,
-                  darkAlpha: 0.24,
-                ),
-              ),
-            ),
-            child: Icon(Icons.settings_outlined, color: accentColor),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n?.settingsHubHeroTitle ?? '偏好设置',
-                  style: TextStyle(
-                    color: scheme.onSurface,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n?.settingsHubHeroSubtitle ??
-                      '从这里进入主题和语言设置，后续可继续扩展通知、隐私等模块。',
-                  style: TextStyle(
-                    color: scheme.onSurfaceVariant,
-                    fontSize: 12.8,
-                    fontWeight: FontWeight.w600,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
@@ -1462,7 +1394,6 @@ class _SettingsActionTile extends StatelessWidget {
     required this.accentColor,
     required this.title,
     required this.subtitle,
-    required this.caption,
     required this.enabled,
     required this.onTap,
   });
@@ -1471,7 +1402,6 @@ class _SettingsActionTile extends StatelessWidget {
   final Color accentColor;
   final String title;
   final String subtitle;
-  final String caption;
   final bool enabled;
   final VoidCallback onTap;
 
@@ -1569,40 +1499,6 @@ class _SettingsActionTile extends StatelessWidget {
                         fontSize: 12.8,
                         height: 1.4,
                         fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: appTintedSurface(
-                          context,
-                          accentColor,
-                          lightAlpha: 0.10,
-                          darkAlpha: 0.18,
-                        ),
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                          color: appTintedBorder(
-                            context,
-                            accentColor,
-                            lightAlpha: 0.20,
-                            darkAlpha: 0.30,
-                          ),
-                        ),
-                      ),
-                      child: Text(
-                        caption,
-                        style: TextStyle(
-                          color: enabled
-                              ? accentColor
-                              : scheme.onSurfaceVariant.withValues(alpha: 0.82),
-                          fontSize: 11.8,
-                          fontWeight: FontWeight.w700,
-                        ),
                       ),
                     ),
                   ],

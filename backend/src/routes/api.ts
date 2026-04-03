@@ -1,9 +1,11 @@
 import { Express } from 'express';
 import {
+  handleGetUserProfile,
   handleLogin,
   handleRefreshToken,
   handleRegister,
   handleSendCode,
+  handleUpdateUserProfile,
 } from '../handlers/auth';
 import { handleMedicineAiDetail } from '../handlers/medicine-ai-detail';
 import { handleMedicineAiSafety } from '../handlers/medicine-ai-safety';
@@ -34,6 +36,8 @@ export function registerApiRoutes(app: Express): void {
   app.post('/api/auth/register', createPostHandler(handleRegister));
   app.post('/api/auth/login', createPostHandler(handleLogin));
   app.post('/api/auth/refresh', createPostHandler(handleRefreshToken));
+  app.post('/api/user/profile', createPostHandler(handleGetUserProfile));
+  app.post('/api/user/profile-update', createPostHandler(handleUpdateUserProfile));
   
   // Example of a protected endpoint using authMiddleware:
   // app.post('/api/user/test', authMiddleware, createPostHandler(async (body, req) => success(req.user)));

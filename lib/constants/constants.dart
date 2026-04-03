@@ -39,6 +39,16 @@ class GlobalConstants {
   /// `DioRequest` 会同时把它用于连接、发送和接收超时。
   static const int TIME_OUT = 15;
 
+  /// AI 安全分析接口接收超时时间（单位：秒）。
+  ///
+  /// 该接口可能触发大模型推理，耗时通常高于普通 CRUD 接口。
+  static const int AI_SAFETY_RECEIVE_TIMEOUT = 90;
+
+  /// AI 视觉识别接口接收超时时间（单位：秒）。
+  ///
+  /// 图像识别通常包含上传和推理，耗时高于文本接口。
+  static const int AI_SCAN_RECEIVE_TIMEOUT = 120;
+
   /// 后端约定的“请求成功”业务码。
   ///
   /// 当前项目约定 `code == "1"` 时表示业务成功。
@@ -84,6 +94,12 @@ class HttpConstants {
 
   /// 刷新鉴权 Token 接口。
   static const String REFRESH_TOKEN = '/api/auth/refresh';
+
+  /// 个人资料读取接口。
+  static const String USER_PROFILE = '/api/user/profile';
+
+  /// 个人资料更新接口。
+  static const String USER_PROFILE_UPDATE = '/api/user/profile-update';
 
   /// 我的药品新增/更新接口。
   static const String MY_MEDICINE_UPSERT = '/api/medicines/my-upsert';

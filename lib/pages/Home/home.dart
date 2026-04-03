@@ -69,18 +69,21 @@ class _HomeViewState extends State<HomeView> {
     HomeReminderItemData(
       icon: Icons.access_time_rounded,
       title: '08:30 维生素D',
+      dosage: '1 粒',
       subtitle: '早餐后服用 1 粒',
       done: true,
     ),
     HomeReminderItemData(
       icon: Icons.access_time_rounded,
       title: '19:30 阿莫西林',
+      dosage: '1 粒',
       subtitle: '晚餐后服用 1 粒',
       done: false,
     ),
     HomeReminderItemData(
       icon: Icons.access_time_rounded,
       title: '22:00 血压记录',
+      dosage: '',
       subtitle: '睡前记录并上传',
       done: false,
     ),
@@ -96,6 +99,7 @@ class _HomeViewState extends State<HomeView> {
           (item) => HomeReminderItemData(
             icon: item.icon,
             title: '$prefix ${item.title}',
+            dosage: item.dosage,
             subtitle: item.subtitle,
             done: item.done,
           ),
@@ -156,18 +160,21 @@ class _HomeViewState extends State<HomeView> {
       HomeReminderItemData(
         icon: Icons.access_time_rounded,
         title: l10n.homeFallbackReminder1Title,
+        dosage: '1 粒',
         subtitle: l10n.homeFallbackReminder1Subtitle,
         done: true,
       ),
       HomeReminderItemData(
         icon: Icons.access_time_rounded,
         title: l10n.homeFallbackReminder2Title,
+        dosage: '1 粒',
         subtitle: l10n.homeFallbackReminder2Subtitle,
         done: false,
       ),
       HomeReminderItemData(
         icon: Icons.access_time_rounded,
         title: l10n.homeFallbackReminder3Title,
+        dosage: '',
         subtitle: l10n.homeFallbackReminder3Subtitle,
         done: false,
       ),
@@ -356,8 +363,11 @@ class _HomeViewState extends State<HomeView> {
     /// 如果今天没有待完成提醒，则显示“暂无提醒”。
     final nextText = next == null
         ? (l10n?.homeNoReminder ?? '暂无提醒')
-        : (l10n?.homeNextReminderPrefix(next.title, next.subtitle) ??
-              '${next.title} · ${next.subtitle}');
+        : (l10n?.homeNextReminderPrefix(
+                next.title,
+                _composeReminderDetail(next),
+              ) ??
+              '${next.title} · ${_composeReminderDetail(next)}');
 
     return SafeArea(
       child: RefreshIndicator(
@@ -586,9 +596,36 @@ class _HomeViewState extends State<HomeView> {
     return HomeReminderItemData(
       icon: Icons.access_time_rounded,
       title: combinedTitle,
-      subtitle: item.subtitle.trim(),
+      dosage: item.dosage.trim(),
+      subtitle: _composeReminderSubtitle(
+        item.dosage.trim(),
+        item.subtitle.trim(),
+      ),
       done: doneOverride ?? item.done,
     );
+  }
+
+  String _composeReminderSubtitle(String dosage, String extra) {
+    final dose = dosage.trim();
+    final note = extra.trim();
+    if (dose.isNotEmpty && note.isNotEmpty) {
+      return '剂量: $dose · $note';
+    }
+    if (dose.isNotEmpty) {
+      return '剂量: $dose';
+    }
+    return note;
+  }
+
+  String _composeReminderDetail(HomeReminderItemData item) {
+    final subtitle = item.subtitle.trim();
+    if (subtitle.isNotEmpty) {
+      return subtitle;
+    }
+    if (item.dosage.trim().isNotEmpty) {
+      return '剂量: ${item.dosage.trim()}';
+    }
+    return _l10n?.homeNoReminder ?? '暂无提醒';
   }
 
   /// 切换到下一条本地健康小贴士。

@@ -1,5 +1,34 @@
 import 'package:luminous/utils/app_i18n_text.dart';
 
+/// 提醒中绑定的单个药品引用。
+class ReminderMedicineRef {
+  final String drugCode;
+  final String approvalNo;
+  final String productName;
+
+  const ReminderMedicineRef({
+    this.drugCode = '',
+    this.approvalNo = '',
+    required this.productName,
+  });
+
+  factory ReminderMedicineRef.fromJson(Map<String, dynamic> json) {
+    return ReminderMedicineRef(
+      drugCode: (json['drugCode'] ?? '').toString().trim(),
+      approvalNo: (json['approvalNo'] ?? '').toString().trim(),
+      productName: (json['productName'] ?? '').toString().trim(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'drugCode': drugCode,
+      'approvalNo': approvalNo,
+      'productName': productName,
+    };
+  }
+}
+
 /// 用药提醒计划对象。
 ///
 /// 该对象既用于：
@@ -23,6 +52,12 @@ class ReminderPlan {
 
   /// 药品名称（用于通知标题/列表标题）。
   final String productName;
+
+  /// 当前提醒绑定的药品列表。
+  final List<ReminderMedicineRef> medicines;
+
+  /// 服用剂量（例如 1 粒 / 5 ml）。
+  final String dosage;
 
   /// 提醒副标题（例如“早餐后服用 1 粒”）。
   final String subtitle;
@@ -50,6 +85,8 @@ class ReminderPlan {
     required this.drugCode,
     required this.approvalNo,
     required this.productName,
+    this.medicines = const [],
+    this.dosage = '',
     required this.subtitle,
     required this.enabled,
     required this.repeatRule,
@@ -60,13 +97,33 @@ class ReminderPlan {
 
   /// 从后端 JSON 反序列化为 `ReminderPlan`。
   factory ReminderPlan.fromJson(Map<String, dynamic> json) {
+    final legacyDrugCode = (json['drugCode'] ?? '').toString().trim();
+    final legacyApprovalNo = (json['approvalNo'] ?? '').toString().trim();
+    final legacyProductName = (json['productName'] ?? '').toString().trim();
+    final medicines = _parseMedicines(
+      json['medicines'],
+      fallbackDrugCode: legacyDrugCode,
+      fallbackApprovalNo: legacyApprovalNo,
+      fallbackProductName: legacyProductName,
+    );
+    final productName = legacyProductName.isNotEmpty
+        ? legacyProductName
+        : _composeProductName(medicines);
+    final primary = medicines.isNotEmpty ? medicines.first : null;
+
     return ReminderPlan(
       id: (json['id'] ?? json['_id'] ?? '').toString(),
       userId: (json['userId'] ?? '').toString(),
       time: (json['time'] ?? '').toString(),
-      drugCode: (json['drugCode'] ?? '').toString(),
-      approvalNo: (json['approvalNo'] ?? '').toString(),
-      productName: (json['productName'] ?? '').toString(),
+      drugCode: legacyDrugCode.isNotEmpty
+          ? legacyDrugCode
+          : (primary?.drugCode ?? ''),
+      approvalNo: legacyApprovalNo.isNotEmpty
+          ? legacyApprovalNo
+          : (primary?.approvalNo ?? ''),
+      productName: productName,
+      medicines: medicines,
+      dosage: (json['dosage'] ?? '').toString(),
       subtitle: (json['subtitle'] ?? '').toString(),
       enabled: json['enabled'] != false,
       repeatRule: (json['repeatRule'] ?? 'daily').toString(),
@@ -85,6 +142,10 @@ class ReminderPlan {
       'drugCode': drugCode,
       'approvalNo': approvalNo,
       'productName': productName,
+      'medicines': medicines
+          .map((item) => item.toJson())
+          .toList(growable: false),
+      'dosage': dosage,
       'subtitle': subtitle,
       'enabled': enabled,
       'repeatRule': repeatRule,
@@ -104,11 +165,71 @@ class ReminderPlan {
   /// 例如：`08:30 维生素D`。
   String get displayTitle {
     final t = time.trim();
-    final n = productName.trim().isEmpty
+    final name = productName.trim().isNotEmpty
+        ? productName.trim()
+        : _composeProductName(medicines);
+    final n = name.isEmpty
         ? AppI18nText.pick(zh: '未知药品', en: 'Unknown medicine')
-        : productName.trim();
+        : name;
     return t.isEmpty ? n : '$t $n';
   }
+}
+
+List<ReminderMedicineRef> _parseMedicines(
+  dynamic raw, {
+  required String fallbackDrugCode,
+  required String fallbackApprovalNo,
+  required String fallbackProductName,
+}) {
+  final medicines = <ReminderMedicineRef>[];
+  final dedupe = <String>{};
+
+  if (raw is List) {
+    for (final item in raw) {
+      if (item is! Map) {
+        continue;
+      }
+      final medicine = ReminderMedicineRef.fromJson(
+        item.cast<String, dynamic>(),
+      );
+      if (medicine.productName.trim().isEmpty) {
+        continue;
+      }
+      final key =
+          '${medicine.drugCode.trim()}|${medicine.approvalNo.trim()}|${medicine.productName.trim()}';
+      if (dedupe.add(key)) {
+        medicines.add(medicine);
+      }
+    }
+  }
+
+  if (medicines.isNotEmpty) {
+    return medicines;
+  }
+
+  final fallbackName = fallbackProductName.trim();
+  if (fallbackName.isEmpty) {
+    return const [];
+  }
+
+  return <ReminderMedicineRef>[
+    ReminderMedicineRef(
+      drugCode: fallbackDrugCode.trim(),
+      approvalNo: fallbackApprovalNo.trim(),
+      productName: fallbackName,
+    ),
+  ];
+}
+
+String _composeProductName(List<ReminderMedicineRef> medicines) {
+  final names = medicines
+      .map((item) => item.productName.trim())
+      .where((name) => name.isNotEmpty)
+      .toList(growable: false);
+  if (names.isEmpty) {
+    return '';
+  }
+  return names.toSet().join('、');
 }
 
 /// 提醒计划列表接口返回模型。

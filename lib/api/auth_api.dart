@@ -46,12 +46,14 @@ class AuthApi {
     required String email,
     required String code,
     required String password,
+    String username = '',
   }) {
     return _register(
       identifierType: AuthIdentifierType.email,
       identifier: email,
       code: code,
       password: password,
+      username: username,
     );
   }
 
@@ -60,12 +62,14 @@ class AuthApi {
     required String phone,
     required String code,
     required String password,
+    String username = '',
   }) {
     return _register(
       identifierType: AuthIdentifierType.phone,
       identifier: phone,
       code: code,
       password: password,
+      username: username,
     );
   }
 
@@ -114,8 +118,10 @@ class AuthApi {
     required String identifier,
     required String code,
     required String password,
+    String username = '',
   }) {
     final trimmedIdentifier = identifier.trim();
+    final trimmedUsername = username.trim();
 
     return dioRequest.post<RegisterResult>(
       HttpConstants.REGISTER_USER,
@@ -127,6 +133,7 @@ class AuthApi {
         'phone': identifierType == AuthIdentifierType.phone
             ? trimmedIdentifier
             : '',
+        'username': trimmedUsername,
         'code': code.trim(),
         'password': password,
       },

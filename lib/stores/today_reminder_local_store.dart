@@ -91,6 +91,7 @@ class TodayReminderLocalStore implements TodayReminderStore {
               id: item.id,
               time: item.time,
               title: item.title,
+              dosage: item.dosage,
               subtitle: item.subtitle,
               done: item.done,
             ),
@@ -118,6 +119,7 @@ class TodayReminderLocalStore implements TodayReminderStore {
           'remoteId': item.id.trim(),
           'time': item.time.trim(),
           'title': item.title.trim(),
+          'dosage': item.dosage.trim(),
           'subtitle': item.subtitle.trim(),
           'serverDone': item.done ? 1 : 0,
           'position': index,
@@ -284,6 +286,7 @@ class TodayReminderLocalStore implements TodayReminderStore {
               id: item.id,
               time: item.time,
               title: item.title,
+              dosage: item.dosage,
               subtitle: item.subtitle,
               done: resolveDoneState(
                 remoteId: item.id,
@@ -305,6 +308,7 @@ class TodayReminderLocalStore implements TodayReminderStore {
             title: item.title.trim().isEmpty
                 ? AppI18nText.pick(zh: '用药提醒', en: 'Medication Reminder')
                 : item.title.trim(),
+            dosage: item.dosage,
             subtitle: item.subtitle,
             done: resolveDoneState(
               remoteId: item.id,
@@ -336,6 +340,7 @@ class TodayReminderLocalStore implements TodayReminderStore {
             title: plan.productName.trim().isEmpty
                 ? AppI18nText.pick(zh: '用药提醒', en: 'Medication Reminder')
                 : plan.productName.trim(),
+            dosage: plan.dosage.trim(),
             subtitle: plan.subtitle.trim(),
             done: false,
           ),
@@ -369,6 +374,7 @@ class TodayReminderLocalStore implements TodayReminderStore {
               id: item.id,
               time: item.time,
               title: item.title,
+              dosage: item.dosage,
               subtitle: item.subtitle,
               done: item.done,
             ),
@@ -386,6 +392,7 @@ class TodayReminderLocalStore implements TodayReminderStore {
           final remoteId = (row['remoteId'] ?? '').toString().trim();
           final time = (row['time'] ?? '').toString().trim();
           final title = (row['title'] ?? '').toString().trim();
+          final dosage = (row['dosage'] ?? '').toString().trim();
           final subtitle = (row['subtitle'] ?? '').toString().trim();
           return ReminderItem(
             id: remoteId,
@@ -393,6 +400,7 @@ class TodayReminderLocalStore implements TodayReminderStore {
             title: title.isEmpty
                 ? AppI18nText.pick(zh: '用药提醒', en: 'Medication Reminder')
                 : title,
+            dosage: dosage,
             subtitle: subtitle,
             done: (row['serverDone'] as int? ?? 0) == 1,
           );

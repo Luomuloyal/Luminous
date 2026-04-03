@@ -90,8 +90,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('08:30 阿莫西林'), findsOneWidget);
-      expect(find.text('20:00 维生素D'), findsOneWidget);
+      expect(find.text('阿莫西林'), findsOneWidget);
+      expect(find.text('维生素D'), findsOneWidget);
+      expect(find.text('08:30'), findsOneWidget);
+      expect(find.text('20:00'), findsOneWidget);
       expect(find.text('不会显示'), findsNothing);
       expect(find.widgetWithText(FilledButton, '取消打卡'), findsOneWidget);
       expect(find.widgetWithText(FilledButton, '打卡'), findsOneWidget);

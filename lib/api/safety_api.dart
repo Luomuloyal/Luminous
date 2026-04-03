@@ -1,5 +1,5 @@
+import 'package:dio/dio.dart';
 import 'package:luminous/constants/constants.dart';
-import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/utils/dio_request.dart';
 import 'package:luminous/viewmodels/safety.dart';
 
@@ -17,6 +17,7 @@ class SafetyApi {
     String? userId,
     required String mode,
     required List<Map<String, String>> medicines,
+    CancelToken? cancelToken,
   }) {
     return dioRequest.post<MedicineAiSafetyResult>(
       HttpConstants.MEDICINE_AI_SAFETY,
@@ -26,8 +27,13 @@ class SafetyApi {
         'medicines': medicines,
       },
       decoder: (json) => MedicineAiSafetyResult.fromJson(_asMap(json)),
-      showLoading: true,
-      loadingText: AppI18nText.pick(zh: '查询中...', en: 'Querying...'),
+      showLoading: false,
+      options: Options(
+        receiveTimeout: const Duration(
+          seconds: GlobalConstants.AI_SAFETY_RECEIVE_TIMEOUT,
+        ),
+      ),
+      cancelToken: cancelToken,
     );
   }
 

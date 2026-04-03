@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/components/app_surface.dart';
+import 'package:luminous/components/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/stores/reminder_local_store.dart';
 import 'package:luminous/stores/today_reminder_local_store.dart';
@@ -46,6 +47,10 @@ class _CheckInPageState extends State<CheckInPage> {
   int _loadRequestId = 0;
 
   String get _userId => _userController.user.value?.id ?? '';
+
+  int get _doneCount => _items.where((item) => item.done).length;
+
+  int get _pendingCount => _items.length - _doneCount;
 
   AppLocalizations? get _l10n => AppLocalizations.of(context);
 
@@ -140,6 +145,7 @@ class _CheckInPageState extends State<CheckInPage> {
         centerTitle: true,
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
+        foregroundColor: const Color(0xFF0F172A),
         actions: [
           IconButton(
             onPressed: loggedIn && !_loading ? _load : null,
@@ -162,16 +168,19 @@ class _CheckInPageState extends State<CheckInPage> {
                 onRefresh: _load,
                 child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 14),
                   children: [
+                    _buildHeroCard(),
+                    const SizedBox(height: 8),
                     if (_error != null) _buildErrorBanner(_error!),
-                    if (_items.isEmpty && !_loading) _buildEmpty(),
+                    if (_items.isEmpty && !_loading && _error == null)
+                      _buildEmpty(),
                     ..._items.asMap().entries.map((entry) {
                       final index = entry.key;
                       final item = entry.value;
                       return Padding(
                         padding: EdgeInsets.only(
-                          bottom: index == _items.length - 1 ? 0 : 10,
+                          bottom: index == _items.length - 1 ? 0 : 6,
                         ),
                         child: _CheckInCard(
                           item: item,
@@ -182,6 +191,66 @@ class _CheckInPageState extends State<CheckInPage> {
                   ],
                 ),
               ),
+      ),
+    );
+  }
+
+  Widget _buildHeroCard() {
+    final l10n = _l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final locale = (l10n?.localeName ?? 'zh').toLowerCase();
+    final subtitleText = locale.startsWith('zh')
+        ? '到点打卡，帮助你连续跟踪每日用药完成情况'
+        : 'Check in on time to track your daily medication completion.';
+    return AppSectionCard(
+      accentColor: const Color(0xFFF59E0B),
+      secondaryColor: const Color(0xFF38BDF8),
+      ornamentKey: 'checkin.hero',
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n?.checkInPageTitle ?? '用药打卡',
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w800,
+              color: scheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitleText,
+            style: TextStyle(
+              fontSize: 12.8,
+              height: 1.45,
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            children: [
+              TintedStatusChip(
+                icon: Icons.library_books_rounded,
+                text: '${_items.length} 条',
+                color: const Color(0xFF0EA5E9),
+              ),
+              TintedStatusChip(
+                icon: Icons.check_circle_rounded,
+                text: '$_doneCount 已打卡',
+                color: const Color(0xFF10B981),
+              ),
+              TintedStatusChip(
+                icon: Icons.alarm_rounded,
+                text: '$_pendingCount 待完成',
+                color: const Color(0xFFF59E0B),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -307,38 +376,45 @@ class _CheckInPageState extends State<CheckInPage> {
   Widget _buildEmpty() {
     final l10n = _l10n;
     final scheme = Theme.of(context).colorScheme;
-    return AppSectionCard(
-      accentColor: Color.lerp(scheme.tertiary, scheme.secondary, 0.35)!,
-      secondaryColor: Color.lerp(scheme.primary, scheme.tertiary, 0.4)!,
-      ornamentKey: 'checkin.empty',
-      padding: const EdgeInsets.symmetric(vertical: 42),
-      radius: 18,
-      child: Column(
-        children: [
-          const Icon(
-            Icons.event_available_outlined,
-            size: 42,
-            color: Color(0xFF94A3B8),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 560),
+        child: AppSectionCard(
+          accentColor: Color.lerp(scheme.tertiary, scheme.secondary, 0.35)!,
+          secondaryColor: Color.lerp(scheme.primary, scheme.tertiary, 0.4)!,
+          ornamentKey: 'checkin.empty',
+          padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
+          radius: 18,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.event_available_outlined,
+                size: 42,
+                color: Color(0xFF94A3B8),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                l10n?.checkInEmptyTitle ?? '今日暂无提醒',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: scheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                l10n?.checkInEmptySubtitle ?? '可以先到“用药提醒”里新增计划',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-          Text(
-            l10n?.checkInEmptyTitle ?? '今日暂无提醒',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-              color: scheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            l10n?.checkInEmptySubtitle ?? '可以先到“用药提醒”里新增计划',
-            style: TextStyle(
-              fontSize: 13,
-              color: scheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -461,6 +537,7 @@ class _CheckInPageState extends State<CheckInPage> {
                     id: item.id,
                     time: item.time,
                     title: item.title,
+                    dosage: item.dosage,
                     subtitle: item.subtitle,
                     done: done,
                   )
@@ -482,6 +559,7 @@ class _CheckInPageState extends State<CheckInPage> {
             title: plan.productName.trim().isEmpty
                 ? (l10n?.checkInDefaultTitle ?? '用药提醒')
                 : plan.productName.trim(),
+            dosage: plan.dosage.trim(),
             subtitle: plan.subtitle.trim(),
             done: false,
           ),
@@ -504,58 +582,77 @@ class _CheckInCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
     final done = item.done;
-    return AppSurfaceCard(
+    final accent = done ? const Color(0xFF10B981) : const Color(0xFFF59E0B);
+    return AppSectionCard(
+      accentColor: accent,
+      secondaryColor: Color.lerp(accent, scheme.primary, 0.35)!,
+      ornamentKey: 'checkin.card.item',
       radius: 18,
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+        padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
         child: Row(
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 color:
                     (done ? const Color(0xFF10B981) : const Color(0xFFF59E0B))
                         .withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 Icons.access_time_rounded,
                 color: done ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+                size: 20,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.time.trim().isEmpty
-                        ? item.title
-                        : '${item.time} ${item.title}',
-                    style: const TextStyle(
-                      fontSize: 15,
+                    item.title,
+                    style: TextStyle(
+                      fontSize: 14.5,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
+                      color: scheme.onSurface,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    _buildScheduleLine(item, l10n),
+                    style: TextStyle(
+                      fontSize: 12.1,
+                      height: 1.35,
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    item.subtitle.trim().isEmpty
-                        ? (l10n?.checkInCardDefaultSubtitle ?? '请按时完成')
-                        : item.subtitle.trim(),
-                    style: const TextStyle(
-                      fontSize: 12.5,
+                    _buildExtraLine(item, l10n),
+                    style: TextStyle(
+                      fontSize: 12.2,
                       height: 1.4,
-                      color: Color(0xFF64748B),
+                      color: scheme.onSurfaceVariant,
                       fontWeight: FontWeight.w600,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             FilledButton(
               onPressed: onCheckIn,
               style: FilledButton.styleFrom(
@@ -563,7 +660,7 @@ class _CheckInCard extends StatelessWidget {
                     ? const Color(0xFF94A3B8)
                     : const Color(0xFFF59E0B),
                 foregroundColor: Colors.white,
-                minimumSize: const Size(88, 42),
+                minimumSize: const Size(84, 40),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -578,5 +675,30 @@ class _CheckInCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _buildScheduleLine(ReminderItem item, AppLocalizations? l10n) {
+    final parts = <String>[];
+    if (item.time.trim().isNotEmpty) {
+      parts.add(item.time.trim());
+    }
+    if (item.dosage.trim().isNotEmpty) {
+      final locale = (l10n?.localeName ?? 'zh').toLowerCase();
+      final doseLabel = locale.startsWith('zh') ? '剂量' : 'Dose';
+      parts.add('$doseLabel: ${item.dosage.trim()}');
+    }
+    if (parts.isEmpty) {
+      return l10n?.checkInCardDefaultSubtitle ?? '请按时完成';
+    }
+    return parts.join(' · ');
+  }
+
+  String _buildExtraLine(ReminderItem item, AppLocalizations? l10n) {
+    final extra = item.subtitle.trim();
+    if (extra.isNotEmpty) {
+      return extra;
+    }
+    final locale = (l10n?.localeName ?? 'zh').toLowerCase();
+    return locale.startsWith('zh') ? '无额外提醒内容' : 'No extra reminder';
   }
 }

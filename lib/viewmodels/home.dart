@@ -16,6 +16,9 @@ class ReminderItem {
   /// 提醒副标题（例如服用说明）。
   final String subtitle;
 
+  /// 服用剂量（例如 1 粒 / 5 ml）。
+  final String dosage;
+
   /// 是否已完成（用于 UI 状态展示）。
   final bool done;
 
@@ -24,6 +27,7 @@ class ReminderItem {
     required this.id,
     required this.time,
     required this.title,
+    this.dosage = '',
     required this.subtitle,
     required this.done,
   });
@@ -34,6 +38,7 @@ class ReminderItem {
       id: (json['id'] ?? json['_id'] ?? '').toString(),
       time: (json['time'] ?? '').toString(),
       title: (json['title'] ?? '').toString(),
+      dosage: (json['dosage'] ?? '').toString(),
       subtitle: (json['subtitle'] ?? '').toString(),
       done: json['done'] == true,
     );
@@ -78,6 +83,9 @@ class HomeReminderItemData {
   /// 提醒副标题（服用说明等）。
   final String subtitle;
 
+  /// 服用剂量。
+  final String dosage;
+
   /// 当前提醒是否已完成。
   final bool done;
 
@@ -85,6 +93,7 @@ class HomeReminderItemData {
   const HomeReminderItemData({
     required this.icon,
     required this.title,
+    this.dosage = '',
     required this.subtitle,
     required this.done,
   });

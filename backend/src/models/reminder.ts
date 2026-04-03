@@ -6,6 +6,12 @@ export interface IReminder extends Document {
   drugCode: string;
   approvalNo: string;
   productName: string;
+  medicines: {
+    drugCode: string;
+    approvalNo: string;
+    productName: string;
+  }[];
+  dosage: string;
   subtitle: string;
   enabled: boolean;
   repeatRule: string;
@@ -22,6 +28,18 @@ const ReminderSchema = new Schema<IReminder>({
   drugCode: { type: String, default: '' },
   approvalNo: { type: String, default: '' },
   productName: { type: String, required: true },
+  medicines: {
+    type: [
+      {
+        _id: false,
+        drugCode: { type: String, default: '' },
+        approvalNo: { type: String, default: '' },
+        productName: { type: String, required: true },
+      },
+    ],
+    default: [],
+  },
+  dosage: { type: String, default: '' },
   subtitle: { type: String, default: '' },
   enabled: { type: Boolean, default: true },
   repeatRule: { type: String, default: 'daily' },

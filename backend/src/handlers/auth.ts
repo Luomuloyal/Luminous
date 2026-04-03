@@ -22,6 +22,57 @@ const sendCodeCooldownSeconds = 60;
 const emailRegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phoneRegExp = /^1[3-9]\d{9}$/;
 const passwordRegExp = /^[A-Za-z0-9]{6,12}$/;
+const birthdayRegExp = /^\d{4}-\d{2}-\d{2}$/;
+
+function normalizeUsername(raw: unknown): string {
+  return String(raw || '').trim();
+}
+
+function verifyUsernameFormat(username: string): string | null {
+  if (!username) {
+    return null;
+  }
+  if (username.length < 2 || username.length > 30) {
+    return '用户名长度需为2-30个字符';
+  }
+  if (/\s/.test(username)) {
+    return '用户名不能包含空格';
+  }
+  return null;
+}
+
+function hasOwnKey(data: Record<string, unknown>, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(data, key);
+}
+
+function readProfileText(
+  data: Record<string, unknown>,
+  key: string,
+  maxLength: number,
+): string {
+  const value = String(data[key] ?? '').trim();
+  if (value.length <= maxLength) {
+    return value;
+  }
+  return value.slice(0, maxLength);
+}
+
+function normalizeGender(raw: unknown): string | null {
+  const normalized = String(raw ?? '').trim().toLowerCase();
+  if (!normalized) {
+    return '';
+  }
+  if (['male', 'm', 'man', '男'].includes(normalized)) {
+    return 'male';
+  }
+  if (['female', 'f', 'woman', '女'].includes(normalized)) {
+    return 'female';
+  }
+  if (['other', 'unknown', 'u', '未设置', '未知'].includes(normalized)) {
+    return 'other';
+  }
+  return null;
+}
 
 function generateTokens(user: { _id: unknown; username: string }) {
   const accessToken = jwt.sign({ id: user._id, username: user.username }, env.jwtSecret, {
@@ -192,9 +243,18 @@ function verifyIdentifierFormat(type: IdentifierType, identifier: string): strin
 function toSafeUser(user: IUser) {
   return {
     id: user._id.toString(),
+    account: user.account || user.username,
     username: user.username,
     email: user.email || '',
+    mobile: user.phone || '',
     phone: user.phone || '',
+    avatar: user.avatar || '',
+    birthday: user.birthday || '',
+    cityCode: user.cityCode || '',
+    gender: user.gender || '',
+    nickname: user.nickname || '',
+    profession: user.profession || '',
+    provinceCode: user.provinceCode || '',
     name: user.name || '',
     type: user.type || 0,
   };
@@ -355,6 +415,14 @@ export async function handleRegister(body: unknown) {
     return fail('密码需为6-12位字母或数字', 'PASSWORD_INVALID');
   }
 
+  const requestedUsername = normalizeUsername(data.username);
+  const usernameFormatError = verifyUsernameFormat(requestedUsername);
+  if (usernameFormatError != null) {
+    return fail(usernameFormatError, 'USERNAME_INVALID');
+  }
+
+  const username = requestedUsername || identifier;
+
   const code = String(data.code || '').trim();
   const codePayload = await readVerificationCode(identifier);
   const codeError = verifyCodePayload({
@@ -372,15 +440,25 @@ export async function handleRegister(body: unknown) {
     return fail(identifierType === 'email' ? '邮箱已经注册' : '手机号已经注册', 'IDENTIFIER_EXISTS');
   }
 
+  if (username !== identifier) {
+    const usernameExists = await User.findOne({ username });
+    if (usernameExists) {
+      return fail('用户名已被占用', 'USERNAME_EXISTS');
+    }
+  }
+
   const salt = await bcrypt.genSalt(10);
   const passwordHash = await bcrypt.hash(password, salt);
+  const profileName = requestedUsername || maskName(identifier);
   const user = new User({
-    username: identifier,
+    account: identifier,
+    username,
     passwordHash,
     email: identifierType === 'email' ? identifier : undefined,
     phone: identifierType === 'phone' ? identifier : undefined,
+    nickname: requestedUsername,
     type: identifierType === 'email' ? 2 : 3,
-    name: maskName(identifier),
+    name: profileName,
     lock: 0,
     lastLoginTime: Date.now(),
   });
@@ -390,6 +468,9 @@ export async function handleRegister(body: unknown) {
   } catch (error) {
     const message = String((error as { message?: string })?.message || '');
     if (message.includes('E11000')) {
+      if (message.includes('username')) {
+        return fail('用户名已被占用', 'USERNAME_EXISTS');
+      }
       return fail(identifierType === 'email' ? '邮箱已经注册' : '手机号已经注册', 'IDENTIFIER_EXISTS');
     }
     throw error;
@@ -494,6 +575,85 @@ export async function handleLogin(body: unknown) {
     },
     '登录成功',
   );
+}
+
+export async function handleGetUserProfile(body: unknown) {
+  const data = parseBody(body);
+  const userId = String(data.userId || data.id || '').trim();
+  if (!userId) {
+    return fail('userId 不能为空', 'USER_ID_REQUIRED');
+  }
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return fail('用户不存在', 'USER_NOT_FOUND');
+    }
+    return success(toSafeUser(user));
+  } catch (error) {
+    console.error('get-user-profile failed:', error);
+    return fail('查询个人资料失败，请稍后重试', 'PROFILE_GET_FAILED');
+  }
+}
+
+export async function handleUpdateUserProfile(body: unknown) {
+  const data = parseBody(body);
+  const userId = String(data.userId || data.id || '').trim();
+  if (!userId) {
+    return fail('userId 不能为空', 'USER_ID_REQUIRED');
+  }
+
+  const gender = normalizeGender(data.gender);
+  if (gender == null) {
+    return fail('gender 无效', 'PROFILE_INVALID');
+  }
+
+  const birthday = readProfileText(data, 'birthday', 10);
+  if (birthday && !birthdayRegExp.test(birthday)) {
+    return fail('birthday 格式错误，应为 YYYY-MM-DD', 'PROFILE_INVALID');
+  }
+
+  const nickname = readProfileText(data, 'nickname', 30);
+  const avatar = readProfileText(data, 'avatar', 200000);
+  const profession = readProfileText(data, 'profession', 60);
+  const provinceCode = readProfileText(data, 'provinceCode', 20);
+  const cityCode = readProfileText(data, 'cityCode', 20);
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return fail('用户不存在', 'USER_NOT_FOUND');
+    }
+
+    if (hasOwnKey(data, 'nickname')) {
+      user.nickname = nickname;
+      user.name = nickname;
+    }
+    if (hasOwnKey(data, 'avatar')) {
+      user.avatar = avatar;
+    }
+    if (hasOwnKey(data, 'gender')) {
+      user.gender = gender;
+    }
+    if (hasOwnKey(data, 'birthday')) {
+      user.birthday = birthday;
+    }
+    if (hasOwnKey(data, 'profession')) {
+      user.profession = profession;
+    }
+    if (hasOwnKey(data, 'provinceCode')) {
+      user.provinceCode = provinceCode;
+    }
+    if (hasOwnKey(data, 'cityCode')) {
+      user.cityCode = cityCode;
+    }
+
+    await user.save();
+    return success(toSafeUser(user), '个人资料已更新');
+  } catch (error) {
+    console.error('update-user-profile failed:', error);
+    return fail('保存个人资料失败，请稍后重试', 'PROFILE_UPDATE_FAILED');
+  }
 }
 
 export async function handleRefreshToken(body: unknown) {

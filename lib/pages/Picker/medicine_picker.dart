@@ -88,6 +88,7 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
       appBar: AppBar(
         title: Text(widget.title ?? l10n?.drugPickerTitle ?? '选择药品'),
         centerTitle: true,
+        foregroundColor: const Color(0xFF0F172A),
       ),
       appBarSpacing: 32,
       accentColor: scheme.primary,
@@ -97,75 +98,12 @@ class _MedicinePickerPageState extends State<MedicinePickerPage> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
           children: [
-            _buildFlowHints(),
-            const SizedBox(height: 12),
             _buildSearchEntry(),
             const SizedBox(height: 12),
             _buildMyMedicinesCard(),
           ],
         ),
       ),
-    );
-  }
-
-  /// 构建顶部流程提示，让选择策略更直观。
-  Widget _buildFlowHints() {
-    final l10n = _l10n;
-    final scheme = Theme.of(context).colorScheme;
-    final itemCountText = _rows.isEmpty
-        ? (l10n?.pickerHintLocalEmpty ?? '本地药品库暂时为空')
-        : (l10n?.pickerHintLocalCount(_rows.length) ??
-              '本地已收录 ${_rows.length} 项');
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        TintedStatusChip(
-          icon: Icons.offline_bolt_rounded,
-          text: l10n?.pickerHintLocalPriority ?? '本地优先选择',
-          color: scheme.primary,
-          textColor: scheme.onSurfaceVariant,
-          iconColor: scheme.primary,
-          surfaceLightAlpha: 0.06,
-          surfaceDarkAlpha: 0.11,
-          borderLightAlpha: 0.08,
-          borderDarkAlpha: 0.16,
-          iconSize: 15,
-          fontSize: 11.5,
-          fontWeight: FontWeight.w700,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-        ),
-        TintedStatusChip(
-          icon: Icons.cloud_sync_outlined,
-          text: l10n?.pickerHintCloudFallback ?? '需要时再补查云端',
-          color: scheme.secondary,
-          textColor: scheme.onSurfaceVariant,
-          iconColor: scheme.secondary,
-          surfaceLightAlpha: 0.06,
-          surfaceDarkAlpha: 0.11,
-          borderLightAlpha: 0.08,
-          borderDarkAlpha: 0.16,
-          iconSize: 15,
-          fontSize: 11.5,
-          fontWeight: FontWeight.w700,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-        ),
-        TintedStatusChip(
-          icon: Icons.inventory_2_outlined,
-          text: itemCountText,
-          color: scheme.tertiary,
-          textColor: scheme.onSurfaceVariant,
-          iconColor: scheme.tertiary,
-          surfaceLightAlpha: 0.06,
-          surfaceDarkAlpha: 0.11,
-          borderLightAlpha: 0.08,
-          borderDarkAlpha: 0.16,
-          iconSize: 15,
-          fontSize: 11.5,
-          fontWeight: FontWeight.w700,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-        ),
-      ],
     );
   }
 

@@ -6,14 +6,26 @@ import { success } from './http/response';
 import { registerApiRoutes } from './routes/api';
 
 function createCorsOptions() {
-  if (!env.corsOrigin || env.corsOrigin === '*') {
+  const raw = env.corsOrigin.trim();
+  if (!raw) {
     return {};
   }
 
-  const origins = env.corsOrigin
+  if (raw === '*') {
+    if ((process.env.NODE_ENV ?? '').trim().toLowerCase() === 'production') {
+      throw new Error('CORS_ORIGIN=* is not allowed in production');
+    }
+    return { origin: true };
+  }
+
+  const origins = raw
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
+
+  if (origins.length === 0) {
+    return {};
+  }
 
   return { origin: origins };
 }

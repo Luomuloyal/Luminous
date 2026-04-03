@@ -129,6 +129,9 @@ class UserSafe {
   /// 用户 id（后端可能返回 `_id` 或 `id`）。
   final String id;
 
+  /// 账号标识（通常是注册时的邮箱或手机号）。
+  final String account;
+
   /// 用户名（登录/注册的 username 字段）。
   final String username;
 
@@ -137,6 +140,30 @@ class UserSafe {
 
   /// 手机号（可选字段）。
   final String phone;
+
+  /// 手机号（与 `phone` 兼容）。
+  final String mobile;
+
+  /// 头像链接。
+  final String avatar;
+
+  /// 生日，格式 `YYYY-MM-DD`。
+  final String birthday;
+
+  /// 城市编码。
+  final String cityCode;
+
+  /// 性别，建议值 `male/female/other`。
+  final String gender;
+
+  /// 昵称。
+  final String nickname;
+
+  /// 职业。
+  final String profession;
+
+  /// 省份编码。
+  final String provinceCode;
 
   /// 显示名称（昵称/姓名等，可选字段）。
   final String name;
@@ -147,9 +174,18 @@ class UserSafe {
   /// 创建一个 `UserSafe` 对象。
   const UserSafe({
     required this.id,
+    this.account = '',
     required this.username,
     required this.email,
     required this.phone,
+    this.mobile = '',
+    this.avatar = '',
+    this.birthday = '',
+    this.cityCode = '',
+    this.gender = '',
+    this.nickname = '',
+    this.profession = '',
+    this.provinceCode = '',
     required this.name,
     required this.type,
   });
@@ -160,9 +196,18 @@ class UserSafe {
   factory UserSafe.fromJson(Map<String, dynamic> json) {
     return UserSafe(
       id: (json['_id'] ?? json['id'] ?? '').toString(),
+      account: (json['account'] ?? '').toString(),
       username: (json['username'] ?? '').toString(),
       email: (json['email'] ?? '').toString(),
-      phone: (json['phone'] ?? '').toString(),
+      phone: (json['phone'] ?? json['mobile'] ?? '').toString(),
+      mobile: (json['mobile'] ?? json['phone'] ?? '').toString(),
+      avatar: (json['avatar'] ?? '').toString(),
+      birthday: (json['birthday'] ?? '').toString(),
+      cityCode: (json['cityCode'] ?? '').toString(),
+      gender: (json['gender'] ?? '').toString(),
+      nickname: (json['nickname'] ?? '').toString(),
+      profession: (json['profession'] ?? '').toString(),
+      provinceCode: (json['provinceCode'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
       type: int.tryParse((json['type'] ?? '').toString()) ?? 0,
     );
@@ -172,12 +217,58 @@ class UserSafe {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'account': account,
       'username': username,
       'email': email,
       'phone': phone,
+      'mobile': mobile,
+      'avatar': avatar,
+      'birthday': birthday,
+      'cityCode': cityCode,
+      'gender': gender,
+      'nickname': nickname,
+      'profession': profession,
+      'provinceCode': provinceCode,
       'name': name,
       'type': type,
     };
+  }
+
+  /// 复制并返回新对象。
+  UserSafe copyWith({
+    String? id,
+    String? account,
+    String? username,
+    String? email,
+    String? phone,
+    String? mobile,
+    String? avatar,
+    String? birthday,
+    String? cityCode,
+    String? gender,
+    String? nickname,
+    String? profession,
+    String? provinceCode,
+    String? name,
+    int? type,
+  }) {
+    return UserSafe(
+      id: id ?? this.id,
+      account: account ?? this.account,
+      username: username ?? this.username,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      mobile: mobile ?? this.mobile,
+      avatar: avatar ?? this.avatar,
+      birthday: birthday ?? this.birthday,
+      cityCode: cityCode ?? this.cityCode,
+      gender: gender ?? this.gender,
+      nickname: nickname ?? this.nickname,
+      profession: profession ?? this.profession,
+      provinceCode: provinceCode ?? this.provinceCode,
+      name: name ?? this.name,
+      type: type ?? this.type,
+    );
   }
 
   /// 当前用户对象是否包含有效数据。
@@ -187,6 +278,9 @@ class UserSafe {
 
   /// 页面上用于展示的主标题（优先级：name > username > email > phone）。
   String get displayTitle {
+    if (nickname.isNotEmpty) {
+      return nickname;
+    }
     if (name.isNotEmpty) {
       return name;
     }
@@ -209,6 +303,7 @@ class UserSafe {
     final title = displayTitle;
     final values = <String>{
       if (username.isNotEmpty && username != title) username,
+      if (account.isNotEmpty && account != title) account,
       if (email.isNotEmpty && email != title) email,
       if (phone.isNotEmpty && phone != title) phone,
     };

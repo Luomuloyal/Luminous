@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:luminous/constants/constants.dart';
 import 'package:luminous/utils/dio_request.dart';
 import 'package:luminous/viewmodels/album.dart';
@@ -35,6 +36,11 @@ class ScanApi {
         return const MedicineScanResult(candidates: [], thumbBase64: '');
       },
       showLoading: false,
+      options: Options(
+        receiveTimeout: const Duration(
+          seconds: GlobalConstants.AI_SCAN_RECEIVE_TIMEOUT,
+        ),
+      ),
     );
   }
 

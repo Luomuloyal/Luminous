@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/api/medicine_api.dart';
@@ -10,6 +12,7 @@ import 'package:luminous/pages/Drug/medicine_detail.dart';
 import 'package:luminous/stores/local_medicine_store.dart';
 import 'package:luminous/stores/my_medicine_repository.dart';
 import 'package:luminous/stores/user_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:luminous/utils/message_utils.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/medicine.dart';
@@ -121,6 +124,17 @@ class _SearchViewState extends State<SearchView> {
   /// 标记是否由用户主动清空过历史，避免在同一会话内被默认词再次填充。
   bool _historyClearedByUser = false;
 
+  /// 本地是否已存在用户作用域下的历史记录（包括空记录）。
+  bool _hasPersistedRecentKeywords = false;
+
+  /// 最近搜索初始化是否完成。
+  bool _recentHistoryReady = false;
+
+  static const int _maxRecentKeywordCount = 8;
+
+  static const String _recentKeywordsStoragePrefix =
+      'search_recent_keywords_v1';
+
   /// 已提交并用于实际请求的搜索关键词。
   ///
   /// 之所以单独维护 `_keyword`，是为了把“输入态”和“请求态”解耦：
@@ -206,9 +220,11 @@ class _SearchViewState extends State<SearchView> {
     }
     _searchController.addListener(_syncDraftKeyword);
     _loadAddedKeys();
+    _loadRecentKeywords();
     _detectInitialQueryMode();
     _userWorker = ever<dynamic>(_userController.user, (_) {
       _loadAddedKeys();
+      _loadRecentKeywords();
     });
     _scrollController.addListener(() {
       if (!_scrollController.hasClients) {
@@ -279,6 +295,54 @@ class _SearchViewState extends State<SearchView> {
     return true;
   }
 
+  String get _recentKeywordsStorageKey {
+    final userId = _userId.trim();
+    final scope = userId.isEmpty ? 'guest' : userId;
+    return '$_recentKeywordsStoragePrefix:$scope';
+  }
+
+  List<String> _sanitizeRecentKeywords(Iterable<String> source) {
+    final result = <String>[];
+    for (final raw in source) {
+      final keyword = raw.trim();
+      if (keyword.isEmpty || result.contains(keyword)) {
+        continue;
+      }
+      result.add(keyword);
+      if (result.length >= _maxRecentKeywordCount) {
+        break;
+      }
+    }
+    return result;
+  }
+
+  Future<void> _loadRecentKeywords() async {
+    final prefs = await SharedPreferences.getInstance();
+    final stored = prefs.getStringList(_recentKeywordsStorageKey);
+    final sanitized = _sanitizeRecentKeywords(stored ?? const <String>[]);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _recentKeywords
+        ..clear()
+        ..addAll(sanitized);
+      _hasPersistedRecentKeywords = stored != null;
+      _recentHistoryReady = true;
+      _historyClearedByUser = stored != null && sanitized.isEmpty;
+      _seededRecentKeywords = null;
+    });
+    _syncDefaultRecentKeywordsForLocale();
+  }
+
+  Future<void> _persistRecentKeywords() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      _recentKeywordsStorageKey,
+      List<String>.from(_recentKeywords),
+    );
+  }
+
   /// 页面销毁时释放控制器资源。
   @override
   void dispose() {
@@ -301,13 +365,21 @@ class _SearchViewState extends State<SearchView> {
   }
 
   void _syncDefaultRecentKeywordsForLocale() {
+    if (!_recentHistoryReady || _hasPersistedRecentKeywords) {
+      return;
+    }
     final defaults = _defaultRecentKeywords();
     if (_recentKeywords.isEmpty) {
       if (_historyClearedByUser) {
         return;
       }
-      _recentKeywords.addAll(defaults);
-      _seededRecentKeywords = List<String>.from(defaults);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _recentKeywords.addAll(defaults);
+        _seededRecentKeywords = List<String>.from(defaults);
+      });
       return;
     }
 
@@ -319,10 +391,15 @@ class _SearchViewState extends State<SearchView> {
       return;
     }
 
-    _recentKeywords
-      ..clear()
-      ..addAll(defaults);
-    _seededRecentKeywords = List<String>.from(defaults);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _recentKeywords
+        ..clear()
+        ..addAll(defaults);
+      _seededRecentKeywords = List<String>.from(defaults);
+    });
   }
 
   void _syncDraftKeyword() {
@@ -490,6 +567,7 @@ class _SearchViewState extends State<SearchView> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final hasCommittedSearch = _keyword.trim().isNotEmpty;
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: AppCanvas(
@@ -508,12 +586,14 @@ class _SearchViewState extends State<SearchView> {
               slivers: [
                 _buildHeaderSliver(),
                 _buildSearchBarSliver(),
-                _buildQueryModeSliver(),
-                _buildQuickTagsSliver(),
-                _buildHistorySliver(),
-                _buildResultTitleSliver(),
+                if (!hasCommittedSearch) ...[
+                  _buildQueryModeSliver(),
+                  _buildQuickTagsSliver(),
+                  _buildHistorySliver(),
+                ],
+                if (hasCommittedSearch) _buildResultTitleSliver(),
                 _buildContentSliver(),
-                if (_keyword.isNotEmpty && _loadingMore)
+                if (hasCommittedSearch && _loadingMore)
                   _buildLoadingMoreSliver(),
                 const SliverToBoxAdapter(child: SizedBox(height: 20)),
               ],
@@ -620,13 +700,13 @@ class _SearchViewState extends State<SearchView> {
         final scheme = theme.colorScheme;
         return SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            padding: const EdgeInsets.fromLTRB(14, 6, 14, 6),
             child: _buildSearchDecorCard(
               ornamentKey: widget.pickerMode
                   ? 'search.picker.searchBar'
                   : 'search.manual.searchBar',
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+                padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
                 child: Row(
                   children: [
                     Expanded(
@@ -679,7 +759,7 @@ class _SearchViewState extends State<SearchView> {
                     FilledButton(
                       onPressed: _commitSearch,
                       style: FilledButton.styleFrom(
-                        minimumSize: const Size(76, 44),
+                        minimumSize: const Size(72, 40),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -704,10 +784,10 @@ class _SearchViewState extends State<SearchView> {
     final databaseLabel = _databaseSourceLabel(l10n);
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
         child: SearchSurfaceCard(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -743,7 +823,7 @@ class _SearchViewState extends State<SearchView> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 Row(
                   children: [
                     Expanded(
@@ -754,7 +834,7 @@ class _SearchViewState extends State<SearchView> {
                             _switchQueryMode(MedicineQueryMode.online),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: _buildDualOptionButton(
                         label: l10n?.searchQueryModeLocal ?? '本地查询',
@@ -765,7 +845,7 @@ class _SearchViewState extends State<SearchView> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 Text(
                   l10n?.searchDatabaseTitle ?? '数据库',
                   style: TextStyle(
@@ -774,7 +854,7 @@ class _SearchViewState extends State<SearchView> {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Row(
                   children: [
                     Expanded(
@@ -786,7 +866,7 @@ class _SearchViewState extends State<SearchView> {
                             _switchDatabaseSource(MedicineDatabaseSource.nmpa),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: _buildDualOptionButton(
                         label: l10n?.searchDatabaseSourceDrugbank ?? 'Drugbank',
@@ -847,13 +927,13 @@ class _SearchViewState extends State<SearchView> {
     final scheme = Theme.of(context).colorScheme;
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+        padding: const EdgeInsets.fromLTRB(14, 4, 14, 6),
         child: _buildSearchDecorCard(
           ornamentKey: widget.pickerMode
               ? 'search.picker.quickTags'
               : 'search.manual.quickTags',
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -865,10 +945,10 @@ class _SearchViewState extends State<SearchView> {
                     color: scheme.onSurface,
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+                  spacing: 6,
+                  runSpacing: 6,
                   children: _quickTags
                       .map(
                         (tag) => ActionChip(
@@ -915,10 +995,10 @@ class _SearchViewState extends State<SearchView> {
     final scheme = Theme.of(context).colorScheme;
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
+        padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
         child: SearchSurfaceCard(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 6),
             child: Column(
               children: [
                 Row(
@@ -945,7 +1025,7 @@ class _SearchViewState extends State<SearchView> {
                 ),
                 if (_recentKeywords.isEmpty)
                   Padding(
-                    padding: EdgeInsets.only(bottom: 8),
+                    padding: EdgeInsets.only(bottom: 6),
                     child: Text(
                       l10n?.searchHistoryEmpty ?? '暂无搜索历史',
                       style: TextStyle(
@@ -964,7 +1044,7 @@ class _SearchViewState extends State<SearchView> {
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
-                                vertical: 8,
+                                vertical: 6,
                               ),
                               child: Row(
                                 children: [
@@ -1009,7 +1089,7 @@ class _SearchViewState extends State<SearchView> {
     final scheme = Theme.of(context).colorScheme;
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
+        padding: const EdgeInsets.fromLTRB(14, 4, 14, 6),
         child: Row(
           children: [
             Text(
@@ -1053,7 +1133,7 @@ class _SearchViewState extends State<SearchView> {
   /// 构建真正的搜索结果列表。
   Widget _buildResultListSliver() {
     return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       sliver: SliverList.builder(
         itemCount: _results.length,
         itemBuilder: (context, index) {
@@ -1069,7 +1149,7 @@ class _SearchViewState extends State<SearchView> {
           final isAdded = _addedKeys.contains(identityKey);
           return Padding(
             padding: EdgeInsets.only(
-              bottom: index == _results.length - 1 ? 0 : 10,
+              bottom: index == _results.length - 1 ? 0 : 8,
             ),
             child: SearchResultCard(
               item: cardData,
@@ -1099,7 +1179,7 @@ class _SearchViewState extends State<SearchView> {
     final scheme = Theme.of(context).colorScheme;
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 10),
+        padding: const EdgeInsets.fromLTRB(14, 16, 14, 8),
         child: _buildSearchDecorCard(
           ornamentKey: widget.pickerMode
               ? 'search.picker.guide'
@@ -1161,7 +1241,7 @@ class _SearchViewState extends State<SearchView> {
     final scheme = Theme.of(context).colorScheme;
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
         child: _buildSearchDecorCard(
           ornamentKey: widget.pickerMode
               ? 'search.picker.ready'
@@ -1229,7 +1309,7 @@ class _SearchViewState extends State<SearchView> {
     final scheme = Theme.of(context).colorScheme;
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+        padding: const EdgeInsets.fromLTRB(14, 18, 14, 10),
         child: Center(
           child: Column(
             children: [
@@ -1268,7 +1348,7 @@ class _SearchViewState extends State<SearchView> {
     final scheme = Theme.of(context).colorScheme;
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 26, 16, 10),
+        padding: const EdgeInsets.fromLTRB(14, 20, 14, 8),
         child: _buildSearchDecorCard(
           ornamentKey: widget.pickerMode
               ? 'search.picker.error'
@@ -1352,6 +1432,7 @@ class _SearchViewState extends State<SearchView> {
       _keyword = tag;
       _updateRecentKeywords(tag);
     });
+    unawaited(_persistRecentKeywords());
     _search(reset: true);
   }
 
@@ -1376,6 +1457,7 @@ class _SearchViewState extends State<SearchView> {
       _keyword = keyword;
       _updateRecentKeywords(keyword);
     });
+    unawaited(_persistRecentKeywords());
     _search(reset: true);
     FocusScope.of(context).unfocus();
   }
@@ -1399,13 +1481,18 @@ class _SearchViewState extends State<SearchView> {
   }
 
   /// 清空最近搜索历史。
-  void _clearHistory() {
+  Future<void> _clearHistory() async {
     final l10n = _l10n;
     setState(() {
       _recentKeywords.clear();
       _historyClearedByUser = true;
       _seededRecentKeywords = null;
+      _hasPersistedRecentKeywords = true;
     });
+    await _persistRecentKeywords();
+    if (!mounted) {
+      return;
+    }
     ToastUtils.instance.show(
       context,
       l10n?.searchHistoryClearedToast ?? '最近搜索已清空',
@@ -1418,11 +1505,16 @@ class _SearchViewState extends State<SearchView> {
   /// - 相同关键词去重后移到最前；
   /// - 最多保留 8 条。
   void _updateRecentKeywords(String keyword) {
+    final normalized = keyword.trim();
+    if (normalized.isEmpty) {
+      return;
+    }
     _historyClearedByUser = false;
     _seededRecentKeywords = null;
-    _recentKeywords.remove(keyword);
-    _recentKeywords.insert(0, keyword);
-    if (_recentKeywords.length > 8) {
+    _hasPersistedRecentKeywords = true;
+    _recentKeywords.remove(normalized);
+    _recentKeywords.insert(0, normalized);
+    if (_recentKeywords.length > _maxRecentKeywordCount) {
       _recentKeywords.removeLast();
     }
   }
@@ -1431,10 +1523,15 @@ class _SearchViewState extends State<SearchView> {
   SearchResultItemData _toCardData(MedicineItem item) {
     final l10n = _l10n;
 
-    /// 卡片下方的补充提示。
-    final tips = item.approvalNo.isNotEmpty
-        ? (l10n?.searchApprovalNoPrefix(item.approvalNo) ??
-              '批准文号: ${item.approvalNo}')
+    /// 卡片下方补充提示优先显示生产单位。
+    final manufacturer = item.manufacturer.trim().isNotEmpty
+        ? item.manufacturer.trim()
+        : item.marketingAuthorizationHolder.trim();
+    final locale = (l10n?.localeName ?? 'zh').toLowerCase();
+    final tips = manufacturer.isNotEmpty
+        ? (locale.startsWith('zh')
+              ? '生产单位: $manufacturer'
+              : 'Manufacturer: $manufacturer')
         : item.displayTips;
     return SearchResultItemData(
       name: item.displayName,

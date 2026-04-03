@@ -20,7 +20,7 @@ class AppDatabase {
   static const String _dbName = 'luminous.db';
 
   /// 当前数据库 schema 版本号。
-  static const int _version = 11;
+  static const int _version = 13;
 
   /// 已打开的数据库实例缓存。
   Database? _db;
@@ -137,6 +137,8 @@ class AppDatabase {
         drugCode TEXT,
         approvalNo TEXT,
         productName TEXT NOT NULL,
+        medicinesJson TEXT,
+        dosage TEXT,
         subtitle TEXT,
         enabled INTEGER NOT NULL,
         repeatRule TEXT NOT NULL,
@@ -178,6 +180,7 @@ class AppDatabase {
         remoteId TEXT NOT NULL,
         time TEXT NOT NULL,
         title TEXT NOT NULL,
+        dosage TEXT,
         subtitle TEXT,
         serverDone INTEGER NOT NULL,
         position INTEGER NOT NULL,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:dio/dio.dart';
 import 'package:luminous/api/safety_api.dart';
 import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/components/app_surface.dart';
@@ -50,6 +51,9 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
 
   /// 当前是否正在请求 AI 查询。
   bool _loading = false;
+
+  /// 当前 AI 查询对应的取消令牌。
+  CancelToken? _queryCancelToken;
 
   /// AI 返回的查询结果。
   MedicineAiSafetyResult? _result;
@@ -141,6 +145,22 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
 
   String _toastAiNoContentText(AppLocalizations? l10n) {
     return l10n?.safetyToastAiNoContent ?? 'AI returned no content';
+  }
+
+  String _cancelActionText(AppLocalizations? l10n) {
+    return l10n?.reminderDeleteCancel ?? '取消';
+  }
+
+  String _toastQueryCanceledText(AppLocalizations? l10n) {
+    final locale = (l10n?.localeName ?? 'zh').toLowerCase();
+    return locale.startsWith('zh') ? '已取消查询' : 'Query canceled';
+  }
+
+  @override
+  void dispose() {
+    _queryCancelToken?.cancel('page disposed');
+    _queryCancelToken = null;
+    super.dispose();
   }
 
   /// 构建安全辅助页 UI。
@@ -497,27 +517,48 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
       accentColor: scheme.tertiary,
       secondaryColor: scheme.primary,
       ornamentKey: 'safety.action',
-      child: SizedBox(
-        width: double.infinity,
-        child: FilledButton(
-          onPressed: _loading || !ready ? null : _query,
-          style: FilledButton.styleFrom(
-            minimumSize: const Size(double.infinity, 48),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+      child: Row(
+        children: [
+          Expanded(
+            child: FilledButton(
+              onPressed: _loading || !ready ? null : _query,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(double.infinity, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: _loading
+                  ? SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: scheme.onPrimary,
+                      ),
+                    )
+                  : Text(_actionQueryText(l10n)),
             ),
           ),
-          child: _loading
-              ? SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: scheme.onPrimary,
-                  ),
-                )
-              : Text(_actionQueryText(l10n)),
-        ),
+          if (_loading) ...[
+            const SizedBox(width: 8),
+            FilledButton.tonal(
+              onPressed: _cancelQuery,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(86, 48),
+                backgroundColor: const Color(
+                  0xFFEF4444,
+                ).withValues(alpha: 0.12),
+                foregroundColor: const Color(0xFFB91C1C),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: const BorderSide(color: Color(0xFFEF4444)),
+                ),
+              ),
+              child: Text(_cancelActionText(l10n)),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -527,7 +568,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
     final l10n = _l10n;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final paragraphs = _result == null
+    final entries = _result == null
         ? const <String>[]
         : _splitResultParagraphs(_result!.text);
     return _SectionCard(
@@ -535,30 +576,27 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
       accentColor: Color.lerp(scheme.secondary, scheme.primary, 0.5)!,
       secondaryColor: scheme.tertiary,
       ornamentKey: 'safety.result',
-      child: paragraphs.isEmpty
+      titleFontSize: 20,
+      child: entries.isEmpty
           ? Text(
               _resultPlaceholderText(l10n),
               style: TextStyle(
-                fontSize: 13,
-                height: 1.55,
-                color: scheme.onSurfaceVariant,
+                fontSize: 15,
+                height: 1.6,
+                color: scheme.onSurface,
                 fontWeight: FontWeight.w600,
               ),
             )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (var i = 0; i < paragraphs.length; i++) ...[
-                  Text(
-                    paragraphs[i],
-                    style: TextStyle(
-                      fontSize: 13,
-                      height: 1.6,
-                      color: scheme.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
+                for (var i = 0; i < entries.length; i++) ...[
+                  _AiResultEntryCard(
+                    index: i + 1,
+                    text: entries[i],
+                    isHeading: _looksLikeHeading(entries[i]),
                   ),
-                  if (i != paragraphs.length - 1) const SizedBox(height: 8),
+                  if (i != entries.length - 1) const SizedBox(height: 9),
                 ],
               ],
             ),
@@ -609,6 +647,23 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
     return parts;
   }
 
+  bool _looksLikeHeading(String text) {
+    final line = text.trim();
+    if (line.isEmpty) {
+      return false;
+    }
+    if (line.length > 28) {
+      return false;
+    }
+    final headingPattern = RegExp(
+      r'^(第[一二三四五六七八九十]+[章节部分]|[一二三四五六七八九十]+[、.．]|\d+[、.．])',
+    );
+    if (headingPattern.hasMatch(line)) {
+      return true;
+    }
+    return line.endsWith('建议') || line.endsWith('事项') || line.endsWith('人群');
+  }
+
   /// 打开药品选择器并把结果写入 A 或 B。
   ///
   /// - slot=0：设置 A
@@ -652,6 +707,10 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
       return;
     }
 
+    _queryCancelToken?.cancel('new query started');
+    final cancelToken = CancelToken();
+    _queryCancelToken = cancelToken;
+
     setState(() => _loading = true);
     try {
       /// 发送给后端的药品列表（Map 结构由接口契约约定）。
@@ -674,6 +733,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
         userId: _userId.isEmpty ? null : _userId,
         mode: _mode,
         medicines: medicines,
+        cancelToken: cancelToken,
       );
       if (!mounted) return;
       setState(() => _result = response.result);
@@ -682,10 +742,35 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
       }
     } catch (e) {
       if (!mounted) return;
+      if (_isCanceledError(e)) {
+        return;
+      }
       ToastUtils.instance.showError(context, e);
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (identical(_queryCancelToken, cancelToken)) {
+        _queryCancelToken = null;
+      }
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
+  }
+
+  void _cancelQuery() {
+    _queryCancelToken?.cancel('user canceled');
+    _queryCancelToken = null;
+    if (mounted) {
+      setState(() => _loading = false);
+      ToastUtils.instance.show(context, _toastQueryCanceledText(_l10n));
+    }
+  }
+
+  bool _isCanceledError(Object error) {
+    if (error is DioException && error.type == DioExceptionType.cancel) {
+      return true;
+    }
+    final text = error.toString().toLowerCase();
+    return text.contains('cancel') || text.contains('canceled');
   }
 
   /// 下拉刷新时按当前已选药品重新发起一次查询。
@@ -709,6 +794,7 @@ class _SectionCard extends StatelessWidget {
     required this.accentColor,
     required this.secondaryColor,
     required this.ornamentKey,
+    this.titleFontSize = 15.5,
   });
 
   /// 卡片标题。
@@ -720,6 +806,7 @@ class _SectionCard extends StatelessWidget {
   final Color accentColor;
   final Color secondaryColor;
   final String ornamentKey;
+  final double titleFontSize;
 
   /// 构建 section 卡片 UI。
   @override
@@ -737,13 +824,95 @@ class _SectionCard extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              fontSize: 15.5,
+              fontSize: titleFontSize,
               fontWeight: FontWeight.w800,
               color: scheme.onSurface,
             ),
           ),
           const SizedBox(height: 10),
           child,
+        ],
+      ),
+    );
+  }
+}
+
+class _AiResultEntryCard extends StatelessWidget {
+  const _AiResultEntryCard({
+    required this.index,
+    required this.text,
+    required this.isHeading,
+  });
+
+  final int index;
+  final String text;
+  final bool isHeading;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final accent = isHeading
+        ? Color.lerp(scheme.secondary, scheme.primary, 0.4)!
+        : scheme.primary;
+    final headingColor = isDark ? scheme.onSurface : const Color(0xFF0F172A);
+    final bodyColor = isDark
+        ? scheme.onSurface.withValues(alpha: 0.92)
+        : const Color(0xFF334155);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+        color: appTintedSurface(
+          context,
+          accent,
+          lightAlpha: isHeading ? 0.09 : 0.05,
+          darkAlpha: isHeading ? 0.18 : 0.12,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: appTintedBorder(
+            context,
+            accent,
+            lightAlpha: 0.14,
+            darkAlpha: 0.24,
+          ),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 1),
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              '$index',
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w800,
+                color: accent,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: isHeading ? 19 : 16,
+                height: 1.55,
+                color: isHeading ? headingColor : bodyColor,
+                fontWeight: isHeading ? FontWeight.w800 : FontWeight.w600,
+              ),
+            ),
+          ),
         ],
       ),
     );

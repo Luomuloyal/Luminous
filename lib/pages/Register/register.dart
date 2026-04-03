@@ -5,6 +5,7 @@ import 'package:luminous/api/auth_api.dart';
 import 'package:luminous/components/auth.dart';
 import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/l10n/app_localizations.dart';
+import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/utils/dio_request.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/auth.dart';
@@ -35,6 +36,7 @@ class _RegisterViewState extends State<RegisterView> {
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _identifierController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _codeController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmController = TextEditingController();
@@ -53,6 +55,7 @@ class _RegisterViewState extends State<RegisterView> {
   static final RegExp _phoneRegExp = RegExp(r'^1[3-9]\d{9}$');
   static final RegExp _codeRegExp = RegExp(r'^\d{6}$');
   static final RegExp _passwordRegExp = RegExp(r'^[A-Za-z0-9]{6,12}$');
+  static final RegExp _usernameRegExp = RegExp(r'^\S{2,30}$');
 
   AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
@@ -82,6 +85,7 @@ class _RegisterViewState extends State<RegisterView> {
   void dispose() {
     _codeCountdownTimer?.cancel();
     _identifierController.dispose();
+    _usernameController.dispose();
     _codeController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
@@ -121,6 +125,20 @@ class _RegisterViewState extends State<RegisterView> {
     }
     if (!_codeRegExp.hasMatch(code)) {
       return _l10n.authValidationCodeRule;
+    }
+    return null;
+  }
+
+  String? _usernameValidator(String? value) {
+    final username = (value ?? '').trim();
+    if (username.isEmpty) {
+      return null;
+    }
+    if (!_usernameRegExp.hasMatch(username)) {
+      return AppI18nText.pick(
+        zh: '用户名需为2-30个字符且不能包含空格',
+        en: 'Username must be 2-30 chars with no spaces',
+      );
     }
     return null;
   }
@@ -269,6 +287,7 @@ class _RegisterViewState extends State<RegisterView> {
     }
 
     final identifier = _identifierController.text.trim();
+    final username = _usernameController.text.trim();
     if (_codeTarget != identifier) {
       ToastUtils.instance.show(
         context,
@@ -291,11 +310,13 @@ class _RegisterViewState extends State<RegisterView> {
               phone: identifier,
               code: _codeController.text.trim(),
               password: _passwordController.text,
+              username: username,
             )
           : await widget.authApi.registerWithEmail(
               email: identifier,
               code: _codeController.text.trim(),
               password: _passwordController.text,
+              username: username,
             );
 
       if (!mounted) {
@@ -493,6 +514,24 @@ class _RegisterViewState extends State<RegisterView> {
                     });
                   }
                 },
+              ),
+              const SizedBox(height: 10),
+              TextFormField(
+                controller: _usernameController,
+                keyboardType: TextInputType.text,
+                textInputAction: TextInputAction.next,
+                decoration: _buildInputDecoration(
+                  labelText: AppI18nText.pick(
+                    zh: '用户名(可选)',
+                    en: 'Username (optional)',
+                  ),
+                  hintText: AppI18nText.pick(
+                    zh: '用于个性化显示，例如 luminous_user',
+                    en: 'Used for profile display, e.g. luminous_user',
+                  ),
+                  prefixIcon: Icons.person_outline_rounded,
+                ),
+                validator: _usernameValidator,
               ),
               const SizedBox(height: 10),
               _buildCodeRow(),

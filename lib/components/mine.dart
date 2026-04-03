@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/responsive_quick_grid.dart';
@@ -46,6 +48,23 @@ class MineProfileCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final isLoggedIn = user?.hasData ?? false;
     final displayUser = user;
+    ImageProvider<Object>? avatarProvider;
+    if (isLoggedIn) {
+      final rawAvatar = displayUser?.avatar.trim() ?? '';
+      if (rawAvatar.startsWith('http')) {
+        avatarProvider = NetworkImage(rawAvatar);
+      } else if (rawAvatar.startsWith('data:image/')) {
+        final commaIndex = rawAvatar.indexOf(',');
+        if (commaIndex > 0 && commaIndex < rawAvatar.length - 1) {
+          try {
+            final bytes = base64Decode(rawAvatar.substring(commaIndex + 1));
+            avatarProvider = MemoryImage(bytes);
+          } catch (_) {
+            avatarProvider = null;
+          }
+        }
+      }
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -73,12 +92,26 @@ class MineProfileCard extends StatelessWidget {
                           color: theme.surfaceColor,
                           border: Border.all(color: theme.borderColor),
                         ),
-                        child: Icon(
-                          isLoggedIn
-                              ? Icons.verified_user_rounded
-                              : Icons.person_outline_rounded,
-                          color: theme.accentColor,
-                          size: compact ? 26 : 28,
+                        child: ClipOval(
+                          child: avatarProvider != null
+                              ? Image(
+                                  image: avatarProvider,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Icon(
+                                      Icons.verified_user_rounded,
+                                      color: theme.accentColor,
+                                      size: compact ? 26 : 28,
+                                    );
+                                  },
+                                )
+                              : Icon(
+                                  isLoggedIn
+                                      ? Icons.verified_user_rounded
+                                      : Icons.person_outline_rounded,
+                                  color: theme.accentColor,
+                                  size: compact ? 26 : 28,
+                                ),
                         ),
                       ),
                     ),

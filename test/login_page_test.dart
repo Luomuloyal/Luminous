@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:luminous/api/auth_api.dart';
+import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Login/login.dart';
 import 'package:luminous/pages/Register/register.dart';
 import 'package:luminous/stores/user_controller.dart';
@@ -25,7 +26,11 @@ void main() {
   });
 
   Widget createLoginWidget({AuthApi? authApi}) {
-    return MaterialApp(home: LoginPage(authApi: authApi ?? FakeAuthApi()));
+    return MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: LoginPage(authApi: authApi ?? FakeAuthApi()),
+    );
   }
 
   testWidgets('tap login with empty fields shows phone error', (tester) async {
@@ -85,7 +90,7 @@ void main() {
           .widgetList<TextFormField>(find.byType(TextFormField))
           .toList();
       expect(registerFields[0].controller?.text, '13800138000');
-      expect(registerFields[1].controller?.text, '123456');
+      expect(registerFields[2].controller?.text, '123456');
     },
   );
 
@@ -121,6 +126,8 @@ void main() {
       final fakeAuth = FakeAuthApi();
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: RegisterView(
             authApi: fakeAuth,
             initialIdentifierType: AuthIdentifierType.phone,
@@ -132,8 +139,8 @@ void main() {
       await tester.pumpAndSettle();
 
       final fields = find.byType(TextFormField);
-      await tester.enterText(fields.at(2), 'Abc123');
       await tester.enterText(fields.at(3), 'Abc123');
+      await tester.enterText(fields.at(4), 'Abc123');
       await tester.ensureVisible(find.byType(Checkbox));
       await tester.tap(find.byType(Checkbox), warnIfMissed: false);
       await tester.pump();
@@ -154,6 +161,8 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: RegisterView(
           authApi: FakeAuthApi(),
           initialIdentifierType: AuthIdentifierType.phone,
@@ -164,9 +173,9 @@ void main() {
     await tester.pumpAndSettle();
 
     final fields = find.byType(TextFormField);
-    await tester.enterText(fields.at(1), '123456');
-    await tester.enterText(fields.at(2), 'Abc123');
+    await tester.enterText(fields.at(2), '123456');
     await tester.enterText(fields.at(3), 'Abc123');
+    await tester.enterText(fields.at(4), 'Abc123');
     await tester.ensureVisible(find.byType(Checkbox));
     await tester.tap(find.byType(Checkbox), warnIfMissed: false);
     await tester.pump();
@@ -270,6 +279,7 @@ class FakeAuthApi extends AuthApi {
     required String email,
     required String code,
     required String password,
+    String username = '',
   }) async {
     lastRegisteredEmail = email;
     return const ApiResult<RegisterResult>(
@@ -284,6 +294,7 @@ class FakeAuthApi extends AuthApi {
     required String phone,
     required String code,
     required String password,
+    String username = '',
   }) async {
     lastRegisteredPhone = phone;
     return const ApiResult<RegisterResult>(

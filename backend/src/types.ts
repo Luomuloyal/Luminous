@@ -69,6 +69,8 @@ export interface ReminderPlanRecord {
   drugCode: string;
   approvalNo: string;
   productName: string;
+  medicines: MedicineRefInput[];
+  dosage: string;
   subtitle: string;
   enabled: boolean;
   repeatRule: string;
@@ -85,6 +87,7 @@ export interface TodayReminderItemRecord {
   id: string;
   time: string;
   title: string;
+  dosage: string;
   subtitle: string;
   done: boolean;
 }

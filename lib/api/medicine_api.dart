@@ -115,6 +115,7 @@ class MedicineApi {
   static Future<ApiResult<MedicineAiDetailResult>> fetchAiDetail({
     String? drugCode,
     String? approvalNo,
+    CancelToken? cancelToken,
   }) {
     return dioRequest.post<MedicineAiDetailResult>(
       HttpConstants.MEDICINE_AI_DETAIL,
@@ -134,6 +135,12 @@ class MedicineApi {
         return const MedicineAiDetailResult(text: '');
       },
       showLoading: false,
+      options: Options(
+        receiveTimeout: const Duration(
+          seconds: GlobalConstants.AI_SAFETY_RECEIVE_TIMEOUT,
+        ),
+      ),
+      cancelToken: cancelToken,
     );
   }
 }

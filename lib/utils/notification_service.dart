@@ -175,13 +175,8 @@ class NotificationService {
 
       /// 通知正文。
       ///
-      /// 优先显示提醒副标题，没有副标题时回退为通用提示语。
-      final body = r.subtitle.trim().isEmpty
-          ? AppI18nText.pick(
-              zh: '请按时用药',
-              en: 'Please take your medicine on time',
-            )
-          : r.subtitle.trim();
+      /// 优先显示剂量与额外提醒，没有时回退为通用提示语。
+      final body = _buildReminderBody(r);
 
       await _plugin.zonedSchedule(
         notificationId,
@@ -307,6 +302,24 @@ class NotificationService {
 
     return AndroidScheduleMode.inexactAllowWhileIdle;
   }
+}
+
+String _buildReminderBody(ReminderPlan reminder) {
+  final dosage = reminder.dosage.trim();
+  final extra = reminder.subtitle.trim();
+  if (dosage.isNotEmpty && extra.isNotEmpty) {
+    return AppI18nText.pick(
+      zh: '剂量: $dosage · $extra',
+      en: 'Dose: $dosage · $extra',
+    );
+  }
+  if (dosage.isNotEmpty) {
+    return AppI18nText.pick(zh: '剂量: $dosage', en: 'Dose: $dosage');
+  }
+  if (extra.isNotEmpty) {
+    return extra;
+  }
+  return AppI18nText.pick(zh: '请按时用药', en: 'Please take your medicine on time');
 }
 
 /// 解析 `HH:mm` 形式的时间字符串。
