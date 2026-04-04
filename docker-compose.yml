@@ -1,3 +1,5 @@
+name: luminous-dev
+
 services:
   backend:
     build:
@@ -32,5 +34,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: "123456"
     volumes:
-      - "D:/25080/DockerTest/mysql-data:/var/lib/mysql"
+      - mysql_data:/var/lib/mysql
     restart: unless-stopped
+
+volumes:
+  mysql_data:
