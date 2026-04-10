@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/l10n/app_localizations.dart';
+import 'package:luminous/stores/ornament_controller.dart';
 import 'package:luminous/viewmodels/search.dart';
 
 /// 搜索页（Search）可复用 UI 组件集合。
@@ -15,6 +17,7 @@ class SearchSurfaceCard extends StatelessWidget {
     this.accentColor,
     this.secondaryColor,
     this.ornamentKey,
+    this.ornamentVisibilityScale = 1,
   });
 
   /// 卡片内部内容。
@@ -23,11 +26,25 @@ class SearchSurfaceCard extends StatelessWidget {
   final Color? accentColor;
   final Color? secondaryColor;
   final String? ornamentKey;
+  final double ornamentVisibilityScale;
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildContent(
+    BuildContext context, {
+    required bool ornamentsDisabled,
+  }) {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = scheme.surface.withValues(alpha: isDark ? 0.35 : 0.65);
+
+    if (ornamentsDisabled) {
+      return AppSurfaceCard(
+        radius: 16,
+        color: baseColor,
+        borderColor: Colors.transparent,
+        child: child,
+      );
+    }
+
     if (decorated) {
       return AppSectionCard(
         radius: 16,
@@ -36,20 +53,40 @@ class SearchSurfaceCard extends StatelessWidget {
         secondaryColor:
             secondaryColor ??
             Color.lerp(scheme.secondary, scheme.tertiary, 0.5),
-        baseColor: scheme.surface.withValues(alpha: isDark ? 0.35 : 0.65),
+        baseColor: baseColor,
         ornamentKey: ornamentKey,
+        ornamentVisibilityScale: ornamentVisibilityScale,
+        surfaceBorderColor: Colors.transparent,
         child: child,
       );
     }
+
     return AppSectionCard(
       radius: 16,
       padding: EdgeInsets.zero,
       accentColor: scheme.primary.withValues(alpha: 0.15),
       secondaryColor: scheme.secondary.withValues(alpha: 0.15),
-      baseColor: scheme.surface.withValues(alpha: isDark ? 0.35 : 0.65),
+      baseColor: baseColor,
       ornamentKey: 'search.item',
+      ornamentVisibilityScale: ornamentVisibilityScale,
+      surfaceBorderColor: Colors.transparent,
       child: child,
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!Get.isRegistered<OrnamentController>()) {
+      return _buildContent(context, ornamentsDisabled: false);
+    }
+    final ornamentController = Get.find<OrnamentController>();
+    return Obx(() {
+      ornamentController.revision.value;
+      return _buildContent(
+        context,
+        ornamentsDisabled: ornamentController.isDisabled,
+      );
+    });
   }
 }
 
@@ -76,6 +113,66 @@ class SearchResultCard extends StatelessWidget {
 
   /// 点击"添加"回调；传 null 表示禁用（已添加）
   final VoidCallback? onAdd;
+
+  String _resolveDosageType() {
+    final source = '${item.badge} ${item.subtitle}'.toLowerCase();
+    if (source.contains('注射') ||
+        source.contains('针') ||
+        source.contains('inject')) {
+      return 'inject';
+    }
+    if (source.contains('胶囊') || source.contains('capsule')) {
+      return 'capsule';
+    }
+    if (source.contains('片') || source.contains('tablet')) {
+      return 'tablet';
+    }
+    if (source.contains('颗粒') || source.contains('granule')) {
+      return 'granule';
+    }
+    if (source.contains('口服液') ||
+        source.contains('糖浆') ||
+        source.contains('混悬') ||
+        source.contains('liquid') ||
+        source.contains('syrup')) {
+      return 'liquid';
+    }
+    return 'default';
+  }
+
+  IconData _resolveDosageIcon(String type) {
+    switch (type) {
+      case 'inject':
+        return Icons.vaccines_rounded;
+      case 'capsule':
+        return Icons.medication_rounded;
+      case 'tablet':
+        return Icons.bubble_chart_rounded;
+      case 'granule':
+        return Icons.grain;
+      case 'liquid':
+        return Icons.water_drop_rounded;
+      default:
+        return Icons.medical_services_rounded;
+    }
+  }
+
+  Color _resolveDosageColor(String type) {
+    switch (type) {
+      case 'inject':
+        return const Color(0xFFE11D48);
+      case 'capsule':
+        return const Color(0xFF2563EB);
+      case 'tablet':
+        return const Color(0xFFEA580C);
+      case 'granule':
+        return const Color(0xFF7C3AED);
+      case 'liquid':
+        return const Color(0xFF0891B2);
+      default:
+        return const Color(0xFF475569);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,31 +212,34 @@ class SearchResultCard extends StatelessWidget {
       lightAlpha: 0.14,
       darkAlpha: 0.20,
     );
+    final dosageType = _resolveDosageType();
+    final dosageColor = _resolveDosageColor(dosageType);
+    final dosageIcon = _resolveDosageIcon(dosageType);
 
     return SearchSurfaceCard(
+      ornamentVisibilityScale: 0.2,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+          padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 药品图标
               Container(
-                width: 40,
-                height: 40,
+                width: 34,
+                height: 34,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0EA5E9).withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(12),
+                  color: dosageColor.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: dosageColor.withValues(alpha: 0.28),
+                  ),
                 ),
-                child: const Icon(
-                  Icons.medication_liquid_rounded,
-                  size: 22,
-                  color: Color(0xFF0EA5E9),
-                ),
+                child: Icon(dosageIcon, size: 19, color: dosageColor),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               // 药品信息
               Expanded(
                 child: Column(
@@ -151,7 +251,7 @@ class SearchResultCard extends StatelessWidget {
                           child: Text(
                             item.name,
                             style: TextStyle(
-                              fontSize: 15,
+                              fontSize: 14.5,
                               fontWeight: FontWeight.w700,
                               color: titleColor,
                             ),
@@ -161,7 +261,7 @@ class SearchResultCard extends StatelessWidget {
                           constraints: const BoxConstraints(maxWidth: 110),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 8,
-                            vertical: 4,
+                            vertical: 3,
                           ),
                           decoration: BoxDecoration(
                             color: badgeBackground,
@@ -172,7 +272,7 @@ class SearchResultCard extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 10.5,
                               fontWeight: FontWeight.w600,
                               color: badgeTextColor,
                             ),
@@ -180,39 +280,38 @@ class SearchResultCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       item.subtitle,
-                      style: TextStyle(fontSize: 13, color: subtitleColor),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12.8,
+                        color: subtitleColor,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
+                    if (item.tips.trim().isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        item.tips,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11.2,
+                          color: subtitleColor.withValues(alpha: 0.86),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline_rounded,
-                          size: 14,
-                          color: subtitleColor,
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            item.tips,
-                            style: TextStyle(
-                              fontSize: 12.5,
-                              color: subtitleColor,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
                     // 添加到我的药品按钮
                     GestureDetector(
                       onTap: onAdd,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
-                          vertical: 5,
+                          vertical: 4,
                         ),
                         decoration: BoxDecoration(
                           color: isAdded ? addedBackground : addBackground,
@@ -228,7 +327,7 @@ class SearchResultCard extends StatelessWidget {
                               isAdded
                                   ? Icons.check_circle_rounded
                                   : Icons.add_circle_outline_rounded,
-                              size: 14,
+                              size: 13,
                               color: isAdded
                                   ? const Color(0xFF16A34A)
                                   : scheme.primary,
@@ -240,7 +339,7 @@ class SearchResultCard extends StatelessWidget {
                                   : (l10n?.searchResultAddActionLabel ??
                                         '添加到我的药品'),
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 11.5,
                                 fontWeight: FontWeight.w600,
                                 color: isAdded
                                     ? const Color(0xFF16A34A)

@@ -368,6 +368,7 @@ class _InfoCard extends StatelessWidget {
       secondaryColor: Theme.of(context).colorScheme.secondary,
       ornamentKey: 'medicine.info',
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _InfoRow(
             label: l10n?.medicineDetailLabelProductName ?? '产品名称',
@@ -844,29 +845,25 @@ class _InfoRow extends StatelessWidget {
 
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                width: 116,
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    color: scheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w700,
-                  ),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              Expanded(
-                child: Text(
-                  text,
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    height: 1.45,
-                    color: scheme.onSurface,
-                    fontWeight: FontWeight.w600,
-                  ),
+              const SizedBox(height: 4),
+              Text(
+                text,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  height: 1.45,
+                  color: scheme.onSurface,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],

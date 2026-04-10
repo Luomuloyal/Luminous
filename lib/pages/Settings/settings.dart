@@ -51,7 +51,8 @@ class SettingsPage extends StatelessWidget {
                 icon: Icons.person_outline_rounded,
                 accentColor: const Color(0xFF0EA5E9),
                 title: l10n?.settingsProfileTitle ?? '个人设置',
-                subtitle: l10n?.settingsProfileSubtitle ?? '完善头像、昵称、性别、生日和职业等个人资料',
+                subtitle:
+                    l10n?.settingsProfileSubtitle ?? '完善头像、昵称、性别、生日和职业等个人资料',
                 enabled: true,
                 onTap: () {
                   Navigator.of(context).push(
@@ -164,7 +165,6 @@ class ThemeSettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeController = Get.find<ThemeController>();
     final ornamentController = Get.find<OrnamentController>();
-    final userController = Get.find<UserController>();
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
 
@@ -183,10 +183,7 @@ class ThemeSettingsPage extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
         children: [
-          _SettingsHeroCard(
-            themeController: themeController,
-            userController: userController,
-          ),
+          _SettingsHeroCard(themeController: themeController),
           const SizedBox(height: 12),
           _SettingsSectionCard(
             title: l10n?.settingsDisplayTitle ?? '显示',
@@ -657,13 +654,9 @@ class _SettingsSectionCard extends StatelessWidget {
 }
 
 class _SettingsHeroCard extends StatelessWidget {
-  const _SettingsHeroCard({
-    required this.themeController,
-    required this.userController,
-  });
+  const _SettingsHeroCard({required this.themeController});
 
   final ThemeController themeController;
-  final UserController userController;
 
   @override
   Widget build(BuildContext context) {
@@ -675,11 +668,6 @@ class _SettingsHeroCard extends StatelessWidget {
       final resolvedDark = preference == AppThemeModePreference.system
           ? systemBrightness == Brightness.dark
           : preference == AppThemeModePreference.dark;
-      final loggedIn = userController.isLoggedIn;
-      final userLabel = loggedIn
-          ? (userController.user.value?.displayTitle ??
-                (l10n?.settingsHeroAccountLoggedIn ?? '账号已登录'))
-          : (l10n?.settingsHeroAccountLoggedOut ?? '未登录');
 
       return SoftBannerCard(
         palette: SoftBannerPalettes.mineOf(context),
@@ -760,73 +748,7 @@ class _SettingsHeroCard extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                     padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
                   ),
-                  TintedStatusChip(
-                    icon: loggedIn
-                        ? Icons.cloud_done_rounded
-                        : Icons.cloud_off_rounded,
-                    text: loggedIn
-                        ? (l10n?.settingsHeroAccountLoggedIn ?? '账号已登录')
-                        : (l10n?.settingsHeroLocalMode ?? '本地模式'),
-                    color: theme.surfaceTextColor,
-                    backgroundColor: theme.surfaceColor,
-                    showBorder: false,
-                    iconSize: 16,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
-                  ),
                 ],
-              ),
-              const SizedBox(height: 14),
-              Container(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                decoration: BoxDecoration(
-                  color: theme.surfaceColor.withValues(
-                    alpha: resolvedDark ? 0.90 : 0.76,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: theme.borderColor),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.person_outline_rounded,
-                      color: theme.accentColor,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            userLabel,
-                            style: TextStyle(
-                              color: theme.textColor,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 3),
-                          Text(
-                            loggedIn
-                                ? (l10n?.settingsHeroLoggedInHint ??
-                                      '你可以继续调整主题风格，账号状态会保留在这台设备上')
-                                : (l10n?.settingsHeroLoggedOutHint ??
-                                      '现在也能正常使用应用，登录只会额外开启轻量同步能力'),
-                            style: TextStyle(
-                              color: theme.secondaryTextColor,
-                              fontSize: 12.5,
-                              height: 1.45,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ],
           );
@@ -1142,14 +1064,13 @@ class _ThemeStyleCard extends StatelessWidget {
       style,
       theme.brightness == Brightness.dark,
     );
-    final accent = preview[preview.length - 1];
 
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
         decoration: BoxDecoration(
           color: selected
               ? scheme.primary.withValues(alpha: 0.10)
@@ -1174,23 +1095,61 @@ class _ThemeStyleCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Expanded(
-                  child: Text(
-                    _themeStyleLabel(style, l10n: l10n),
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: theme.colorScheme.onSurface,
+                Container(
+                  width: 116,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    gradient: LinearGradient(colors: preview),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: preview.take(3).map((color) {
+                          return Container(
+                            width: 4,
+                            height: 4,
+                            margin: const EdgeInsets.only(right: 4),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: color.withValues(alpha: 0.92),
+                            ),
+                          );
+                        }).toList(),
+                      ),
                     ),
                   ),
                 ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      _themeStyleLabel(style, l10n: l10n),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: theme.colorScheme.onSurface,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 AnimatedOpacity(
                   duration: const Duration(milliseconds: 180),
                   opacity: selected ? 1 : 0,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                      horizontal: 7,
+                      vertical: 3,
                     ),
                     decoration: BoxDecoration(
                       color: scheme.primary.withValues(alpha: 0.12),
@@ -1200,7 +1159,7 @@ class _ThemeStyleCard extends StatelessWidget {
                       l10n?.settingsThemeStyleInUseBadge ?? '当前使用',
                       style: TextStyle(
                         color: scheme.primary,
-                        fontSize: 11.5,
+                        fontSize: 10.5,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -1208,58 +1167,16 @@ class _ThemeStyleCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            Container(
-              height: 56,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: LinearGradient(colors: preview),
-              ),
-              child: Stack(
-                children: [
-                  Positioned(
-                    top: -12,
-                    right: -10,
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.30),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 10,
-                    left: 12,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: preview
-                          .map(
-                            (color) => Container(
-                              width: 9,
-                              height: 9,
-                              margin: const EdgeInsets.only(right: 5),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: color.withValues(alpha: 0.92),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 7),
             Text(
               _themeStyleSubtitle(style, l10n: l10n),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 12.5,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
-                height: 1.35,
+                height: 1.3,
               ),
             ),
           ],
@@ -1290,13 +1207,13 @@ class _OrnamentPreviewCard extends StatelessWidget {
       accentColor: accentColor,
       secondaryColor: secondaryColor,
       ornamentKey: 'settings.ornament.preview',
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       radius: 16,
       child: Row(
         children: [
           Container(
-            width: 38,
-            height: 38,
+            width: 30,
+            height: 30,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: appTintedSurface(
@@ -1314,9 +1231,13 @@ class _OrnamentPreviewCard extends StatelessWidget {
                 ),
               ),
             ),
-            child: Icon(Icons.auto_awesome_rounded, color: accentColor),
+            child: Icon(
+              Icons.auto_awesome_rounded,
+              color: accentColor,
+              size: 18,
+            ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1326,25 +1247,27 @@ class _OrnamentPreviewCard extends StatelessWidget {
                   style: TextStyle(
                     color: scheme.onSurface,
                     fontWeight: FontWeight.w800,
-                    fontSize: 14.5,
+                    fontSize: 13.5,
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
                 Text(
                   l10n?.settingsOrnamentPreviewSubtitle ?? '上方渐变块会实时反映当前氛围装饰强度',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: scheme.onSurfaceVariant,
-                    fontSize: 12.5,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w600,
-                    height: 1.35,
+                    height: 1.2,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
             decoration: BoxDecoration(
               color: appTintedSurface(
                 context,
@@ -1358,7 +1281,7 @@ class _OrnamentPreviewCard extends StatelessWidget {
               '${visibilityPercent.toString()}%',
               style: TextStyle(
                 color: accentColor,
-                fontSize: 12.5,
+                fontSize: 11.5,
                 fontWeight: FontWeight.w800,
               ),
             ),

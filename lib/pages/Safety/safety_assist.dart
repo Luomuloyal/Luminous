@@ -182,25 +182,25 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
       ),
-      appBarSpacing: 32,
+      appBarSpacing: 20,
       accentColor: scheme.primary,
       secondaryAccentColor: secondaryAccent,
       child: RefreshIndicator(
         onRefresh: _refreshResult,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          padding: const EdgeInsets.fromLTRB(14, 0, 14, 18),
           children: [
             _buildHeroCard(),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             _buildModeCard(),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             _buildPickCard(),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             _buildActionCard(),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             _buildResultCard(),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             const _DisclaimerCard(),
           ],
         ),
@@ -217,7 +217,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
     return SoftBannerCard(
       palette: SoftBannerPalettes.drugOf(context),
       ornamentKey: 'safety.hero',
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
       builder: (context, theme) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,8 +225,8 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
             Row(
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: theme.surfaceColor,
@@ -235,9 +235,10 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
                   child: Icon(
                     Icons.health_and_safety_outlined,
                     color: theme.accentColor,
+                    size: 20,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,17 +247,17 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
                         _safetyTitle(l10n),
                         style: TextStyle(
                           color: theme.textColor,
-                          fontSize: 18.5,
+                          fontSize: 17.5,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
                         _heroSubtitle(l10n),
                         style: TextStyle(
                           color: theme.secondaryTextColor,
-                          fontSize: 13,
-                          height: 1.4,
+                          fontSize: 12,
+                          height: 1.3,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -265,7 +266,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
@@ -280,7 +281,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
                     foregroundColor: theme.surfaceTextColor,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Expanded(
                   child: _SafetyInfoChip(
                     icon: Icons.medication_outlined,
@@ -291,7 +292,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
                     foregroundColor: theme.surfaceTextColor,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Expanded(
                   child: _SafetyInfoChip(
                     icon: loggedIn
@@ -368,7 +369,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
             note: _a?.displayTips,
           ),
           if (_mode == 'pair') ...[
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             _pickTile(
               label: _b?.displayName ?? _pickPlaceholderText(l10n, 1),
               subtitle: _b?.displaySubtitle ?? _pickSubtitleText(l10n),
@@ -397,7 +398,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Ink(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+        padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
         decoration: BoxDecoration(
           color: appTintedSurface(
             context,
@@ -419,15 +420,15 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 42,
-              height: 42,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(Icons.medication_outlined, color: color),
+              child: Icon(Icons.medication_outlined, color: color, size: 20),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -439,17 +440,17 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
                         child: Text(
                           label,
                           style: TextStyle(
-                            fontSize: 14.5,
+                            fontSize: 13.8,
                             fontWeight: FontWeight.w800,
                             color: scheme.onSurface,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                          horizontal: 7,
+                          vertical: 3,
                         ),
                         decoration: BoxDecoration(
                           color: appTintedSurface(
@@ -463,7 +464,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
                         child: Text(
                           badge,
                           style: TextStyle(
-                            fontSize: 10.8,
+                            fontSize: 10.2,
                             fontWeight: FontWeight.w700,
                             color: color,
                           ),
@@ -471,22 +472,22 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: 12.5,
+                      fontSize: 12,
                       color: scheme.onSurfaceVariant,
                       fontWeight: FontWeight.w600,
                       height: 1.35,
                     ),
                   ),
                   if (note != null && note.trim().isNotEmpty) ...[
-                    const SizedBox(height: 7),
+                    const SizedBox(height: 5),
                     Text(
                       note.trim(),
                       style: TextStyle(
-                        fontSize: 11.8,
+                        fontSize: 11.2,
                         color: scheme.onSurfaceVariant.withValues(alpha: 0.88),
                         fontWeight: FontWeight.w600,
                       ),
@@ -497,7 +498,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
                 ],
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
           ],
         ),
@@ -523,7 +524,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
             child: FilledButton(
               onPressed: _loading || !ready ? null : _query,
               style: FilledButton.styleFrom(
-                minimumSize: const Size(double.infinity, 48),
+                minimumSize: const Size(double.infinity, 44),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -541,11 +542,11 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
             ),
           ),
           if (_loading) ...[
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             FilledButton.tonal(
               onPressed: _cancelQuery,
               style: FilledButton.styleFrom(
-                minimumSize: const Size(86, 48),
+                minimumSize: const Size(78, 44),
                 backgroundColor: const Color(
                   0xFFEF4444,
                 ).withValues(alpha: 0.12),
@@ -816,7 +817,7 @@ class _SectionCard extends StatelessWidget {
       accentColor: accentColor,
       secondaryColor: secondaryColor,
       ornamentKey: ornamentKey,
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      padding: const EdgeInsets.fromLTRB(12, 11, 12, 11),
       radius: 18,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -829,7 +830,7 @@ class _SectionCard extends StatelessWidget {
               color: scheme.onSurface,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           child,
         ],
       ),
@@ -970,14 +971,14 @@ class _SafetyInfoChip extends StatelessWidget {
       color: foregroundColor,
       backgroundColor: backgroundColor,
       showBorder: false,
-      iconSize: 16,
-      fontSize: 12.3,
+      iconSize: 14,
+      fontSize: 11.2,
       fontWeight: FontWeight.w700,
       textMaxLines: 2,
       textOverflow: TextOverflow.ellipsis,
       expandText: true,
       mainAxisSize: MainAxisSize.max,
-      padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
+      padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
     );
   }
 }

@@ -143,6 +143,8 @@ class AppSectionCard extends StatelessWidget {
     this.padding = const EdgeInsets.all(14),
     this.radius = 18,
     this.baseColor,
+    this.ornamentVisibilityScale = 1,
+    this.surfaceBorderColor,
   });
 
   final Widget child;
@@ -153,6 +155,8 @@ class AppSectionCard extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final double radius;
   final Color? baseColor;
+  final double ornamentVisibilityScale;
+  final Color? surfaceBorderColor;
 
   @override
   Widget build(BuildContext context) {
@@ -162,9 +166,14 @@ class AppSectionCard extends StatelessWidget {
     final ornamentController = Get.find<OrnamentController>();
     return Obx(() {
       ornamentController.revision.value;
+      final resolvedVisibility =
+          (ornamentController.visibilityFactor * ornamentVisibilityScale).clamp(
+            0.0,
+            1.0,
+          );
       return _buildCard(
         context,
-        ornamentVisibilityFactor: ornamentController.visibilityFactor,
+        ornamentVisibilityFactor: resolvedVisibility,
         sessionLayout: ornamentController.resolveLayout(
           ornamentKey: ornamentKey!,
           family: AppOrnamentFamily.section,
@@ -217,6 +226,7 @@ class AppSectionCard extends StatelessWidget {
     return AppSurfaceCard(
       radius: radius,
       color: resolvedBaseColor,
+      borderColor: surfaceBorderColor,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(radius),
         child: Stack(

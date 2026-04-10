@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -9,6 +11,10 @@ import 'package:luminous/pages/Drug/drug.dart';
 import 'package:luminous/pages/Home/home.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Mine/mine.dart';
+import 'package:luminous/pages/Safety/safety_assist.dart';
+import 'package:luminous/pages/Search/search.dart';
+import 'package:luminous/pages/Settings/profile_settings.dart';
+import 'package:luminous/pages/Settings/settings.dart';
 import 'package:luminous/stores/ornament_controller.dart';
 
 // 主页面：底部 Tab 容器
@@ -69,8 +75,111 @@ class _MainPageState extends State<MainPage> {
   /// 已经真正挂载过的 Tab 下标。
   final Set<int> _loadedIndexes = <int>{0};
 
+  /// 需要在后台预热的二级页面列表。
+  static const List<Widget> _secondaryPages = [
+    SearchView(),
+    SafetyAssistPage(),
+    SettingsPage(),
+    ProfileSettingsPage(),
+  ];
+
+  /// 已完成预加载的二级页面下标。
+  final Set<int> _preloadedSecondaryIndexes = <int>{};
+
   /// 当前选中的底部 Tab 下标。
   int _currentIndex = 0;
+
+  /// 防止重复启动后台预加载。
+  bool _backgroundPreloadStarted = false;
+
+  /// 防止重复启动二级页预加载。
+  bool _secondaryPreloadStarted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_preloadTabsInBackground());
+    unawaited(_preloadSecondaryPagesInBackground());
+  }
+
+  /// 冷启动后分批预加载未打开的 Tab，降低首次切换卡顿感。
+  Future<void> _preloadTabsInBackground() async {
+    if (_backgroundPreloadStarted) {
+      return;
+    }
+    _backgroundPreloadStarted = true;
+
+    // 让首屏和启动预热任务先跑，避免刚启动就叠加渲染压力。
+    await Future<void>.delayed(const Duration(milliseconds: 900));
+    if (!mounted) {
+      return;
+    }
+
+    for (var index = 0; index < _pages.length; index++) {
+      if (!mounted) {
+        return;
+      }
+      if (_loadedIndexes.contains(index)) {
+        continue;
+      }
+      setState(() {
+        _loadedIndexes.add(index);
+      });
+
+      // 分批加载，避免瞬时触发多个页面初始化造成主线程尖峰。
+      await Future<void>.delayed(const Duration(milliseconds: 420));
+    }
+  }
+
+  /// 冷启动后延迟分批预加载二级页，进一步减少首次进入二级页卡顿。
+  Future<void> _preloadSecondaryPagesInBackground() async {
+    if (_secondaryPreloadStarted) {
+      return;
+    }
+    _secondaryPreloadStarted = true;
+
+    // 二级页预热故意更晚，避免与首屏和 Tab 预热争资源。
+    const delayedStarts = <int>[1200, 1300, 1400, 1500];
+
+    for (var index = 0; index < _secondaryPages.length; index++) {
+      if (!mounted) {
+        return;
+      }
+      await Future<void>.delayed(
+        Duration(milliseconds: delayedStarts[index % delayedStarts.length]),
+      );
+      if (!mounted) {
+        return;
+      }
+      if (_preloadedSecondaryIndexes.contains(index)) {
+        continue;
+      }
+      setState(() {
+        _preloadedSecondaryIndexes.add(index);
+      });
+    }
+  }
+
+  Widget _buildSecondaryPreloadLayer() {
+    return Offstage(
+      offstage: true,
+      child: TickerMode(
+        enabled: false,
+        child: Stack(
+          fit: StackFit.expand,
+          children: List<Widget>.generate(_secondaryPages.length, (index) {
+            if (!_preloadedSecondaryIndexes.contains(index)) {
+              return const SizedBox.shrink();
+            }
+            return KeyedSubtree(
+              key: ValueKey<String>('secondary-preload-$index'),
+              child: _secondaryPages[index],
+            );
+          }),
+        ),
+      ),
+    );
+  }
 
   List<Color> _resolvedTabColors(ThemeData theme) {
     final scheme = theme.colorScheme;
@@ -143,14 +252,20 @@ class _MainPageState extends State<MainPage> {
         body: AppCanvas(
           accentColor: currentColor,
           secondaryAccentColor: secondaryColor,
-          child: IndexedStack(
-            index: _currentIndex,
-            children: List<Widget>.generate(
-              tablist.length,
-              (index) => _loadedIndexes.contains(index)
-                  ? _pages[index]
-                  : const SizedBox.shrink(),
-            ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              IndexedStack(
+                index: _currentIndex,
+                children: List<Widget>.generate(
+                  tablist.length,
+                  (index) => _loadedIndexes.contains(index)
+                      ? _pages[index]
+                      : const SizedBox.shrink(),
+                ),
+              ),
+              _buildSecondaryPreloadLayer(),
+            ],
           ),
         ),
         bottomNavigationBar: DecoratedBox(

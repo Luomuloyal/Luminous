@@ -27,8 +27,6 @@ typedef MedicineSearchExecutor =
 
 enum MedicineQueryMode { online, local }
 
-enum MedicineDatabaseSource { nmpa, drugbank }
-
 // 手动搜索页（对接 MySQL 药品库）
 //
 // 数据库字段说明：
@@ -193,11 +191,10 @@ class _SearchViewState extends State<SearchView> {
   /// 当前查询模式：联网查询或本地 JSON 查询。
   MedicineQueryMode _queryMode = MedicineQueryMode.online;
 
-  /// 是否已经完成首帧后的网络可达性探测。
-  bool _queryModeResolved = false;
+  /// 首屏搜索超过阈值后显示“查询中”提示。
+  bool _showSlowSearchHint = false;
 
-  /// 数据源选择（Drugbank 入口预留，尚未接入实际查询）。
-  MedicineDatabaseSource _databaseSource = MedicineDatabaseSource.nmpa;
+  Timer? _slowSearchHintTimer;
 
   /// 监听登录用户变化的 worker。
   Worker? _userWorker;
@@ -347,6 +344,7 @@ class _SearchViewState extends State<SearchView> {
   @override
   void dispose() {
     _userWorker?.dispose();
+    _slowSearchHintTimer?.cancel();
     _searchController.removeListener(_syncDraftKeyword);
     _searchController.dispose();
     _scrollController.dispose();
@@ -415,105 +413,16 @@ class _SearchViewState extends State<SearchView> {
       ? (l10n?.searchQueryModeOnline ?? '联网查询')
       : (l10n?.searchQueryModeLocal ?? '本地查询');
 
-  String _databaseSourceLabel(AppLocalizations? l10n) =>
-      _databaseSource == MedicineDatabaseSource.nmpa
-      ? (l10n?.searchDatabaseSourceNmpa ?? 'NMPA')
-      : (l10n?.searchDatabaseSourceDrugbank ?? 'Drugbank');
-
   Future<void> _detectInitialQueryMode() async {
     final reachable = await MedicineApi.isBackendReachable();
     if (!mounted) {
       return;
     }
     setState(() {
-      _queryModeResolved = true;
       if (!reachable) {
         _queryMode = MedicineQueryMode.local;
       }
     });
-  }
-
-  void _switchQueryMode(MedicineQueryMode mode) {
-    if (_queryMode == mode) {
-      return;
-    }
-    setState(() {
-      _queryMode = mode;
-      _lastError = null;
-      _results.clear();
-      _hasMore = false;
-      _page = 1;
-    });
-
-    if (_keyword.trim().isNotEmpty) {
-      _search(reset: true);
-    }
-  }
-
-  void _switchDatabaseSource(MedicineDatabaseSource source) {
-    if (_databaseSource == source) {
-      return;
-    }
-    setState(() {
-      _databaseSource = source;
-    });
-    if (source == MedicineDatabaseSource.drugbank) {
-      final l10n = _l10n;
-      ToastUtils.instance.show(
-        context,
-        l10n?.searchDatabaseNotConnectedToast ??
-            'Drugbank 暂未接入，当前仍使用 NMPA 数据源。',
-      );
-    }
-  }
-
-  Widget _buildDualOptionButton({
-    required String label,
-    required bool selected,
-    required VoidCallback onPressed,
-  }) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final borderColor = selected
-        ? appTintedBorder(
-            context,
-            scheme.primary,
-            lightAlpha: 0.16,
-            darkAlpha: 0.24,
-          )
-        : scheme.outline;
-    final foreground = selected ? scheme.primary : scheme.onSurface;
-    final background = selected
-        ? appTintedSurface(
-            context,
-            scheme.primary,
-            lightAlpha: 0.12,
-            darkAlpha: 0.22,
-            baseColor: theme.cardTheme.color ?? scheme.surface,
-          )
-        : theme.cardTheme.color ?? scheme.surface;
-
-    return SizedBox(
-      height: 44,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(color: borderColor),
-          backgroundColor: background,
-          foregroundColor: foreground,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.w700),
-        ),
-      ),
-    );
   }
 
   /// 当前登录用户 id（未登录时为空字符串）。
@@ -521,41 +430,14 @@ class _SearchViewState extends State<SearchView> {
 
   AppLocalizations? get _l10n => AppLocalizations.of(context);
 
-  Color _searchDecorAccent(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final base = theme.cardTheme.color ?? scheme.surface;
-    return Color.alphaBlend(
-      scheme.primary.withValues(
-        alpha: theme.brightness == Brightness.dark ? 0.22 : 0.12,
-      ),
-      base,
-    );
-  }
-
-  Color _searchDecorSecondary(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final base = theme.cardTheme.color ?? scheme.surface;
-    return Color.alphaBlend(
-      Color.lerp(
-        scheme.secondary,
-        scheme.tertiary,
-        0.65,
-      )!.withValues(alpha: theme.brightness == Brightness.dark ? 0.18 : 0.10),
-      base,
-    );
-  }
+  double get _pageOrnamentVisibilityScale => widget.pickerMode ? 1.0 : 0.2;
 
   SearchSurfaceCard _buildSearchDecorCard({
     required String ornamentKey,
     required Widget child,
   }) {
     return SearchSurfaceCard(
-      decorated: true,
-      ornamentKey: ornamentKey,
-      accentColor: _searchDecorAccent(context),
-      secondaryColor: _searchDecorSecondary(context),
+      ornamentVisibilityScale: _pageOrnamentVisibilityScale,
       child: child,
     );
   }
@@ -587,7 +469,6 @@ class _SearchViewState extends State<SearchView> {
                 _buildHeaderSliver(),
                 _buildSearchBarSliver(),
                 if (!hasCommittedSearch) ...[
-                  _buildQueryModeSliver(),
                   _buildQuickTagsSliver(),
                   _buildHistorySliver(),
                 ],
@@ -637,53 +518,72 @@ class _SearchViewState extends State<SearchView> {
                 ),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    widget.pickerMode
-                        ? (l10n?.searchTitlePicker ?? '选择药品')
-                        : (l10n?.searchTitleManual ?? '手动搜索'),
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: scheme.onSurface,
-                    ),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          widget.pickerMode
+                              ? (l10n?.searchTitlePicker ?? '选择药品')
+                              : (l10n?.searchTitleManual ?? '手动搜索'),
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: scheme.onSurface,
+                          ),
+                        ),
+                      ),
+                      if (!widget.pickerMode) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          _queryModeLabel(l10n),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                TintedStatusChip(
-                  text: widget.pickerMode
-                      ? (l10n?.searchBadgePicker ?? '药品库选择')
-                      : (l10n?.searchBadgeManual ?? '关键词检索'),
-                  color: scheme.primary,
-                  surfaceLightAlpha: 0.06,
-                  surfaceDarkAlpha: 0.12,
-                  borderLightAlpha: 0.08,
-                  borderDarkAlpha: 0.16,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    widget.pickerMode
-                        ? (l10n?.searchHeaderSubtitlePicker ?? '从后端药品库搜索并选择')
-                        : (l10n?.searchHeaderSubtitleManual ??
-                              '支持按药品名称、批准文号、生产单位搜索'),
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: scheme.onSurfaceVariant,
+            if (widget.pickerMode) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  TintedStatusChip(
+                    text: widget.pickerMode
+                        ? (l10n?.searchBadgePicker ?? '药品库选择')
+                        : (l10n?.searchBadgeManual ?? '关键词检索'),
+                    color: scheme.primary,
+                    surfaceLightAlpha: 0.06,
+                    surfaceDarkAlpha: 0.12,
+                    borderLightAlpha: 0.08,
+                    borderDarkAlpha: 0.16,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
                     ),
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      widget.pickerMode
+                          ? (l10n?.searchHeaderSubtitlePicker ?? '从后端药品库搜索并选择')
+                          : (l10n?.searchHeaderSubtitleManual ??
+                                '可按名称/文号/厂家搜索'),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -718,11 +618,17 @@ class _SearchViewState extends State<SearchView> {
                               l10n?.searchInputHint ?? '产品名称 / 批准文号 / 生产单位',
                           hintStyle: TextStyle(
                             color: scheme.onSurfaceVariant,
-                            fontSize: 14,
+                            fontSize: 12,
                           ),
+                          hintMaxLines: 1,
                           prefixIcon: Icon(
                             Icons.search_rounded,
                             color: scheme.primary,
+                            size: 20,
+                          ),
+                          prefixIconConstraints: const BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 36,
                           ),
                           suffixIcon: draftKeyword.isEmpty
                               ? null
@@ -730,10 +636,14 @@ class _SearchViewState extends State<SearchView> {
                                   onPressed: _clearKeyword,
                                   icon: Icon(
                                     Icons.close_rounded,
-                                    size: 18,
+                                    size: 16,
                                     color: scheme.onSurfaceVariant,
                                   ),
                                 ),
+                          suffixIconConstraints: const BoxConstraints(
+                            minWidth: 32,
+                            minHeight: 32,
+                          ),
                           filled: true,
                           fillColor: appTintedSurface(
                             context,
@@ -756,15 +666,40 @@ class _SearchViewState extends State<SearchView> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    FilledButton(
-                      onPressed: _commitSearch,
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size(72, 40),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        FilledButton(
+                          onPressed: _commitSearch,
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size(64, 38),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(l10n?.searchActionSearch ?? '搜索'),
                         ),
-                      ),
-                      child: Text(l10n?.searchActionSearch ?? '搜索'),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 160),
+                          child: _loading && _showSlowSearchHint
+                              ? Padding(
+                                  key: const ValueKey<String>('searching-hint'),
+                                  padding: const EdgeInsets.only(top: 3),
+                                  child: Text(
+                                    '查询中...',
+                                    style: TextStyle(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: scheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                )
+                              : const SizedBox(
+                                  key: ValueKey<String>('searching-hint-empty'),
+                                  height: 0,
+                                ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -773,127 +708,6 @@ class _SearchViewState extends State<SearchView> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildQueryModeSliver() {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final l10n = _l10n;
-    final modeLabel = _queryModeLabel(l10n);
-    final databaseLabel = _databaseSourceLabel(l10n);
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
-        child: SearchSurfaceCard(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      l10n?.searchQueryModeTitle ?? '查询方式',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: scheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    if (!_queryModeResolved)
-                      Text(
-                        l10n?.searchQueryModeDetecting ?? '检测网络中...',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: scheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    const Spacer(),
-                    Text(
-                      l10n?.searchQueryModeCurrent(modeLabel) ??
-                          '当前: $modeLabel',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildDualOptionButton(
-                        label: l10n?.searchQueryModeOnline ?? '联网查询',
-                        selected: _queryMode == MedicineQueryMode.online,
-                        onPressed: () =>
-                            _switchQueryMode(MedicineQueryMode.online),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _buildDualOptionButton(
-                        label: l10n?.searchQueryModeLocal ?? '本地查询',
-                        selected: _queryMode == MedicineQueryMode.local,
-                        onPressed: () =>
-                            _switchQueryMode(MedicineQueryMode.local),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  l10n?.searchDatabaseTitle ?? '数据库',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: scheme.onSurface,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildDualOptionButton(
-                        label: l10n?.searchDatabaseSourceNmpa ?? 'NMPA',
-                        selected:
-                            _databaseSource == MedicineDatabaseSource.nmpa,
-                        onPressed: () =>
-                            _switchDatabaseSource(MedicineDatabaseSource.nmpa),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _buildDualOptionButton(
-                        label: l10n?.searchDatabaseSourceDrugbank ?? 'Drugbank',
-                        selected:
-                            _databaseSource == MedicineDatabaseSource.drugbank,
-                        onPressed: () => _switchDatabaseSource(
-                          MedicineDatabaseSource.drugbank,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  l10n?.searchDatabaseCurrentHint(databaseLabel) ??
-                      '当前数据库: $databaseLabel。Drugbank 暂未接入，联网查询仍走 NMPA（MySQL）。',
-                  style: TextStyle(
-                    fontSize: 11.8,
-                    color: scheme.onSurfaceVariant,
-                    height: 1.35,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -997,6 +811,7 @@ class _SearchViewState extends State<SearchView> {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
         child: SearchSurfaceCard(
+          ornamentVisibilityScale: _pageOrnamentVisibilityScale,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(10, 10, 10, 6),
             child: Column(
@@ -1618,6 +1433,13 @@ class _SearchViewState extends State<SearchView> {
     final requestId = ++_searchRequestId;
     final requestPage = reset ? 1 : _page;
 
+    _slowSearchHintTimer?.cancel();
+    if (_showSlowSearchHint) {
+      setState(() {
+        _showSlowSearchHint = false;
+      });
+    }
+
     if (reset) {
       setState(() {
         _loading = true;
@@ -1626,6 +1448,14 @@ class _SearchViewState extends State<SearchView> {
         _page = 1;
         _hasMore = false;
         _results.clear();
+      });
+      _slowSearchHintTimer = Timer(const Duration(milliseconds: 300), () {
+        if (!mounted || !_isActiveSearchRequest(requestId) || !_loading) {
+          return;
+        }
+        setState(() {
+          _showSlowSearchHint = true;
+        });
       });
     } else {
       if (_loadingMore || _loading || !_hasMore) {
@@ -1690,10 +1520,12 @@ class _SearchViewState extends State<SearchView> {
         });
       }
     } finally {
+      _slowSearchHintTimer?.cancel();
       if (_isActiveSearchRequest(requestId) && mounted) {
         setState(() {
           _loading = false;
           _loadingMore = false;
+          _showSlowSearchHint = false;
         });
       }
     }
