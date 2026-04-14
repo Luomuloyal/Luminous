@@ -192,6 +192,31 @@
   "homeFallbackReminder2Subtitle": "晚餐后服用 1 粒",
   "homeFallbackReminder3Title": "22:00 血压记录",
   "homeFallbackReminder3Subtitle": "睡前记录并上传",
+  "homeCheckInRecordsTitle": "打卡记录",
+  "homeCheckInRecordsSubtitle": "按天查看是否完成与实际打卡时间",
+  "homeCheckInRecordsEmpty": "暂未记录到打卡数据",
+  "homeCheckInRecordsDoneCount": "{done}/{total} 已打卡",
+  "@homeCheckInRecordsDoneCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "homeCheckInRecordsToday": "今天",
+  "homeCheckInRecordsYesterday": "昨天",
+  "homeCheckInRecordsStatusDone": "已打卡",
+  "homeCheckInRecordsStatusPending": "未打卡",
+  "homeCheckInRecordsCheckedAt": "打卡时间 {time}",
+  "@homeCheckInRecordsCheckedAt": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "homeCheckInRecordsNotChecked": "尚未打卡",
   "reminderListTitle": "用药提醒",
   "reminderAddButton": "新增提醒",
   "reminderNeedLoginTitle": "请先登录",

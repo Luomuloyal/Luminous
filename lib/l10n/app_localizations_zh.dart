@@ -477,6 +477,40 @@ class AppLocalizationsZh extends AppLocalizations {
   String get homeFallbackReminder3Subtitle => '睡前记录并上传';
 
   @override
+  String get homeCheckInRecordsTitle => '打卡记录';
+
+  @override
+  String get homeCheckInRecordsSubtitle => '按天查看是否完成与实际打卡时间';
+
+  @override
+  String get homeCheckInRecordsEmpty => '暂未记录到打卡数据';
+
+  @override
+  String homeCheckInRecordsDoneCount(int done, int total) {
+    return '$done/$total 已打卡';
+  }
+
+  @override
+  String get homeCheckInRecordsToday => '今天';
+
+  @override
+  String get homeCheckInRecordsYesterday => '昨天';
+
+  @override
+  String get homeCheckInRecordsStatusDone => '已打卡';
+
+  @override
+  String get homeCheckInRecordsStatusPending => '未打卡';
+
+  @override
+  String homeCheckInRecordsCheckedAt(Object time) {
+    return '打卡时间 $time';
+  }
+
+  @override
+  String get homeCheckInRecordsNotChecked => '尚未打卡';
+
+  @override
   String get reminderListTitle => '用药提醒';
 
   @override

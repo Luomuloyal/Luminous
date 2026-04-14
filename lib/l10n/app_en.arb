@@ -192,6 +192,31 @@
   "homeFallbackReminder2Subtitle": "Take 1 capsule after dinner",
   "homeFallbackReminder3Title": "22:00 Blood Pressure Log",
   "homeFallbackReminder3Subtitle": "Record and upload before sleep",
+  "homeCheckInRecordsTitle": "Check-in Records",
+  "homeCheckInRecordsSubtitle": "Daily completion and actual check-in time",
+  "homeCheckInRecordsEmpty": "No check-in records yet",
+  "homeCheckInRecordsDoneCount": "{done}/{total} done",
+  "@homeCheckInRecordsDoneCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "homeCheckInRecordsToday": "Today",
+  "homeCheckInRecordsYesterday": "Yesterday",
+  "homeCheckInRecordsStatusDone": "Done",
+  "homeCheckInRecordsStatusPending": "Pending",
+  "homeCheckInRecordsCheckedAt": "Checked at {time}",
+  "@homeCheckInRecordsCheckedAt": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "homeCheckInRecordsNotChecked": "Not checked in",
   "reminderListTitle": "Medication Reminders",
   "reminderAddButton": "Add Reminder",
   "reminderNeedLoginTitle": "Please log in first",

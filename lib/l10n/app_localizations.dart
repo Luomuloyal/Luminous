@@ -1004,6 +1004,66 @@ abstract class AppLocalizations {
   /// **'Record and upload before sleep'**
   String get homeFallbackReminder3Subtitle;
 
+  /// No description provided for @homeCheckInRecordsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in Records'**
+  String get homeCheckInRecordsTitle;
+
+  /// No description provided for @homeCheckInRecordsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily completion and actual check-in time'**
+  String get homeCheckInRecordsSubtitle;
+
+  /// No description provided for @homeCheckInRecordsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No check-in records yet'**
+  String get homeCheckInRecordsEmpty;
+
+  /// No description provided for @homeCheckInRecordsDoneCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{done}/{total} done'**
+  String homeCheckInRecordsDoneCount(int done, int total);
+
+  /// No description provided for @homeCheckInRecordsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get homeCheckInRecordsToday;
+
+  /// No description provided for @homeCheckInRecordsYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get homeCheckInRecordsYesterday;
+
+  /// No description provided for @homeCheckInRecordsStatusDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get homeCheckInRecordsStatusDone;
+
+  /// No description provided for @homeCheckInRecordsStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get homeCheckInRecordsStatusPending;
+
+  /// No description provided for @homeCheckInRecordsCheckedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked at {time}'**
+  String homeCheckInRecordsCheckedAt(Object time);
+
+  /// No description provided for @homeCheckInRecordsNotChecked.
+  ///
+  /// In en, this message translates to:
+  /// **'Not checked in'**
+  String get homeCheckInRecordsNotChecked;
+
   /// No description provided for @reminderListTitle.
   ///
   /// In en, this message translates to:

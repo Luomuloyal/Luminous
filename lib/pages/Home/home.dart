@@ -11,6 +11,7 @@ import 'package:luminous/pages/Picker/medicine_picker.dart';
 import 'package:luminous/pages/Scan/medicine_scan.dart';
 import 'package:luminous/stores/reminder_local_gateway.dart';
 import 'package:luminous/stores/user_controller.dart';
+import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/home.dart';
 import 'package:luminous/viewmodels/medicine.dart';
@@ -152,8 +153,8 @@ class _HomeViewState extends State<HomeView> {
   void initState() {
     super.initState();
     _todayTipNotifier = ValueNotifier<String>('');
-    _reminders = _buildDemoReminders();
-    _checkInRecords = _buildDemoCheckInRecords();
+    _reminders = _buildDemoReminders(_l10n);
+    _checkInRecords = _buildDemoCheckInRecords(_l10n);
     _userWorker = ever<dynamic>(_userController.user, (_) {
       _refreshRemindersIfReady();
     });
@@ -181,6 +182,14 @@ class _HomeViewState extends State<HomeView> {
           !tips.contains(_todayTipNotifier.value)) {
         _todayTipNotifier.value = tips[Random().nextInt(tips.length)];
       }
+    }
+
+    final userId = (_userController.user.value?.id ?? '').trim();
+    if (userId.isEmpty && mounted) {
+      setState(() {
+        _reminders = _buildDemoReminders(_l10n);
+        _checkInRecords = _buildDemoCheckInRecords(_l10n);
+      });
     }
   }
 
@@ -211,8 +220,8 @@ class _HomeViewState extends State<HomeView> {
           _loadingReminders = false;
           _loadingCheckInRecords = false;
           _syncingReminders = false;
-          _reminders = _buildDemoReminders();
-          _checkInRecords = _buildDemoCheckInRecords();
+          _reminders = _buildDemoReminders(_l10n);
+          _checkInRecords = _buildDemoCheckInRecords(_l10n);
         });
       }
       return;
@@ -358,7 +367,7 @@ class _HomeViewState extends State<HomeView> {
       }
       setState(() {
         _loadingReminders = false;
-        _reminders = _buildDemoReminders();
+        _reminders = _buildDemoReminders(_l10n);
       });
       return;
     }
@@ -411,7 +420,7 @@ class _HomeViewState extends State<HomeView> {
       }
       setState(() {
         _loadingCheckInRecords = false;
-        _checkInRecords = _buildDemoCheckInRecords();
+        _checkInRecords = _buildDemoCheckInRecords(_l10n);
       });
       return;
     }
@@ -558,33 +567,53 @@ class _HomeViewState extends State<HomeView> {
     return _l10n?.homeNoReminder ?? '暂无提醒';
   }
 
-  List<HomeReminderItemData> _buildDemoReminders() {
-    return const <HomeReminderItemData>[
+  List<HomeReminderItemData> _buildDemoReminders(AppLocalizations? l10n) {
+    final reminder1Title =
+        l10n?.homeFallbackReminder1Title ??
+        AppI18nText.pick(zh: '08:30 维生素D', en: '08:30 Vitamin D');
+    final reminder1Subtitle =
+        l10n?.homeFallbackReminder1Subtitle ??
+        AppI18nText.pick(zh: '早餐后服用 1 粒', en: 'Take 1 capsule after breakfast');
+    final reminder2Title =
+        l10n?.homeFallbackReminder2Title ??
+        AppI18nText.pick(zh: '19:30 阿莫西林', en: '19:30 Amoxicillin');
+    final reminder2Subtitle =
+        l10n?.homeFallbackReminder2Subtitle ??
+        AppI18nText.pick(zh: '晚餐后服用 1 粒', en: 'Take 1 capsule after dinner');
+    final reminder3Title =
+        l10n?.homeFallbackReminder3Title ??
+        AppI18nText.pick(zh: '22:00 血压记录', en: '22:00 Blood Pressure Log');
+    final reminder3Subtitle =
+        l10n?.homeFallbackReminder3Subtitle ??
+        AppI18nText.pick(zh: '睡前记录并上传', en: 'Record and upload before sleep');
+
+    return <HomeReminderItemData>[
       HomeReminderItemData(
         icon: Icons.access_time_rounded,
-        title: '08:30 阿莫西林胶囊',
-        dosage: '1 粒',
-        subtitle: '剂量: 1 粒 · 早餐后服用',
+        title: reminder1Title,
+        subtitle: reminder1Subtitle,
         done: true,
       ),
       HomeReminderItemData(
         icon: Icons.access_time_rounded,
-        title: '12:00 维生素D',
-        dosage: '1 粒',
-        subtitle: '剂量: 1 粒 · 午餐后服用',
+        title: reminder2Title,
+        subtitle: reminder2Subtitle,
         done: false,
       ),
       HomeReminderItemData(
         icon: Icons.access_time_rounded,
-        title: '20:30 缬沙坦片',
-        dosage: '1 片',
-        subtitle: '剂量: 1 片 · 晚餐后服用',
+        title: reminder3Title,
+        subtitle: reminder3Subtitle,
         done: false,
       ),
     ];
   }
 
-  List<HomeCheckInRecordData> _buildDemoCheckInRecords() {
+  List<HomeCheckInRecordData> _buildDemoCheckInRecords(AppLocalizations? l10n) {
+    final demoReminders = _buildDemoReminders(l10n);
+    final reminder1 = _splitDemoReminderTitle(demoReminders[0].title);
+    final reminder2 = _splitDemoReminderTitle(demoReminders[1].title);
+    final reminder3 = _splitDemoReminderTitle(demoReminders[2].title);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
@@ -594,8 +623,8 @@ class _HomeViewState extends State<HomeView> {
       HomeCheckInRecordData(
         dateKey: _dateKey(today),
         reminderId: 'demo-amoxicillin',
-        title: '阿莫西林胶囊',
-        reminderTime: '08:30',
+        title: reminder1.title,
+        reminderTime: reminder1.time,
         done: true,
         takenAt: today
             .add(const Duration(hours: 8, minutes: 34))
@@ -604,22 +633,22 @@ class _HomeViewState extends State<HomeView> {
       HomeCheckInRecordData(
         dateKey: _dateKey(today),
         reminderId: 'demo-vitamin-d',
-        title: '维生素D',
-        reminderTime: '12:00',
+        title: reminder2.title,
+        reminderTime: reminder2.time,
         done: false,
       ),
       HomeCheckInRecordData(
         dateKey: _dateKey(today),
         reminderId: 'demo-valsartan',
-        title: '缬沙坦片',
-        reminderTime: '20:30',
+        title: reminder3.title,
+        reminderTime: reminder3.time,
         done: false,
       ),
       HomeCheckInRecordData(
         dateKey: _dateKey(yesterday),
         reminderId: 'demo-valsartan',
-        title: '缬沙坦片',
-        reminderTime: '20:30',
+        title: reminder3.title,
+        reminderTime: reminder3.time,
         done: true,
         takenAt: yesterday
             .add(const Duration(hours: 20, minutes: 41))
@@ -628,14 +657,31 @@ class _HomeViewState extends State<HomeView> {
       HomeCheckInRecordData(
         dateKey: _dateKey(twoDaysAgo),
         reminderId: 'demo-vitamin-d',
-        title: '维生素D',
-        reminderTime: '12:00',
+        title: reminder2.title,
+        reminderTime: reminder2.time,
         done: true,
         takenAt: twoDaysAgo
             .add(const Duration(hours: 12, minutes: 5))
             .millisecondsSinceEpoch,
       ),
     ];
+  }
+
+  ({String time, String title}) _splitDemoReminderTitle(String raw) {
+    final text = raw.trim();
+    if (text.isEmpty) {
+      return (time: '', title: '');
+    }
+    final firstSpace = text.indexOf(' ');
+    if (firstSpace <= 0) {
+      return (time: '', title: text);
+    }
+    final maybeTime = text.substring(0, firstSpace).trim();
+    if (!RegExp(r'^\d{1,2}:\d{2}$').hasMatch(maybeTime)) {
+      return (time: '', title: text);
+    }
+    final title = text.substring(firstSpace + 1).trim();
+    return (time: maybeTime, title: title.isEmpty ? text : title);
   }
 
   String _dateKey(DateTime date) {

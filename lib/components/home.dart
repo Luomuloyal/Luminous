@@ -314,9 +314,8 @@ class HomeCheckInRecordSection extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final locale = Localizations.localeOf(context);
     final grouped = _groupByDate(items);
-    final emptyText = locale.languageCode.toLowerCase().startsWith('zh')
-        ? '暂未记录到打卡数据'
-        : (l10n?.homeNoReminder ?? 'No records');
+    final emptyText =
+        l10n?.homeCheckInRecordsEmpty ?? 'No check-in records yet';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
@@ -338,9 +337,7 @@ class HomeCheckInRecordSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  locale.languageCode.toLowerCase().startsWith('zh')
-                      ? '打卡记录'
-                      : 'Check-in Records',
+                  l10n?.homeCheckInRecordsTitle ?? 'Check-in Records',
                   style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
@@ -348,9 +345,8 @@ class HomeCheckInRecordSection extends StatelessWidget {
                 ),
                 SizedBox(height: compact ? 3 : 5),
                 Text(
-                  locale.languageCode.toLowerCase().startsWith('zh')
-                      ? '按天查看是否完成与实际打卡时间'
-                      : 'Daily completion and check-in time',
+                  l10n?.homeCheckInRecordsSubtitle ??
+                      'Daily completion and actual check-in time',
                   style: TextStyle(
                     fontSize: compact ? 12.4 : 12.9,
                     color: scheme.onSurfaceVariant,
@@ -400,13 +396,16 @@ class HomeCheckInRecordSection extends StatelessWidget {
                               .where((item) => item.done)
                               .length;
                           final dayLabel = _formatRecordDayLabel(
+                            l10n,
                             locale,
                             entry.key,
                           );
                           final countText =
-                              locale.languageCode.toLowerCase().startsWith('zh')
-                              ? '$doneCount/${dayItems.length} 已打卡'
-                              : '$doneCount/${dayItems.length} done';
+                              l10n?.homeCheckInRecordsDoneCount(
+                                doneCount,
+                                dayItems.length,
+                              ) ??
+                              '$doneCount/${dayItems.length} done';
                           return Padding(
                             padding: EdgeInsets.only(
                               bottom: entry.key == grouped.keys.last
@@ -497,7 +496,7 @@ class HomeCheckInRecordSection extends StatelessWidget {
                                             child: _HomeCheckInRecordTile(
                                               item: item,
                                               compact: compact,
-                                              locale: locale,
+                                              l10n: l10n,
                                             ),
                                           );
                                         })
@@ -530,8 +529,11 @@ class HomeCheckInRecordSection extends StatelessWidget {
     return grouped;
   }
 
-  String _formatRecordDayLabel(Locale locale, String dateKey) {
-    final isZh = locale.languageCode.toLowerCase().startsWith('zh');
+  String _formatRecordDayLabel(
+    AppLocalizations? l10n,
+    Locale locale,
+    String dateKey,
+  ) {
     final parsed = _parseDateKey(dateKey);
     if (parsed == null) {
       return dateKey;
@@ -541,10 +543,10 @@ class HomeCheckInRecordSection extends StatelessWidget {
     final day = DateTime(parsed.year, parsed.month, parsed.day);
     final delta = today.difference(day).inDays;
     if (delta == 0) {
-      return isZh ? '今天' : 'Today';
+      return l10n?.homeCheckInRecordsToday ?? 'Today';
     }
     if (delta == 1) {
-      return isZh ? '昨天' : 'Yesterday';
+      return l10n?.homeCheckInRecordsYesterday ?? 'Yesterday';
     }
     if (now.year == parsed.year) {
       final month = parsed.month.toString().padLeft(2, '0');
@@ -575,17 +577,16 @@ class _HomeCheckInRecordTile extends StatelessWidget {
   const _HomeCheckInRecordTile({
     required this.item,
     required this.compact,
-    required this.locale,
+    required this.l10n,
   });
 
   final HomeCheckInRecordData item;
   final bool compact;
-  final Locale locale;
+  final AppLocalizations? l10n;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isZh = locale.languageCode.toLowerCase().startsWith('zh');
     final doneColor = Color.lerp(
       const Color(0xFF16A34A),
       scheme.tertiary,
@@ -601,13 +602,12 @@ class _HomeCheckInRecordTile extends StatelessWidget {
         ? item.title.trim()
         : '${item.reminderTime.trim()} ${item.title.trim()}';
     final statusText = item.done
-        ? (isZh ? '已打卡' : 'Done')
-        : (isZh ? '未打卡' : 'Pending');
+        ? (l10n?.homeCheckInRecordsStatusDone ?? 'Done')
+        : (l10n?.homeCheckInRecordsStatusPending ?? 'Pending');
     final detailText = item.done
-        ? (isZh
-              ? '打卡时间 ${_formatClock(item.takenAt)}'
-              : 'Checked at ${_formatClock(item.takenAt)}')
-        : (isZh ? '尚未打卡' : 'Not checked in');
+        ? (l10n?.homeCheckInRecordsCheckedAt(_formatClock(item.takenAt)) ??
+              'Checked at ${_formatClock(item.takenAt)}')
+        : (l10n?.homeCheckInRecordsNotChecked ?? 'Not checked in');
 
     return Container(
       width: double.infinity,
@@ -661,7 +661,7 @@ class _HomeCheckInRecordTile extends StatelessWidget {
               children: [
                 Text(
                   title.trim().isEmpty
-                      ? (isZh ? '用药提醒' : 'Medication reminder')
+                      ? (l10n?.checkInDefaultTitle ?? 'Medication Reminder')
                       : title,
                   style: TextStyle(
                     fontSize: compact ? 12.4 : 13.0,

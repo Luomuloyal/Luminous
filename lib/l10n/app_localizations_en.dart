@@ -505,6 +505,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeFallbackReminder3Subtitle => 'Record and upload before sleep';
 
   @override
+  String get homeCheckInRecordsTitle => 'Check-in Records';
+
+  @override
+  String get homeCheckInRecordsSubtitle =>
+      'Daily completion and actual check-in time';
+
+  @override
+  String get homeCheckInRecordsEmpty => 'No check-in records yet';
+
+  @override
+  String homeCheckInRecordsDoneCount(int done, int total) {
+    return '$done/$total done';
+  }
+
+  @override
+  String get homeCheckInRecordsToday => 'Today';
+
+  @override
+  String get homeCheckInRecordsYesterday => 'Yesterday';
+
+  @override
+  String get homeCheckInRecordsStatusDone => 'Done';
+
+  @override
+  String get homeCheckInRecordsStatusPending => 'Pending';
+
+  @override
+  String homeCheckInRecordsCheckedAt(Object time) {
+    return 'Checked at $time';
+  }
+
+  @override
+  String get homeCheckInRecordsNotChecked => 'Not checked in';
+
+  @override
   String get reminderListTitle => 'Medication Reminders';
 
   @override
