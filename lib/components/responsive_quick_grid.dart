@@ -9,6 +9,8 @@ bool isCompactLayoutWidth(double maxWidth) => maxWidth < 600;
 class ResponsiveQuickGridMetrics {
   const ResponsiveQuickGridMetrics._({
     required this.isCompact,
+    required this.columnCount,
+    required this.itemWidth,
     required this.sectionPadding,
     required this.gridSpacing,
     required this.itemPadding,
@@ -17,21 +19,29 @@ class ResponsiveQuickGridMetrics {
     required this.iconBorderRadius,
     required this.titleSpacing,
     required this.subtitleSpacing,
-    required this.gridDelegate,
   });
 
-  factory ResponsiveQuickGridMetrics.fromWidth(double maxWidth) {
+  factory ResponsiveQuickGridMetrics.fromWidth(
+    double maxWidth, {
+    double textScaleFactor = 1.0,
+  }) {
     final compact = isCompactLayoutWidth(maxWidth);
     final spacing = compact ? 6.0 : 10.0;
     final safeWidth = maxWidth.isFinite && maxWidth > 0 ? maxWidth : 360.0;
-    final cellWidth = ((safeWidth - (spacing * 2)) / 3).clamp(
-      0.0,
-      double.infinity,
-    );
+    final resolvedTextScale = textScaleFactor.clamp(1.0, 1.6).toDouble();
+    final columnCount = compact && resolvedTextScale > 1.2 && safeWidth < 420
+        ? 2
+        : 3;
+    final cellWidth =
+        ((safeWidth - (spacing * (columnCount - 1))) / columnCount)
+            .clamp(0.0, double.infinity)
+            .toDouble();
     final compactIconBox = (cellWidth * 0.45).clamp(42.0, 52.0).toDouble();
 
     return ResponsiveQuickGridMetrics._(
       isCompact: compact,
+      columnCount: columnCount,
+      itemWidth: cellWidth,
       sectionPadding: compact ? 8.0 : 12.0,
       gridSpacing: spacing,
       itemPadding: compact
@@ -44,24 +54,17 @@ class ResponsiveQuickGridMetrics {
       iconBorderRadius: compact ? 14.0 : 18.0,
       titleSpacing: compact ? 4.0 : 8.0,
       subtitleSpacing: compact ? 1.0 : 2.0,
-      gridDelegate: compact
-          ? SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              mainAxisSpacing: spacing,
-              crossAxisSpacing: spacing,
-              mainAxisExtent: 116,
-            )
-          : const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              mainAxisSpacing: 10,
-              crossAxisSpacing: 10,
-              mainAxisExtent: 136,
-            ),
     );
   }
 
   /// 当前是否处于手机窄屏布局。
   final bool isCompact;
+
+  /// 当前宽度和字号下建议的列数。
+  final int columnCount;
+
+  /// 当前布局中单个入口卡片的建议宽度。
+  final double itemWidth;
 
   /// 外层白卡内容区 padding。
   final double sectionPadding;
@@ -86,7 +89,51 @@ class ResponsiveQuickGridMetrics {
 
   /// 标题与副标题之间的间距。
   final double subtitleSpacing;
+}
 
-  /// 当前宽度对应的网格委托。
-  final SliverGridDelegateWithFixedCrossAxisCount gridDelegate;
+/// 自适应快捷入口布局，允许卡片按内容自然增高。
+class ResponsiveQuickWrap extends StatelessWidget {
+  const ResponsiveQuickWrap({
+    super.key,
+    required this.metrics,
+    required this.itemCount,
+    required this.itemBuilder,
+  });
+
+  final ResponsiveQuickGridMetrics metrics;
+  final int itemCount;
+  final IndexedWidgetBuilder itemBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final safeWidth =
+            constraints.maxWidth.isFinite && constraints.maxWidth > 0
+            ? constraints.maxWidth
+            : metrics.itemWidth * metrics.columnCount;
+        final computedItemWidth =
+            ((safeWidth - (metrics.gridSpacing * (metrics.columnCount - 1))) /
+                    metrics.columnCount)
+                .clamp(0.0, double.infinity)
+                .toDouble();
+        final resolvedItemWidth = computedItemWidth > 0
+            ? computedItemWidth
+            : metrics.itemWidth;
+
+        return Wrap(
+          alignment: WrapAlignment.center,
+          spacing: metrics.gridSpacing,
+          runSpacing: metrics.gridSpacing,
+          children: List.generate(
+            itemCount,
+            (index) => SizedBox(
+              width: resolvedItemWidth,
+              child: itemBuilder(context, index),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }

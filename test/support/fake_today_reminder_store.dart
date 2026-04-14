@@ -167,4 +167,25 @@ class FakeTodayReminderStore implements TodayReminderStore {
         .toList(growable: false);
     return applyTodayState(userId, items: items);
   }
+
+  @override
+  Future<List<HomeCheckInRecordData>> loadRecentCheckinRecords(
+    String? userId, {
+    int maxDays = 7,
+    int maxItems = 120,
+  }) async {
+    final dayKey = resolveDateKey();
+    return (await loadTodaySnapshotItems(userId))
+        .map(
+          (item) => HomeCheckInRecordData(
+            dateKey: dayKey,
+            reminderId: item.id,
+            title: item.title,
+            reminderTime: item.time,
+            done: item.done,
+            takenAt: item.done ? DateTime.now().millisecondsSinceEpoch : null,
+          ),
+        )
+        .toList(growable: false);
+  }
 }

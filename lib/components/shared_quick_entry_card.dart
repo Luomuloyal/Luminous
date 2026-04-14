@@ -29,7 +29,10 @@ class SharedQuickEntryCard extends StatelessWidget {
       builder: (context, constraints) {
         final resolvedMetrics =
             metrics ??
-            ResponsiveQuickGridMetrics.fromWidth(constraints.maxWidth);
+            ResponsiveQuickGridMetrics.fromWidth(
+              constraints.maxWidth,
+              textScaleFactor: MediaQuery.textScalerOf(context).scale(1),
+            );
         final compact = resolvedMetrics.isCompact;
         final style = resolveQuickEntryVisualStyle(context, color);
 
@@ -45,6 +48,7 @@ class SharedQuickEntryCard extends StatelessWidget {
             child: Padding(
               padding: resolvedMetrics.itemPadding,
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Align(
@@ -70,41 +74,27 @@ class SharedQuickEntryCard extends StatelessWidget {
                     ),
                   ),
                   SizedBox(height: resolvedMetrics.titleSpacing),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          title,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: compact ? 14 : 14.5,
-                            fontWeight: FontWeight.w800,
-                            color: style.titleColor,
-                            height: 1.1,
-                            leadingDistribution: TextLeadingDistribution.even,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(height: resolvedMetrics.subtitleSpacing),
-                        Flexible(
-                          child: Text(
-                            subtitle,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: compact ? 11.5 : 12,
-                              color: style.subtitleColor,
-                              fontWeight: FontWeight.w600,
-                              height: compact ? 1.1 : 1.15,
-                              leadingDistribution: TextLeadingDistribution.even,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: compact ? 14 : 14.5,
+                      fontWeight: FontWeight.w800,
+                      color: style.titleColor,
+                      height: 1.2,
+                      leadingDistribution: TextLeadingDistribution.even,
+                    ),
+                  ),
+                  SizedBox(height: resolvedMetrics.subtitleSpacing),
+                  Text(
+                    subtitle,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: compact ? 11.5 : 12,
+                      color: style.subtitleColor,
+                      fontWeight: FontWeight.w600,
+                      height: compact ? 1.25 : 1.3,
+                      leadingDistribution: TextLeadingDistribution.even,
                     ),
                   ),
                 ],

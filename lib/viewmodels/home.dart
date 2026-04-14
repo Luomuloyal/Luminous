@@ -99,6 +99,37 @@ class HomeReminderItemData {
   });
 }
 
+/// 首页“打卡记录”区域使用的展示数据。
+class HomeCheckInRecordData {
+  /// 对应日期键（yyyy-MM-dd）。
+  final String dateKey;
+
+  /// 对应提醒 id。
+  final String reminderId;
+
+  /// 提醒标题（药名或事项名）。
+  final String title;
+
+  /// 计划提醒时间（HH:mm，可为空）。
+  final String reminderTime;
+
+  /// 当天该条是否已打卡。
+  final bool done;
+
+  /// 实际打卡时间戳（毫秒，未打卡时为空）。
+  final int? takenAt;
+
+  /// 创建一个首页打卡记录对象。
+  const HomeCheckInRecordData({
+    required this.dateKey,
+    required this.reminderId,
+    required this.title,
+    required this.reminderTime,
+    required this.done,
+    this.takenAt,
+  });
+}
+
 class TodayRemindersResult {
   /// 数据对应的日期（yyyy-MM-dd）。
   final String date;

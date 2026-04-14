@@ -39,6 +39,12 @@ abstract interface class ReminderLocalGateway {
     required String userId,
     required String reminderId,
   });
+
+  Future<List<HomeCheckInRecordData>> loadCheckInRecords(
+    String userId, {
+    int maxDays,
+    int maxItems,
+  });
 }
 
 class ReminderLocalGatewayImpl implements ReminderLocalGateway {
@@ -185,6 +191,23 @@ class ReminderLocalGatewayImpl implements ReminderLocalGateway {
       done: false,
     );
     _emitRevision(uid);
+  }
+
+  @override
+  Future<List<HomeCheckInRecordData>> loadCheckInRecords(
+    String userId, {
+    int maxDays = 7,
+    int maxItems = 120,
+  }) {
+    final uid = userId.trim();
+    if (uid.isEmpty) {
+      return Future.value(const <HomeCheckInRecordData>[]);
+    }
+    return _todayReminderStore.loadRecentCheckinRecords(
+      uid,
+      maxDays: maxDays,
+      maxItems: maxItems,
+    );
   }
 
   Future<void> _replacePlansAndNotify(

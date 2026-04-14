@@ -9,6 +9,8 @@ class FakeReminderLocalGateway implements ReminderLocalGateway {
       <String, List<ReminderPlan>>{};
   final Map<String, List<ReminderItem>> _todayItemsByUser =
       <String, List<ReminderItem>>{};
+  final Map<String, List<HomeCheckInRecordData>> _checkInRecordsByUser =
+      <String, List<HomeCheckInRecordData>>{};
   final StreamController<_RevisionEvent> _revisionController =
       StreamController<_RevisionEvent>.broadcast();
   final Map<String, int> _revisions = <String, int>{};
@@ -17,6 +19,7 @@ class FakeReminderLocalGateway implements ReminderLocalGateway {
   int loadTodayItemsCalls = 0;
   int syncRemoteToLocalCalls = 0;
   int rescheduleFromLocalCalls = 0;
+  int loadCheckInRecordsCalls = 0;
   Future<void> Function(String userId)? onSyncRemoteToLocal;
   Future<void> Function(String userId)? onRescheduleFromLocal;
 
@@ -33,6 +36,12 @@ class FakeReminderLocalGateway implements ReminderLocalGateway {
     final nextRevision = (_revisions[uid] ?? 0) + 1;
     _revisions[uid] = nextRevision;
     _revisionController.add(_RevisionEvent(uid, nextRevision));
+  }
+
+  void setCheckInRecords(String userId, List<HomeCheckInRecordData> records) {
+    _checkInRecordsByUser[userId.trim()] = List<HomeCheckInRecordData>.from(
+      records,
+    );
   }
 
   @override
@@ -142,6 +151,18 @@ class FakeReminderLocalGateway implements ReminderLocalGateway {
         )
         .toList(growable: false);
     emitRevision(uid);
+  }
+
+  @override
+  Future<List<HomeCheckInRecordData>> loadCheckInRecords(
+    String userId, {
+    int maxDays = 7,
+    int maxItems = 120,
+  }) async {
+    loadCheckInRecordsCalls += 1;
+    return List<HomeCheckInRecordData>.from(
+      _checkInRecordsByUser[userId.trim()] ?? const <HomeCheckInRecordData>[],
+    );
   }
 }
 

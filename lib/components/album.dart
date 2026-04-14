@@ -71,35 +71,46 @@ class AlbumPage extends StatelessWidget {
             if (entries.isEmpty && !loading)
               const AlbumEmptySliver()
             else
-              SliverLayoutBuilder(
-                builder: (context, constraints) {
-                  final width = constraints.crossAxisExtent;
-                  final crossAxisCount = width >= 1100
-                      ? 4
-                      : (width >= 760 ? 3 : 2);
-                  final spacing = width >= 760 ? 12.0 : 10.0;
-                  final aspectRatio = width >= 760 ? 0.96 : 0.90;
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final width = constraints.maxWidth;
+                      final textScaleFactor = MediaQuery.textScalerOf(
+                        context,
+                      ).scale(1);
+                      final baseCrossAxisCount = width >= 1100
+                          ? 4
+                          : (width >= 760 ? 3 : 2);
+                      final crossAxisCount =
+                          textScaleFactor > 1.2 && baseCrossAxisCount > 2
+                          ? baseCrossAxisCount - 1
+                          : baseCrossAxisCount;
+                      final spacing = width >= 760 ? 12.0 : 10.0;
+                      final itemWidth =
+                          ((width - (spacing * (crossAxisCount - 1))) /
+                                  crossAxisCount)
+                              .clamp(0.0, double.infinity)
+                              .toDouble();
 
-                  return SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                    sliver: SliverGrid.builder(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        mainAxisSpacing: spacing,
-                        crossAxisSpacing: spacing,
-                        childAspectRatio: aspectRatio,
-                      ),
-                      itemCount: entries.length,
-                      itemBuilder: (context, index) {
-                        final entry = entries[index];
-                        return AlbumCard(
-                          entry: entry,
-                          onTap: () => onTapEntry(entry),
-                        );
-                      },
-                    ),
-                  );
-                },
+                      return Wrap(
+                        spacing: spacing,
+                        runSpacing: spacing,
+                        children: [
+                          for (final entry in entries)
+                            SizedBox(
+                              width: itemWidth,
+                              child: AlbumCard(
+                                entry: entry,
+                                onTap: () => onTapEntry(entry),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
               ),
             const SliverToBoxAdapter(child: SizedBox(height: 12)),
           ],
@@ -627,9 +638,11 @@ class AlbumCard extends StatelessWidget {
                   ],
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
+              AspectRatio(
+                aspectRatio: 1.08,
                 child: ClipRRect(
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(18),
@@ -701,27 +714,29 @@ class AlbumCard extends StatelessWidget {
                   children: [
                     Text(
                       entry.displayName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      maxLines: 3,
+                      softWrap: true,
                       style: TextStyle(
                         fontSize: 13.8,
                         fontWeight: FontWeight.w800,
                         color: titleColor,
+                        height: 1.24,
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 4),
                     Text(
                       entry.approvalNo.trim().isEmpty
                           ? (l10n?.albumCardSubtitleTapForDetail ??
                                 '点击查看识别结果与药品详情')
                           : (l10n?.albumApprovalNoPrefix(entry.approvalNo) ??
                                 '批准文号: ${entry.approvalNo}'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      maxLines: 3,
+                      softWrap: true,
                       style: TextStyle(
                         fontSize: 11.8,
                         color: subtitleColor,
                         fontWeight: FontWeight.w600,
+                        height: 1.3,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -729,10 +744,13 @@ class AlbumCard extends StatelessWidget {
                       entry.hasOriginalImage
                           ? (l10n?.albumCardTagRescannable ?? '可再次识别')
                           : (l10n?.albumCardTagLightRecord ?? '当前为轻量记录'),
+                      maxLines: 2,
+                      softWrap: true,
                       style: TextStyle(
                         fontSize: 11.8,
                         color: accent,
                         fontWeight: FontWeight.w800,
+                        height: 1.24,
                       ),
                     ),
                   ],

@@ -231,9 +231,10 @@ class DrugQuickEntrySectionSliver extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
         child: LayoutBuilder(
           builder: (context, constraints) {
+            final textScaleFactor = MediaQuery.textScalerOf(context).scale(1);
             final metrics = ResponsiveQuickGridMetrics.fromWidth(
-              constraints.maxWidth -
-                  ((isCompactLayoutWidth(constraints.maxWidth) ? 12 : 14) * 2),
+              constraints.maxWidth,
+              textScaleFactor: textScaleFactor,
             );
 
             return SoftBannerCard(
@@ -263,11 +264,9 @@ class DrugQuickEntrySectionSliver extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: metrics.isCompact ? 10 : 12),
-                    GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
+                    ResponsiveQuickWrap(
+                      metrics: metrics,
                       itemCount: entries.length,
-                      gridDelegate: metrics.gridDelegate,
                       itemBuilder: (context, index) {
                         final item = entries[index];
                         return SharedQuickEntryCard(
@@ -563,9 +562,15 @@ class DrugMyMedicineCard extends StatelessWidget {
           return AppSectionCard(
             radius: 16,
             padding: EdgeInsets.zero,
-            accentColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
-            secondaryColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.15),
-            baseColor: Theme.of(context).colorScheme.surface.withValues(alpha: isDark ? 0.35 : 0.65),
+            accentColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.15),
+            secondaryColor: Theme.of(
+              context,
+            ).colorScheme.secondary.withValues(alpha: 0.15),
+            baseColor: Theme.of(
+              context,
+            ).colorScheme.surface.withValues(alpha: isDark ? 0.35 : 0.65),
             ornamentKey: 'drug.item',
             child: InkWell(
               borderRadius: BorderRadius.circular(16),

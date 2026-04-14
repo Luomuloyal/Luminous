@@ -119,11 +119,15 @@ class _HomeViewState extends State<HomeView> {
   }
 
   late List<HomeReminderItemData> _reminders;
+  late List<HomeCheckInRecordData> _checkInRecords;
   bool _loadingReminders = false;
+  bool _loadingCheckInRecords = false;
   bool _syncingReminders = false;
   bool _reloadQueued = false;
+  bool _checkInReloadQueued = false;
   bool _syncQueued = false;
   int _reminderRequestId = 0;
+  int _checkInRequestId = 0;
   String? _lastRequestedUserId;
 
   List<String> _healthTipsFor(AppLocalizations? l10n) {
@@ -148,7 +152,8 @@ class _HomeViewState extends State<HomeView> {
   void initState() {
     super.initState();
     _todayTipNotifier = ValueNotifier<String>('');
-    _reminders = <HomeReminderItemData>[];
+    _reminders = _buildDemoReminders();
+    _checkInRecords = _buildDemoCheckInRecords();
     _userWorker = ever<dynamic>(_userController.user, (_) {
       _refreshRemindersIfReady();
     });
@@ -199,12 +204,15 @@ class _HomeViewState extends State<HomeView> {
     if (userId.isEmpty) {
       _lastRequestedUserId = userId;
       _reloadQueued = false;
+      _checkInReloadQueued = false;
       _syncQueued = false;
       if (mounted) {
         setState(() {
           _loadingReminders = false;
+          _loadingCheckInRecords = false;
           _syncingReminders = false;
-          _reminders = <HomeReminderItemData>[];
+          _reminders = _buildDemoReminders();
+          _checkInRecords = _buildDemoCheckInRecords();
         });
       }
       return;
@@ -215,6 +223,7 @@ class _HomeViewState extends State<HomeView> {
         mounted) {
       setState(() {
         _reminders = <HomeReminderItemData>[];
+        _checkInRecords = <HomeCheckInRecordData>[];
       });
     }
 
@@ -224,6 +233,7 @@ class _HomeViewState extends State<HomeView> {
 
     _lastRequestedUserId = userId;
     unawaited(_loadTodayReminders());
+    unawaited(_loadCheckInRecords());
     unawaited(_syncTodayReminders());
   }
 
@@ -263,6 +273,9 @@ class _HomeViewState extends State<HomeView> {
               child: HomeFeatureSection(items: _entries, onTap: _onEntryTap),
             ),
             SliverToBoxAdapter(child: HomeReminderSection(items: _reminders)),
+            SliverToBoxAdapter(
+              child: HomeCheckInRecordSection(items: _checkInRecords),
+            ),
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],
         ),
@@ -284,6 +297,7 @@ class _HomeViewState extends State<HomeView> {
     if (item.id == 'reminder') {
       Navigator.pushNamed(context, '/reminders').then((_) {
         _loadTodayReminders();
+        _loadCheckInRecords();
       });
       return;
     }
@@ -291,6 +305,7 @@ class _HomeViewState extends State<HomeView> {
     if (item.id == 'checkIn') {
       Navigator.pushNamed(context, '/checkin').then((_) {
         _loadTodayReminders();
+        _loadCheckInRecords();
       });
       return;
     }
@@ -343,7 +358,7 @@ class _HomeViewState extends State<HomeView> {
       }
       setState(() {
         _loadingReminders = false;
-        _reminders = <HomeReminderItemData>[];
+        _reminders = _buildDemoReminders();
       });
       return;
     }
@@ -382,6 +397,65 @@ class _HomeViewState extends State<HomeView> {
     }
   }
 
+  Future<void> _loadCheckInRecords() async {
+    if (_loadingCheckInRecords) {
+      _checkInReloadQueued = true;
+      return;
+    }
+
+    final userId = (_userController.user.value?.id ?? '').trim();
+    if (userId.isEmpty) {
+      _checkInReloadQueued = false;
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _loadingCheckInRecords = false;
+        _checkInRecords = _buildDemoCheckInRecords();
+      });
+      return;
+    }
+
+    final requestId = ++_checkInRequestId;
+    if (mounted) {
+      setState(() {
+        _loadingCheckInRecords = true;
+      });
+    }
+
+    try {
+      final records = await _reminderGateway.loadCheckInRecords(
+        userId,
+        maxDays: 7,
+        maxItems: 160,
+      );
+      if (!_canApplyCheckInResult(requestId, userId)) {
+        return;
+      }
+      setState(() {
+        _checkInRecords = records;
+      });
+    } catch (_) {
+      if (_canApplyCheckInResult(requestId, userId)) {
+        setState(() {
+          _checkInRecords = <HomeCheckInRecordData>[];
+        });
+      }
+    } finally {
+      if (_isActiveCheckInRequest(requestId) && mounted) {
+        setState(() {
+          _loadingCheckInRecords = false;
+        });
+      }
+      if (_isActiveCheckInRequest(requestId) &&
+          _checkInReloadQueued &&
+          mounted) {
+        _checkInReloadQueued = false;
+        unawaited(_loadCheckInRecords());
+      }
+    }
+  }
+
   Future<void> _syncTodayReminders({bool showError = false}) async {
     final userId = (_userController.user.value?.id ?? '').trim();
     if (userId.isEmpty) {
@@ -403,6 +477,7 @@ class _HomeViewState extends State<HomeView> {
       await _reminderGateway.syncRemoteToLocal(userId);
       if (mounted && userId == (_userController.user.value?.id ?? '').trim()) {
         await _loadTodayReminders();
+        await _loadCheckInRecords();
       }
     } catch (error) {
       if (showError && mounted) {
@@ -431,6 +506,16 @@ class _HomeViewState extends State<HomeView> {
 
   bool _isActiveReminderRequest(int requestId) {
     return requestId == _reminderRequestId;
+  }
+
+  bool _canApplyCheckInResult(int requestId, String userId) {
+    return mounted &&
+        _isActiveCheckInRequest(requestId) &&
+        userId == (_userController.user.value?.id ?? '').trim();
+  }
+
+  bool _isActiveCheckInRequest(int requestId) {
+    return requestId == _checkInRequestId;
   }
 
   HomeReminderItemData _toReminderUi(ReminderItem item) {
@@ -473,6 +558,93 @@ class _HomeViewState extends State<HomeView> {
     return _l10n?.homeNoReminder ?? '暂无提醒';
   }
 
+  List<HomeReminderItemData> _buildDemoReminders() {
+    return const <HomeReminderItemData>[
+      HomeReminderItemData(
+        icon: Icons.access_time_rounded,
+        title: '08:30 阿莫西林胶囊',
+        dosage: '1 粒',
+        subtitle: '剂量: 1 粒 · 早餐后服用',
+        done: true,
+      ),
+      HomeReminderItemData(
+        icon: Icons.access_time_rounded,
+        title: '12:00 维生素D',
+        dosage: '1 粒',
+        subtitle: '剂量: 1 粒 · 午餐后服用',
+        done: false,
+      ),
+      HomeReminderItemData(
+        icon: Icons.access_time_rounded,
+        title: '20:30 缬沙坦片',
+        dosage: '1 片',
+        subtitle: '剂量: 1 片 · 晚餐后服用',
+        done: false,
+      ),
+    ];
+  }
+
+  List<HomeCheckInRecordData> _buildDemoCheckInRecords() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final twoDaysAgo = today.subtract(const Duration(days: 2));
+
+    return <HomeCheckInRecordData>[
+      HomeCheckInRecordData(
+        dateKey: _dateKey(today),
+        reminderId: 'demo-amoxicillin',
+        title: '阿莫西林胶囊',
+        reminderTime: '08:30',
+        done: true,
+        takenAt: today
+            .add(const Duration(hours: 8, minutes: 34))
+            .millisecondsSinceEpoch,
+      ),
+      HomeCheckInRecordData(
+        dateKey: _dateKey(today),
+        reminderId: 'demo-vitamin-d',
+        title: '维生素D',
+        reminderTime: '12:00',
+        done: false,
+      ),
+      HomeCheckInRecordData(
+        dateKey: _dateKey(today),
+        reminderId: 'demo-valsartan',
+        title: '缬沙坦片',
+        reminderTime: '20:30',
+        done: false,
+      ),
+      HomeCheckInRecordData(
+        dateKey: _dateKey(yesterday),
+        reminderId: 'demo-valsartan',
+        title: '缬沙坦片',
+        reminderTime: '20:30',
+        done: true,
+        takenAt: yesterday
+            .add(const Duration(hours: 20, minutes: 41))
+            .millisecondsSinceEpoch,
+      ),
+      HomeCheckInRecordData(
+        dateKey: _dateKey(twoDaysAgo),
+        reminderId: 'demo-vitamin-d',
+        title: '维生素D',
+        reminderTime: '12:00',
+        done: true,
+        takenAt: twoDaysAgo
+            .add(const Duration(hours: 12, minutes: 5))
+            .millisecondsSinceEpoch,
+      ),
+    ];
+  }
+
+  String _dateKey(DateTime date) {
+    final year = date.year.toString().padLeft(4, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
+  }
+
   void _bindRevision(String userId) {
     _revisionSubscription?.cancel();
     final scopedUserId = userId.trim();
@@ -483,6 +655,7 @@ class _HomeViewState extends State<HomeView> {
       (_) {
         if (mounted) {
           unawaited(_loadTodayReminders());
+          unawaited(_loadCheckInRecords());
         }
       },
     );

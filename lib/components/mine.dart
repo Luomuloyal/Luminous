@@ -327,8 +327,10 @@ class MineQuickActionsSection extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = isCompactLayoutWidth(constraints.maxWidth);
+        final textScaleFactor = MediaQuery.textScalerOf(context).scale(1);
         final metrics = ResponsiveQuickGridMetrics.fromWidth(
-          constraints.maxWidth - ((compact ? 12 : 14) * 2),
+          constraints.maxWidth,
+          textScaleFactor: textScaleFactor,
         );
 
         return AppSectionCard(
@@ -391,11 +393,9 @@ class MineQuickActionsSection extends StatelessWidget {
                 ),
               ),
               SizedBox(height: compact ? 12 : 14),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
+              ResponsiveQuickWrap(
+                metrics: metrics,
                 itemCount: items.length,
-                gridDelegate: metrics.gridDelegate,
                 itemBuilder: (context, index) {
                   final item = items[index];
                   return SharedQuickEntryCard(

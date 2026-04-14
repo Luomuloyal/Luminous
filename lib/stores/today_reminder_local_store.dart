@@ -52,6 +52,12 @@ abstract interface class TodayReminderStore {
     String? userId,
     List<ReminderPlan> plans,
   );
+
+  Future<List<HomeCheckInRecordData>> loadRecentCheckinRecords(
+    String? userId, {
+    int maxDays,
+    int maxItems,
+  });
 }
 
 /// 今日提醒快照、本地打卡状态与本地覆盖状态的统一读取/写入入口。
@@ -357,6 +363,94 @@ class TodayReminderLocalStore implements TodayReminderStore {
     return applyTodayState(userId, items: baseItems, overrides: overrides);
   }
 
+  @override
+  Future<List<HomeCheckInRecordData>> loadRecentCheckinRecords(
+    String? userId, {
+    int maxDays = 7,
+    int maxItems = 120,
+  }) async {
+    final uid = (userId ?? '').trim();
+    if (uid.isEmpty) {
+      return const [];
+    }
+
+    final normalizedDays = maxDays <= 0 ? 7 : maxDays;
+    final normalizedItems = maxItems <= 0 ? 120 : maxItems;
+    final todayKey = resolveDateKey();
+    final todayRecords = await _loadTodayCheckinRecords(uid, todayKey);
+    if (kIsWeb) {
+      return todayRecords;
+    }
+
+    final db = await AppDatabase.instance.database;
+    final reminderMetaMap = await _loadReminderMetaMap(db, uid);
+    final rangeStartDate = DateTime.now().subtract(
+      Duration(days: normalizedDays - 1),
+    );
+    final rangeStart = DateTime(
+      rangeStartDate.year,
+      rangeStartDate.month,
+      rangeStartDate.day,
+    ).millisecondsSinceEpoch;
+    final rows = await db.query(
+      'checkins',
+      columns: ['reminderRemoteId', 'takenAt'],
+      where: 'userId = ? AND takenAt >= ?',
+      whereArgs: [uid, rangeStart],
+      orderBy: 'takenAt DESC, id DESC',
+      limit: normalizedItems,
+    );
+
+    final results = <HomeCheckInRecordData>[...todayRecords];
+    final seen = <String>{
+      for (final item in todayRecords) '${item.dateKey}|${item.reminderId}',
+    };
+
+    for (final row in rows) {
+      final reminderId = (row['reminderRemoteId'] ?? '').toString().trim();
+      if (reminderId.isEmpty) {
+        continue;
+      }
+      final takenAt = (row['takenAt'] as int?) ?? 0;
+      if (takenAt <= 0) {
+        continue;
+      }
+      final dateKey = _dateKeyFromTimestamp(takenAt);
+      if (dateKey == todayKey) {
+        continue;
+      }
+      final dedupeKey = '$dateKey|$reminderId';
+      if (!seen.add(dedupeKey)) {
+        continue;
+      }
+      final meta = reminderMetaMap[reminderId];
+      results.add(
+        HomeCheckInRecordData(
+          dateKey: dateKey,
+          reminderId: reminderId,
+          title: meta?.title ?? AppI18nText.pick(zh: '用药提醒', en: 'Medication'),
+          reminderTime: meta?.time ?? '',
+          done: true,
+          takenAt: takenAt,
+        ),
+      );
+    }
+
+    results.sort((a, b) {
+      final dateCompare = b.dateKey.compareTo(a.dateKey);
+      if (dateCompare != 0) {
+        return dateCompare;
+      }
+      final takenCompare = (b.takenAt ?? -1).compareTo(a.takenAt ?? -1);
+      if (takenCompare != 0) {
+        return takenCompare;
+      }
+      return a.reminderTime.compareTo(b.reminderTime);
+    });
+
+    return results;
+  }
+
   bool _isPlanActiveOnDate(ReminderPlan plan, String dateKey) {
     final start = plan.startDate.trim();
     final end = plan.endDate.trim();
@@ -469,6 +563,77 @@ class TodayReminderLocalStore implements TodayReminderStore {
         .toSet();
   }
 
+  Future<List<HomeCheckInRecordData>> _loadTodayCheckinRecords(
+    String userId,
+    String todayKey,
+  ) async {
+    final items = await loadTodaySnapshotItems(userId);
+    if (items.isEmpty) {
+      return const [];
+    }
+
+    Map<String, int> takenAtMap = const <String, int>{};
+    if (!kIsWeb) {
+      final db = await AppDatabase.instance.database;
+      final range = todayRange();
+      final rows = await db.query(
+        'checkins',
+        columns: ['reminderRemoteId', 'takenAt'],
+        where: 'userId = ? AND takenAt >= ? AND takenAt < ?',
+        whereArgs: [userId, range.start, range.end],
+        orderBy: 'takenAt DESC, id DESC',
+      );
+      takenAtMap = <String, int>{
+        for (final row in rows)
+          (row['reminderRemoteId'] ?? '').toString().trim():
+              (row['takenAt'] as int?) ?? 0,
+      }..removeWhere((key, value) => key.isEmpty || value <= 0);
+    }
+
+    return items
+        .map(
+          (item) => HomeCheckInRecordData(
+            dateKey: todayKey,
+            reminderId: item.id.trim(),
+            title: item.title.trim().isEmpty
+                ? AppI18nText.pick(zh: '用药提醒', en: 'Medication')
+                : item.title.trim(),
+            reminderTime: item.time.trim(),
+            done: item.done,
+            takenAt: takenAtMap[item.id.trim()],
+          ),
+        )
+        .where((item) => item.reminderId.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  Future<Map<String, _ReminderMeta>> _loadReminderMetaMap(
+    Database db,
+    String userId,
+  ) async {
+    final rows = await db.query(
+      'reminders',
+      columns: ['remoteId', 'time', 'productName'],
+      where: 'userId = ?',
+      whereArgs: [userId],
+      orderBy: 'time ASC, id ASC',
+    );
+    return <String, _ReminderMeta>{
+      for (final row in rows)
+        (row['remoteId'] ?? '').toString().trim(): _ReminderMeta(
+          time: (row['time'] ?? '').toString().trim(),
+          title: (row['productName'] ?? '').toString().trim(),
+        ),
+    }..removeWhere((key, value) => key.isEmpty);
+  }
+
+  String _dateKeyFromTimestamp(int millis) {
+    final date = DateTime.fromMillisecondsSinceEpoch(millis);
+    return '${date.year.toString().padLeft(4, '0')}-'
+        '${date.month.toString().padLeft(2, '0')}-'
+        '${date.day.toString().padLeft(2, '0')}';
+  }
+
   String _snapshotKey(String? userId, {String? date}) {
     final uid = (userId ?? '').trim();
     return '$uid|${resolveDateKey(date)}';
@@ -480,3 +645,10 @@ class TodayReminderLocalStore implements TodayReminderStore {
 }
 
 final todayReminderLocalStore = TodayReminderLocalStore.instance;
+
+class _ReminderMeta {
+  const _ReminderMeta({required this.time, required this.title});
+
+  final String time;
+  final String title;
+}

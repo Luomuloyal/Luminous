@@ -44,16 +44,6 @@ Widget getRootWidget() {
       themeMode: themeController.themeMode,
       initialRoute: '/',
       routes: getRootRoutes(),
-      builder: (context, child) {
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: MediaQuery.of(
-              context,
-            ).textScaler.clamp(minScaleFactor: 0.85, maxScaleFactor: 1.15),
-          ),
-          child: child ?? const SizedBox.shrink(),
-        );
-      },
     );
   });
 }
