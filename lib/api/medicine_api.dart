@@ -77,6 +77,7 @@ class MedicineApi {
   static Future<ApiResult<MedicineItem>> fetchDetail({
     String? drugCode,
     String? approvalNo,
+    CancelToken? cancelToken,
   }) {
     return dioRequest.post<MedicineItem>(
       HttpConstants.MEDICINE_DETAIL,
@@ -106,6 +107,7 @@ class MedicineApi {
         );
       },
       showLoading: false,
+      cancelToken: cancelToken,
     );
   }
 

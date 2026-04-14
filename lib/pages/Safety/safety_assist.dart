@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:dio/dio.dart';
-import 'package:luminous/api/safety_api.dart';
 import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/auth.dart';
@@ -9,59 +7,65 @@ import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/components/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Picker/medicine_picker.dart';
-import 'package:luminous/stores/user_controller.dart';
-import 'package:luminous/utils/toast_utils.dart';
+import 'package:luminous/pages/Safety/controllers/safety_assist_controller.dart';
 import 'package:luminous/viewmodels/medicine.dart';
-import 'package:luminous/viewmodels/safety.dart';
 
 /// 安全辅助页。
 ///
 /// 页面允许用户选择一款或两款药品，并调用 AI 接口生成用药建议或相互作用提示。
-class SafetyAssistPage extends StatefulWidget {
+class SafetyAssistPage extends StatelessWidget {
   /// 创建安全辅助页组件。
   const SafetyAssistPage({super.key});
 
-  /// 创建安全辅助页对应的状态对象。
   @override
-  State<SafetyAssistPage> createState() => _SafetyAssistPageState();
-}
-
-/// 安全辅助页状态对象。
-///
-/// 状态核心在于：
-/// - 当前查询模式（单药 / 两药）；
-/// - 已选择的药品；
-/// - AI 返回的结果文本。
-class _SafetyAssistPageState extends State<SafetyAssistPage> {
-  /// 全局用户控制器，用于获取 userId（可选）与判断登录态。
-  final UserController _userController = Get.find<UserController>();
-
-  /// 当前查询模式：
-  /// - single：单药建议
-  /// - pair：两药相互作用
-  ///
-  /// 该状态决定页面要渲染几个药品选择入口，以及请求时要组装几条 medicine 数据。
-  String _mode = 'single'; // single | pair
-
-  /// 药品 A（单药模式仅使用 A）。
-  MedicineItem? _a;
-
-  /// 药品 B（两药模式使用 A + B）。
-  MedicineItem? _b;
-
-  /// 当前是否正在请求 AI 查询。
-  bool _loading = false;
-
-  /// 当前 AI 查询对应的取消令牌。
-  CancelToken? _queryCancelToken;
-
-  /// AI 返回的查询结果。
-  MedicineAiSafetyResult? _result;
-
-  /// 当前登录用户 id（未登录时为空字符串）。
-  String get _userId => _userController.user.value?.id ?? '';
-
-  AppLocalizations? get _l10n => AppLocalizations.of(context);
+  Widget build(BuildContext context) {
+    return GetBuilder<SafetyAssistController>(
+      init: SafetyAssistController(),
+      global: false,
+      builder: (controller) {
+        final l10n = AppLocalizations.of(context);
+        final scheme = Theme.of(context).colorScheme;
+        final secondaryAccent = Color.lerp(
+          scheme.secondary,
+          scheme.tertiary,
+          0.52,
+        )!;
+        return AppCanvasPageScaffold(
+          appBar: AppBar(
+            title: Text(_safetyTitle(l10n)),
+            centerTitle: true,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            surfaceTintColor: Colors.transparent,
+          ),
+          appBarSpacing: 20,
+          accentColor: scheme.primary,
+          secondaryAccentColor: secondaryAccent,
+          child: RefreshIndicator(
+            onRefresh: controller.refreshResult,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 18),
+              children: [
+                _buildHeroCard(context, controller, l10n),
+                const SizedBox(height: 8),
+                _buildModeCard(context, controller, l10n),
+                const SizedBox(height: 8),
+                _buildPickCard(context, controller, l10n),
+                const SizedBox(height: 8),
+                _buildActionCard(context, controller, l10n),
+                const SizedBox(height: 8),
+                _buildResultCard(context, controller, l10n),
+                const SizedBox(height: 8),
+                const _DisclaimerCard(),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   String _safetyTitle(AppLocalizations? l10n) {
     return l10n?.safetyTitle ?? 'Safety Assist';
@@ -115,8 +119,8 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
     return l10n?.safetyPickBadgeB ?? 'Medicine B';
   }
 
-  String _actionQueryText(AppLocalizations? l10n) {
-    if (_mode == 'pair') {
+  String _actionQueryText(AppLocalizations? l10n, String mode) {
+    if (mode == SafetyAssistController.pairMode) {
       return l10n?.safetyActionQueryPair ?? 'Check Two-medicine Interaction';
     }
     return l10n?.safetyActionQuerySingle ?? 'Check Medication Advice';
@@ -134,85 +138,17 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
     return l10n?.safetyPickerTitleB ?? 'Select Medicine B';
   }
 
-  String _toastSelectMedicineText(AppLocalizations? l10n) {
-    return l10n?.safetyToastSelectMedicine ?? 'Please select a medicine first';
-  }
-
-  String _toastSelectSecondMedicineText(AppLocalizations? l10n) {
-    return l10n?.safetyToastSelectSecondMedicine ??
-        'Please select one more medicine';
-  }
-
-  String _toastAiNoContentText(AppLocalizations? l10n) {
-    return l10n?.safetyToastAiNoContent ?? 'AI returned no content';
-  }
-
   String _cancelActionText(AppLocalizations? l10n) {
     return l10n?.reminderDeleteCancel ?? '取消';
   }
 
-  String _toastQueryCanceledText(AppLocalizations? l10n) {
-    final locale = (l10n?.localeName ?? 'zh').toLowerCase();
-    return locale.startsWith('zh') ? '已取消查询' : 'Query canceled';
-  }
-
-  @override
-  void dispose() {
-    _queryCancelToken?.cancel('page disposed');
-    _queryCancelToken = null;
-    super.dispose();
-  }
-
-  /// 构建安全辅助页 UI。
-  @override
-  Widget build(BuildContext context) {
-    final l10n = _l10n;
-    final scheme = Theme.of(context).colorScheme;
-    final secondaryAccent = Color.lerp(
-      scheme.secondary,
-      scheme.tertiary,
-      0.52,
-    )!;
-    return AppCanvasPageScaffold(
-      appBar: AppBar(
-        title: Text(_safetyTitle(l10n)),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-      ),
-      appBarSpacing: 20,
-      accentColor: scheme.primary,
-      secondaryAccentColor: secondaryAccent,
-      child: RefreshIndicator(
-        onRefresh: _refreshResult,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(14, 0, 14, 18),
-          children: [
-            _buildHeroCard(),
-            const SizedBox(height: 8),
-            _buildModeCard(),
-            const SizedBox(height: 8),
-            _buildPickCard(),
-            const SizedBox(height: 8),
-            _buildActionCard(),
-            const SizedBox(height: 8),
-            _buildResultCard(),
-            const SizedBox(height: 8),
-            const _DisclaimerCard(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeroCard() {
-    final l10n = _l10n;
-    final loggedIn = _userController.isLoggedIn;
-    final selectedCount =
-        1 + (_mode == 'pair' ? (_b == null ? 0 : 1) : 0) - (_a == null ? 1 : 0);
+  Widget _buildHeroCard(
+    BuildContext context,
+    SafetyAssistController controller,
+    AppLocalizations? l10n,
+  ) {
+    final loggedIn = controller.loggedIn;
+    final selectedCount = controller.selectedCount;
 
     return SoftBannerCard(
       palette: SoftBannerPalettes.drugOf(context),
@@ -271,10 +207,10 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
               children: [
                 Expanded(
                   child: _SafetyInfoChip(
-                    icon: _mode == 'pair'
+                    icon: controller.mode == SafetyAssistController.pairMode
                         ? Icons.compare_arrows_rounded
                         : Icons.auto_awesome_rounded,
-                    text: _mode == 'pair'
+                    text: controller.mode == SafetyAssistController.pairMode
                         ? _modePairText(l10n)
                         : _modeSingleText(l10n),
                     backgroundColor: theme.surfaceColor,
@@ -314,8 +250,11 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
   }
 
   /// 构建“查询模式”卡片。
-  Widget _buildModeCard() {
-    final l10n = _l10n;
+  Widget _buildModeCard(
+    BuildContext context,
+    SafetyAssistController controller,
+    AppLocalizations? l10n,
+  ) {
     final scheme = Theme.of(context).colorScheme;
     return _SectionCard(
       title: l10n?.safetyModeCardTitle ?? 'Query Mode',
@@ -327,20 +266,13 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
         items: [
           AuthMethodItem(
             label: _modeSingleText(l10n),
-            selected: _mode == 'single',
-            onTap: () => setState(() {
-              _mode = 'single';
-              _b = null;
-              _result = null;
-            }),
+            selected: controller.mode == SafetyAssistController.singleMode,
+            onTap: () => controller.setMode(SafetyAssistController.singleMode),
           ),
           AuthMethodItem(
             label: _modePairText(l10n),
-            selected: _mode == 'pair',
-            onTap: () => setState(() {
-              _mode = 'pair';
-              _result = null;
-            }),
+            selected: controller.mode == SafetyAssistController.pairMode,
+            onTap: () => controller.setMode(SafetyAssistController.pairMode),
           ),
         ],
       ),
@@ -348,8 +280,11 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
   }
 
   /// 构建“选择药品”卡片。
-  Widget _buildPickCard() {
-    final l10n = _l10n;
+  Widget _buildPickCard(
+    BuildContext context,
+    SafetyAssistController controller,
+    AppLocalizations? l10n,
+  ) {
     final scheme = Theme.of(context).colorScheme;
     final tileAColor = scheme.primary;
     final tileBColor = Color.lerp(scheme.secondary, scheme.tertiary, 0.35)!;
@@ -361,22 +296,32 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
       child: Column(
         children: [
           _pickTile(
-            label: _a?.displayName ?? _pickPlaceholderText(l10n, 0),
-            subtitle: _a?.displaySubtitle ?? _pickSubtitleText(l10n),
+            context: context,
+            label:
+                controller.medicineA?.displayName ??
+                _pickPlaceholderText(l10n, 0),
+            subtitle:
+                controller.medicineA?.displaySubtitle ??
+                _pickSubtitleText(l10n),
             color: tileAColor,
-            onTap: () => _pickMedicine(slot: 0),
+            onTap: () => _pickMedicine(context, controller, slot: 0),
             badge: _pickBadgeText(l10n, 0),
-            note: _a?.displayTips,
+            note: controller.medicineA?.displayTips,
           ),
-          if (_mode == 'pair') ...[
+          if (controller.mode == SafetyAssistController.pairMode) ...[
             const SizedBox(height: 8),
             _pickTile(
-              label: _b?.displayName ?? _pickPlaceholderText(l10n, 1),
-              subtitle: _b?.displaySubtitle ?? _pickSubtitleText(l10n),
+              context: context,
+              label:
+                  controller.medicineB?.displayName ??
+                  _pickPlaceholderText(l10n, 1),
+              subtitle:
+                  controller.medicineB?.displaySubtitle ??
+                  _pickSubtitleText(l10n),
               color: tileBColor,
-              onTap: () => _pickMedicine(slot: 1),
+              onTap: () => _pickMedicine(context, controller, slot: 1),
               badge: _pickBadgeText(l10n, 1),
-              note: _b?.displayTips,
+              note: controller.medicineB?.displayTips,
             ),
           ],
         ],
@@ -386,6 +331,7 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
 
   /// 构建药品选择 tile（A 或 B）。
   Widget _pickTile({
+    required BuildContext context,
     required String label,
     required String subtitle,
     required Color color,
@@ -507,11 +453,11 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
   }
 
   /// 构建“开始查询”卡片。
-  Widget _buildActionCard() {
-    final l10n = _l10n;
-
-    /// 当前是否已选择到足够的药品以开始查询。
-    final ready = _a != null && (_mode == 'single' || _b != null);
+  Widget _buildActionCard(
+    BuildContext context,
+    SafetyAssistController controller,
+    AppLocalizations? l10n,
+  ) {
     final scheme = Theme.of(context).colorScheme;
     return _SectionCard(
       title: l10n?.safetyActionCardTitle ?? 'Start Query',
@@ -522,14 +468,16 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
         children: [
           Expanded(
             child: FilledButton(
-              onPressed: _loading || !ready ? null : _query,
+              onPressed: controller.loading || !controller.ready
+                  ? null
+                  : controller.query,
               style: FilledButton.styleFrom(
                 minimumSize: const Size(double.infinity, 44),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child: _loading
+              child: controller.loading
                   ? SizedBox(
                       width: 18,
                       height: 18,
@@ -538,13 +486,13 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
                         color: scheme.onPrimary,
                       ),
                     )
-                  : Text(_actionQueryText(l10n)),
+                  : Text(_actionQueryText(l10n, controller.mode)),
             ),
           ),
-          if (_loading) ...[
+          if (controller.loading) ...[
             const SizedBox(width: 6),
             FilledButton.tonal(
-              onPressed: _cancelQuery,
+              onPressed: controller.cancelQuery,
               style: FilledButton.styleFrom(
                 minimumSize: const Size(78, 44),
                 backgroundColor: const Color(
@@ -565,13 +513,16 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
   }
 
   /// 构建“AI 结果”卡片。
-  Widget _buildResultCard() {
-    final l10n = _l10n;
+  Widget _buildResultCard(
+    BuildContext context,
+    SafetyAssistController controller,
+    AppLocalizations? l10n,
+  ) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final entries = _result == null
+    final entries = controller.result == null
         ? const <String>[]
-        : _splitResultParagraphs(_result!.text);
+        : _splitResultParagraphs(controller.result!.text);
     return _SectionCard(
       title: l10n?.safetyResultCardTitle ?? 'AI Result',
       accentColor: Color.lerp(scheme.secondary, scheme.primary, 0.5)!,
@@ -669,118 +620,21 @@ class _SafetyAssistPageState extends State<SafetyAssistPage> {
   ///
   /// - slot=0：设置 A
   /// - slot=1：设置 B
-  Future<void> _pickMedicine({required int slot}) async {
-    final l10n = _l10n;
+  Future<void> _pickMedicine(
+    BuildContext context,
+    SafetyAssistController controller, {
+    required int slot,
+  }) async {
+    final l10n = AppLocalizations.of(context);
     final item = await Navigator.of(context).push<MedicineItem>(
       MaterialPageRoute<MedicineItem>(
         builder: (_) => MedicinePickerPage(title: _pickerTitleText(l10n, slot)),
       ),
     );
-    if (!mounted) return;
-    if (item == null) return;
-    setState(() {
-      if (slot == 0) {
-        _a = item;
-      } else {
-        _b = item;
-      }
-      _result = null;
-    });
-  }
-
-  /// 发起安全辅助查询。
-  ///
-  /// 会根据模式组装 medicines 数组，然后调用后端 `medicine-ai-safety` 接口。
-  Future<void> _query() async {
-    final l10n = _l10n;
-
-    /// 当前选择的药品 A。
-    final a = _a;
-
-    /// 当前选择的药品 B（两药模式才需要）。
-    final b = _b;
-    if (a == null) {
-      ToastUtils.instance.show(context, _toastSelectMedicineText(l10n));
+    if (item == null || controller.isClosed) {
       return;
     }
-    if (_mode == 'pair' && b == null) {
-      ToastUtils.instance.show(context, _toastSelectSecondMedicineText(l10n));
-      return;
-    }
-
-    _queryCancelToken?.cancel('new query started');
-    final cancelToken = CancelToken();
-    _queryCancelToken = cancelToken;
-
-    setState(() => _loading = true);
-    try {
-      /// 发送给后端的药品列表（Map 结构由接口契约约定）。
-      final medicines = <Map<String, String>>[
-        {
-          'drugCode': a.drugCode,
-          'approvalNo': a.approvalNo,
-          'productName': a.productName,
-        },
-        if (_mode == 'pair' && b != null)
-          {
-            'drugCode': b.drugCode,
-            'approvalNo': b.approvalNo,
-            'productName': b.productName,
-          },
-      ];
-
-      /// 调用安全辅助接口。
-      final response = await SafetyApi.query(
-        userId: _userId.isEmpty ? null : _userId,
-        mode: _mode,
-        medicines: medicines,
-        cancelToken: cancelToken,
-      );
-      if (!mounted) return;
-      setState(() => _result = response.result);
-      if (!_result!.hasText) {
-        ToastUtils.instance.show(context, _toastAiNoContentText(l10n));
-      }
-    } catch (e) {
-      if (!mounted) return;
-      if (_isCanceledError(e)) {
-        return;
-      }
-      ToastUtils.instance.showError(context, e);
-    } finally {
-      if (identical(_queryCancelToken, cancelToken)) {
-        _queryCancelToken = null;
-      }
-      if (mounted) {
-        setState(() => _loading = false);
-      }
-    }
-  }
-
-  void _cancelQuery() {
-    _queryCancelToken?.cancel('user canceled');
-    _queryCancelToken = null;
-    if (mounted) {
-      setState(() => _loading = false);
-      ToastUtils.instance.show(context, _toastQueryCanceledText(_l10n));
-    }
-  }
-
-  bool _isCanceledError(Object error) {
-    if (error is DioException && error.type == DioExceptionType.cancel) {
-      return true;
-    }
-    final text = error.toString().toLowerCase();
-    return text.contains('cancel') || text.contains('canceled');
-  }
-
-  /// 下拉刷新时按当前已选药品重新发起一次查询。
-  Future<void> _refreshResult() async {
-    final ready = _a != null && (_mode == 'single' || _b != null);
-    if (!ready || _loading) {
-      return;
-    }
-    await _query();
+    controller.setMedicine(slot: slot, item: item);
   }
 }
 

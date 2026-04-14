@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
-import 'package:luminous/api/medicine_api.dart';
+import 'package:get/get.dart';
 import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/l10n/app_localizations.dart';
-import 'package:luminous/utils/toast_utils.dart';
+import 'package:luminous/pages/Drug/controllers/medicine_detail_controller.dart';
 import 'package:luminous/viewmodels/medicine.dart';
 
 String _pickDetailTextByLocale(
@@ -30,7 +29,7 @@ String _pickDetailTextByLocale(
 /// 药品详情页。
 ///
 /// 用于展示基础药品信息，并在用户需要时进一步拉取 AI 解读内容。
-class MedicineDetailPage extends StatefulWidget {
+class MedicineDetailPage extends StatelessWidget {
   /// 创建药品详情页，并指定初始药品对象。
   ///
   /// 初始对象可能来自列表点击，字段不一定完整，页面会在 `initState` 再拉取一次详情补齐。
@@ -41,233 +40,61 @@ class MedicineDetailPage extends StatefulWidget {
   /// 通常来自列表页/搜索页的点击结果，字段可能不完整，页面会再调用详情接口补齐。
   final MedicineItem initialItem;
 
-  /// 创建详情页对应的状态对象。
-  @override
-  State<MedicineDetailPage> createState() => _MedicineDetailPageState();
-}
-
-/// 药品详情页状态对象。
-///
-/// 同时维护“基础详情”与“AI 解读”两条独立请求链路，避免二者互相阻塞。
-class _MedicineDetailPageState extends State<MedicineDetailPage> {
-  /// 当前展示的药品对象。
-  ///
-  /// 初始值来自 `widget.initialItem`，当详情接口返回更完整的数据后会覆盖更新。
-  late MedicineItem _item;
-
-  /// 是否正在加载基础详情数据。
-  bool _loadingDetail = false;
-
-  /// AI 解读接口返回的结果。
-  MedicineAiDetailResult? _aiResult;
-
-  /// 是否正在请求 AI 解读内容。
-  bool _loadingAi = false;
-
-  /// 当前 AI 解读请求取消令牌。
-  CancelToken? _aiCancelToken;
-
-  /// 初始化时设置初始药品对象，并尝试加载基础详情。
-  @override
-  void initState() {
-    super.initState();
-    _item = widget.initialItem;
-    _loadDetail();
-  }
-
-  @override
-  void dispose() {
-    _aiCancelToken?.cancel('page disposed');
-    _aiCancelToken = null;
-    super.dispose();
-  }
-
-  /// 加载药品基础详情信息。
-  ///
-  /// - 如果当前药品不具备身份字段（drugCode/approvalNo），则不发起请求；
-  /// - 请求成功后会用返回值覆盖 `_item`，补齐字段。
-  Future<void> _loadDetail() async {
-    if (_loadingDetail || !_item.hasIdentity) {
-      return;
-    }
-    setState(() {
-      _loadingDetail = true;
-    });
-    try {
-      final response = await MedicineApi.fetchDetail(
-        drugCode: _item.drugCode,
-        approvalNo: _item.approvalNo,
-      );
-      if (!mounted) {
-        return;
-      }
-      if (response.result.productName.isNotEmpty) {
-        setState(() {
-          _item = response.result;
-        });
-      }
-    } catch (e) {
-      if (!mounted) {
-        return;
-      }
-      ToastUtils.instance.showError(context, e);
-    } finally {
-      if (mounted) {
-        setState(() {
-          _loadingDetail = false;
-        });
-      }
-    }
-  }
-
-  /// 加载药品的 AI 解读内容。
-  ///
-  /// 该请求独立于基础详情请求，用户点击按钮时才触发。
-  Future<void> _loadAiDetail() async {
-    if (_loadingAi || !_item.hasIdentity) {
-      return;
-    }
-
-    _aiCancelToken?.cancel('new ai detail request started');
-    final cancelToken = CancelToken();
-    _aiCancelToken = cancelToken;
-
-    setState(() {
-      _loadingAi = true;
-    });
-    try {
-      final response = await MedicineApi.fetchAiDetail(
-        drugCode: _item.drugCode,
-        approvalNo: _item.approvalNo,
-        cancelToken: cancelToken,
-      );
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _aiResult = response.result;
-      });
-      if (!_aiResult!.hasText) {
-        final l10n = AppLocalizations.of(context);
-        ToastUtils.instance.show(
-          context,
-          l10n?.medicineDetailAiNoContentToast ?? 'AI接口暂无返回内容',
-        );
-      }
-    } catch (e) {
-      if (!mounted) {
-        return;
-      }
-      if (_isCanceledError(e)) {
-        return;
-      }
-      final l10n = AppLocalizations.of(context);
-      if (_isLikelyNetworkFailure(e)) {
-        ToastUtils.instance.showError(
-          context,
-          e,
-          fallback:
-              l10n?.medicineDetailAiNetworkErrorToast ?? '网络访问失败，请检查网络后重试',
-        );
-      } else {
-        ToastUtils.instance.showError(context, e);
-      }
-    } finally {
-      if (identical(_aiCancelToken, cancelToken)) {
-        _aiCancelToken = null;
-      }
-      if (mounted) {
-        setState(() {
-          _loadingAi = false;
-        });
-      }
-    }
-  }
-
-  void _cancelAiDetail() {
-    _aiCancelToken?.cancel('user canceled');
-    _aiCancelToken = null;
-    if (mounted) {
-      setState(() {
-        _loadingAi = false;
-      });
-      final l10n = AppLocalizations.of(context);
-      final locale = (l10n?.localeName ?? 'zh').toLowerCase();
-      ToastUtils.instance.show(
-        context,
-        locale.startsWith('zh') ? '已取消获取详细信息' : 'Detailed query canceled',
-      );
-    }
-  }
-
-  bool _isCanceledError(Object error) {
-    if (error is DioException && error.type == DioExceptionType.cancel) {
-      return true;
-    }
-    final text = error.toString().toLowerCase();
-    return text.contains('cancel') || text.contains('canceled');
-  }
-
-  bool _isLikelyNetworkFailure(Object error) {
-    final text = error.toString().toLowerCase();
-    return text.contains('timeout') ||
-        text.contains('socket') ||
-        text.contains('connection') ||
-        text.contains('network') ||
-        text.contains('xmlhttprequest') ||
-        text.contains('failed host lookup');
-  }
-
-  /// 构建药品详情页 UI。
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
+    return GetBuilder<MedicineDetailController>(
+      init: MedicineDetailController(initialItem: initialItem),
+      global: false,
+      builder: (controller) {
+        final l10n = AppLocalizations.of(context);
+        final scheme = Theme.of(context).colorScheme;
 
-    return AppCanvasPageScaffold(
-      appBar: AppBar(
-        toolbarHeight: 44,
-        title: Text(
-          l10n?.medicineDetailPageTitle ?? '药品详情',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        centerTitle: true,
-        foregroundColor: const Color(0xFF0F172A),
-      ),
-      appBarSpacing: 30,
-      accentColor: scheme.primary,
-      secondaryAccentColor: Color.lerp(
-        scheme.secondary,
-        scheme.tertiary,
-        0.55,
-      )!,
-      child: RefreshIndicator(
-        onRefresh: _loadDetail,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-          children: [
-            _HeaderCard(
-              item: _item,
-              loading: _loadingDetail,
-              onRefresh: _loadDetail,
+        return AppCanvasPageScaffold(
+          appBar: AppBar(
+            toolbarHeight: 44,
+            title: Text(
+              l10n?.medicineDetailPageTitle ?? '药品详情',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 12),
-            _InfoCard(item: _item),
-            const SizedBox(height: 12),
-            _AiCard(
-              hasIdentity: _item.hasIdentity,
-              loading: _loadingAi,
-              result: _aiResult,
-              onFetch: _loadAiDetail,
-              onCancel: _cancelAiDetail,
+            centerTitle: true,
+            foregroundColor: const Color(0xFF0F172A),
+          ),
+          appBarSpacing: 30,
+          accentColor: scheme.primary,
+          secondaryAccentColor: Color.lerp(
+            scheme.secondary,
+            scheme.tertiary,
+            0.55,
+          )!,
+          child: RefreshIndicator(
+            onRefresh: controller.loadDetail,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              children: [
+                _HeaderCard(
+                  item: controller.item,
+                  loading: controller.loadingDetail,
+                  onRefresh: controller.loadDetail,
+                ),
+                const SizedBox(height: 12),
+                _InfoCard(item: controller.item),
+                const SizedBox(height: 12),
+                _AiCard(
+                  hasIdentity: controller.item.hasIdentity,
+                  loading: controller.loadingAi,
+                  result: controller.aiResult,
+                  onFetch: controller.loadAiDetail,
+                  onCancel: controller.cancelAiDetail,
+                ),
+                const SizedBox(height: 12),
+                const _DisclaimerCard(),
+              ],
             ),
-            const SizedBox(height: 12),
-            const _DisclaimerCard(),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
