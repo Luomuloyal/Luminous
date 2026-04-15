@@ -250,6 +250,8 @@ class MinePage extends StatelessWidget {
     required this.quickActions,
     required this.onTapQuickAction,
     required this.onTapBrowseHistory,
+    this.browseHistorySubtitle,
+    this.browseHistoryBadgeText,
     required this.onTapSecurity,
     required this.onTapAbout,
   });
@@ -268,6 +270,8 @@ class MinePage extends StatelessWidget {
 
   /// 点击“浏览记录”回调。
   final VoidCallback onTapBrowseHistory;
+  final String? browseHistorySubtitle;
+  final String? browseHistoryBadgeText;
 
   /// 点击“账号与安全”回调。
   final VoidCallback onTapSecurity;
@@ -297,6 +301,8 @@ class MinePage extends StatelessWidget {
           SizedBox(height: compact ? 10 : 12),
           MineMenuCard(
             onTapBrowseHistory: onTapBrowseHistory,
+            browseHistorySubtitle: browseHistorySubtitle,
+            browseHistoryBadgeText: browseHistoryBadgeText,
             onTapSecurity: onTapSecurity,
             onTapAbout: onTapAbout,
           ),
@@ -422,12 +428,16 @@ class MineMenuCard extends StatelessWidget {
   const MineMenuCard({
     super.key,
     required this.onTapBrowseHistory,
+    this.browseHistorySubtitle,
+    this.browseHistoryBadgeText,
     required this.onTapSecurity,
     required this.onTapAbout,
   });
 
   /// 点击“浏览记录”回调。
   final VoidCallback onTapBrowseHistory;
+  final String? browseHistorySubtitle;
+  final String? browseHistoryBadgeText;
 
   /// 点击“账号与安全”回调。
   final VoidCallback onTapSecurity;
@@ -489,7 +499,11 @@ class MineMenuCard extends StatelessWidget {
                 compact: compact,
                 icon: Icons.history_rounded,
                 title: l10n?.mineMenuHistoryTitle ?? '浏览记录',
-                subtitle: l10n?.mineMenuHistorySubtitle ?? '你最近查看过的药品',
+                subtitle:
+                    browseHistorySubtitle ??
+                    l10n?.mineMenuHistorySubtitle ??
+                    '你最近查看过的药品',
+                badgeText: browseHistoryBadgeText,
                 accentColor: scheme.secondary,
                 onTap: onTapBrowseHistory,
               ),
@@ -525,6 +539,7 @@ class _MineMenuItem extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.badgeText,
     required this.accentColor,
     required this.onTap,
   });
@@ -540,6 +555,7 @@ class _MineMenuItem extends StatelessWidget {
 
   /// 副标题。
   final String subtitle;
+  final String? badgeText;
 
   final Color accentColor;
 
@@ -579,15 +595,37 @@ class _MineMenuItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: compact ? 14 : 14.5,
-                      fontWeight: FontWeight.w800,
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: compact ? 14 : 14.5,
+                            fontWeight: FontWeight.w800,
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF0F172A),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if ((badgeText ?? '').trim().isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        TintedStatusChip(
+                          text: badgeText!.trim(),
+                          color: accentColor,
+                          enablePopup: false,
+                          fontSize: 10.6,
+                          fontWeight: FontWeight.w800,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   SizedBox(height: compact ? 1.5 : 2),
                   Text(

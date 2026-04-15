@@ -828,6 +828,57 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mineMenuHistorySubtitle => '你最近查看过的药品';
 
   @override
+  String get mineBrowseHistoryPageTitle => '浏览记录';
+
+  @override
+  String get mineBrowseHistoryHeroTitle => '最近查看';
+
+  @override
+  String get mineBrowseHistoryHeroSubtitle => '进入药品详情后会自动记录，方便稍后继续查看。';
+
+  @override
+  String mineBrowseHistoryCountLabel(int count) {
+    return '$count 条记录';
+  }
+
+  @override
+  String get mineBrowseHistoryScopeAccount => '当前账号';
+
+  @override
+  String get mineBrowseHistoryScopeGuest => '本机游客记录';
+
+  @override
+  String get mineBrowseHistoryClearAction => '清空';
+
+  @override
+  String get mineBrowseHistoryClearConfirmTitle => '清空浏览记录';
+
+  @override
+  String get mineBrowseHistoryClearConfirmMessage =>
+      '清空后将删除当前账号下的本机浏览记录，且无法恢复。';
+
+  @override
+  String get mineBrowseHistoryConfirmAction => '确认清空';
+
+  @override
+  String get mineBrowseHistoryEmptyTitle => '还没有浏览记录';
+
+  @override
+  String get mineBrowseHistoryEmptySubtitle => '去搜索或识别药品，打开详情后就会自动出现在这里。';
+
+  @override
+  String get mineBrowseHistoryOpenSearchAction => '去搜索药品';
+
+  @override
+  String get mineBrowseHistoryRemoveAction => '移除';
+
+  @override
+  String get mineBrowseHistoryDeleteToast => '已移除浏览记录';
+
+  @override
+  String get mineBrowseHistoryClearedToast => '浏览记录已清空';
+
+  @override
   String get mineMenuSecurityTitle => '账号与安全';
 
   @override

@@ -882,6 +882,59 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mineMenuHistorySubtitle => 'Medicines you viewed recently';
 
   @override
+  String get mineBrowseHistoryPageTitle => 'Browse History';
+
+  @override
+  String get mineBrowseHistoryHeroTitle => 'Recently Viewed';
+
+  @override
+  String get mineBrowseHistoryHeroSubtitle =>
+      'Medicine details you opened are saved automatically so you can come back later.';
+
+  @override
+  String mineBrowseHistoryCountLabel(int count) {
+    return '$count records';
+  }
+
+  @override
+  String get mineBrowseHistoryScopeAccount => 'Current account';
+
+  @override
+  String get mineBrowseHistoryScopeGuest => 'Local guest history';
+
+  @override
+  String get mineBrowseHistoryClearAction => 'Clear';
+
+  @override
+  String get mineBrowseHistoryClearConfirmTitle => 'Clear browsing history';
+
+  @override
+  String get mineBrowseHistoryClearConfirmMessage =>
+      'This removes the local browsing history saved for the current account and cannot be undone.';
+
+  @override
+  String get mineBrowseHistoryConfirmAction => 'Clear all';
+
+  @override
+  String get mineBrowseHistoryEmptyTitle => 'No browsing history yet';
+
+  @override
+  String get mineBrowseHistoryEmptySubtitle =>
+      'Search or scan a medicine and open its detail page. It will appear here automatically.';
+
+  @override
+  String get mineBrowseHistoryOpenSearchAction => 'Search medicines';
+
+  @override
+  String get mineBrowseHistoryRemoveAction => 'Remove';
+
+  @override
+  String get mineBrowseHistoryDeleteToast => 'Removed from browsing history';
+
+  @override
+  String get mineBrowseHistoryClearedToast => 'Browsing history cleared';
+
+  @override
   String get mineMenuSecurityTitle => 'Account & Security';
 
   @override

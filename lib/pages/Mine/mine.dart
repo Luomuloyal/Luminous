@@ -3,8 +3,10 @@ import 'package:get/get.dart';
 import 'package:luminous/components/mine.dart';
 import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/l10n/app_localizations.dart';
+import 'package:luminous/stores/browse_history_store.dart';
 import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/toast_utils.dart';
+import 'package:luminous/viewmodels/browse_history.dart';
 import 'package:luminous/viewmodels/mine.dart';
 
 // 我的页
@@ -33,8 +35,26 @@ class _MineViewState extends State<MineView> {
   ///
   /// 用于判断登录态、读取用户信息、执行退出登录。
   final UserController _userController = Get.find<UserController>();
+  Worker? _userWorker;
+  String? _browseHistorySubtitle;
+  String? _browseHistoryBadgeText;
 
   AppLocalizations? get _l10n => AppLocalizations.of(context);
+
+  @override
+  void initState() {
+    super.initState();
+    _userWorker = ever<dynamic>(_userController.user, (_) {
+      _loadBrowseHistoryPreview();
+    });
+    _loadBrowseHistoryPreview();
+  }
+
+  @override
+  void dispose() {
+    _userWorker?.dispose();
+    super.dispose();
+  }
 
   /// 我的页顶部快捷入口配置列表。
   List<MineQuickActionData> get _quickActions {
@@ -106,6 +126,50 @@ class _MineViewState extends State<MineView> {
     ToastUtils.instance.show(context, l10n?.mineDevelopingToast ?? '功能开发中');
   }
 
+  Future<void> _openBrowseHistory() async {
+    await Navigator.pushNamed(context, '/browse-history');
+    if (!mounted) {
+      return;
+    }
+    await _loadBrowseHistoryPreview();
+  }
+
+  Future<void> _loadBrowseHistoryPreview() async {
+    List<BrowseHistoryEntry> entries = const <BrowseHistoryEntry>[];
+    try {
+      entries = await browseHistoryStore.loadEntries(
+        userId: _userController.user.value?.id,
+      );
+    } catch (_) {
+      entries = const <BrowseHistoryEntry>[];
+    }
+    if (!mounted) {
+      return;
+    }
+    final l10n = _l10n;
+    final latest = entries.isEmpty ? null : entries.first;
+    setState(() {
+      _browseHistorySubtitle = latest == null
+          ? (l10n?.mineMenuHistorySubtitle ?? '你最近查看过的药品')
+          : _historyPreviewSubtitle(l10n, latest);
+      _browseHistoryBadgeText = entries.isEmpty
+          ? null
+          : (l10n?.mineBrowseHistoryCountLabel(entries.length) ??
+                '${entries.length} 条');
+    });
+  }
+
+  String _historyPreviewSubtitle(
+    AppLocalizations? l10n,
+    BrowseHistoryEntry latest,
+  ) {
+    final title = latest.displayTitle.trim();
+    if (title.isEmpty) {
+      return l10n?.mineMenuHistorySubtitle ?? '你最近查看过的药品';
+    }
+    return title;
+  }
+
   /// 构建我的页 UI。
   ///
   /// 这里用 `Obx` 监听用户对象变化，让 UI 自动响应登录/退出登录。
@@ -125,10 +189,9 @@ class _MineViewState extends State<MineView> {
       ),
       quickActions: _quickActions,
       onTapQuickAction: _onTapQuickAction,
-      onTapBrowseHistory: () => ToastUtils.instance.show(
-        context,
-        l10n?.mineDevelopingToast ?? '功能开发中',
-      ),
+      onTapBrowseHistory: _openBrowseHistory,
+      browseHistorySubtitle: _browseHistorySubtitle,
+      browseHistoryBadgeText: _browseHistoryBadgeText,
       onTapSecurity: () => Navigator.pushNamed(context, '/settings'),
       onTapAbout: () => showAboutDialog(
         context: context,

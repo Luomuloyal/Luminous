@@ -371,6 +371,29 @@
   "mineMenuSubtitle": "Collect history, account security, and version info in one place",
   "mineMenuHistoryTitle": "Browse History",
   "mineMenuHistorySubtitle": "Medicines you viewed recently",
+  "mineBrowseHistoryPageTitle": "Browse History",
+  "mineBrowseHistoryHeroTitle": "Recently Viewed",
+  "mineBrowseHistoryHeroSubtitle": "Medicine details you opened are saved automatically so you can come back later.",
+  "mineBrowseHistoryCountLabel": "{count} records",
+  "@mineBrowseHistoryCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mineBrowseHistoryScopeAccount": "Current account",
+  "mineBrowseHistoryScopeGuest": "Local guest history",
+  "mineBrowseHistoryClearAction": "Clear",
+  "mineBrowseHistoryClearConfirmTitle": "Clear browsing history",
+  "mineBrowseHistoryClearConfirmMessage": "This removes the local browsing history saved for the current account and cannot be undone.",
+  "mineBrowseHistoryConfirmAction": "Clear all",
+  "mineBrowseHistoryEmptyTitle": "No browsing history yet",
+  "mineBrowseHistoryEmptySubtitle": "Search or scan a medicine and open its detail page. It will appear here automatically.",
+  "mineBrowseHistoryOpenSearchAction": "Search medicines",
+  "mineBrowseHistoryRemoveAction": "Remove",
+  "mineBrowseHistoryDeleteToast": "Removed from browsing history",
+  "mineBrowseHistoryClearedToast": "Browsing history cleared",
   "mineMenuSecurityTitle": "Account & Security",
   "mineMenuSecuritySubtitle": "Privacy settings and security options",
   "mineMenuAboutTitle": "About Luminous",

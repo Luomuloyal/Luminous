@@ -1148,18 +1148,6 @@ class _ThemeStyleCard extends StatelessWidget {
                 height: 1.3,
               ),
             ),
-            if (selected) ...[
-              const SizedBox(height: 9),
-              TintedStatusChip(
-                text: l10n?.settingsThemeStyleInUseBadge ?? '当前使用',
-                color: scheme.primary,
-                enablePopup: false,
-                showBorder: false,
-                fontSize: 10.8,
-                fontWeight: FontWeight.w800,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              ),
-            ],
           ],
         ),
       ),
@@ -1592,33 +1580,33 @@ List<Color> _themeStylePreview(AppThemeStyle style, bool isDark) {
   switch (style) {
     case AppThemeStyle.softGlow:
       return isDark
-          ? const [Color(0xFF0A1424), Color(0xFF1D3050), Color(0xFF6B5EA3)]
-          : const [Color(0xFFECF7FF), Color(0xFFF9EFD9), Color(0xFFEEE4FF)];
+          ? const [Color(0xFF0B1524), Color(0xFF1E3351), Color(0xFFD8C1FF)]
+          : const [Color(0xFFF7FBFF), Color(0xFFF7EFCF), Color(0xFFEEE4FF)];
     case AppThemeStyle.moonMist:
       return isDark
-          ? const [Color(0xFF061423), Color(0xFF17365A), Color(0xFF7480DB)]
-          : const [Color(0xFFEFF6FF), Color(0xFFDEE9FF), Color(0xFFE8E5FF)];
+          ? const [Color(0xFF081523), Color(0xFF1A314A), Color(0xFFC3C8FF)]
+          : const [Color(0xFFF3F7FD), Color(0xFFE5EEFF), Color(0xFFE9EBFF)];
     case AppThemeStyle.divineTree:
       return isDark
-          ? const [Color(0xFF0A120C), Color(0xFF1F3124), Color(0xFF7C6A32)]
-          : const [Color(0xFFFEF8DB), Color(0xFFF2F8D8), Color(0xFFDDECB2)];
+          ? const [Color(0xFF0B120C), Color(0xFF203327), Color(0xFFE1CB85)]
+          : const [Color(0xFFFBFAF0), Color(0xFFF0F5D9), Color(0xFFEBDDAB)];
     case AppThemeStyle.illusion:
       return isDark
           ? const [
-              Color(0xFF120A20),
-              Color(0xFF2C1D46),
-              Color(0xFF4E54A2),
-              Color(0xFFD7BCFF),
+              Color(0xFF110B1E),
+              Color(0xFF2B1F45),
+              Color(0xFF87A0E4),
+              Color(0xFFD0C0FF),
             ]
           : const [
-              Color(0xFFF8F2FF),
-              Color(0xFFEDE0FF),
-              Color(0xFFC7B0FF),
-              Color(0xFF8495EA),
+              Color(0xFFF7F4FF),
+              Color(0xFFEDE4FF),
+              Color(0xFFD4C3FF),
+              Color(0xFF90A6EA),
             ];
     case AppThemeStyle.lightSand:
       return isDark
-          ? const [Color(0xFF17110D), Color(0xFF31241D), Color(0xFF946F5A)]
-          : const [Color(0xFFF7EFE7), Color(0xFFEAD9CF), Color(0xFFD6B7AA)];
+          ? const [Color(0xFF17110D), Color(0xFF32251E), Color(0xFFD8B1A7)]
+          : const [Color(0xFFFAF1E9), Color(0xFFEEDBD0), Color(0xFFDDB6AA)];
   }
 }

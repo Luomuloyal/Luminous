@@ -7,6 +7,7 @@ import 'package:luminous/pages/CheckIn/checkin.dart';
 import 'package:luminous/pages/Legal/legal_documents.dart';
 import 'package:luminous/pages/Login/login.dart';
 import 'package:luminous/pages/Main/main.dart';
+import 'package:luminous/pages/Mine/browse_history.dart';
 import 'package:luminous/pages/Register/register.dart';
 import 'package:luminous/pages/Reminders/reminder_list.dart';
 import 'package:luminous/pages/Safety/safety_assist.dart';
@@ -62,6 +63,7 @@ Map<String, Widget Function(BuildContext)> getRootRoutes() {
     '/checkin': (context) => const CheckInPage(),
     '/safety': (context) => const SafetyAssistPage(),
     '/settings': (context) => const SettingsPage(),
+    '/browse-history': (context) => const BrowseHistoryPage(),
     '/user-agreement': (context) => const UserAgreementPage(),
     '/privacy-policy': (context) => const PrivacyPolicyPage(),
   };
@@ -70,6 +72,10 @@ Map<String, Widget Function(BuildContext)> getRootRoutes() {
 ThemeData _buildLightTheme(AppThemeStyle style) {
   final spec = _safeThemeSpec(style);
   final scaffoldBackground = _softenedLightBackground(spec.lightBackground);
+  final lightOnSurfaceVariant = _lightOnSurfaceVariant(spec);
+  final lightOutline = _lightOutline(spec);
+  final lightDivider = _lightDivider(spec);
+  final lightCardBorder = _lightCardBorder(spec);
   final colorScheme =
       ColorScheme.fromSeed(
         seedColor: spec.lightPrimary,
@@ -79,8 +85,9 @@ ThemeData _buildLightTheme(AppThemeStyle style) {
         secondary: spec.lightSecondary,
         tertiary: spec.lightTertiary,
         surface: Colors.white,
-        onSurfaceVariant: const Color(0xFF64748B),
-        outline: const Color(0xFFDDE5F0),
+        onSurfaceVariant: lightOnSurfaceVariant,
+        outline: lightOutline,
+        outlineVariant: lightDivider,
         shadow: const Color(0xFF0F172A),
       );
 
@@ -89,7 +96,7 @@ ThemeData _buildLightTheme(AppThemeStyle style) {
     colorScheme: colorScheme,
     scaffoldBackgroundColor: scaffoldBackground,
     canvasColor: scaffoldBackground,
-    dividerColor: const Color(0xFFE2E8F0),
+    dividerColor: lightDivider,
     shadowColor: const Color(0xFF0F172A),
     dialogTheme: const DialogThemeData(
       backgroundColor: Colors.white,
@@ -117,15 +124,19 @@ ThemeData _buildLightTheme(AppThemeStyle style) {
       color: colorScheme.surface,
       surfaceTintColor: Colors.transparent,
       margin: EdgeInsets.zero,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(20)),
-        side: BorderSide(color: Color(0xFFE4EAF2)),
+      shape: RoundedRectangleBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(20)),
+        side: BorderSide(color: lightCardBorder),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: Color.alphaBlend(
-        spec.lightPrimary.withValues(alpha: 0.035),
+        Color.lerp(
+          spec.lightPrimary,
+          spec.lightSecondary,
+          0.30,
+        )!.withValues(alpha: 0.04),
         const Color(0xFFF7F9FC),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -185,16 +196,21 @@ ThemeData _buildDarkTheme(AppThemeStyle style) {
   final spec = _safeThemeSpec(style);
   final scaffoldBackground = _softenedDarkBackground(spec.darkBackground);
   final darkOnSurface = const Color(0xFFF2F6FF);
+  final darkAccentMix = Color.lerp(spec.darkPrimary, spec.darkSecondary, 0.44)!;
   final darkOnSurfaceVariant = Color.alphaBlend(
-    spec.darkPrimary.withValues(alpha: 0.24),
+    darkAccentMix.withValues(alpha: 0.22),
     const Color(0xFFA6B4C7),
   );
   final darkOutline = Color.alphaBlend(
-    spec.darkPrimary.withValues(alpha: 0.20),
+    darkAccentMix.withValues(alpha: 0.18),
     const Color(0xFF32445B),
   );
   final darkDivider = Color.alphaBlend(
-    spec.darkPrimary.withValues(alpha: 0.15),
+    Color.lerp(
+      spec.darkSecondary,
+      spec.darkTertiary,
+      0.42,
+    )!.withValues(alpha: 0.16),
     const Color(0xFF2A3A4F),
   );
   final colorScheme =
@@ -315,83 +331,83 @@ _AppThemeSpec _themeSpecFor(AppThemeStyle style) {
   switch (style) {
     case AppThemeStyle.softGlow:
       return const _AppThemeSpec(
-        lightPrimary: Color(0xFF2DA7E7),
-        lightSecondary: Color(0xFFC78DE8),
-        lightTertiary: Color(0xFFF3C983),
-        lightBackground: Color(0xFFF8FBFF),
-        darkPrimary: Color(0xFF90DBFF),
-        darkSecondary: Color(0xFFD8B8FF),
-        darkTertiary: Color(0xFFF0D184),
-        darkBackground: Color(0xFF0A1424),
-        darkSurface: Color(0xFF13223A),
-        darkSurfaceAlt: Color(0xFF1D3050),
+        lightPrimary: Color(0xFF3FA9E8),
+        lightSecondary: Color(0xFFCAA4E8),
+        lightTertiary: Color(0xFFF1CB8A),
+        lightBackground: Color(0xFFF7FBFF),
+        darkPrimary: Color(0xFFA6DBFF),
+        darkSecondary: Color(0xFFD8C1FF),
+        darkTertiary: Color(0xFFE9D08E),
+        darkBackground: Color(0xFF0B1524),
+        darkSurface: Color(0xFF14243A),
+        darkSurfaceAlt: Color(0xFF1E3351),
       );
     case AppThemeStyle.moonMist:
       return const _AppThemeSpec(
-        lightPrimary: Color(0xFF3A82F6),
-        lightSecondary: Color(0xFF7E8EF8),
-        lightTertiary: Color(0xFFA4BCFF),
-        lightBackground: Color(0xFFF1F6FF),
-        darkPrimary: Color(0xFF9DC8FF),
-        darkSecondary: Color(0xFFB0B8FF),
-        darkTertiary: Color(0xFF75A6E9),
-        darkBackground: Color(0xFF061423),
-        darkSurface: Color(0xFF0F233A),
-        darkSurfaceAlt: Color(0xFF17365A),
+        lightPrimary: Color(0xFF5A8FE6),
+        lightSecondary: Color(0xFF9AA5F2),
+        lightTertiary: Color(0xFFC5D3FF),
+        lightBackground: Color(0xFFF3F7FD),
+        darkPrimary: Color(0xFFAACBFF),
+        darkSecondary: Color(0xFFC3C8FF),
+        darkTertiary: Color(0xFF8FAEED),
+        darkBackground: Color(0xFF081523),
+        darkSurface: Color(0xFF122435),
+        darkSurfaceAlt: Color(0xFF1A314A),
       );
     case AppThemeStyle.divineTree:
       return const _AppThemeSpec(
-        lightPrimary: Color(0xFF8CAF4B),
-        lightSecondary: Color(0xFFDFC05D),
-        lightTertiary: Color(0xFFAECB63),
-        lightBackground: Color(0xFFFAFBEF),
-        darkPrimary: Color(0xFFD0E386),
-        darkSecondary: Color(0xFFE4C977),
-        darkTertiary: Color(0xFF99C97A),
-        darkBackground: Color(0xFF0A120C),
-        darkSurface: Color(0xFF142218),
-        darkSurfaceAlt: Color(0xFF1F3124),
+        lightPrimary: Color(0xFF8FA85C),
+        lightSecondary: Color(0xFFD8BD71),
+        lightTertiary: Color(0xFFAFCC92),
+        lightBackground: Color(0xFFFBFAF0),
+        darkPrimary: Color(0xFFD1E4A0),
+        darkSecondary: Color(0xFFE1CB85),
+        darkTertiary: Color(0xFF9BC68A),
+        darkBackground: Color(0xFF0B120C),
+        darkSurface: Color(0xFF15231A),
+        darkSurfaceAlt: Color(0xFF203327),
       );
     case AppThemeStyle.illusion:
       return const _AppThemeSpec(
-        lightPrimary: Color(0xFF9D68F0),
-        lightSecondary: Color(0xFFC39CFF),
-        lightTertiary: Color(0xFF7D91EB),
-        lightBackground: Color(0xFFF8F3FF),
-        darkPrimary: Color(0xFFD4B8FF),
-        darkSecondary: Color(0xFFAF93F1),
-        darkTertiary: Color(0xFF7A8DE0),
-        darkBackground: Color(0xFF120A20),
-        darkSurface: Color(0xFF1F1632),
-        darkSurfaceAlt: Color(0xFF2C1D46),
+        lightPrimary: Color(0xFF9272E6),
+        lightSecondary: Color(0xFFB89BEF),
+        lightTertiary: Color(0xFF88A0E8),
+        lightBackground: Color(0xFFF7F4FF),
+        darkPrimary: Color(0xFFD0C0FF),
+        darkSecondary: Color(0xFFA99AEF),
+        darkTertiary: Color(0xFF87A0E4),
+        darkBackground: Color(0xFF110B1E),
+        darkSurface: Color(0xFF1F1730),
+        darkSurfaceAlt: Color(0xFF2B1F45),
       );
     case AppThemeStyle.lightSand:
       return const _AppThemeSpec(
-        lightPrimary: Color(0xFFBDA286),
-        lightSecondary: Color(0xFFCDA6A7),
-        lightTertiary: Color(0xFFBD8A6E),
-        lightBackground: Color(0xFFF7EFE7),
-        darkPrimary: Color(0xFFDAC2A9),
-        darkSecondary: Color(0xFFCBA4A8),
-        darkTertiary: Color(0xFFBF9076),
+        lightPrimary: Color(0xFFBD9C7D),
+        lightSecondary: Color(0xFFD6B1A6),
+        lightTertiary: Color(0xFFC89072),
+        lightBackground: Color(0xFFFAF1E9),
+        darkPrimary: Color(0xFFE0C6AF),
+        darkSecondary: Color(0xFFD8B1A7),
+        darkTertiary: Color(0xFFC89074),
         darkBackground: Color(0xFF17110D),
-        darkSurface: Color(0xFF231A14),
-        darkSurfaceAlt: Color(0xFF31241D),
+        darkSurface: Color(0xFF241B15),
+        darkSurfaceAlt: Color(0xFF32251E),
       );
   }
 }
 
 const _AppThemeSpec _fallbackThemeSpec = _AppThemeSpec(
-  lightPrimary: Color(0xFF2DA7E7),
-  lightSecondary: Color(0xFFC78DE8),
-  lightTertiary: Color(0xFFF3C983),
-  lightBackground: Color(0xFFF8FBFF),
-  darkPrimary: Color(0xFF90DBFF),
-  darkSecondary: Color(0xFFD8B8FF),
-  darkTertiary: Color(0xFFF0D184),
-  darkBackground: Color(0xFF0A1424),
-  darkSurface: Color(0xFF13223A),
-  darkSurfaceAlt: Color(0xFF1D3050),
+  lightPrimary: Color(0xFF3FA9E8),
+  lightSecondary: Color(0xFFCAA4E8),
+  lightTertiary: Color(0xFFF1CB8A),
+  lightBackground: Color(0xFFF7FBFF),
+  darkPrimary: Color(0xFFA6DBFF),
+  darkSecondary: Color(0xFFD8C1FF),
+  darkTertiary: Color(0xFFE9D08E),
+  darkBackground: Color(0xFF0B1524),
+  darkSurface: Color(0xFF14243A),
+  darkSurfaceAlt: Color(0xFF1E3351),
 );
 
 _AppThemeSpec _safeThemeSpec(AppThemeStyle style) {
@@ -409,6 +425,50 @@ Color _softenedLightBackground(Color themedBackground) {
 
 Color _softenedDarkBackground(Color themedBackground) {
   return Color.lerp(const Color(0xFF0C1118), themedBackground, 0.72)!;
+}
+
+Color _lightOnSurfaceVariant(_AppThemeSpec spec) {
+  return Color.alphaBlend(
+    Color.lerp(
+      spec.lightPrimary,
+      spec.lightSecondary,
+      0.42,
+    )!.withValues(alpha: 0.10),
+    const Color(0xFF65758A),
+  );
+}
+
+Color _lightOutline(_AppThemeSpec spec) {
+  return Color.alphaBlend(
+    Color.lerp(
+      spec.lightPrimary,
+      spec.lightSecondary,
+      0.48,
+    )!.withValues(alpha: 0.16),
+    const Color(0xFFD9E2ED),
+  );
+}
+
+Color _lightDivider(_AppThemeSpec spec) {
+  return Color.alphaBlend(
+    Color.lerp(
+      spec.lightSecondary,
+      spec.lightTertiary,
+      0.42,
+    )!.withValues(alpha: 0.12),
+    const Color(0xFFE2E8F0),
+  );
+}
+
+Color _lightCardBorder(_AppThemeSpec spec) {
+  return Color.alphaBlend(
+    Color.lerp(
+      spec.lightPrimary,
+      spec.lightTertiary,
+      0.34,
+    )!.withValues(alpha: 0.12),
+    const Color(0xFFE4EAF2),
+  );
 }
 
 class _AppThemeSpec {

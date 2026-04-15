@@ -1658,6 +1658,102 @@ abstract class AppLocalizations {
   /// **'Medicines you viewed recently'**
   String get mineMenuHistorySubtitle;
 
+  /// No description provided for @mineBrowseHistoryPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse History'**
+  String get mineBrowseHistoryPageTitle;
+
+  /// No description provided for @mineBrowseHistoryHeroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently Viewed'**
+  String get mineBrowseHistoryHeroTitle;
+
+  /// No description provided for @mineBrowseHistoryHeroSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Medicine details you opened are saved automatically so you can come back later.'**
+  String get mineBrowseHistoryHeroSubtitle;
+
+  /// No description provided for @mineBrowseHistoryCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} records'**
+  String mineBrowseHistoryCountLabel(int count);
+
+  /// No description provided for @mineBrowseHistoryScopeAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Current account'**
+  String get mineBrowseHistoryScopeAccount;
+
+  /// No description provided for @mineBrowseHistoryScopeGuest.
+  ///
+  /// In en, this message translates to:
+  /// **'Local guest history'**
+  String get mineBrowseHistoryScopeGuest;
+
+  /// No description provided for @mineBrowseHistoryClearAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get mineBrowseHistoryClearAction;
+
+  /// No description provided for @mineBrowseHistoryClearConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear browsing history'**
+  String get mineBrowseHistoryClearConfirmTitle;
+
+  /// No description provided for @mineBrowseHistoryClearConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the local browsing history saved for the current account and cannot be undone.'**
+  String get mineBrowseHistoryClearConfirmMessage;
+
+  /// No description provided for @mineBrowseHistoryConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get mineBrowseHistoryConfirmAction;
+
+  /// No description provided for @mineBrowseHistoryEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No browsing history yet'**
+  String get mineBrowseHistoryEmptyTitle;
+
+  /// No description provided for @mineBrowseHistoryEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Search or scan a medicine and open its detail page. It will appear here automatically.'**
+  String get mineBrowseHistoryEmptySubtitle;
+
+  /// No description provided for @mineBrowseHistoryOpenSearchAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Search medicines'**
+  String get mineBrowseHistoryOpenSearchAction;
+
+  /// No description provided for @mineBrowseHistoryRemoveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get mineBrowseHistoryRemoveAction;
+
+  /// No description provided for @mineBrowseHistoryDeleteToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from browsing history'**
+  String get mineBrowseHistoryDeleteToast;
+
+  /// No description provided for @mineBrowseHistoryClearedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Browsing history cleared'**
+  String get mineBrowseHistoryClearedToast;
+
   /// No description provided for @mineMenuSecurityTitle.
   ///
   /// In en, this message translates to:
