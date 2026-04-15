@@ -302,9 +302,15 @@ class _HistoryItemCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final accent = Color.lerp(scheme.secondary, scheme.primary, 0.42)!;
+    final secondary = Color.lerp(scheme.tertiary, scheme.secondary, 0.36)!;
     final tips = entry.displayTips;
-    return AppSurfaceCard(
+    return AppSectionCard(
+      accentColor: accent,
+      secondaryColor: secondary,
+      ornamentKey: _historyItemOrnamentKey(entry.identityKey),
+      ornamentVisibilityScale: 0.22,
       padding: const EdgeInsets.fromLTRB(12, 11, 12, 11),
+      radius: 16,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -420,6 +426,14 @@ class _HistoryItemCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _historyItemOrnamentKey(String identityKey) {
+  final sanitized = identityKey.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
+  if (sanitized.isEmpty) {
+    return 'mine.browse-history.item.unknown';
+  }
+  return 'mine.browse-history.item.$sanitized';
 }
 
 String _formatHistoryTimeLabel(BuildContext context, DateTime value) {

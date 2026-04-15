@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:luminous/api/scan_api.dart';
 import 'package:luminous/l10n/app_localizations.dart';
+import 'package:luminous/pages/Scan/models/selected_scan_image.dart';
 import 'package:luminous/stores/album_local_store.dart';
 import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/loading_utils.dart';
@@ -82,6 +83,41 @@ class MedicineScanController extends GetxController {
     }
     _selectedIndex = index.clamp(0, result.candidates.length - 1);
     update();
+  }
+
+  /// 处理页面进入后的首次识别流。
+  Future<void> handleEntryFlow({
+    SelectedScanImage? initialImage,
+    required bool promptSourceOnStart,
+    required Future<SelectedScanImage?> Function() pickImage,
+    VoidCallback? onPromptCancelled,
+  }) async {
+    if (initialImage != null) {
+      await applySelectedImage(initialImage);
+      return;
+    }
+    if (!promptSourceOnStart) {
+      return;
+    }
+    await pickAndScan(pickImage: pickImage, onCancelled: onPromptCancelled);
+  }
+
+  /// 调起选图流程并在成功后立即识别。
+  Future<void> pickAndScan({
+    required Future<SelectedScanImage?> Function() pickImage,
+    VoidCallback? onCancelled,
+  }) async {
+    final image = await pickImage();
+    if (image == null) {
+      onCancelled?.call();
+      return;
+    }
+    await applySelectedImage(image);
+  }
+
+  /// 应用一张已经读取完成的识别图片。
+  Future<void> applySelectedImage(SelectedScanImage image) {
+    return applyImageAndScan(bytes: image.bytes, mimeType: image.mimeType);
   }
 
   /// 应用新图片并发起识别。

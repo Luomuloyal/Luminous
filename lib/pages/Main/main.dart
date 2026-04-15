@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -10,6 +8,7 @@ import 'package:luminous/pages/Album/album.dart';
 import 'package:luminous/pages/Drug/drug.dart';
 import 'package:luminous/pages/Home/home.dart';
 import 'package:luminous/l10n/app_localizations.dart';
+import 'package:luminous/pages/Main/controllers/main_controller.dart';
 import 'package:luminous/pages/Mine/mine.dart';
 import 'package:luminous/pages/Safety/safety_assist.dart';
 import 'package:luminous/pages/Search/search.dart';
@@ -27,7 +26,9 @@ import 'package:luminous/stores/ornament_controller.dart';
 /// 只负责一级页面切换与状态保活，不承担各业务页的数据逻辑。
 class MainPage extends StatefulWidget {
   /// 创建主页面 Tab 容器组件。
-  const MainPage({super.key});
+  const MainPage({super.key, this.controller});
+
+  final MainController? controller;
 
   /// 创建底部 Tab 主页面对应的状态对象。
   @override
@@ -38,6 +39,13 @@ class MainPage extends StatefulWidget {
 ///
 /// 这里只维护当前选中的 Tab 下标，不承载任何业务数据，业务状态由各子页面自己保存。
 class _MainPageState extends State<MainPage> {
+  late final MainController _controller =
+      widget.controller ??
+      MainController(
+        pageCount: _pages.length,
+        secondaryPageCount: _secondaryPages.length,
+      );
+
   /// 底部导航栏配置列表。
   List<_MainTabItem> _tablist(AppLocalizations? l10n) {
     return [
@@ -72,9 +80,6 @@ class _MainPageState extends State<MainPage> {
     MineView(),
   ];
 
-  /// 已经真正挂载过的 Tab 下标。
-  final Set<int> _loadedIndexes = <int>{0};
-
   /// 需要在后台预热的二级页面列表。
   static const List<Widget> _secondaryPages = [
     SearchView(),
@@ -82,83 +87,6 @@ class _MainPageState extends State<MainPage> {
     SettingsPage(),
     ProfileSettingsPage(),
   ];
-
-  /// 已完成预加载的二级页面下标。
-  final Set<int> _preloadedSecondaryIndexes = <int>{};
-
-  /// 当前选中的底部 Tab 下标。
-  int _currentIndex = 0;
-
-  /// 防止重复启动后台预加载。
-  bool _backgroundPreloadStarted = false;
-
-  /// 防止重复启动二级页预加载。
-  bool _secondaryPreloadStarted = false;
-
-  @override
-  void initState() {
-    super.initState();
-    unawaited(_preloadTabsInBackground());
-    unawaited(_preloadSecondaryPagesInBackground());
-  }
-
-  /// 冷启动后分批预加载未打开的 Tab，降低首次切换卡顿感。
-  Future<void> _preloadTabsInBackground() async {
-    if (_backgroundPreloadStarted) {
-      return;
-    }
-    _backgroundPreloadStarted = true;
-
-    // 让首屏和启动预热任务先跑，避免刚启动就叠加渲染压力。
-    await Future<void>.delayed(const Duration(milliseconds: 900));
-    if (!mounted) {
-      return;
-    }
-
-    for (var index = 0; index < _pages.length; index++) {
-      if (!mounted) {
-        return;
-      }
-      if (_loadedIndexes.contains(index)) {
-        continue;
-      }
-      setState(() {
-        _loadedIndexes.add(index);
-      });
-
-      // 分批加载，避免瞬时触发多个页面初始化造成主线程尖峰。
-      await Future<void>.delayed(const Duration(milliseconds: 420));
-    }
-  }
-
-  /// 冷启动后延迟分批预加载二级页，进一步减少首次进入二级页卡顿。
-  Future<void> _preloadSecondaryPagesInBackground() async {
-    if (_secondaryPreloadStarted) {
-      return;
-    }
-    _secondaryPreloadStarted = true;
-
-    // 二级页预热故意更晚，避免与首屏和 Tab 预热争资源。
-    const delayedStarts = <int>[1200, 1300, 1400, 1500];
-
-    for (var index = 0; index < _secondaryPages.length; index++) {
-      if (!mounted) {
-        return;
-      }
-      await Future<void>.delayed(
-        Duration(milliseconds: delayedStarts[index % delayedStarts.length]),
-      );
-      if (!mounted) {
-        return;
-      }
-      if (_preloadedSecondaryIndexes.contains(index)) {
-        continue;
-      }
-      setState(() {
-        _preloadedSecondaryIndexes.add(index);
-      });
-    }
-  }
 
   Widget _buildSecondaryPreloadLayer() {
     return Offstage(
@@ -168,7 +96,7 @@ class _MainPageState extends State<MainPage> {
         child: Stack(
           fit: StackFit.expand,
           children: List<Widget>.generate(_secondaryPages.length, (index) {
-            if (!_preloadedSecondaryIndexes.contains(index)) {
+            if (!_controller.shouldPreloadSecondary(index)) {
               return const SizedBox.shrink();
             }
             return KeyedSubtree(
@@ -205,100 +133,104 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final tablist = _tablist(l10n);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final tabColors = _resolvedTabColors(theme);
-    final currentColor = tabColors[_currentIndex];
-    final secondaryColor = tabColors[(_currentIndex + 1) % tabColors.length];
-    final tabBarBackground = Color.alphaBlend(
-      (isDark ? secondaryColor : currentColor).withValues(
-        alpha: isDark ? 0.08 : 0.04,
-      ),
-      theme.cardTheme.color ?? theme.colorScheme.surface,
-    );
-    final bottomBedColor = Color.alphaBlend(
-      currentColor.withValues(alpha: isDark ? 0.12 : 0.055),
-      theme.scaffoldBackgroundColor,
-    );
-    final systemNavigationBarColor = Color.alphaBlend(
-      secondaryColor.withValues(alpha: isDark ? 0.12 : 0.05),
-      bottomBedColor,
-    );
-    final inactiveColor = isDark
-        ? const Color(0xFF94A3B8)
-        : AppUiConstants.TAB_INACTIVE;
-    final overlayStyle =
-        (isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark)
-            .copyWith(
-              statusBarColor: Colors.transparent,
-              systemNavigationBarColor: systemNavigationBarColor,
-              systemNavigationBarDividerColor: Colors.transparent,
-              statusBarIconBrightness: isDark
-                  ? Brightness.light
-                  : Brightness.dark,
-              statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
-              systemNavigationBarIconBrightness: isDark
-                  ? Brightness.light
-                  : Brightness.dark,
-            );
+    return GetBuilder<MainController>(
+      init: _controller,
+      global: false,
+      builder: (controller) {
+        final l10n = AppLocalizations.of(context);
+        final tablist = _tablist(l10n);
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+        final tabColors = _resolvedTabColors(theme);
+        final currentColor = tabColors[controller.currentIndex];
+        final secondaryColor =
+            tabColors[(controller.currentIndex + 1) % tabColors.length];
+        final tabBarBackground = Color.alphaBlend(
+          (isDark ? secondaryColor : currentColor).withValues(
+            alpha: isDark ? 0.08 : 0.04,
+          ),
+          theme.cardTheme.color ?? theme.colorScheme.surface,
+        );
+        final bottomBedColor = Color.alphaBlend(
+          currentColor.withValues(alpha: isDark ? 0.12 : 0.055),
+          theme.scaffoldBackgroundColor,
+        );
+        final systemNavigationBarColor = Color.alphaBlend(
+          secondaryColor.withValues(alpha: isDark ? 0.12 : 0.05),
+          bottomBedColor,
+        );
+        final inactiveColor = isDark
+            ? const Color(0xFF94A3B8)
+            : AppUiConstants.TAB_INACTIVE;
+        final overlayStyle =
+            (isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark)
+                .copyWith(
+                  statusBarColor: Colors.transparent,
+                  systemNavigationBarColor: systemNavigationBarColor,
+                  systemNavigationBarDividerColor: Colors.transparent,
+                  statusBarIconBrightness: isDark
+                      ? Brightness.light
+                      : Brightness.dark,
+                  statusBarBrightness: isDark
+                      ? Brightness.dark
+                      : Brightness.light,
+                  systemNavigationBarIconBrightness: isDark
+                      ? Brightness.light
+                      : Brightness.dark,
+                );
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: overlayStyle,
-      child: Scaffold(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        extendBody: true,
-        body: AppCanvas(
-          accentColor: currentColor,
-          secondaryAccentColor: secondaryColor,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              IndexedStack(
-                index: _currentIndex,
-                children: List<Widget>.generate(
-                  tablist.length,
-                  (index) => _loadedIndexes.contains(index)
-                      ? _pages[index]
-                      : const SizedBox.shrink(),
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: overlayStyle,
+          child: Scaffold(
+            backgroundColor: theme.scaffoldBackgroundColor,
+            extendBody: true,
+            body: AppCanvas(
+              accentColor: currentColor,
+              secondaryAccentColor: secondaryColor,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  IndexedStack(
+                    index: controller.currentIndex,
+                    children: List<Widget>.generate(
+                      tablist.length,
+                      (index) => controller.shouldLoadTab(index)
+                          ? _pages[index]
+                          : const SizedBox.shrink(),
+                    ),
+                  ),
+                  _buildSecondaryPreloadLayer(),
+                ],
+              ),
+            ),
+            bottomNavigationBar: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    bottomBedColor.withValues(alpha: isDark ? 0.92 : 0.90),
+                    systemNavigationBarColor,
+                  ],
                 ),
               ),
-              _buildSecondaryPreloadLayer(),
-            ],
-          ),
-        ),
-        bottomNavigationBar: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                bottomBedColor.withValues(alpha: isDark ? 0.92 : 0.90),
-                systemNavigationBarColor,
-              ],
+              child: SafeArea(
+                top: false,
+                minimum: const EdgeInsets.fromLTRB(12, 0, 12, 6),
+                child: _MainBottomBar(
+                  items: tablist,
+                  itemColors: tabColors,
+                  currentIndex: controller.currentIndex,
+                  backgroundColor: tabBarBackground,
+                  inactiveColor: inactiveColor,
+                  buildIcon: _buildTabIcon,
+                  onTap: controller.selectTab,
+                ),
+              ),
             ),
           ),
-          child: SafeArea(
-            top: false,
-            minimum: const EdgeInsets.fromLTRB(12, 0, 12, 6),
-            child: _MainBottomBar(
-              items: tablist,
-              itemColors: tabColors,
-              currentIndex: _currentIndex,
-              backgroundColor: tabBarBackground,
-              inactiveColor: inactiveColor,
-              buildIcon: _buildTabIcon,
-              onTap: (index) {
-                setState(() {
-                  _loadedIndexes.add(index);
-                  _currentIndex = index;
-                });
-              },
-            ),
-          ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

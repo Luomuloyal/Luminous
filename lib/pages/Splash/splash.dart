@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:luminous/l10n/app_localizations.dart';
+import 'package:get/get.dart';
 import 'package:luminous/stores/user_controller.dart';
 
 /// 启动屏页面。

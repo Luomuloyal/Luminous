@@ -8,6 +8,7 @@ import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/pages/Album/controllers/album_controller.dart';
 import 'package:luminous/pages/Drug/medicine_detail.dart';
 import 'package:luminous/pages/Scan/medicine_scan.dart';
+import 'package:luminous/pages/Scan/models/selected_scan_image.dart';
 import 'package:luminous/viewmodels/album.dart';
 
 /// 识别相册页。

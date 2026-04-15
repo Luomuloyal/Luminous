@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/api/auth_api.dart';
@@ -7,109 +5,59 @@ import 'package:luminous/components/auth.dart';
 import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Register/register.dart';
-import 'package:luminous/stores/session_sync_service.dart';
-import 'package:luminous/stores/token_manager.dart';
-import 'package:luminous/stores/user_controller.dart';
-import 'package:luminous/utils/dio_request.dart';
-import 'package:luminous/utils/toast_utils.dart';
+import 'package:luminous/pages/Login/controllers/login_controller.dart';
 import 'package:luminous/viewmodels/auth.dart';
 
 /// 登录页。
 ///
 /// 页面默认展示邮箱登录（密码/验证码），保留手机号分支逻辑供后续灰度开关。
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key, this.authApi = const AuthApi()});
+  const LoginPage({super.key, this.authApi = const AuthApi(), this.controller});
 
   final AuthApi authApi;
+  final LoginController? controller;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  static const int _codeCooldownSeconds = 60;
-
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _identifierController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _codeController = TextEditingController();
-  final UserController _userController = Get.find<UserController>();
-
-  final AuthIdentifierType _identifierType = AuthIdentifierType.email;
-  AuthLoginMode _loginMode = AuthLoginMode.password;
-  bool _obscurePassword = true;
-  bool _sendingCode = false;
-  bool _submitting = false;
-  String _codeTarget = '';
-  Timer? _codeCountdownTimer;
-  int _codeCountdownSeconds = 0;
-
-  static final RegExp _emailRegExp = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-  static final RegExp _phoneRegExp = RegExp(r'^1[3-9]\d{9}$');
-  static final RegExp _codeRegExp = RegExp(r'^\d{6}$');
-  static final RegExp _passwordRegExp = RegExp(r'^[A-Za-z0-9]{6,12}$');
+  late final LoginController _controller =
+      widget.controller ?? LoginController(authApi: widget.authApi);
 
   AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
+  GlobalKey<FormState> get _formKey => _controller.formKey;
+  TextEditingController get _identifierController =>
+      _controller.identifierController;
+  TextEditingController get _passwordController =>
+      _controller.passwordController;
+  TextEditingController get _codeController => _controller.codeController;
+  AuthIdentifierType get _identifierType => _controller.identifierType;
+  AuthLoginMode get _loginMode => _controller.loginMode;
+  bool get _obscurePassword => _controller.obscurePassword;
+  bool get _sendingCode => _controller.sendingCode;
+  bool get _submitting => _controller.submitting;
+  int get _codeCountdownSeconds => _controller.codeCountdownSeconds;
+
   String _identifierLabel(AuthIdentifierType type) {
-    return type == AuthIdentifierType.phone
-        ? _l10n.authPhoneLabel
-        : _l10n.authEmailLabel;
+    return _controller.identifierLabel(_l10n, type);
   }
 
   String _loginModeLabel(AuthLoginMode mode) {
-    return mode == AuthLoginMode.password
-        ? _l10n.authPasswordLoginMode
-        : _l10n.authCodeLoginMode;
-  }
-
-  @override
-  void dispose() {
-    _codeCountdownTimer?.cancel();
-    _identifierController.dispose();
-    _passwordController.dispose();
-    _codeController.dispose();
-    super.dispose();
+    return _controller.loginModeLabel(_l10n, mode);
   }
 
   String? _identifierValidator(String? value) {
-    final identifier = (value ?? '').trim();
-    if (identifier.isEmpty) {
-      return _identifierType == AuthIdentifierType.phone
-          ? _l10n.authValidationEnterPhone
-          : _l10n.authValidationEnterEmail;
-    }
-    if (_identifierType == AuthIdentifierType.phone &&
-        !_phoneRegExp.hasMatch(identifier)) {
-      return _l10n.authValidationInvalidPhone;
-    }
-    if (_identifierType == AuthIdentifierType.email &&
-        !_emailRegExp.hasMatch(identifier)) {
-      return _l10n.authValidationInvalidEmail;
-    }
-    return null;
+    return _controller.identifierValidator(_l10n, value);
   }
 
   String? _passwordValidator(String? value) {
-    final pwd = value ?? '';
-    if (pwd.isEmpty) {
-      return _l10n.authValidationEnterPassword;
-    }
-    if (!_passwordRegExp.hasMatch(pwd)) {
-      return _l10n.authValidationPasswordRule;
-    }
-    return null;
+    return _controller.passwordValidator(_l10n, value);
   }
 
   String? _codeValidator(String? value) {
-    final code = (value ?? '').trim();
-    if (code.isEmpty) {
-      return _l10n.authValidationEnterCode;
-    }
-    if (!_codeRegExp.hasMatch(code)) {
-      return _l10n.authValidationCodeRule;
-    }
-    return null;
+    return _controller.codeValidator(_l10n, value);
   }
 
   void _openUserAgreement() {
@@ -121,310 +69,70 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _onTapForgotPassword() {
-    ToastUtils.instance.show(context, _l10n.loginForgotPasswordPending);
+    _controller.onTapForgotPassword(context, _l10n);
   }
 
   void _onLoginModeChanged(AuthLoginMode mode) {
-    if (_submitting) {
-      return;
-    }
-    FocusScope.of(context).unfocus();
-    setState(() {
-      _loginMode = mode;
-      _clearCodeSession(clearInput: true);
-    });
-  }
-
-  void _clearCodeSession({required bool clearInput}) {
-    _resetCodeCooldown();
-    _codeTarget = '';
-    if (clearInput) {
-      _codeController.clear();
-    }
-  }
-
-  void _startCodeCooldown() {
-    _codeCountdownTimer?.cancel();
-    setState(() {
-      _codeCountdownSeconds = _codeCooldownSeconds;
-    });
-    _codeCountdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      if (_codeCountdownSeconds <= 1) {
-        timer.cancel();
-        setState(() {
-          _codeCountdownSeconds = 0;
-        });
-        return;
-      }
-      setState(() {
-        _codeCountdownSeconds -= 1;
-      });
-    });
-  }
-
-  void _resetCodeCooldown() {
-    _codeCountdownTimer?.cancel();
-    _codeCountdownTimer = null;
-    if (_codeCountdownSeconds == 0) {
-      return;
-    }
-    _codeCountdownSeconds = 0;
+    _controller.onLoginModeChanged(context, mode);
   }
 
   Future<void> _onSendCode() async {
-    FocusScope.of(context).unfocus();
-    if (_sendingCode || _codeCountdownSeconds > 0) {
-      return;
-    }
-
-    final identifier = _identifierController.text.trim();
-    final error = _identifierValidator(identifier);
-    if (error != null) {
-      ToastUtils.instance.show(context, error);
-      return;
-    }
-
-    setState(() {
-      _sendingCode = true;
-    });
-
-    try {
-      final response = _identifierType == AuthIdentifierType.phone
-          ? await widget.authApi.sendPhoneCode(
-              phone: identifier,
-              scene: AuthCodeScene.login,
-            )
-          : await widget.authApi.sendEmailCode(
-              email: identifier,
-              scene: AuthCodeScene.login,
-            );
-
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _codeTarget = identifier;
-      });
-      _startCodeCooldown();
-      ToastUtils.instance.show(
-        context,
-        response.msg.isEmpty ? _l10n.authCodeSentSuccess : response.msg,
-      );
-    } on ApiException catch (e) {
-      if (!mounted) {
-        return;
-      }
-      ToastUtils.instance.show(context, _resolveAuthErrorMessage(e));
-    } catch (e) {
-      if (!mounted) {
-        return;
-      }
-      ToastUtils.instance.showError(context, e);
-    } finally {
-      if (mounted) {
-        setState(() {
-          _sendingCode = false;
-        });
-      }
-    }
+    await _controller.onSendCode(context, _l10n);
   }
 
   Future<void> _onLoginPressed() async {
-    FocusScope.of(context).unfocus();
-    if (_submitting) {
-      return;
-    }
-
-    final isValid = _formKey.currentState?.validate() ?? false;
-    if (!isValid) {
-      return;
-    }
-
-    final identifier = _identifierController.text.trim();
-    if (_loginMode == AuthLoginMode.code && _codeTarget != identifier) {
-      ToastUtils.instance.show(context, _l10n.loginNeedCodeForCurrentAccount);
-      return;
-    }
-
-    setState(() {
-      _submitting = true;
-    });
-
-    try {
-      final response = _loginMode == AuthLoginMode.password
-          ? await widget.authApi.loginWithPassword(
-              identifierType: _identifierType,
-              identifier: identifier,
-              password: _passwordController.text,
-            )
-          : await widget.authApi.loginWithCode(
-              identifierType: _identifierType,
-              identifier: identifier,
-              code: _codeController.text.trim(),
-            );
-
-      final loginResult = response.result;
-      if (loginResult.token.trim().isNotEmpty) {
-        await tokenManager.setToken(loginResult.token.trim());
-        if (loginResult.refreshToken.trim().isNotEmpty) {
-          await tokenManager.setRefreshToken(loginResult.refreshToken.trim());
-        }
-      } else {
-        await tokenManager.deleteToken();
-      }
-
-      await _userController.setUser(loginResult.user);
-      final syncErrors = await sessionSyncService.syncForUser(
-        loginResult.user.id,
-      );
-
-      if (!mounted) {
-        return;
-      }
-
-      ToastUtils.instance.show(
-        context,
-        syncErrors.isEmpty
-            ? (response.msg.isEmpty ? _l10n.loginSuccess : response.msg)
-            : _l10n.loginSuccessPartialSync,
-      );
-
-      await Future<void>.delayed(const Duration(milliseconds: 500));
-      if (mounted) {
-        Navigator.maybePop(context);
-      }
-    } on ApiException catch (e) {
-      if (!mounted) {
-        return;
-      }
-      if (_loginMode == AuthLoginMode.code && e.code == 'NOT_REGISTERED') {
-        final confirmed = await _showAutoRegisterDialog(e.message);
-        if (!mounted || confirmed != true) {
-          return;
-        }
-        await Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => RegisterView(
-              authApi: widget.authApi,
-              initialIdentifierType: _identifierType,
-              initialIdentifier: identifier,
-              initialCode: _codeController.text.trim(),
-            ),
-          ),
-        );
-        return;
-      }
-      ToastUtils.instance.show(context, _resolveAuthErrorMessage(e));
-    } catch (e) {
-      if (!mounted) {
-        return;
-      }
-      ToastUtils.instance.showError(context, e);
-    } finally {
-      if (mounted) {
-        setState(() {
-          _submitting = false;
-        });
-      }
-    }
-  }
-
-  Future<bool?> _showAutoRegisterDialog(String message) {
-    return showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(_l10n.loginAutoRegisterTitle),
-          content: Text(
-            message.isEmpty ? _l10n.loginAutoRegisterPrompt : message,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(_l10n.loginAutoRegisterCancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(_l10n.loginAutoRegisterConfirm),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  String _resolveAuthErrorMessage(ApiException error) {
-    switch (error.code) {
-      case 'CODE_INVALID':
-        return _l10n.authErrorCodeInvalid;
-      case 'CODE_EXPIRED':
-        return _l10n.authErrorCodeExpired;
-      case 'CODE_REQUIRED':
-        return _l10n.authErrorCodeRequired;
-      case 'IDENTIFIER_EXISTS':
-        return _l10n.authErrorIdentifierExistsLogin;
-      case 'CODE_SEND_TOO_FREQUENT':
-        return _l10n.authErrorTooFrequent;
-      case 'INVALID_IDENTIFIER':
-      case 'INVALID_TARGET':
-        return _identifierType == AuthIdentifierType.phone
-            ? _l10n.authErrorInvalidPhone
-            : _l10n.authErrorInvalidEmailFormat;
-      default:
-        return error.message.trim().isEmpty
-            ? _l10n.authErrorRequestFailed
-            : error.message;
-    }
+    await _controller.onLoginPressed(context, _l10n);
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = _l10n;
-    return AuthPageScaffold(
-      children: [
-        _buildTopBar(),
-        const SizedBox(height: 10),
-        AuthHeroCard(
-          palette: SoftBannerPalettes.authOf(context),
-          icon: Icons.health_and_safety_rounded,
-          title: l10n.loginHeroTitle,
-          subtitle: l10n.loginHeroSubtitle(
-            _identifierLabel(_identifierType),
-            _loginModeLabel(_loginMode),
-          ),
-        ),
-        const SizedBox(height: 10),
-        AuthMethodSwitcher(
-          items: [
-            AuthMethodItem(
-              label: _loginModeLabel(AuthLoginMode.password),
-              selected: _loginMode == AuthLoginMode.password,
-              onTap: () => _onLoginModeChanged(AuthLoginMode.password),
+    return GetBuilder<LoginController>(
+      init: _controller,
+      global: false,
+      builder: (_) {
+        final l10n = _l10n;
+        return AuthPageScaffold(
+          children: [
+            _buildTopBar(),
+            const SizedBox(height: 10),
+            AuthHeroCard(
+              palette: SoftBannerPalettes.authOf(context),
+              icon: Icons.health_and_safety_rounded,
+              title: l10n.loginHeroTitle,
+              subtitle: l10n.loginHeroSubtitle(
+                _identifierLabel(_identifierType),
+                _loginModeLabel(_loginMode),
+              ),
             ),
-            AuthMethodItem(
-              label: _loginModeLabel(AuthLoginMode.code),
-              selected: _loginMode == AuthLoginMode.code,
-              onTap: () => _onLoginModeChanged(AuthLoginMode.code),
+            const SizedBox(height: 10),
+            AuthMethodSwitcher(
+              items: [
+                AuthMethodItem(
+                  label: _loginModeLabel(AuthLoginMode.password),
+                  selected: _loginMode == AuthLoginMode.password,
+                  onTap: () => _onLoginModeChanged(AuthLoginMode.password),
+                ),
+                AuthMethodItem(
+                  label: _loginModeLabel(AuthLoginMode.code),
+                  selected: _loginMode == AuthLoginMode.code,
+                  onTap: () => _onLoginModeChanged(AuthLoginMode.code),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            _buildFormCard(),
+            const SizedBox(height: 14),
+            _buildLoginButton(),
+            const SizedBox(height: 8),
+            _buildHelperText(),
+            const SizedBox(height: 8),
+            AuthLegalHint(
+              onTapAgreement: _openUserAgreement,
+              onTapPrivacy: _openPrivacyPolicy,
             ),
           ],
-        ),
-        const SizedBox(height: 14),
-        _buildFormCard(),
-        const SizedBox(height: 14),
-        _buildLoginButton(),
-        const SizedBox(height: 8),
-        _buildHelperText(),
-        const SizedBox(height: 8),
-        AuthLegalHint(
-          onTapAgreement: _openUserAgreement,
-          onTapPrivacy: _openPrivacyPolicy,
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -506,15 +214,7 @@ class _LoginPageState extends State<LoginPage> {
                       : Icons.email_outlined,
                 ),
                 validator: _identifierValidator,
-                onChanged: (value) {
-                  final identifier = value.trim();
-                  final hasActiveCodeSession = _codeTarget.isNotEmpty;
-                  if (hasActiveCodeSession && identifier != _codeTarget) {
-                    setState(() {
-                      _clearCodeSession(clearInput: false);
-                    });
-                  }
-                },
+                onChanged: _controller.onIdentifierChanged,
               ),
               const SizedBox(height: 10),
               if (_loginMode == AuthLoginMode.password)
@@ -527,11 +227,7 @@ class _LoginPageState extends State<LoginPage> {
                     hintText: _l10n.authPasswordHint,
                     prefixIcon: Icons.lock_rounded,
                     suffixIcon: IconButton(
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
+                      onPressed: _controller.toggleObscurePassword,
                       icon: Icon(
                         _obscurePassword
                             ? Icons.visibility_rounded

@@ -1,12 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:luminous/api/auth_api.dart';
 import 'package:luminous/components/auth.dart';
 import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/l10n/app_localizations.dart';
-import 'package:luminous/utils/dio_request.dart';
-import 'package:luminous/utils/toast_utils.dart';
+import 'package:luminous/pages/Register/controllers/register_controller.dart';
 import 'package:luminous/viewmodels/auth.dart';
 
 /// 注册页。
@@ -19,71 +17,51 @@ class RegisterView extends StatefulWidget {
     this.initialIdentifierType = AuthIdentifierType.email,
     this.initialIdentifier = '',
     this.initialCode = '',
+    this.controller,
   });
 
   final AuthApi authApi;
   final AuthIdentifierType initialIdentifierType;
   final String initialIdentifier;
   final String initialCode;
+  final RegisterController? controller;
 
   @override
   State<RegisterView> createState() => _RegisterViewState();
 }
 
 class _RegisterViewState extends State<RegisterView> {
-  static const int _codeCooldownSeconds = 60;
-
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _identifierController = TextEditingController();
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _codeController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmController = TextEditingController();
-
-  AuthIdentifierType _identifierType = AuthIdentifierType.email;
-  bool _agreed = false;
-  bool _obscurePassword = true;
-  bool _obscureConfirm = true;
-  bool _sendingCode = false;
-  bool _submitting = false;
-  String _codeTarget = '';
-  Timer? _codeCountdownTimer;
-  int _codeCountdownSeconds = 0;
-
-  static final RegExp _emailRegExp = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-  static final RegExp _phoneRegExp = RegExp(r'^1[3-9]\d{9}$');
-  static final RegExp _codeRegExp = RegExp(r'^\d{6}$');
-  static final RegExp _passwordRegExp = RegExp(r'^[A-Za-z0-9]{6,12}$');
-  static final RegExp _usernameRegExp = RegExp(r'^\S{2,30}$');
+  late final RegisterController _controller =
+      widget.controller ??
+      RegisterController(
+        authApi: widget.authApi,
+        initialIdentifierType: widget.initialIdentifierType,
+        initialIdentifier: widget.initialIdentifier,
+        initialCode: widget.initialCode,
+      );
 
   AppLocalizations get _l10n => AppLocalizations.of(context)!;
 
   String _identifierLabel(AuthIdentifierType type) {
-    return type == AuthIdentifierType.phone
-        ? _l10n.authPhoneLabel
-        : _l10n.authEmailLabel;
+    return _controller.identifierLabel(_l10n, type);
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _identifierType = widget.initialIdentifierType;
-    _identifierController.text = widget.initialIdentifier;
-    _codeController.text = widget.initialCode;
-    final initialCode = widget.initialCode.trim();
-    _codeTarget = initialCode.isEmpty ? '' : widget.initialIdentifier.trim();
-  }
-
-  @override
-  void dispose() {
-    _codeCountdownTimer?.cancel();
-    _identifierController.dispose();
-    _usernameController.dispose();
-    _codeController.dispose();
-    _passwordController.dispose();
-    _confirmController.dispose();
-    super.dispose();
-  }
+  GlobalKey<FormState> get _formKey => _controller.formKey;
+  TextEditingController get _identifierController =>
+      _controller.identifierController;
+  TextEditingController get _usernameController =>
+      _controller.usernameController;
+  TextEditingController get _codeController => _controller.codeController;
+  TextEditingController get _passwordController =>
+      _controller.passwordController;
+  TextEditingController get _confirmController => _controller.confirmController;
+  AuthIdentifierType get _identifierType => _controller.identifierType;
+  bool get _agreed => _controller.agreed;
+  bool get _obscurePassword => _controller.obscurePassword;
+  bool get _obscureConfirm => _controller.obscureConfirm;
+  bool get _sendingCode => _controller.sendingCode;
+  bool get _submitting => _controller.submitting;
+  int get _codeCountdownSeconds => _controller.codeCountdownSeconds;
 
   void _onTapAgreement() {
     Navigator.pushNamed(context, '/user-agreement');
@@ -94,300 +72,68 @@ class _RegisterViewState extends State<RegisterView> {
   }
 
   String? _identifierValidator(String? value) {
-    final identifier = (value ?? '').trim();
-    if (identifier.isEmpty) {
-      return _identifierType == AuthIdentifierType.phone
-          ? _l10n.authValidationEnterPhone
-          : _l10n.authValidationEnterEmail;
-    }
-    if (_identifierType == AuthIdentifierType.phone &&
-        !_phoneRegExp.hasMatch(identifier)) {
-      return _l10n.authValidationInvalidPhone;
-    }
-    if (_identifierType == AuthIdentifierType.email &&
-        !_emailRegExp.hasMatch(identifier)) {
-      return _l10n.authValidationInvalidEmail;
-    }
-    return null;
+    return _controller.identifierValidator(_l10n, value);
   }
 
   String? _codeValidator(String? value) {
-    final code = (value ?? '').trim();
-    if (code.isEmpty) {
-      return _l10n.authValidationEnterCode;
-    }
-    if (!_codeRegExp.hasMatch(code)) {
-      return _l10n.authValidationCodeRule;
-    }
-    return null;
+    return _controller.codeValidator(_l10n, value);
   }
 
   String? _usernameValidator(String? value) {
-    final username = (value ?? '').trim();
-    if (username.isEmpty) {
-      return null;
-    }
-    if (!_usernameRegExp.hasMatch(username)) {
-      return _l10n.registerUsernameValidation;
-    }
-    return null;
+    return _controller.usernameValidator(_l10n, value);
   }
 
   String? _passwordValidator(String? value) {
-    final pwd = value ?? '';
-    if (pwd.isEmpty) {
-      return _l10n.authValidationEnterPassword;
-    }
-    if (!_passwordRegExp.hasMatch(pwd)) {
-      return _l10n.authValidationPasswordRule;
-    }
-    return null;
+    return _controller.passwordValidator(_l10n, value);
   }
 
   String? _confirmValidator(String? value) {
-    final confirm = value ?? '';
-    if (confirm.isEmpty) {
-      return _l10n.authValidationEnterConfirmPassword;
-    }
-    if (confirm != _passwordController.text) {
-      return _l10n.authValidationPasswordMismatch;
-    }
-    return null;
-  }
-
-  void _clearCodeSession({required bool clearInput}) {
-    _resetCodeCooldown();
-    _codeTarget = '';
-    if (clearInput) {
-      _codeController.clear();
-    }
-  }
-
-  void _startCodeCooldown() {
-    _codeCountdownTimer?.cancel();
-    setState(() {
-      _codeCountdownSeconds = _codeCooldownSeconds;
-    });
-    _codeCountdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      if (_codeCountdownSeconds <= 1) {
-        timer.cancel();
-        setState(() {
-          _codeCountdownSeconds = 0;
-        });
-        return;
-      }
-      setState(() {
-        _codeCountdownSeconds -= 1;
-      });
-    });
-  }
-
-  void _resetCodeCooldown() {
-    _codeCountdownTimer?.cancel();
-    _codeCountdownTimer = null;
-    if (_codeCountdownSeconds == 0) {
-      return;
-    }
-    _codeCountdownSeconds = 0;
+    return _controller.confirmValidator(_l10n, value);
   }
 
   Future<void> _onSendCode() async {
-    FocusScope.of(context).unfocus();
-    if (_sendingCode || _codeCountdownSeconds > 0) {
-      return;
-    }
-
-    final identifier = _identifierController.text.trim();
-    final error = _identifierValidator(identifier);
-    if (error != null) {
-      ToastUtils.instance.show(context, error);
-      return;
-    }
-
-    setState(() {
-      _sendingCode = true;
-    });
-
-    try {
-      final response = _identifierType == AuthIdentifierType.phone
-          ? await widget.authApi.sendPhoneCode(
-              phone: identifier,
-              scene: AuthCodeScene.register,
-            )
-          : await widget.authApi.sendEmailCode(
-              email: identifier,
-              scene: AuthCodeScene.register,
-            );
-
-      if (!mounted) {
-        return;
-      }
-
-      setState(() {
-        _codeTarget = identifier;
-      });
-      _startCodeCooldown();
-      ToastUtils.instance.show(
-        context,
-        response.msg.isEmpty ? _l10n.authCodeSentSuccess : response.msg,
-      );
-    } on ApiException catch (e) {
-      if (!mounted) {
-        return;
-      }
-      ToastUtils.instance.show(context, _resolveAuthErrorMessage(e));
-    } catch (e) {
-      if (!mounted) {
-        return;
-      }
-      ToastUtils.instance.showError(context, e);
-    } finally {
-      if (mounted) {
-        setState(() {
-          _sendingCode = false;
-        });
-      }
-    }
+    await _controller.onSendCode(context, _l10n);
   }
 
   Future<void> _onRegisterPressed() async {
-    FocusScope.of(context).unfocus();
-    if (_submitting) {
-      return;
-    }
-
-    final isValid = _formKey.currentState?.validate() ?? false;
-    if (!isValid) {
-      return;
-    }
-
-    final identifier = _identifierController.text.trim();
-    final username = _usernameController.text.trim();
-    if (_codeTarget != identifier) {
-      ToastUtils.instance.show(
-        context,
-        _l10n.registerNeedCodeForCurrentAccount,
-      );
-      return;
-    }
-    if (!_agreed) {
-      ToastUtils.instance.show(context, _l10n.registerNeedAgreement);
-      return;
-    }
-
-    setState(() {
-      _submitting = true;
-    });
-
-    try {
-      final response = _identifierType == AuthIdentifierType.phone
-          ? await widget.authApi.registerWithPhone(
-              phone: identifier,
-              code: _codeController.text.trim(),
-              password: _passwordController.text,
-              username: username,
-            )
-          : await widget.authApi.registerWithEmail(
-              email: identifier,
-              code: _codeController.text.trim(),
-              password: _passwordController.text,
-              username: username,
-            );
-
-      if (!mounted) {
-        return;
-      }
-
-      ToastUtils.instance.show(
-        context,
-        response.msg.isEmpty ? _l10n.registerSuccess : response.msg,
-      );
-      await Future<void>.delayed(const Duration(milliseconds: 600));
-      if (mounted) {
-        Navigator.maybePop(context);
-      }
-    } on ApiException catch (e) {
-      if (!mounted) {
-        return;
-      }
-      ToastUtils.instance.show(context, _resolveAuthErrorMessage(e));
-    } catch (e) {
-      if (!mounted) {
-        return;
-      }
-      ToastUtils.instance.showError(context, e);
-    } finally {
-      if (mounted) {
-        setState(() {
-          _submitting = false;
-        });
-      }
-    }
-  }
-
-  String _resolveAuthErrorMessage(ApiException error) {
-    switch (error.code) {
-      case 'CODE_INVALID':
-        return _l10n.authErrorCodeInvalid;
-      case 'CODE_EXPIRED':
-        return _l10n.authErrorCodeExpired;
-      case 'CODE_REQUIRED':
-        return _l10n.authErrorCodeRequired;
-      case 'IDENTIFIER_EXISTS':
-        return _identifierType == AuthIdentifierType.phone
-            ? _l10n.authErrorIdentifierExistsPhoneRegistered
-            : _l10n.authErrorIdentifierExistsEmailRegistered;
-      case 'CODE_SEND_TOO_FREQUENT':
-        return _l10n.authErrorTooFrequent;
-      case 'INVALID_IDENTIFIER':
-      case 'INVALID_TARGET':
-        return _identifierType == AuthIdentifierType.phone
-            ? _l10n.authErrorInvalidPhone
-            : _l10n.authErrorInvalidEmailFormat;
-      default:
-        return error.message.trim().isEmpty
-            ? _l10n.authErrorRequestFailed
-            : error.message;
-    }
+    await _controller.onRegisterPressed(context, _l10n);
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = _l10n;
-    return AuthPageScaffold(
-      children: [
-        _buildTopBar(),
-        const SizedBox(height: 10),
-        AuthHeroCard(
-          palette: SoftBannerPalettes.authOf(context),
-          icon: Icons.person_add_alt_1_rounded,
-          title: l10n.registerHeroTitle,
-          subtitle: l10n.registerHeroSubtitle(
-            _identifierLabel(_identifierType),
-          ),
-        ),
-        const SizedBox(height: 14),
-        _buildFormCard(),
-        const SizedBox(height: 12),
-        AuthAgreementRow(
-          agreed: _agreed,
-          onChanged: (value) {
-            setState(() {
-              _agreed = value;
-            });
-          },
-          onTapAgreement: _onTapAgreement,
-          onTapPrivacy: _onTapPrivacy,
-        ),
-        const SizedBox(height: 14),
-        _buildRegisterButton(),
-        const SizedBox(height: 8),
-        _buildHelperText(),
-      ],
+    return GetBuilder<RegisterController>(
+      init: _controller,
+      global: false,
+      builder: (_) {
+        final l10n = _l10n;
+        return AuthPageScaffold(
+          children: [
+            _buildTopBar(),
+            const SizedBox(height: 10),
+            AuthHeroCard(
+              palette: SoftBannerPalettes.authOf(context),
+              icon: Icons.person_add_alt_1_rounded,
+              title: l10n.registerHeroTitle,
+              subtitle: l10n.registerHeroSubtitle(
+                _identifierLabel(_identifierType),
+              ),
+            ),
+            const SizedBox(height: 14),
+            _buildFormCard(),
+            const SizedBox(height: 12),
+            AuthAgreementRow(
+              agreed: _agreed,
+              onChanged: (value) => _controller.setAgreed(value),
+              onTapAgreement: _onTapAgreement,
+              onTapPrivacy: _onTapPrivacy,
+            ),
+            const SizedBox(height: 14),
+            _buildRegisterButton(),
+            const SizedBox(height: 8),
+            _buildHelperText(),
+          ],
+        );
+      },
     );
   }
 
@@ -467,15 +213,7 @@ class _RegisterViewState extends State<RegisterView> {
                       : Icons.email_outlined,
                 ),
                 validator: _identifierValidator,
-                onChanged: (value) {
-                  final identifier = value.trim();
-                  final hasActiveCodeSession = _codeTarget.isNotEmpty;
-                  if (hasActiveCodeSession && identifier != _codeTarget) {
-                    setState(() {
-                      _clearCodeSession(clearInput: false);
-                    });
-                  }
-                },
+                onChanged: _controller.onIdentifierChanged,
               ),
               const SizedBox(height: 10),
               _buildCodeRow(),
@@ -489,11 +227,7 @@ class _RegisterViewState extends State<RegisterView> {
                   hintText: _l10n.authPasswordHint,
                   prefixIcon: Icons.lock_rounded,
                   suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
+                    onPressed: _controller.toggleObscurePassword,
                     icon: Icon(
                       _obscurePassword
                           ? Icons.visibility_rounded
@@ -513,11 +247,7 @@ class _RegisterViewState extends State<RegisterView> {
                   hintText: _l10n.authConfirmPasswordHint,
                   prefixIcon: Icons.lock_outline_rounded,
                   suffixIcon: IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _obscureConfirm = !_obscureConfirm;
-                      });
-                    },
+                    onPressed: _controller.toggleObscureConfirm,
                     icon: Icon(
                       _obscureConfirm
                           ? Icons.visibility_rounded

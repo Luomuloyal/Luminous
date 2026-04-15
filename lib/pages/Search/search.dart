@@ -1,31 +1,15 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:luminous/api/medicine_api.dart';
 import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/search.dart';
 import 'package:luminous/components/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Drug/medicine_detail.dart';
-import 'package:luminous/stores/local_medicine_store.dart';
-import 'package:luminous/stores/my_medicine_repository.dart';
-import 'package:luminous/stores/user_controller.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:luminous/utils/message_utils.dart';
-import 'package:luminous/utils/toast_utils.dart';
+import 'package:luminous/pages/Search/controllers/search_controller.dart'
+    as search_page;
 import 'package:luminous/viewmodels/medicine.dart';
 import 'package:luminous/viewmodels/search.dart';
-
-typedef MedicineSearchExecutor =
-    Future<MedicineSearchResult> Function({
-      required String keyword,
-      required int page,
-      required int pageSize,
-    });
-
-enum MedicineQueryMode { online, local }
 
 // 手动搜索页（对接 MySQL 药品库）
 //
@@ -54,6 +38,7 @@ class SearchView extends StatefulWidget {
     this.initialKeyword = '',
     this.autoSearchOnInit = false,
     this.searchExecutor,
+    this.controller,
   });
 
   /// 是否以“选择器模式”打开。
@@ -69,7 +54,10 @@ class SearchView extends StatefulWidget {
   final bool autoSearchOnInit;
 
   /// 搜索执行器（默认走 [MedicineApi.search]）。
-  final MedicineSearchExecutor? searchExecutor;
+  final search_page.MedicineSearchExecutor? searchExecutor;
+
+  /// 可选外部 controller，便于测试或复用页面状态。
+  final search_page.SearchController? controller;
 
   /// 创建搜索页对应的状态对象。
   @override
@@ -83,17 +71,14 @@ class SearchView extends StatefulWidget {
 /// - 分页链路：`_hasMore/_page/_loadingMore` 控制滚动到底后的下一页请求；
 /// - 本地联动链路：`_addedKeys` 用于把搜索结果和“我的药品”列表对齐。
 class _SearchViewState extends State<SearchView> {
-  /// 当前登录用户控制器。
-  final UserController _userController = Get.find<UserController>();
-
-  /// 搜索输入框控制器。
-  final TextEditingController _searchController = TextEditingController();
-  final ValueNotifier<String> _draftKeywordNotifier = ValueNotifier<String>('');
-
-  /// 页面滚动控制器。
-  ///
-  /// 用于监听列表滚动位置，在接近底部时自动加载下一页。
-  final ScrollController _scrollController = ScrollController();
+  late final search_page.SearchController _controller =
+      widget.controller ??
+      search_page.SearchController(
+        pickerMode: widget.pickerMode,
+        initialKeyword: widget.initialKeyword,
+        autoSearchOnInit: widget.autoSearchOnInit,
+        searchExecutor: widget.searchExecutor,
+      );
 
   /// 搜索框下方的快捷搜索标签。
   List<String> get _quickTags {
@@ -108,325 +93,34 @@ class _SearchViewState extends State<SearchView> {
     ];
   }
 
-  /// 最近搜索关键词列表。
-  ///
-  /// 当前仅做内存态演示，未持久化到本地。
-  final List<String> _recentKeywords = [];
-
-  /// 最近搜索是否由当前语言的默认值自动填充。
-  ///
-  /// 仅当历史仍保持默认值时，语言切换才会替换为新语言默认词；
-  /// 用户手动搜索或手动清空后不再自动覆盖。
-  List<String>? _seededRecentKeywords;
-
-  /// 标记是否由用户主动清空过历史，避免在同一会话内被默认词再次填充。
-  bool _historyClearedByUser = false;
-
-  /// 本地是否已存在用户作用域下的历史记录（包括空记录）。
-  bool _hasPersistedRecentKeywords = false;
-
-  /// 最近搜索初始化是否完成。
-  bool _recentHistoryReady = false;
-
-  static const int _maxRecentKeywordCount = 8;
-
-  static const String _recentKeywordsStoragePrefix =
-      'search_recent_keywords_v1';
-
-  /// 已提交并用于实际请求的搜索关键词。
-  ///
-  /// 之所以单独维护 `_keyword`，是为了把“输入态”和“请求态”解耦：
-  /// 用户在输入框里继续编辑时（`_draftKeyword` 变化）不会立刻触发搜索，
-  /// 只有点击“搜索/回车”后才会把输入提交到 `_keyword` 并发起请求。
-  String _keyword = '';
-
-  /// 最近一次搜索失败时的错误文案。
-  String? _lastError;
-
-  /// 当前已加载出来的搜索结果列表。
-  ///
-  /// - reset 搜索时会清空；
-  /// - 分页加载时会在原列表尾部追加，保证滚动位置与已有内容不被打断。
-  final List<MedicineItem> _results = [];
-
-  /// 已经添加到“我的药品”的 identityKey 集合。
-  ///
-  /// 用 Set 的目的是：
-  /// - O(1) 判断某条搜索结果是否已添加（用于禁用“添加”按钮/展示已添加状态）；
-  /// - 避免重复插入本地数据库。
-  final Set<String> _addedKeys = {};
-
-  /// 是否正在执行“首屏/重置搜索”。
-  ///
-  /// 与 `_loadingMore` 分开是因为两者的 UI 与行为不同：
-  /// - `_loading=true` 通常意味着清空结果并重新请求，需要展示首屏 loading；
-  /// - `_loadingMore=true` 则保留现有结果，只在底部展示分页 loading。
-  bool _loading = false;
-
-  /// 当前活跃搜索请求的编号。
-  int _searchRequestId = 0;
-
-  /// 是否正在加载下一页。
-  ///
-  /// 该状态用于：
-  /// - 防止滚动到底部时重复触发并发分页请求；
-  /// - 控制底部“加载更多”进度条显示。
-  bool _loadingMore = false;
-
-  /// 当前是否还有下一页结果。
-  ///
-  /// 由后端分页结果返回，用于决定是否继续触发滚动加载。
-  bool _hasMore = false;
-
-  /// 下一次请求要使用的页码。
-  ///
-  /// 这里保存的是“下一页页码”（next page），而不是“当前页”：
-  /// - reset 时回到 1；
-  /// - 每次请求成功后会根据返回的 `result.page` 推进到 `result.page + 1`。
-  int _page = 1;
-
-  /// 每页大小常量。
-  static const int _pageSize = 20;
-
-  /// 当前查询模式：联网查询或本地 JSON 查询。
-  MedicineQueryMode _queryMode = MedicineQueryMode.online;
-
-  /// 首屏搜索超过阈值后显示“查询中”提示。
-  bool _showSlowSearchHint = false;
-
-  Timer? _slowSearchHintTimer;
-
-  /// 监听登录用户变化的 worker。
-  Worker? _userWorker;
-
-  /// 初始化时加载已添加药品集合，并注册滚动分页监听。
-  @override
-  void initState() {
-    super.initState();
-    final initialKeyword = widget.initialKeyword.trim();
-    if (initialKeyword.isNotEmpty) {
-      _searchController.text = initialKeyword;
-      _searchController.selection = TextSelection.collapsed(
-        offset: initialKeyword.length,
-      );
-      _draftKeywordNotifier.value = initialKeyword;
-      if (widget.autoSearchOnInit) {
-        _keyword = initialKeyword;
-        _updateRecentKeywords(initialKeyword);
-      }
-    }
-    _searchController.addListener(_syncDraftKeyword);
-    _loadAddedKeys();
-    _loadRecentKeywords();
-    _detectInitialQueryMode();
-    _userWorker = ever<dynamic>(_userController.user, (_) {
-      _loadAddedKeys();
-      _loadRecentKeywords();
-    });
-    _scrollController.addListener(() {
-      if (!_scrollController.hasClients) {
-        return;
-      }
-      if (_keyword.isEmpty || !_hasMore || _loadingMore || _loading) {
-        return;
-      }
-
-      /// 当前列表可滚动的最大偏移值。
-      final maxScroll = _scrollController.position.maxScrollExtent;
-
-      /// 当前滚动偏移值。
-      final current = _scrollController.offset;
-      if (current >= maxScroll - 120) {
-        _search(reset: false);
-      }
-    });
-    if (widget.autoSearchOnInit && initialKeyword.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _search(reset: true);
-        }
-      });
-    }
-  }
-
-  /// 读取本地“我的药品”列表里的 identityKey，用于标记哪些搜索结果已添加。
-  ///
-  /// 这一步单独放在页面初始化时做，是为了让搜索结果一出现就知道哪些药
-  /// 已经存在于本地列表里，避免用户重复点击“添加”。
-  Future<void> _loadAddedKeys() async {
-    try {
-      /// 当前作用域下已经存在的 identityKey 集合。
-      final keys = await myMedicineRepository.loadIdentityKeys(userId: _userId);
-      if (!mounted) return;
-      if (_sameStringSet(_addedKeys, keys)) {
-        return;
-      }
-      setState(() {
-        _addedKeys.clear();
-        _addedKeys.addAll(keys);
-      });
-    } catch (_) {}
-  }
-
-  bool _sameStringSet(Set<String> current, Set<String> next) {
-    if (current.length != next.length) {
-      return false;
-    }
-    for (final key in next) {
-      if (!current.contains(key)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  bool _sameStringList(List<String> current, List<String> next) {
-    if (current.length != next.length) {
-      return false;
-    }
-    for (var i = 0; i < current.length; i++) {
-      if (current[i] != next[i]) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  String get _recentKeywordsStorageKey {
-    final userId = _userId.trim();
-    final scope = userId.isEmpty ? 'guest' : userId;
-    return '$_recentKeywordsStoragePrefix:$scope';
-  }
-
-  List<String> _sanitizeRecentKeywords(Iterable<String> source) {
-    final result = <String>[];
-    for (final raw in source) {
-      final keyword = raw.trim();
-      if (keyword.isEmpty || result.contains(keyword)) {
-        continue;
-      }
-      result.add(keyword);
-      if (result.length >= _maxRecentKeywordCount) {
-        break;
-      }
-    }
-    return result;
-  }
-
-  Future<void> _loadRecentKeywords() async {
-    final prefs = await SharedPreferences.getInstance();
-    final stored = prefs.getStringList(_recentKeywordsStorageKey);
-    final sanitized = _sanitizeRecentKeywords(stored ?? const <String>[]);
-    if (!mounted) {
-      return;
-    }
-    setState(() {
-      _recentKeywords
-        ..clear()
-        ..addAll(sanitized);
-      _hasPersistedRecentKeywords = stored != null;
-      _recentHistoryReady = true;
-      _historyClearedByUser = stored != null && sanitized.isEmpty;
-      _seededRecentKeywords = null;
-    });
-    _syncDefaultRecentKeywordsForLocale();
-  }
-
-  Future<void> _persistRecentKeywords() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
-      _recentKeywordsStorageKey,
-      List<String>.from(_recentKeywords),
-    );
-  }
-
-  /// 页面销毁时释放控制器资源。
-  @override
-  void dispose() {
-    _userWorker?.dispose();
-    _slowSearchHintTimer?.cancel();
-    _searchController.removeListener(_syncDraftKeyword);
-    _searchController.dispose();
-    _scrollController.dispose();
-    _draftKeywordNotifier.dispose();
-    super.dispose();
-  }
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _syncDefaultRecentKeywordsForLocale();
+    _controller.applyLocalizedRecentDefaults(_defaultRecentKeywords());
   }
 
   List<String> _defaultRecentKeywords() {
     return _quickTags.take(3).toList();
   }
 
-  void _syncDefaultRecentKeywordsForLocale() {
-    if (!_recentHistoryReady || _hasPersistedRecentKeywords) {
-      return;
-    }
-    final defaults = _defaultRecentKeywords();
-    if (_recentKeywords.isEmpty) {
-      if (_historyClearedByUser) {
-        return;
-      }
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _recentKeywords.addAll(defaults);
-        _seededRecentKeywords = List<String>.from(defaults);
-      });
-      return;
-    }
-
-    final seeded = _seededRecentKeywords;
-    if (seeded == null || !_sameStringList(_recentKeywords, seeded)) {
-      return;
-    }
-    if (_sameStringList(_recentKeywords, defaults)) {
-      return;
-    }
-
-    if (!mounted) {
-      return;
-    }
-    setState(() {
-      _recentKeywords
-        ..clear()
-        ..addAll(defaults);
-      _seededRecentKeywords = List<String>.from(defaults);
-    });
-  }
-
-  void _syncDraftKeyword() {
-    final next = _searchController.text.trim();
-    if (_draftKeywordNotifier.value == next) {
-      return;
-    }
-    _draftKeywordNotifier.value = next;
-  }
-
   String _queryModeLabel(AppLocalizations? l10n) =>
-      _queryMode == MedicineQueryMode.online
+      _queryMode == search_page.MedicineQueryMode.online
       ? (l10n?.searchQueryModeOnline ?? '联网查询')
       : (l10n?.searchQueryModeLocal ?? '本地查询');
 
-  Future<void> _detectInitialQueryMode() async {
-    final reachable = await MedicineApi.isBackendReachable();
-    if (!mounted) {
-      return;
-    }
-    setState(() {
-      if (!reachable) {
-        _queryMode = MedicineQueryMode.local;
-      }
-    });
-  }
-
-  /// 当前登录用户 id（未登录时为空字符串）。
-  String get _userId => _userController.user.value?.id ?? '';
+  TextEditingController get _searchController => _controller.searchController;
+  ValueNotifier<String> get _draftKeywordNotifier =>
+      _controller.draftKeywordNotifier;
+  ScrollController get _scrollController => _controller.scrollController;
+  List<String> get _recentKeywords => _controller.recentKeywords;
+  String get _keyword => _controller.keyword;
+  String? get _lastError => _controller.lastError;
+  List<MedicineItem> get _results => _controller.results;
+  Set<String> get _addedKeys => _controller.addedKeys;
+  bool get _loading => _controller.loading;
+  bool get _loadingMore => _controller.loadingMore;
+  search_page.MedicineQueryMode get _queryMode => _controller.queryMode;
+  bool get _showSlowSearchHint => _controller.showSlowSearchHint;
 
   AppLocalizations? get _l10n => AppLocalizations.of(context);
 
@@ -453,40 +147,49 @@ class _SearchViewState extends State<SearchView> {
   /// 的组合状态，在“提示态 / 待提交态 / 加载态 / 错误态 / 结果态”之间切换。
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final hasCommittedSearch = _keyword.trim().isNotEmpty;
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: AppCanvas(
-        accentColor: scheme.primary,
-        secondaryAccentColor: Color.lerp(
-          scheme.secondary,
-          scheme.tertiary,
-          0.5,
-        )!,
-        child: SafeArea(
-          child: RefreshIndicator(
-            onRefresh: _refreshSearch,
-            child: CustomScrollView(
-              controller: _scrollController,
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                _buildHeaderSliver(),
-                _buildSearchBarSliver(),
-                if (!hasCommittedSearch) ...[
-                  _buildQuickTagsSliver(),
-                  _buildHistorySliver(),
-                ],
-                if (hasCommittedSearch) _buildResultTitleSliver(),
-                _buildContentSliver(),
-                if (hasCommittedSearch && _loadingMore)
-                  _buildLoadingMoreSliver(),
-                const SliverToBoxAdapter(child: SizedBox(height: 20)),
-              ],
+    return GetBuilder<search_page.SearchController>(
+      init: _controller,
+      global: false,
+      builder: (_) {
+        final scheme = Theme.of(context).colorScheme;
+        final hasCommittedSearch = _keyword.trim().isNotEmpty;
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          resizeToAvoidBottomInset: false,
+          body: AppCanvas(
+            accentColor: scheme.primary,
+            secondaryAccentColor: Color.lerp(
+              scheme.secondary,
+              scheme.tertiary,
+              0.5,
+            )!,
+            child: SafeArea(
+              child: RefreshIndicator(
+                onRefresh: _refreshSearch,
+                child: CustomScrollView(
+                  controller: _scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  slivers: [
+                    _buildHeaderSliver(),
+                    _buildSearchBarSliver(),
+                    if (!hasCommittedSearch) ...[
+                      _buildQuickTagsSliver(),
+                      _buildHistorySliver(),
+                    ],
+                    if (hasCommittedSearch) _buildResultTitleSliver(),
+                    _buildContentSliver(),
+                    if (hasCommittedSearch && _loadingMore)
+                      _buildLoadingMoreSliver(),
+                    const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -961,10 +664,10 @@ class _SearchViewState extends State<SearchView> {
             ),
             const SizedBox(width: 8),
             TintedStatusChip(
-              text: _queryMode == MedicineQueryMode.online
+              text: _queryMode == search_page.MedicineQueryMode.online
                   ? (_l10n?.searchModeTagOnline ?? '联网')
                   : (_l10n?.searchModeTagLocal ?? '本地'),
-              color: _queryMode == MedicineQueryMode.online
+              color: _queryMode == search_page.MedicineQueryMode.online
                   ? scheme.primary
                   : scheme.tertiary,
               showBorder: false,
@@ -1275,15 +978,7 @@ class _SearchViewState extends State<SearchView> {
   /// 3. 更新最近搜索；
   /// 4. 直接发起 reset 搜索。
   void _applyQuickTag(String tag) {
-    _searchController.text = tag;
-    _searchController.selection = TextSelection.collapsed(offset: tag.length);
-    setState(() {
-      _lastError = null;
-      _keyword = tag;
-      _updateRecentKeywords(tag);
-    });
-    unawaited(_persistRecentKeywords());
-    _search(reset: true);
+    _controller.applyQuickTag(tag);
   }
 
   /// 提交搜索。
@@ -1291,25 +986,10 @@ class _SearchViewState extends State<SearchView> {
   /// 该方法是“用户确认搜索”的入口，会把输入框内容从 `_draftKeyword`
   /// 提交到 `_keyword`，再触发一次重置搜索。
   void _commitSearch() {
-    final l10n = _l10n;
-
-    /// 输入框中当前的关键词。
-    final keyword = _searchController.text.trim();
-    if (keyword.isEmpty) {
-      ToastUtils.instance.show(
-        context,
-        l10n?.searchCommitEmptyToast ?? '请输入产品名称、批准文号或生产单位后再搜索',
-      );
-      return;
-    }
-    setState(() {
-      _lastError = null;
-      _keyword = keyword;
-      _updateRecentKeywords(keyword);
-    });
-    unawaited(_persistRecentKeywords());
-    _search(reset: true);
-    FocusScope.of(context).unfocus();
+    _controller.commitSearch(
+      context,
+      emptyToast: _l10n?.searchCommitEmptyToast ?? '请输入产品名称、批准文号或生产单位后再搜索',
+    );
   }
 
   /// 清空当前搜索内容与结果列表。
@@ -1320,85 +1000,28 @@ class _SearchViewState extends State<SearchView> {
   /// - 错误态清空；
   /// - 分页态重置。
   void _clearKeyword() {
-    _searchController.clear();
-    setState(() {
-      _keyword = '';
-      _lastError = null;
-      _results.clear();
-      _hasMore = false;
-      _page = 1;
-    });
+    _controller.clearKeyword();
   }
 
   /// 清空最近搜索历史。
   Future<void> _clearHistory() async {
-    final l10n = _l10n;
-    setState(() {
-      _recentKeywords.clear();
-      _historyClearedByUser = true;
-      _seededRecentKeywords = null;
-      _hasPersistedRecentKeywords = true;
-    });
-    await _persistRecentKeywords();
-    if (!mounted) {
-      return;
-    }
-    ToastUtils.instance.show(
+    await _controller.clearHistory(
       context,
-      l10n?.searchHistoryClearedToast ?? '最近搜索已清空',
+      clearedToast: _l10n?.searchHistoryClearedToast ?? '最近搜索已清空',
     );
-  }
-
-  /// 更新最近搜索列表。
-  ///
-  /// 规则：
-  /// - 相同关键词去重后移到最前；
-  /// - 最多保留 8 条。
-  void _updateRecentKeywords(String keyword) {
-    final normalized = keyword.trim();
-    if (normalized.isEmpty) {
-      return;
-    }
-    _historyClearedByUser = false;
-    _seededRecentKeywords = null;
-    _hasPersistedRecentKeywords = true;
-    _recentKeywords.remove(normalized);
-    _recentKeywords.insert(0, normalized);
-    if (_recentKeywords.length > _maxRecentKeywordCount) {
-      _recentKeywords.removeLast();
-    }
   }
 
   /// 将 `MedicineItem` 转为搜索结果卡片所需的数据对象。
   SearchResultItemData _toCardData(MedicineItem item) {
-    final l10n = _l10n;
-
-    /// 卡片下方补充提示优先显示生产单位。
-    final manufacturer = item.manufacturer.trim().isNotEmpty
-        ? item.manufacturer.trim()
-        : item.marketingAuthorizationHolder.trim();
-    final locale = (l10n?.localeName ?? 'zh').toLowerCase();
-    final tips = manufacturer.isNotEmpty
-        ? (locale.startsWith('zh')
-              ? '生产单位: $manufacturer'
-              : 'Manufacturer: $manufacturer')
-        : item.displayTips;
-    return SearchResultItemData(
-      name: item.displayName,
-      subtitle: item.displaySubtitle,
-      tips: tips,
-      badge: item.displayBadge,
-    );
+    final locale = (_l10n?.localeName ?? 'zh').toLowerCase();
+    return _controller.toCardData(item, isZh: locale.startsWith('zh'));
   }
 
   /// 生成药品的 identityKey。
   ///
   /// 优先级：drugCode > approvalNo > productName。
   String _buildIdentityKey(MedicineItem item) {
-    return myMedicineRepository.buildScopedIdentityKeyFromMedicine(
-      item,
-      userId: _userId,
-    );
+    return _controller.buildIdentityKey(item);
   }
 
   /// 将一条搜索结果加入“我的药品”。
@@ -1406,43 +1029,15 @@ class _SearchViewState extends State<SearchView> {
   /// 成功后除了写库，还会立即把 identityKey 放进 `_addedKeys`，
   /// 这样当前页面不需要重新查库就能同步按钮状态。
   Future<void> _addToMyMedicines(MedicineItem item) async {
-    final l10n = _l10n;
-
-    /// 当前药品的唯一 identityKey。
-    final identityKey = _buildIdentityKey(item);
-    try {
-      final result = await myMedicineRepository.addMedicine(
-        item: item,
-        source: 'search',
-        userId: _userId,
-      );
-      if (!mounted) return;
-      if (!result.added) {
-        ToastUtils.instance.show(
-          context,
-          l10n?.searchAlreadyAddedToast ?? '该药品已在我的药品列表中',
-        );
-        setState(() {
-          _addedKeys.add(identityKey);
-        });
-        return;
-      }
-      setState(() {
-        _addedKeys.add(identityKey);
-      });
-      ToastUtils.instance.show(
-        context,
-        _userId.isNotEmpty && !result.remoteSynced
-            ? (l10n?.searchAddedPendingSyncToast ?? '已添加到我的药品，待同步到云端')
-            : (l10n?.searchAddedToast ?? '已添加到我的药品'),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ToastUtils.instance.show(
-        context,
-        l10n?.searchAddFailedToast ?? '添加失败，请重试',
-      );
-    }
+    await _controller.addToMyMedicines(
+      context,
+      item,
+      alreadyAddedToast: _l10n?.searchAlreadyAddedToast ?? '该药品已在我的药品列表中',
+      addedPendingSyncToast:
+          _l10n?.searchAddedPendingSyncToast ?? '已添加到我的药品，待同步到云端',
+      addedToast: _l10n?.searchAddedToast ?? '已添加到我的药品',
+      addFailedToast: _l10n?.searchAddFailedToast ?? '添加失败，请重试',
+    );
   }
 
   /// 执行搜索请求。
@@ -1459,140 +1054,12 @@ class _SearchViewState extends State<SearchView> {
   /// - reset：清空旧结果、页码回到 1、展示首屏 loading；
   /// - load more：保留旧结果、只打开底部 loading。
   Future<void> _search({required bool reset}) async {
-    /// 真正用于请求的关键词。
-    final keyword = _keyword.trim();
-    if (keyword.isEmpty) {
-      return;
-    }
-
-    final requestId = ++_searchRequestId;
-    final requestPage = reset ? 1 : _page;
-
-    _slowSearchHintTimer?.cancel();
-    if (_showSlowSearchHint) {
-      setState(() {
-        _showSlowSearchHint = false;
-      });
-    }
-
-    if (reset) {
-      setState(() {
-        _loading = true;
-        _loadingMore = false;
-        _lastError = null;
-        _page = 1;
-        _hasMore = false;
-        _results.clear();
-      });
-      _slowSearchHintTimer = Timer(const Duration(milliseconds: 300), () {
-        if (!mounted || !_isActiveSearchRequest(requestId) || !_loading) {
-          return;
-        }
-        setState(() {
-          _showSlowSearchHint = true;
-        });
-      });
-    } else {
-      if (_loadingMore || _loading || !_hasMore) {
-        return;
-      }
-      setState(() {
-        _loadingMore = true;
-      });
-    }
-
-    try {
-      /// 根据查询模式执行联网或本地查询。
-      final result = _queryMode == MedicineQueryMode.local
-          ? await localMedicineStore.search(
-              keyword: keyword,
-              page: requestPage,
-              pageSize: _pageSize,
-            )
-          : widget.searchExecutor != null
-          ? await widget.searchExecutor!(
-              keyword: keyword,
-              page: requestPage,
-              pageSize: _pageSize,
-            )
-          : (await MedicineApi.search(
-              keyword: keyword,
-              page: requestPage,
-              pageSize: _pageSize,
-            )).result;
-
-      if (!_canApplySearchResult(requestId, keyword)) {
-        return;
-      }
-
-      setState(() {
-        _results.addAll(result.items);
-        _hasMore = result.hasMore;
-        _page = result.page + 1;
-      });
-    } catch (e) {
-      if (!_canApplySearchResult(requestId, keyword)) {
-        return;
-      }
-      if (!mounted) {
-        return;
-      }
-
-      if (_queryMode == MedicineQueryMode.online &&
-          _isLikelyNetworkError(e.toString())) {
-        setState(() {
-          _queryMode = MedicineQueryMode.local;
-        });
-        await _search(reset: true);
-        return;
-      }
-
-      final msg = MessageUtils.extractError(e);
-      ToastUtils.instance.show(context, msg);
-      if (reset) {
-        setState(() {
-          _lastError = msg;
-        });
-      }
-    } finally {
-      _slowSearchHintTimer?.cancel();
-      if (_isActiveSearchRequest(requestId) && mounted) {
-        setState(() {
-          _loading = false;
-          _loadingMore = false;
-          _showSlowSearchHint = false;
-        });
-      }
-    }
+    await _controller.search(reset: reset);
   }
 
   /// 下拉刷新时重新执行当前关键词搜索。
   Future<void> _refreshSearch() async {
-    if (_keyword.trim().isEmpty) {
-      await _loadAddedKeys();
-      return;
-    }
-    await _search(reset: true);
-  }
-
-  bool _canApplySearchResult(int requestId, String keyword) {
-    return mounted &&
-        _isActiveSearchRequest(requestId) &&
-        keyword == _keyword.trim();
-  }
-
-  bool _isActiveSearchRequest(int requestId) {
-    return requestId == _searchRequestId;
-  }
-
-  bool _isLikelyNetworkError(String message) {
-    final text = message.toLowerCase();
-    return text.contains('socket') ||
-        text.contains('network') ||
-        text.contains('connection') ||
-        text.contains('xmlhttprequest') ||
-        text.contains('timeout') ||
-        text.contains('failed host lookup');
+    await _controller.refreshSearch();
   }
 }
 

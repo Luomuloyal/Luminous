@@ -3,62 +3,25 @@ import 'package:get/get.dart';
 import 'package:luminous/components/mine.dart';
 import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/l10n/app_localizations.dart';
-import 'package:luminous/stores/browse_history_store.dart';
-import 'package:luminous/stores/user_controller.dart';
-import 'package:luminous/utils/toast_utils.dart';
-import 'package:luminous/viewmodels/browse_history.dart';
+import 'package:luminous/pages/Mine/controllers/mine_controller.dart';
 import 'package:luminous/viewmodels/mine.dart';
 
 // 我的页
 //
 // 设计要点：
-// - 页面只负责交互/登录态判断
-// - 具体 UI（背景、卡片布局、QuickActions/Menu）拆到 components/mine.dart
-// - QuickAction 数据模型放在 viewmodels/mine.dart
+// - 页面只负责组合 UI；
+// - 登录态、浏览记录预览与入口交互交给页面级 MineController；
+// - 具体卡片/布局仍由 components/mine.dart 负责。
 /// 我的页。
 ///
-/// 负责登录态相关交互，以及“提醒/搜索/设置”等个人中心入口。
-class MineView extends StatefulWidget {
+/// 负责承载个人中心 UI，并通过页面级 GetX controller 接管页面状态。
+class MineView extends StatelessWidget {
   /// 创建我的页组件。
-  const MineView({super.key});
+  const MineView({super.key, this.controller});
 
-  /// 创建我的页对应的状态对象。
-  @override
-  State<MineView> createState() => _MineViewState();
-}
+  final MineController? controller;
 
-/// 我的页状态对象。
-///
-/// 页面主要围绕登录态工作：同一套 UI 会根据是否登录切换为“去登录”或“查看个人中心”。
-class _MineViewState extends State<MineView> {
-  /// 全局用户控制器。
-  ///
-  /// 用于判断登录态、读取用户信息、执行退出登录。
-  final UserController _userController = Get.find<UserController>();
-  Worker? _userWorker;
-  String? _browseHistorySubtitle;
-  String? _browseHistoryBadgeText;
-
-  AppLocalizations? get _l10n => AppLocalizations.of(context);
-
-  @override
-  void initState() {
-    super.initState();
-    _userWorker = ever<dynamic>(_userController.user, (_) {
-      _loadBrowseHistoryPreview();
-    });
-    _loadBrowseHistoryPreview();
-  }
-
-  @override
-  void dispose() {
-    _userWorker?.dispose();
-    super.dispose();
-  }
-
-  /// 我的页顶部快捷入口配置列表。
-  List<MineQuickActionData> get _quickActions {
-    final l10n = _l10n;
+  List<MineQuickActionData> _quickActions(AppLocalizations? l10n) {
     return [
       MineQuickActionData(
         icon: Icons.alarm_rounded,
@@ -84,85 +47,14 @@ class _MineViewState extends State<MineView> {
     ];
   }
 
-  /// 点击 Profile 区域（头像/昵称）回调。
-  ///
-  /// 未登录：跳转登录页；已登录：进入设置页。
-  Future<void> _onTapProfile() async {
-    if (!_userController.isLoggedIn) {
-      Navigator.pushNamed(context, '/login');
-      return;
-    }
-    Navigator.pushNamed(context, '/settings');
-  }
-
-  /// 点击 Profile 右侧按钮回调。
-  ///
-  /// 未登录：跳转登录页；已登录：进入设置页。
-  Future<void> _onTapAction() async {
-    if (!_userController.isLoggedIn) {
-      Navigator.pushNamed(context, '/login');
-      return;
-    }
-    Navigator.pushNamed(context, '/settings');
-  }
-
-  /// 点击快捷入口卡片回调。
-  ///
-  /// 根据 id 决定跳转的页面。
-  void _onTapQuickAction(String id) {
-    final l10n = _l10n;
-    if (id == 'search') {
-      Navigator.pushNamed(context, '/search');
-      return;
-    }
-    if (id == 'reminders') {
-      Navigator.pushNamed(context, '/reminders');
-      return;
-    }
-    if (id == 'settings') {
-      Navigator.pushNamed(context, '/settings');
-      return;
-    }
-    ToastUtils.instance.show(context, l10n?.mineDevelopingToast ?? '功能开发中');
-  }
-
-  Future<void> _openBrowseHistory() async {
-    await Navigator.pushNamed(context, '/browse-history');
-    if (!mounted) {
-      return;
-    }
-    await _loadBrowseHistoryPreview();
-  }
-
-  Future<void> _loadBrowseHistoryPreview() async {
-    List<BrowseHistoryEntry> entries = const <BrowseHistoryEntry>[];
-    try {
-      entries = await browseHistoryStore.loadEntries(
-        userId: _userController.user.value?.id,
-      );
-    } catch (_) {
-      entries = const <BrowseHistoryEntry>[];
-    }
-    if (!mounted) {
-      return;
-    }
-    final l10n = _l10n;
-    final latest = entries.isEmpty ? null : entries.first;
-    setState(() {
-      _browseHistorySubtitle = latest == null
-          ? (l10n?.mineMenuHistorySubtitle ?? '你最近查看过的药品')
-          : _historyPreviewSubtitle(l10n, latest);
-      _browseHistoryBadgeText = entries.isEmpty
-          ? null
-          : (l10n?.mineBrowseHistoryCountLabel(entries.length) ??
-                '${entries.length} 条');
-    });
-  }
-
-  String _historyPreviewSubtitle(
+  String? _browseHistorySubtitle(
     AppLocalizations? l10n,
-    BrowseHistoryEntry latest,
+    MineController controller,
   ) {
+    final latest = controller.latestBrowseEntry;
+    if (latest == null) {
+      return l10n?.mineMenuHistorySubtitle ?? '你最近查看过的药品';
+    }
     final title = latest.displayTitle.trim();
     if (title.isEmpty) {
       return l10n?.mineMenuHistorySubtitle ?? '你最近查看过的药品';
@@ -170,35 +62,47 @@ class _MineViewState extends State<MineView> {
     return title;
   }
 
+  String? _browseHistoryBadgeText(
+    AppLocalizations? l10n,
+    MineController controller,
+  ) {
+    final count = controller.browseHistoryCount;
+    if (count <= 0) {
+      return null;
+    }
+    return l10n?.mineBrowseHistoryCountLabel(count) ?? '$count 条';
+  }
+
   /// 构建我的页 UI。
-  ///
-  /// 这里用 `Obx` 监听用户对象变化，让 UI 自动响应登录/退出登录。
   @override
   Widget build(BuildContext context) {
-    final l10n = _l10n;
-    return MinePage(
-      headerPalette: SoftBannerPalettes.mineOf(context),
-      profileCard: Obx(
-        () => MineProfileCard(
-          palette: SoftBannerPalettes.mineOf(context),
-          user: _userController.user.value,
-          onTapProfile: _onTapProfile,
-          onTapAction: _onTapAction,
-          loggedInActionLabel: l10n?.mineLoggedInActionLabel,
-        ),
-      ),
-      quickActions: _quickActions,
-      onTapQuickAction: _onTapQuickAction,
-      onTapBrowseHistory: _openBrowseHistory,
-      browseHistorySubtitle: _browseHistorySubtitle,
-      browseHistoryBadgeText: _browseHistoryBadgeText,
-      onTapSecurity: () => Navigator.pushNamed(context, '/settings'),
-      onTapAbout: () => showAboutDialog(
-        context: context,
-        applicationName: 'Luminous Alpha',
-        applicationVersion: '3.1.0-alpha.1+35',
-        applicationLegalese: l10n?.mineAboutLegalese ?? '健康助手与药品信息辅助应用',
-      ),
+    return GetBuilder<MineController>(
+      init: controller ?? MineController(),
+      global: false,
+      builder: (controller) {
+        final l10n = AppLocalizations.of(context);
+        return MinePage(
+          headerPalette: SoftBannerPalettes.mineOf(context),
+          profileCard: MineProfileCard(
+            palette: SoftBannerPalettes.mineOf(context),
+            user: controller.currentUser,
+            onTapProfile: () => controller.onTapProfile(context),
+            onTapAction: () => controller.onTapAction(context),
+            loggedInActionLabel: l10n?.mineLoggedInActionLabel,
+          ),
+          quickActions: _quickActions(l10n),
+          onTapQuickAction: (id) =>
+              controller.onTapQuickAction(context, id, l10n: l10n),
+          onTapBrowseHistory: () => controller.openBrowseHistory(context),
+          browseHistorySubtitle: _browseHistorySubtitle(l10n, controller),
+          browseHistoryBadgeText: _browseHistoryBadgeText(l10n, controller),
+          onTapSecurity: () => Navigator.pushNamed(context, '/settings'),
+          onTapAbout: () => controller.onTapAbout(
+            context,
+            legalese: l10n?.mineAboutLegalese ?? '健康助手与药品信息辅助应用',
+          ),
+        );
+      },
     );
   }
 }

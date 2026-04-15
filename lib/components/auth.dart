@@ -49,7 +49,6 @@ class AuthPageScaffold extends StatelessWidget {
     final screenWidth = MediaQuery.sizeOf(context).width;
     final isWide = screenWidth >= 600;
     final horizontalPadding = screenWidth < 600 ? 16.0 : 24.0;
-    final keyboardInset = MediaQuery.viewInsetsOf(context).bottom;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final scaffoldBackground = backgroundColor ?? theme.scaffoldBackgroundColor;
@@ -66,7 +65,9 @@ class AuthPageScaffold extends StatelessWidget {
         child: Stack(
           children: [
             const Positioned.fill(
-              child: IgnorePointer(child: _AuthBackdropDecoration()),
+              child: IgnorePointer(
+                child: RepaintBoundary(child: _AuthBackdropDecoration()),
+              ),
             ),
             SafeArea(
               bottom: false,
@@ -76,21 +77,18 @@ class AuthPageScaffold extends StatelessWidget {
                   constraints: BoxConstraints(
                     maxWidth: isWide ? 420 : double.infinity,
                   ),
-                  child: Padding(
-                    padding: EdgeInsets.only(bottom: keyboardInset),
-                    child: SingleChildScrollView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: EdgeInsets.fromLTRB(
-                        horizontalPadding,
-                        6,
-                        horizontalPadding,
-                        16,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: children,
-                      ),
+                  child: SingleChildScrollView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      6,
+                      horizontalPadding,
+                      24,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: children,
                     ),
                   ),
                 ),

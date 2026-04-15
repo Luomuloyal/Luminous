@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>需要访问相机以拍摄药品包装、处方或资料图片，用于识别与记录。</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>需要访问相册以选择药品包装、头像或资料图片，用于识别、上传与保存设置。</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

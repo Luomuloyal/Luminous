@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -7,10 +6,10 @@ import 'package:luminous/components/home.dart';
 import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Drug/medicine_detail.dart';
+import 'package:luminous/pages/Home/controllers/home_controller.dart';
 import 'package:luminous/pages/Picker/medicine_picker.dart';
 import 'package:luminous/pages/Scan/medicine_scan.dart';
 import 'package:luminous/stores/reminder_local_gateway.dart';
-import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/home.dart';
@@ -28,9 +27,10 @@ import 'package:luminous/viewmodels/medicine.dart';
 /// 作为应用一级入口，负责把高频功能、今日提醒和健康提示组合在同一屏展示。
 class HomeView extends StatefulWidget {
   /// 创建首页组件。
-  const HomeView({super.key, this.reminderGateway});
+  const HomeView({super.key, this.reminderGateway, this.controller});
 
   final ReminderLocalGateway? reminderGateway;
+  final HomeController? controller;
 
   /// 创建首页对应的状态对象，所有首页数据加载与交互都在状态类里完成。
   @override
@@ -44,6 +44,10 @@ class HomeView extends StatefulWidget {
 /// - 中部固定功能入口；
 /// - 底部今日提醒及其本地回流逻辑。
 class _HomeViewState extends State<HomeView> {
+  late final HomeController _controller =
+      widget.controller ??
+      HomeController(reminderGateway: widget.reminderGateway);
+
   List<String> get _defaultHealthTips => [
     '按时服药，别漏别补',
     '饭前饭后按说明来',
@@ -57,21 +61,7 @@ class _HomeViewState extends State<HomeView> {
     '规律作息，药效更稳',
   ];
 
-  final UserController _userController = Get.find<UserController>();
-
-  ReminderLocalGateway get _reminderGateway =>
-      widget.reminderGateway ?? reminderLocalGateway;
-
-  Worker? _userWorker;
-  Worker? _sessionReadyWorker;
-  StreamSubscription<int>? _revisionSubscription;
-
-  late final ValueNotifier<String> _todayTipNotifier;
-  String? _tipLocaleCode;
-
   AppLocalizations? get _l10n => AppLocalizations.of(context);
-  AppLocalizations? get _localizedDemoL10n =>
-      _tipLocaleCode == null ? null : _l10n;
 
   List<HomeFeatureItemData> get _entries {
     final l10n = _l10n;
@@ -121,12 +111,9 @@ class _HomeViewState extends State<HomeView> {
     ];
   }
 
-  late List<HomeReminderItemData> _reminders;
-  late List<HomeCheckInRecordData> _checkInRecords;
-  bool _loadingCheckInRecords = false;
-  bool _checkInReloadQueued = false;
-  int _checkInRequestId = 0;
-  String? _lastRequestedUserId;
+  ValueNotifier<String> get _todayTipNotifier => _controller.todayTipNotifier;
+  List<HomeReminderItemData> get _reminders => _controller.reminders;
+  List<HomeCheckInRecordData> get _checkInRecords => _controller.checkInRecords;
 
   List<String> _healthTipsFor(AppLocalizations? l10n) {
     if (l10n == null) {
@@ -147,137 +134,69 @@ class _HomeViewState extends State<HomeView> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    _todayTipNotifier = ValueNotifier<String>('');
-    _reminders = _buildDemoReminders(null);
-    _checkInRecords = _buildDemoCheckInRecords(null);
-    _userWorker = ever<dynamic>(_userController.user, (_) {
-      _refreshRemindersIfReady();
-    });
-    _sessionReadyWorker = ever<bool>(_userController.sessionReady, (ready) {
-      if (ready) {
-        _lastRequestedUserId = null;
-        _refreshRemindersIfReady();
-      }
-    });
-    _refreshRemindersIfReady();
-  }
-
-  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final localeCode = Localizations.localeOf(context).languageCode;
-    if (_tipLocaleCode == localeCode) {
-      return;
-    }
-    _tipLocaleCode = localeCode;
-
-    final tips = _healthTipsFor(_l10n);
-    if (tips.isNotEmpty) {
-      if (_todayTipNotifier.value.isEmpty ||
-          !tips.contains(_todayTipNotifier.value)) {
-        _todayTipNotifier.value = tips[Random().nextInt(tips.length)];
-      }
-    }
-
-    final userId = (_userController.user.value?.id ?? '').trim();
-    _reminders = _buildDemoReminders(_l10n);
-    if (userId.isEmpty) {
-      _checkInRecords = _buildDemoCheckInRecords(_l10n);
-    }
-  }
-
-  @override
-  void dispose() {
-    _userWorker?.dispose();
-    _sessionReadyWorker?.dispose();
-    _revisionSubscription?.cancel();
-    _todayTipNotifier.dispose();
-    super.dispose();
-  }
-
-  void _refreshRemindersIfReady({bool force = false}) {
-    if (!_userController.sessionReady.value) {
-      return;
-    }
-
-    final userId = (_userController.user.value?.id ?? '').trim();
-    _bindRevision(userId);
-
-    if (userId.isEmpty) {
-      _lastRequestedUserId = userId;
-      _checkInReloadQueued = false;
-      if (mounted) {
-        setState(() {
-          _loadingCheckInRecords = false;
-          _reminders = _buildDemoReminders(_localizedDemoL10n);
-          _checkInRecords = _buildDemoCheckInRecords(_localizedDemoL10n);
-        });
-      }
-      return;
-    }
-
-    if (_lastRequestedUserId != null &&
-        _lastRequestedUserId != userId &&
-        mounted) {
-      setState(() {
-        _reminders = _buildDemoReminders(_l10n);
-        _checkInRecords = <HomeCheckInRecordData>[];
-      });
-    }
-
-    if (!force && _lastRequestedUserId == userId) {
-      return;
-    }
-
-    _lastRequestedUserId = userId;
-    unawaited(_loadCheckInRecords());
+    _controller.applyLocalizedData(
+      healthTips: _healthTipsFor(_l10n),
+      demoReminders: _buildDemoReminders(_l10n),
+      demoCheckInRecords: _buildDemoCheckInRecords(_l10n),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = _l10n;
-    final next = _reminders.cast<HomeReminderItemData?>().firstWhere(
-      (e) => e != null && e.done == false,
-      orElse: () => null,
-    );
-    final nextText = next == null
-        ? (l10n?.homeNoReminder ?? '暂无提醒')
-        : (l10n?.homeNextReminderPrefix(
-                next.title,
-                _composeReminderDetail(next),
-              ) ??
-              '${next.title} · ${_composeReminderDetail(next)}');
+    return GetBuilder<HomeController>(
+      init: _controller,
+      global: false,
+      builder: (_) {
+        final l10n = _l10n;
+        final next = _reminders.cast<HomeReminderItemData?>().firstWhere(
+          (e) => e != null && e.done == false,
+          orElse: () => null,
+        );
+        final nextText = next == null
+            ? (l10n?.homeNoReminder ?? '暂无提醒')
+            : (l10n?.homeNextReminderPrefix(
+                    next.title,
+                    _composeReminderDetail(next),
+                  ) ??
+                  '${next.title} · ${_composeReminderDetail(next)}');
 
-    return SafeArea(
-      child: RefreshIndicator(
-        onRefresh: _refreshHomeData,
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(
-              child: HomeTopSection(
-                palette: SoftBannerPalettes.homeOf(context),
-                todayTipListenable: _todayTipNotifier,
-                nextText: nextText,
-                loadingReminders: false,
-                reminderCount: _reminders.length,
-                onTapTip: _cycleHealthTip,
-                onLongPressTip: _showAllHealthTips,
-              ),
+        return SafeArea(
+          child: RefreshIndicator(
+            onRefresh: _refreshHomeData,
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: HomeTopSection(
+                    palette: SoftBannerPalettes.homeOf(context),
+                    todayTipListenable: _todayTipNotifier,
+                    nextText: nextText,
+                    loadingReminders: false,
+                    reminderCount: _reminders.length,
+                    onTapTip: _cycleHealthTip,
+                    onLongPressTip: _showAllHealthTips,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: HomeFeatureSection(
+                    items: _entries,
+                    onTap: _onEntryTap,
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: HomeReminderSection(items: _reminders),
+                ),
+                SliverToBoxAdapter(
+                  child: HomeCheckInRecordSection(items: _checkInRecords),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              ],
             ),
-            SliverToBoxAdapter(
-              child: HomeFeatureSection(items: _entries, onTap: _onEntryTap),
-            ),
-            SliverToBoxAdapter(child: HomeReminderSection(items: _reminders)),
-            SliverToBoxAdapter(
-              child: HomeCheckInRecordSection(items: _checkInRecords),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -341,97 +260,11 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _loadCheckInRecords() async {
-    if (_loadingCheckInRecords) {
-      _checkInReloadQueued = true;
-      return;
-    }
-
-    final userId = (_userController.user.value?.id ?? '').trim();
-    if (userId.isEmpty) {
-      _checkInReloadQueued = false;
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _loadingCheckInRecords = false;
-        _checkInRecords = _buildDemoCheckInRecords(_l10n);
-      });
-      return;
-    }
-
-    final requestId = ++_checkInRequestId;
-    if (mounted) {
-      setState(() {
-        _loadingCheckInRecords = true;
-      });
-    }
-
-    try {
-      final records = await _reminderGateway.loadCheckInRecords(
-        userId,
-        maxDays: 7,
-        maxItems: 160,
-      );
-      if (!_canApplyCheckInResult(requestId, userId)) {
-        return;
-      }
-      setState(() {
-        _checkInRecords = records;
-      });
-    } catch (_) {
-      if (_canApplyCheckInResult(requestId, userId)) {
-        setState(() {
-          _checkInRecords = <HomeCheckInRecordData>[];
-        });
-      }
-    } finally {
-      if (_isActiveCheckInRequest(requestId) && mounted) {
-        setState(() {
-          _loadingCheckInRecords = false;
-        });
-      }
-      if (_isActiveCheckInRequest(requestId) &&
-          _checkInReloadQueued &&
-          mounted) {
-        _checkInReloadQueued = false;
-        unawaited(_loadCheckInRecords());
-      }
-    }
+    await _controller.loadCheckInRecords();
   }
 
   Future<void> _refreshHomeData() async {
-    final userId = (_userController.user.value?.id ?? '').trim();
-    if (userId.isEmpty) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _reminders = _buildDemoReminders(_l10n);
-        _checkInRecords = _buildDemoCheckInRecords(_l10n);
-      });
-      return;
-    }
-
-    try {
-      await _reminderGateway.syncRemoteToLocal(userId);
-      if (mounted && userId == (_userController.user.value?.id ?? '').trim()) {
-        await _loadCheckInRecords();
-      }
-    } catch (error) {
-      if (mounted) {
-        ToastUtils.instance.showError(context, error);
-      }
-    }
-  }
-
-  bool _canApplyCheckInResult(int requestId, String userId) {
-    return mounted &&
-        _isActiveCheckInRequest(requestId) &&
-        userId == (_userController.user.value?.id ?? '').trim();
-  }
-
-  bool _isActiveCheckInRequest(int requestId) {
-    return requestId == _checkInRequestId;
+    await _controller.refreshHomeData(context);
   }
 
   String _composeReminderDetail(HomeReminderItemData item) {
@@ -570,46 +403,19 @@ class _HomeViewState extends State<HomeView> {
     return '$year-$month-$day';
   }
 
-  void _bindRevision(String userId) {
-    _revisionSubscription?.cancel();
-    final scopedUserId = userId.trim();
-    if (scopedUserId.isEmpty) {
-      return;
-    }
-    _revisionSubscription = _reminderGateway.watchRevision(scopedUserId).listen(
-      (_) {
-        if (mounted) {
-          unawaited(_loadCheckInRecords());
-        }
-      },
-    );
-  }
-
   void _cycleHealthTip() {
-    final tips = _healthTipsFor(_l10n);
-    if (tips.length <= 1) {
-      return;
-    }
-
-    final currentTip = _todayTipNotifier.value;
-    final nextTips = tips.where((tip) => tip != currentTip).toList();
-    if (nextTips.isEmpty) {
-      return;
-    }
-
-    _updateTodayTip(nextTips[Random().nextInt(nextTips.length)]);
+    _controller.cycleHealthTip();
   }
 
   void _updateTodayTip(String nextTip) {
-    if (nextTip == _todayTipNotifier.value || !mounted) {
-      return;
-    }
-    _todayTipNotifier.value = nextTip;
+    _controller.updateTodayTip(nextTip);
   }
 
   Future<void> _showAllHealthTips() async {
     final l10n = _l10n;
-    final tips = _healthTipsFor(l10n);
+    final tips = _controller.healthTips.isEmpty
+        ? _healthTipsFor(l10n)
+        : _controller.healthTips;
     final currentTip = _todayTipNotifier.value;
     final selectedTip = await showModalBottomSheet<String>(
       context: context,

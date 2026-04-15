@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -8,6 +7,8 @@ import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Search/search.dart';
 import 'package:luminous/pages/Scan/controllers/medicine_scan_controller.dart';
+import 'package:luminous/pages/Scan/models/selected_scan_image.dart';
+import 'package:luminous/utils/media_access_error_text.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -18,19 +19,6 @@ enum ScanEntryMode {
 
   /// 药品页快捷入口。
   actions,
-}
-
-/// 用户为识别页选择的一张图片。
-class SelectedScanImage {
-  const SelectedScanImage({
-    required this.bytes,
-    required this.mimeType,
-    required this.source,
-  });
-
-  final Uint8List bytes;
-  final String mimeType;
-  final ImageSource source;
 }
 
 /// 打开图片来源选择弹层。
@@ -124,11 +112,22 @@ Future<SelectedScanImage?> pickMedicineScanImage(BuildContext context) async {
   }
 
   final picker = ImagePicker();
-  final file = await picker.pickImage(
-    source: source,
-    imageQuality: 92,
-    maxWidth: 1800,
-  );
+  XFile? file;
+  try {
+    file = await picker.pickImage(
+      source: source,
+      imageQuality: 92,
+      maxWidth: 1800,
+    );
+  } catch (error) {
+    if (context.mounted) {
+      ToastUtils.instance.showTop(
+        context,
+        mediaAccessErrorText(source: source, error: error),
+      );
+    }
+    return null;
+  }
   if (file == null) {
     return null;
   }
@@ -163,6 +162,7 @@ class MedicineScanPage extends StatefulWidget {
     this.mode = ScanEntryMode.result,
     this.initialImage,
     this.promptSourceOnStart = false,
+    this.controller,
   });
 
   final ScanEntryMode mode;
@@ -172,6 +172,9 @@ class MedicineScanPage extends StatefulWidget {
 
   /// 当没有 [initialImage] 时，是否在首帧后自动弹出图片来源选择。
   final bool promptSourceOnStart;
+
+  /// 页面级 GetX controller，可在测试或注入场景下覆写。
+  final MedicineScanController? controller;
 
   @override
   State<MedicineScanPage> createState() => _MedicineScanPageState();
@@ -193,8 +196,10 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
   final ValueNotifier<double> _sheetSizeNotifier = ValueNotifier<double>(
     _initialSheetSize,
   );
-  late final MedicineScanController _controller = MedicineScanController();
-  late final String _controllerTag = 'medicine-scan:${identityHashCode(this)}';
+  late final MedicineScanController _controller =
+      widget.controller ?? MedicineScanController();
+  late final String _controllerTag =
+      'medicine-scan:${identityHashCode(_controller)}';
 
   String _pageTitle(AppLocalizations? l10n) {
     if (widget.mode == ScanEntryMode.actions) {
@@ -290,14 +295,16 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     _sheetController.addListener(_onSheetChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       unawaited(_autoExpandSheet());
-      if (widget.initialImage != null) {
-        await _controller.applyImageAndScan(
-          bytes: widget.initialImage!.bytes,
-          mimeType: widget.initialImage!.mimeType,
-        );
-      } else if (widget.promptSourceOnStart) {
-        await _pickAndScan(closeIfCancelled: true);
-      }
+      await _controller.handleEntryFlow(
+        initialImage: widget.initialImage,
+        promptSourceOnStart: widget.promptSourceOnStart,
+        pickImage: () => pickMedicineScanImage(context),
+        onPromptCancelled: () {
+          if (mounted) {
+            Navigator.maybePop(context);
+          }
+        },
+      );
     });
   }
 
@@ -336,6 +343,7 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     return GetBuilder<MedicineScanController>(
       init: _controller,
       tag: _controllerTag,
+      global: false,
       builder: (controller) {
         final l10n = AppLocalizations.of(context);
         return Scaffold(
@@ -537,7 +545,11 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
           ),
         ),
         FilledButton.tonalIcon(
-          onPressed: controller.scanning ? null : _pickAndScan,
+          onPressed: controller.scanning
+              ? null
+              : () => controller.pickAndScan(
+                  pickImage: () => pickMedicineScanImage(context),
+                ),
           icon: const Icon(Icons.camera_alt_rounded, size: 16),
           label: Text(l10n?.scanRetakeAction ?? 'Retake'),
         ),
@@ -786,7 +798,11 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
           color: const Color(0xFF0EA5E9),
           label: _actionRescanLabel(l10n),
           subtitle: _actionRescanSubtitle(l10n),
-          onTap: controller.scanning ? null : _pickAndScan,
+          onTap: controller.scanning
+              ? null
+              : () => controller.pickAndScan(
+                  pickImage: () => pickMedicineScanImage(context),
+                ),
         ),
         const SizedBox(height: 10),
         _ActionTile(
@@ -817,23 +833,6 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
           onTap: controller.scanning ? null : () => Navigator.maybePop(context),
         ),
       ],
-    );
-  }
-
-  Future<void> _pickAndScan({bool closeIfCancelled = false}) async {
-    final image = await pickMedicineScanImage(context);
-    if (!mounted) {
-      return;
-    }
-    if (image == null) {
-      if (closeIfCancelled) {
-        Navigator.maybePop(context);
-      }
-      return;
-    }
-    await _controller.applyImageAndScan(
-      bytes: image.bytes,
-      mimeType: image.mimeType,
     );
   }
 
