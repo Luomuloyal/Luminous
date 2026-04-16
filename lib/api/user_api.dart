@@ -45,6 +45,17 @@ class UserApi {
     );
   }
 
+  /// 注销当前账户。
+  Future<ApiResult<bool>> deleteAccount({required String userId}) {
+    return dioRequest.post<bool>(
+      HttpConstants.USER_DELETE,
+      data: {'userId': userId.trim()},
+      showLoading: true,
+      loadingText: AppI18nText.pick(zh: '正在注销账户...', en: 'Deleting account...'),
+      decoder: (_) => true,
+    );
+  }
+
   static Map<String, dynamic> _asMap(dynamic json) {
     if (json is Map<String, dynamic>) {
       return json;

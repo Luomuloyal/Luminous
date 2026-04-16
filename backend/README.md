@@ -148,7 +148,7 @@ docker compose up -d --build
 - `POST /api/medicines/scan-record-create`
 - `POST /api/medicines/scan-record-list`
 
-Full schema and examples: [../lib/docs/backend-api.md](../lib/docs/backend-api.md)
+Full schema and examples: [../.md/lib-docs/backend-api.md](../.md/lib-docs/backend-api.md)
 
 ## Response Envelope
 
@@ -209,4 +209,4 @@ Stop-Process -Id <PID> -Force
 ## Related Docs
 
 - Project README: [../README.md](../README.md)
-- Deployment Config: [../lib/docs/deployment-config.md](../lib/docs/deployment-config.md)
+- Deployment Config: [../.md/lib-docs/deployment-config.md](../.md/lib-docs/deployment-config.md)

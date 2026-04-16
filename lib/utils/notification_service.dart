@@ -54,6 +54,8 @@ class NotificationService {
     en: 'Remind you to take medicine on schedule',
   );
 
+  static const String _darwinThreadIdentifier = 'luminous.medication.reminders';
+
   /// 初始化通知服务。
   ///
   /// 初始化内容包括：
@@ -85,6 +87,11 @@ class NotificationService {
       requestAlertPermission: false,
       requestBadgePermission: false,
       requestSoundPermission: false,
+      defaultPresentAlert: true,
+      defaultPresentBadge: true,
+      defaultPresentSound: true,
+      defaultPresentBanner: true,
+      defaultPresentList: true,
     );
 
     /// 汇总后的跨平台初始化配置对象。
@@ -191,6 +198,14 @@ class NotificationService {
             importance: Importance.high,
             priority: Priority.high,
           ),
+          iOS: const DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentBanner: true,
+            presentList: true,
+            presentSound: true,
+            threadIdentifier: _darwinThreadIdentifier,
+          ),
         ),
         androidScheduleMode: scheduleMode,
         matchDateTimeComponents: DateTimeComponents.time,
@@ -224,6 +239,19 @@ class NotificationService {
   Future<bool> _ensureNotificationPermission() async {
     if (kIsWeb) {
       return false;
+    }
+
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final ios = _plugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >();
+      final granted = await ios?.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      return granted ?? false;
     }
 
     /// 当前通知权限状态。

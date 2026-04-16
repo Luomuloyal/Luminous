@@ -387,7 +387,7 @@
 先看：
 
 1. `lib/pages/Reminders/reminder_edit.dart`
-2. `Study/05-Medicine-Search-and-Detail.md`
+2. `05-Medicine-Search-and-Detail.md`
 
 ### 想改通知调度规则
 

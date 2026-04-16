@@ -29,8 +29,8 @@
 ## 相关文档
 
 - 后端服务说明: [../README.md](../README.md)
-- API 文档: [../../lib/docs/backend-api.md](../../lib/docs/backend-api.md)
-- 部署文档: [../../lib/docs/deployment-config.md](../../lib/docs/deployment-config.md)
+- API 文档: [../../.md/lib-docs/backend-api.md](../../.md/lib-docs/backend-api.md)
+- 部署文档: [../../.md/lib-docs/deployment-config.md](../../.md/lib-docs/deployment-config.md)
 
 ## 运行补充
 

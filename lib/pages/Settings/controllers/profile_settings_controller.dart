@@ -38,10 +38,12 @@ class ProfileSettingsController extends GetxController {
 
   bool _loading = true;
   bool _saving = false;
+  bool _deleting = false;
   String _gender = 'other';
 
   bool get loading => _loading;
   bool get saving => _saving;
+  bool get deleting => _deleting;
   String get gender => _gender;
   UserSafe? get currentUser => _userController.user.value;
 
@@ -220,6 +222,56 @@ class ProfileSettingsController extends GetxController {
     } finally {
       if (!isClosed) {
         _saving = false;
+        update();
+      }
+    }
+  }
+
+  Future<bool> deleteAccount(BuildContext context) async {
+    final user = currentUser;
+    if (user == null || user.id.trim().isEmpty) {
+      _showToast(
+        context,
+        AppI18nText.pick(zh: '请先登录', en: 'Please sign in first'),
+      );
+      return false;
+    }
+    if (_deleting) {
+      return false;
+    }
+
+    _deleting = true;
+    update();
+
+    try {
+      final response = await _userApi.deleteAccount(userId: user.id);
+      await _userController.purgeDeletedAccountData(user.id);
+      await _userController.logout();
+      if (!context.mounted || isClosed) {
+        return true;
+      }
+      _showToast(
+        context,
+        response.msg.trim().isEmpty
+            ? AppI18nText.pick(zh: '账户已注销', en: 'Account deleted')
+            : response.msg,
+      );
+      return true;
+    } on ApiException catch (error) {
+      if (!context.mounted || isClosed) {
+        return false;
+      }
+      _showToast(context, error.message);
+      return false;
+    } catch (error) {
+      if (!context.mounted || isClosed) {
+        return false;
+      }
+      ToastUtils.instance.showError(context, error);
+      return false;
+    } finally {
+      if (!isClosed) {
+        _deleting = false;
         update();
       }
     }

@@ -101,6 +101,9 @@ class HttpConstants {
   /// 个人资料更新接口。
   static const String USER_PROFILE_UPDATE = '/api/user/profile-update';
 
+  /// 注销账户接口。
+  static const String USER_DELETE = '/api/user/delete';
+
   /// 我的药品新增/更新接口。
   static const String MY_MEDICINE_UPSERT = '/api/medicines/my-upsert';
 

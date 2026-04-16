@@ -29,6 +29,7 @@ Luminous/
   test/               Flutter 测试
   backend/            App 后端服务
   Study/              架构学习与问题定位文档
+  .md/                项目 Markdown 文档归档
   android/ios/...     平台工程
 ```
 
@@ -98,12 +99,12 @@ docker compose down
 - File: `backend/.env`
 - Loader: `backend/src/config/env.ts`
 
-完整部署配置见 [lib/docs/deployment-config.md](lib/docs/deployment-config.md)。
+完整部署配置见 [.md/lib-docs/deployment-config.md](.md/lib-docs/deployment-config.md)。
 
 ## Documentation
 
-- Backend API: [lib/docs/backend-api.md](lib/docs/backend-api.md)
-- Deployment Guide: [lib/docs/deployment-config.md](lib/docs/deployment-config.md)
+- Backend API: [.md/lib-docs/backend-api.md](.md/lib-docs/backend-api.md)
+- Deployment Guide: [.md/lib-docs/deployment-config.md](.md/lib-docs/deployment-config.md)
 - Backend Runtime: [backend/README.md](backend/README.md)
 - Architecture Notes: [Study/README.md](Study/README.md)
 

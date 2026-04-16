@@ -117,11 +117,64 @@ class MineController extends GetxController {
   }
 
   void onTapAbout(BuildContext context, {required String legalese}) {
-    showAboutDialog(
+    showDialog<void>(
       context: context,
-      applicationName: 'Luminous Alpha',
-      applicationVersion: '3.1.0-alpha.1+35',
-      applicationLegalese: legalese,
+      builder: (dialogContext) {
+        final l10n = AppLocalizations.of(dialogContext);
+        return AlertDialog(
+          title: const Text('关于 Luminous'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Luminous Alpha',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                '版本 3.1.0-alpha.1+35',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                legalese,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  height: 1.45,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                Navigator.pushNamed(context, '/user-agreement');
+              },
+              child: Text(l10n?.legalUserAgreementTitle ?? '用户协议'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                Navigator.pushNamed(context, '/privacy-policy');
+              },
+              child: Text(l10n?.legalPrivacyPolicyTitle ?? '隐私政策'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('关闭'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

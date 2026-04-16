@@ -125,9 +125,9 @@
 
 ## 本轮附带收口
 
-- `Study/04-Home-and-Today-Reminders.md` 已同步到“远端成功后覆盖当天快照，再统一从快照渲染”的新口径。
-- `Study/07-Reminders-and-CheckIn.md` 已同步到“打卡纯本地、状态只保存在当前设备”的新口径。
-- `Study/08-Local-Storage-and-Sync.md` 已补充 `today_reminder_snapshots` 表和它与 `reminders / checkins / checkin_overrides` 的职责边界。
+- `04-Home-and-Today-Reminders.md` 已同步到“远端成功后覆盖当天快照，再统一从快照渲染”的新口径。
+- `07-Reminders-and-CheckIn.md` 已同步到“打卡纯本地、状态只保存在当前设备”的新口径。
+- `08-Local-Storage-and-Sync.md` 已补充 `today_reminder_snapshots` 表和它与 `reminders / checkins / checkin_overrides` 的职责边界。
 - 根 `README.md` 已补充说明：用药打卡当前是纯本地功能，不依赖打卡后端接口。
 
 ## 本轮验证

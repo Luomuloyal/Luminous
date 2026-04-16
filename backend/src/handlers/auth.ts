@@ -2,6 +2,9 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
 import { env } from '../config/env';
+import { MyMedicine } from '../models/my-medicine';
+import { Reminder } from '../models/reminder';
+import { ScanRecord } from '../models/scan-record';
 import { getRedisClient } from '../db/redis';
 import { fail, success } from '../http/response';
 import { IUser, User } from '../models/user';
@@ -683,6 +686,38 @@ export async function handleUpdateUserProfile(body: unknown) {
   } catch (error) {
     console.error('update-user-profile failed:', error);
     return fail('保存个人资料失败，请稍后重试', 'PROFILE_UPDATE_FAILED');
+  }
+}
+
+export async function handleDeleteAccount(body: unknown) {
+  const data = parseBody(body);
+  const userId = String(data.userId || data.id || '').trim();
+  if (!userId) {
+    return fail('userId 不能为空', 'USER_ID_REQUIRED');
+  }
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return fail('用户不存在', 'USER_NOT_FOUND');
+    }
+
+    await Promise.all([
+      Reminder.deleteMany({ userId }),
+      MyMedicine.deleteMany({ userId }),
+      ScanRecord.deleteMany({ userId }),
+      User.deleteOne({ _id: userId }),
+    ]);
+
+    return success(
+      {
+        id: userId,
+      },
+      '账户已注销',
+    );
+  } catch (error) {
+    console.error('delete-account failed:', error);
+    return fail('注销账户失败，请稍后重试', 'ACCOUNT_DELETE_FAILED');
   }
 }
 

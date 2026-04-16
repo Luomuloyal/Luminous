@@ -236,4 +236,4 @@ docker compose -f docker-compose.prod.yml up -d --build
 - [ ] 域名解析已生效
 - [ ] 证书已放到 `/opt/luminous/deploy/certs`
 
-完整检查见 PRE_RELEASE_CHECKLIST.md。
+完整检查见 [PRE_RELEASE_CHECKLIST.md](PRE_RELEASE_CHECKLIST.md)。

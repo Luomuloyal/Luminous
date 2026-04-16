@@ -2,7 +2,10 @@ import 'dart:convert';
 
 import 'package:get/get.dart';
 import 'package:luminous/constants/constants.dart';
+import 'package:luminous/stores/app_database.dart';
+import 'package:luminous/stores/browse_history_store.dart';
 import 'package:luminous/stores/token_manager.dart';
+import 'package:luminous/stores/album_asset_store.dart';
 import 'package:luminous/utils/notification_service.dart';
 import 'package:luminous/viewmodels/auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,6 +20,8 @@ class UserController extends GetxController {
   final Rxn<UserSafe> user = Rxn<UserSafe>();
   final RxBool sessionReady = true.obs;
   Future<SharedPreferences>? _prefsFuture;
+  final BrowseHistoryStore _browseHistoryStore = BrowseHistoryStore.instance;
+  final AlbumAssetStore _albumAssetStore = AlbumAssetStore();
 
   /// 当前是否处于登录状态。
   ///
@@ -88,5 +93,53 @@ class UserController extends GetxController {
     await prefs.remove(GlobalConstants.USER_KEY);
     await tokenManager.deleteToken();
     await NotificationService.instance.cancelAll();
+  }
+
+  /// 当账户被真正注销时，清空当前用户相关的本地缓存与资产文件。
+  Future<void> purgeDeletedAccountData(String userId) async {
+    final uid = userId.trim();
+    if (uid.isEmpty) {
+      return;
+    }
+
+    final db = await AppDatabase.instance.database;
+    final albumRows = await db.query(
+      'album_items',
+      columns: ['imagePath', 'thumbPath'],
+      where: 'userId = ?',
+      whereArgs: [uid],
+    );
+
+    await _albumAssetStore.deletePaths(
+      albumRows.expand((row) sync* {
+        final imagePath = (row['imagePath'] ?? '').toString().trim();
+        final thumbPath = (row['thumbPath'] ?? '').toString().trim();
+        if (imagePath.isNotEmpty) {
+          yield imagePath;
+        }
+        if (thumbPath.isNotEmpty) {
+          yield thumbPath;
+        }
+      }),
+    );
+
+    await db.transaction((txn) async {
+      await txn.delete('my_medicines', where: 'userId = ?', whereArgs: [uid]);
+      await txn.delete('album_items', where: 'userId = ?', whereArgs: [uid]);
+      await txn.delete('reminders', where: 'userId = ?', whereArgs: [uid]);
+      await txn.delete('checkins', where: 'userId = ?', whereArgs: [uid]);
+      await txn.delete(
+        'checkin_overrides',
+        where: 'userId = ?',
+        whereArgs: [uid],
+      );
+      await txn.delete(
+        'today_reminder_snapshots',
+        where: 'userId = ?',
+        whereArgs: [uid],
+      );
+    });
+
+    await _browseHistoryStore.clear(userId: uid);
   }
 }

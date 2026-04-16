@@ -35,6 +35,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       _controller.cityCodeController;
   bool get _loading => _controller.loading;
   bool get _saving => _controller.saving;
+  bool get _deleting => _controller.deleting;
   String get _gender => _controller.gender;
   UserSafe? get _currentUser => _controller.currentUser;
 
@@ -44,6 +45,46 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
   Future<void> _saveProfile() async {
     await _controller.saveProfile(context);
+  }
+
+  Future<void> _deleteAccount() async {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('注销账户'),
+        content: const Text(
+          '注销后会删除你的个人资料、我的药品、提醒与扫描记录，本地缓存也会一并清空，且无法恢复。确认继续吗？',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: scheme.error,
+              foregroundColor: scheme.onError,
+            ),
+            child: const Text('确认注销'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) {
+      return;
+    }
+
+    final deleted = await _controller.deleteAccount(context);
+    if (!mounted || !deleted) {
+      return;
+    }
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
   }
 
   ImageProvider<Object>? _avatarProviderFromText(String text) {
@@ -311,6 +352,63 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                               )
                             : const Icon(Icons.save_rounded),
                         label: Text(_saving ? '保存中...' : '保存个人资料'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              AppSectionCard(
+                accentColor: scheme.error,
+                secondaryColor: scheme.errorContainer,
+                ornamentKey: 'settings.profile.danger',
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '危险操作',
+                      style: TextStyle(
+                        color: scheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '注销账户会永久删除当前账号及其相关云端数据，本地缓存也会一并清空，请谨慎操作。',
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 12.8,
+                        fontWeight: FontWeight.w600,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _deleting ? null : _deleteAccount,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: scheme.error,
+                          side: BorderSide(
+                            color: scheme.error.withValues(alpha: 0.45),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        icon: _deleting
+                            ? SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    scheme.error,
+                                  ),
+                                ),
+                              )
+                            : const Icon(Icons.delete_forever_rounded),
+                        label: Text(_deleting ? '注销中...' : '注销账户'),
                       ),
                     ),
                   ],
