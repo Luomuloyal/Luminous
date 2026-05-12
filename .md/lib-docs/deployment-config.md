@@ -110,10 +110,13 @@ Required keys:
 - `AUTH_CODE_EMAIL_FROM`
 - `JWT_SECRET`
 - `JWT_REFRESH_SECRET`
-- `DOUBAO_API_KEY`
-- `DOUBAO_BASE_URL`
-- `DOUBAO_VISION_ENDPOINT_ID` or `DOUBAO_VISION_MODEL_ID`
-- `DOUBAO_TEXT_ENDPOINT_ID` or `DOUBAO_TEXT_MODEL_ID`
+- `AI_PROVIDER`（当前支持 `openai-compatible`）
+- `AI_API_KEY`
+- `AI_BASE_URL`
+- `AI_VISION_MODEL`
+- `AI_TEXT_MODEL`
+- `AI_TEXT_TEMPERATURE`（默认 0.3）
+- `AI_VISION_TEMPERATURE`（默认 0.2）
 
 Example `.env`:
 
@@ -144,11 +147,19 @@ AUTH_CODE_EMAIL_FROM=
 JWT_SECRET=replace_with_long_random_secret
 JWT_REFRESH_SECRET=replace_with_another_long_random_secret
 
-DOUBAO_API_KEY=your_doubao_api_key
-DOUBAO_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
-DOUBAO_VISION_ENDPOINT_ID=ep-vision-xxx
-DOUBAO_TEXT_ENDPOINT_ID=ep-text-xxx
+AI_PROVIDER=openai-compatible
+AI_API_KEY=your_ai_api_key
+AI_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
+AI_VISION_MODEL=ep-vision-xxx
+AI_TEXT_MODEL=ep-text-xxx
+AI_TEXT_TEMPERATURE=0.3
+AI_VISION_TEMPERATURE=0.2
 ```
+
+Compatibility:
+
+- 若完全未配置 `AI_*`，后端仍支持旧的 `DOUBAO_API_KEY` / `DOUBAO_BASE_URL` / `DOUBAO_VISION_ENDPOINT_ID` / `DOUBAO_TEXT_ENDPOINT_ID`。
+- 一旦配置任意 `AI_*`，就不会再混用旧 `DOUBAO_*`，避免切换供应商时 key 与 base URL 串台。
 
 ### 3.2 Run and Deploy
 

@@ -36,8 +36,12 @@ export function resolveServiceError(
     return '缺少依赖 mysql2：请先安装依赖再重试';
   }
 
-  if (message.includes('DOUBAO_') || message.includes('缺少环境变量: DOUBAO')) {
-    return 'AI 服务配置不完整，请检查豆包环境变量';
+  if (
+    message.includes('AI_') ||
+    message.includes('DOUBAO_') ||
+    message.includes('缺少环境变量: DOUBAO')
+  ) {
+    return 'AI 服务配置不完整，请检查 AI_* 环境变量；旧 DOUBAO_* 配置仍可作为兜底';
   }
 
   if (message.includes('MYSQL_') || message.includes('缺少环境变量: MYSQL')) {

@@ -3,7 +3,7 @@ import {
   buildMedicineAiDetailCacheKey,
   loadAiTextWithCache,
 } from '../ai/text-cache';
-import { callTextModel } from '../ai/doubao-client';
+import { callTextModel } from '../ai/langchain-client';
 import { findMedicine } from '../db/medicine-repository';
 import { expectRecord, readBoolean, readTrimmedString } from '../http/body';
 import { toApiFailure } from '../http/errors';

@@ -1,5 +1,5 @@
 import { buildMedicineScanPrompt } from '../ai/prompts';
-import { callVisionModel, parseJsonObject } from '../ai/doubao-client';
+import { callVisionModel, parseJsonObject } from '../ai/langchain-client';
 import { findMedicineCandidates } from '../db/medicine-repository';
 import { expectRecord, readTrimmedString } from '../http/body';
 import { toApiFailure } from '../http/errors';
@@ -67,4 +67,3 @@ export async function handleMedicineScan(
     return toApiFailure(error, '药品识别失败，请稍后重试');
   }
 }
-

@@ -10,7 +10,7 @@ App 后端服务，提供认证与药品能力接口。
 - MongoDB (用户数据)
 - Redis（验证码存储，5 分钟过期）
 - MySQL (药品库)
-- OpenAI SDK（用于豆包/方舟兼容调用）
+- LangChain AI 网关（OpenAI-compatible endpoint，兼容豆包/方舟）
 
 ## Directory Layout
 
@@ -32,7 +32,7 @@ backend/
 
 ## Requirements
 
-- Node.js 18+
+- Node.js 20+
 - 可访问 MongoDB
 - 可访问 Redis
 - 可访问 MySQL
@@ -76,16 +76,20 @@ AUTH_CODE_EMAIL_FROM=
 JWT_SECRET=replace_with_strong_secret
 JWT_REFRESH_SECRET=replace_with_another_strong_secret
 
-DOUBAO_API_KEY=your_doubao_api_key
-DOUBAO_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
-DOUBAO_VISION_ENDPOINT_ID=ep-vision-xxx
-DOUBAO_TEXT_ENDPOINT_ID=ep-text-xxx
+AI_PROVIDER=openai-compatible
+AI_API_KEY=your_ai_api_key
+AI_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
+AI_VISION_MODEL=ep-vision-xxx
+AI_TEXT_MODEL=ep-text-xxx
+AI_TEXT_TEMPERATURE=0.3
+AI_VISION_TEMPERATURE=0.2
 ```
 
-Model selection priority:
+AI configuration priority:
 
-- Vision: `DOUBAO_VISION_ENDPOINT_ID` > `DOUBAO_VISION_MODEL_ID`
-- Text: `DOUBAO_TEXT_ENDPOINT_ID` > `DOUBAO_TEXT_MODEL_ID`
+- New config: `AI_API_KEY` / `AI_BASE_URL` / `AI_TEXT_MODEL` / `AI_VISION_MODEL`
+- Legacy fallback: if no `AI_*` variable is set, `DOUBAO_*` is still supported
+- Legacy model priority: Vision `DOUBAO_VISION_ENDPOINT_ID` > `DOUBAO_VISION_MODEL_ID`; Text `DOUBAO_TEXT_ENDPOINT_ID` > `DOUBAO_TEXT_MODEL_ID`
 
 ### Run in Development
 
@@ -185,9 +189,12 @@ Full schema and examples: [../.md/lib-docs/backend-api.md](../.md/lib-docs/backe
 
 检查以下配置与网络：
 
-- `DOUBAO_API_KEY`
-- 文本/视觉模型 ID
-- `DOUBAO_BASE_URL`
+- `AI_API_KEY`
+- `AI_BASE_URL`
+- `AI_TEXT_MODEL`
+- `AI_VISION_MODEL`
+
+兼容模式下，如果完全未配置 `AI_*`，仍可使用旧的 `DOUBAO_API_KEY` / `DOUBAO_BASE_URL` / 模型 ID。
 
 ### Port 8787 occupied (EADDRINUSE)
 
