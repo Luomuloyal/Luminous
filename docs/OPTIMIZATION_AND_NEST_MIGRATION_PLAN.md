@@ -101,7 +101,7 @@ Tasks:
 
 - Stop sending `userId` from Flutter for protected endpoints after backend compatibility is in place.
 - Keep public endpoints public: medicine search/detail, AI detail/safety if product direction allows anonymous use.
-- Update `.md/lib-docs/frontend-backend-alignment-checklist.md`.
+- Update `docs/lib-docs/frontend-backend-alignment-checklist.md`.
 
 Acceptance:
 
