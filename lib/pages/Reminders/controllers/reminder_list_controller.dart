@@ -6,7 +6,6 @@ import 'package:luminous/api/reminder_api.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/stores/reminder_local_gateway.dart';
 import 'package:luminous/stores/user_controller.dart';
-import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/utils/loading_utils.dart';
 import 'package:luminous/utils/message_utils.dart';
 import 'package:luminous/utils/toast_utils.dart';
@@ -36,7 +35,6 @@ class ReminderListController extends GetxController {
   bool _syncQueued = false;
   int _loadRequestId = 0;
   final Set<String> _busyReminderIds = <String>{};
-  bool _seedingDefaults = false;
 
   bool get loading => _loading || _syncing;
   String? get error => _error;
@@ -89,12 +87,7 @@ class ReminderListController extends GetxController {
       if (!_canApplyLoadResult(requestId, scopedUserId)) {
         return;
       }
-      final sorted = _sortedPlans(items);
-      if (sorted.isEmpty) {
-        _items = await _seedDefaultPlansIfNeeded(scopedUserId, requestId);
-      } else {
-        _items = sorted;
-      }
+      _items = _sortedPlans(items);
       _error = null;
     } catch (error) {
       if (!_canApplyLoadResult(requestId, scopedUserId)) {
@@ -255,111 +248,6 @@ class ReminderListController extends GetxController {
     if (!isClosed && isLoggedIn) {
       await sync();
     }
-  }
-
-  Future<List<ReminderPlan>> _seedDefaultPlansIfNeeded(
-    String userId,
-    int requestId,
-  ) async {
-    if (_seedingDefaults || !_canApplyLoadResult(requestId, userId)) {
-      return const <ReminderPlan>[];
-    }
-    _seedingDefaults = true;
-    try {
-      final presets = _defaultPresetSeedData();
-      for (final preset in presets) {
-        if (!_canApplyLoadResult(requestId, userId)) {
-          return const <ReminderPlan>[];
-        }
-        await ReminderApi.upsert(
-          userId: userId,
-          time: preset.time,
-          productName: preset.productName,
-          subtitle: preset.subtitle,
-          enabled: false,
-          repeatRule: 'daily',
-          method: 'notification',
-        );
-      }
-      await _reminderGateway.syncRemoteToLocal(userId);
-      final next = await _reminderGateway.loadPlans(userId);
-      return _sortedPlans(next);
-    } finally {
-      _seedingDefaults = false;
-    }
-  }
-
-  List<({String time, String productName, String subtitle})>
-  _defaultPresetSeedData() {
-    final l10n = _l10n;
-    final firstTitle =
-        l10n?.homeFallbackReminder1Title ??
-        AppI18nText.pick(zh: '08:30 维生素D', en: '08:30 Vitamin D');
-    final secondTitle =
-        l10n?.homeFallbackReminder2Title ??
-        AppI18nText.pick(zh: '19:30 阿莫西林', en: '19:30 Amoxicillin');
-    final thirdTitle =
-        l10n?.homeFallbackReminder3Title ??
-        AppI18nText.pick(zh: '22:00 血压记录', en: '22:00 Blood Pressure Log');
-    final first = _splitTitle(firstTitle);
-    final second = _splitTitle(secondTitle);
-    final third = _splitTitle(thirdTitle);
-    return <({String time, String productName, String subtitle})>[
-      (
-        time: first.time.isEmpty ? '08:30' : first.time,
-        productName: first.productName,
-        subtitle:
-            l10n?.homeFallbackReminder1Subtitle ??
-            AppI18nText.pick(
-              zh: '早餐后服用 1 粒',
-              en: 'Take 1 capsule after breakfast',
-            ),
-      ),
-      (
-        time: second.time.isEmpty ? '19:30' : second.time,
-        productName: second.productName,
-        subtitle:
-            l10n?.homeFallbackReminder2Subtitle ??
-            AppI18nText.pick(
-              zh: '晚餐后服用 1 粒',
-              en: 'Take 1 capsule after dinner',
-            ),
-      ),
-      (
-        time: third.time.isEmpty ? '22:00' : third.time,
-        productName: third.productName,
-        subtitle:
-            l10n?.homeFallbackReminder3Subtitle ??
-            AppI18nText.pick(
-              zh: '睡前记录并上传',
-              en: 'Record and upload before sleep',
-            ),
-      ),
-    ];
-  }
-
-  ({String time, String productName}) _splitTitle(String rawTitle) {
-    final text = rawTitle.trim();
-    final firstSpace = text.indexOf(' ');
-    if (firstSpace <= 0) {
-      return (
-        time: '',
-        productName: text.isEmpty
-            ? AppI18nText.pick(zh: '用药提醒', en: 'Medication reminder')
-            : text,
-      );
-    }
-    final maybeTime = text.substring(0, firstSpace).trim();
-    final maybeName = text.substring(firstSpace + 1).trim();
-    if (!RegExp(r'^\d{1,2}:\d{2}$').hasMatch(maybeTime)) {
-      return (time: '', productName: text);
-    }
-    return (
-      time: maybeTime,
-      productName: maybeName.isEmpty
-          ? AppI18nText.pick(zh: '用药提醒', en: 'Medication reminder')
-          : maybeName,
-    );
   }
 
   void _bindRevision() {

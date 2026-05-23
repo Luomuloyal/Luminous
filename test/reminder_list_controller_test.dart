@@ -17,6 +17,34 @@ void main() {
 
   tearDown(Get.reset);
 
+  test('empty reminder list stays empty instead of seeding defaults', () async {
+    final userController = Get.put(UserController(), permanent: true);
+    userController.user.value = const UserSafe(
+      id: 'user-empty',
+      username: 'tester',
+      email: '',
+      phone: '13800138000',
+      name: '',
+      type: 0,
+    );
+
+    final gateway = FakeReminderLocalGateway();
+    final controller = ReminderListController(
+      userController: userController,
+      reminderGateway: gateway,
+    );
+
+    controller.onInit();
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+
+    expect(controller.items, isEmpty);
+    expect(controller.error, isNull);
+    expect(gateway.syncRemoteToLocalCalls, 1);
+
+    controller.onClose();
+  });
+
   test(
     'reminder list controller reloads from local gateway after revision',
     () async {
