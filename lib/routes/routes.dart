@@ -3,25 +3,14 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/constants/constants.dart';
-import 'package:luminous/pages/CheckIn/checkin.dart';
-import 'package:luminous/pages/Legal/legal_documents.dart';
-import 'package:luminous/pages/Login/login.dart';
-import 'package:luminous/pages/Main/main.dart';
-import 'package:luminous/pages/Mine/browse_history.dart';
-import 'package:luminous/pages/Register/register.dart';
-import 'package:luminous/pages/Reminders/reminder_list.dart';
-import 'package:luminous/pages/Safety/safety_assist.dart';
-import 'package:luminous/pages/Scan/medicine_scan.dart';
-import 'package:luminous/pages/Search/search.dart';
-import 'package:luminous/pages/Settings/settings.dart';
 import 'package:luminous/stores/providers/locale_provider.dart';
 import 'package:luminous/stores/providers/theme_provider.dart';
 import 'package:luminous/stores/theme_controller.dart';
-import 'package:luminous/utils/loading_utils.dart';
+import 'package:luminous/router/app_router.dart';
 
 /// 构建应用根组件。
 ///
-/// 当前项目使用原生 `MaterialApp` 路由表，不依赖 `GetMaterialApp`。
+/// 当前项目使用原生 `MaterialApp.router` 结合 GoRouter 路由表体系。
 class RootAppWidget extends ConsumerWidget {
   const RootAppWidget({super.key});
 
@@ -31,10 +20,11 @@ class RootAppWidget extends ConsumerWidget {
     final localeState = ref.watch(localeProvider);
     final themeMode = ref.read(themeProvider.notifier).themeMode;
     final locale = ref.read(localeProvider.notifier).locale;
+    final router = ref.watch(routerProvider);
 
-    return MaterialApp(
+    return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      navigatorKey: LoadingUtils.navigatorKey,
+      routerConfig: router,
       onGenerateTitle: (context) =>
           AppLocalizations.of(context)?.appName ?? 'Luminous',
       localizationsDelegates: const [
@@ -48,30 +38,8 @@ class RootAppWidget extends ConsumerWidget {
       theme: _buildLightTheme(themeState.style),
       darkTheme: _buildDarkTheme(themeState.style),
       themeMode: themeMode,
-      initialRoute: '/',
-      routes: getRootRoutes(),
     );
   }
-}
-
-Map<String, Widget Function(BuildContext)> getRootRoutes() {
-  return {
-    '/': (context) => const MainPage(),
-    '/login': (context) => const LoginPage(),
-    '/register': (context) => const RegisterView(),
-    '/search': (context) => const SearchView(),
-    '/scan': (context) => const MedicineScanPage(
-      mode: ScanEntryMode.result,
-      promptSourceOnStart: true,
-    ),
-    '/reminders': (context) => const ReminderListPage(),
-    '/checkin': (context) => const CheckInPage(),
-    '/safety': (context) => const SafetyAssistPage(),
-    '/settings': (context) => const SettingsPage(),
-    '/browse-history': (context) => const BrowseHistoryPage(),
-    '/user-agreement': (context) => const UserAgreementPage(),
-    '/privacy-policy': (context) => const PrivacyPolicyPage(),
-  };
 }
 
 ThemeData _buildLightTheme(AppThemeStyle style) {
