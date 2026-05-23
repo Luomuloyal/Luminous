@@ -68,3 +68,4 @@ lib/
 
 - 补充迁移执行规则：小步推进、限制文件体积、迁移代码优先进入目标目录结构。
 - 将 `OrnamentController` 迁移为 `lib/core/theme/ornaments/ornament_provider.dart` 中的 Riverpod notifier，并同步替换设置页、共享卡片、横幅和主页面底栏的装饰状态读取方式。
+- 开始拆分 `UserController`：会话恢复和用户持久化读写已迁入 `lib/features/auth/`，旧 GetX 控制器暂时保留为兼容入口。

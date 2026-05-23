@@ -1,25 +1,25 @@
-import 'dart:convert';
-
 import 'package:get/get.dart';
-import 'package:luminous/constants/constants.dart';
+import 'package:luminous/features/auth/data/user_session_store.dart';
 import 'package:luminous/stores/app_database.dart';
 import 'package:luminous/stores/browse_history_store.dart';
 import 'package:luminous/stores/token_manager.dart';
 import 'package:luminous/stores/album_asset_store.dart';
 import 'package:luminous/utils/notification_service.dart';
 import 'package:luminous/viewmodels/auth.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 /// 全局用户态控制器。
 ///
 /// 使用 GetX 管理当前登录用户，并负责和本地持久化做同步。
 class UserController extends GetxController {
+  UserController({UserSessionStore? sessionStore})
+    : _sessionStore = sessionStore ?? UserSessionStore.lazy();
+
   /// 当前登录用户的响应式容器。
   ///
   /// 未登录时值为 `null`，已登录时保存 `UserSafe`。
   final Rxn<UserSafe> user = Rxn<UserSafe>();
   final RxBool sessionReady = true.obs;
-  Future<SharedPreferences>? _prefsFuture;
+  final UserSessionStore _sessionStore;
   final BrowseHistoryStore _browseHistoryStore = BrowseHistoryStore.instance;
   final AlbumAssetStore _albumAssetStore = AlbumAssetStore();
 
@@ -33,42 +33,16 @@ class UserController extends GetxController {
     sessionReady.value = false;
   }
 
-  Future<SharedPreferences> get _prefs async {
-    return _prefsFuture ??= SharedPreferences.getInstance();
-  }
-
   /// 从本地缓存恢复登录用户。
   ///
   /// 应用启动时由 `main()` 调用一次。
   Future<void> init() async {
     try {
-      final prefs = await _prefs;
-
-      /// 本地缓存的用户 JSON 字符串。
-      final rawUser = prefs.getString(GlobalConstants.USER_KEY);
-
-      if (rawUser == null || rawUser.trim().isEmpty) {
-        if (user.value != null) {
-          user.value = null;
-        }
-        return;
-      }
-
-      /// 从本地字符串反序列化得到的 JSON 对象。
-      final decoded = jsonDecode(rawUser);
-      if (decoded is Map<String, dynamic>) {
-        user.value = UserSafe.fromJson(decoded);
-        return;
-      }
+      user.value = await _sessionStore.restoreUser();
     } catch (_) {
-      final prefs = await _prefs;
-      await prefs.remove(GlobalConstants.USER_KEY);
+      user.value = null;
     } finally {
       sessionReady.value = true;
-    }
-
-    if (user.value != null) {
-      user.value = null;
     }
   }
 
@@ -77,11 +51,7 @@ class UserController extends GetxController {
   /// 一般在登录成功后调用。
   Future<void> setUser(UserSafe nextUser) async {
     user.value = nextUser;
-    final prefs = await _prefs;
-    await prefs.setString(
-      GlobalConstants.USER_KEY,
-      jsonEncode(nextUser.toJson()),
-    );
+    await _sessionStore.persistUser(nextUser);
   }
 
   /// 清空当前用户状态并删除本地持久化数据。
@@ -89,8 +59,7 @@ class UserController extends GetxController {
   /// 一般在主动退出登录时调用。
   Future<void> logout() async {
     user.value = null;
-    final prefs = await _prefs;
-    await prefs.remove(GlobalConstants.USER_KEY);
+    await _sessionStore.clearUser();
     await tokenManager.deleteToken();
     await NotificationService.instance.cancelAll();
   }

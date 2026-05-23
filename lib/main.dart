@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:luminous/core/theme/ornaments/ornament_provider.dart';
+import 'package:luminous/features/auth/data/user_session_store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:luminous/routes/routes.dart';
 import 'package:luminous/startup/app_startup_warmup.dart';
@@ -15,7 +16,10 @@ Future<void> main() async {
   // Riverpod: 在运行之前异步获取 SharedPreferences，避免每次初始化都闪白。
   final prefs = await SharedPreferences.getInstance();
 
-  final userController = Get.put(UserController(), permanent: true);
+  final userController = Get.put(
+    UserController(sessionStore: UserSessionStore.fromPreferences(prefs)),
+    permanent: true,
+  );
   userController.markSessionPending();
 
   runApp(

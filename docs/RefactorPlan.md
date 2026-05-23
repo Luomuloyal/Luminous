@@ -234,3 +234,4 @@ Tasks:
 - Phase 1.1 started: `ReminderListController` no longer seeds default reminder plans when the logged-in user's local reminder list is empty.
 - Added a controller test to keep empty reminder lists empty after local load and remote sync.
 - Moved ornament session/UI state from `OrnamentController` to a Riverpod notifier under `lib/core/theme/ornaments/`, keeping this migration slice small and aligned with the target directory structure.
+- Started `UserController` migration by moving session restore and persisted user reads/writes into `lib/features/auth/`, while keeping the old controller API as the compatibility layer for existing pages.
