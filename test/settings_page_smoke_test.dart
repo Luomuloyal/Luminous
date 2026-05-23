@@ -1,3 +1,5 @@
+import 'package:luminous/stores/providers/shared_preferences_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
@@ -25,7 +27,7 @@ void main() {
   });
 
   testWidgets('settings page builds without exceptions', (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: SettingsPage()));
+    await tester.pumpWidget(ProviderScope(overrides: [sharedPreferencesProvider.overrideWithValue(await SharedPreferences.getInstance())], child: MaterialApp(home: SettingsPage())));
 
     await tester.pumpAndSettle();
 
@@ -38,7 +40,7 @@ void main() {
   testWidgets('theme settings entry navigates to theme detail page', (
     tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: SettingsPage()));
+    await tester.pumpWidget(ProviderScope(overrides: [sharedPreferencesProvider.overrideWithValue(await SharedPreferences.getInstance())], child: MaterialApp(home: SettingsPage())));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('主题设置'));
@@ -55,7 +57,7 @@ void main() {
   testWidgets('language settings entry navigates to language options page', (
     tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: SettingsPage()));
+    await tester.pumpWidget(ProviderScope(overrides: [sharedPreferencesProvider.overrideWithValue(await SharedPreferences.getInstance())], child: MaterialApp(home: SettingsPage())));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('语言设置'));

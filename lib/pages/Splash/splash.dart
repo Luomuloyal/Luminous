@@ -1,3 +1,4 @@
+// This page and it controller is deprecated. Do not reference or modify it.
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';

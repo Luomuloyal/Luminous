@@ -6,19 +6,22 @@ import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/components/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Settings/profile_settings.dart';
+import 'package:luminous/stores/providers/locale_provider.dart';
+import 'package:luminous/stores/providers/theme_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:luminous/stores/theme_controller.dart';
 import 'package:luminous/stores/locale_controller.dart';
 import 'package:luminous/stores/ornament_controller.dart';
-import 'package:luminous/stores/theme_controller.dart';
 import 'package:luminous/stores/user_controller.dart';
 
 /// 设置总览页。
 ///
 /// 采用常见 App 的“设置列表 -> 子设置页”结构。
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
@@ -158,12 +161,13 @@ class SettingsPage extends StatelessWidget {
 /// 主题设置页。
 ///
 /// 复用原有主题设置内容。
-class ThemeSettingsPage extends StatelessWidget {
+class ThemeSettingsPage extends ConsumerWidget {
   const ThemeSettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final themeController = Get.find<ThemeController>();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeNotifier = ref.read(themeProvider.notifier);
+    final themeState = ref.watch(themeProvider);
     final ornamentController = Get.find<OrnamentController>();
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
@@ -183,7 +187,10 @@ class ThemeSettingsPage extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
         children: [
-          _SettingsHeroCard(themeController: themeController),
+          _SettingsHeroCard(
+            themeNotifier: themeNotifier,
+            themeState: themeState,
+          ),
           const SizedBox(height: 12),
           _SettingsSectionCard(
             title: l10n?.settingsDisplayTitle ?? '显示',
@@ -195,7 +202,8 @@ class ThemeSettingsPage extends StatelessWidget {
             ornamentKey: 'settings.display',
             children: [
               _DisplayPreferencesSection(
-                themeController: themeController,
+                themeNotifier: themeNotifier,
+                themeState: themeState,
                 ornamentController: ornamentController,
               ),
             ],
@@ -209,14 +217,15 @@ class ThemeSettingsPage extends StatelessWidget {
 /// 语言设置页。
 ///
 /// 支持跟随系统、简体中文与英文三种语言偏好。
-class LanguageSettingsPage extends StatelessWidget {
+class LanguageSettingsPage extends ConsumerWidget {
   const LanguageSettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
-    final localeController = Get.find<LocaleController>();
+    final localeNotifier = ref.read(localeProvider.notifier);
+    final localeState = ref.watch(localeProvider);
 
     return AppCanvasPageScaffold(
       accentColor: scheme.tertiary,
@@ -234,7 +243,10 @@ class LanguageSettingsPage extends StatelessWidget {
         physics: const NeverScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
         children: [
-          _LanguageHeroCard(localeController: localeController),
+          _LanguageHeroCard(
+            localeNotifier: localeNotifier,
+            localeState: localeState,
+          ),
           const SizedBox(height: 12),
           _SettingsSectionCard(
             title: l10n?.languageSectionTitle ?? '应用语言',
@@ -245,7 +257,10 @@ class LanguageSettingsPage extends StatelessWidget {
             secondaryColor: Color.lerp(scheme.secondary, scheme.primary, 0.4)!,
             ornamentKey: 'settings.language',
             children: [
-              _LanguagePreferenceSection(localeController: localeController),
+              _LanguagePreferenceSection(
+                localeNotifier: localeNotifier,
+                localeState: localeState,
+              ),
             ],
           ),
         ],
@@ -254,13 +269,17 @@ class LanguageSettingsPage extends StatelessWidget {
   }
 }
 
-class _LanguagePreferenceSection extends StatelessWidget {
-  const _LanguagePreferenceSection({required this.localeController});
+class _LanguagePreferenceSection extends ConsumerWidget {
+  const _LanguagePreferenceSection({
+    required this.localeNotifier,
+    required this.localeState,
+  });
 
-  final LocaleController localeController;
+  final LocaleNotifier localeNotifier;
+  final LocaleState localeState;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
@@ -275,7 +294,7 @@ class _LanguagePreferenceSection extends StatelessWidget {
       return Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () => localeController.setLocalePreference(value),
+          onTap: () => localeNotifier.setLocalePreference(value),
           borderRadius: BorderRadius.circular(14),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
@@ -373,8 +392,8 @@ class _LanguagePreferenceSection extends StatelessWidget {
       );
     }
 
-    return Obx(() {
-      final selected = localeController.localePreference.value;
+    return (() {
+      final selected = localeState.preference;
       final selectedLabel = _languagePreferenceLabel(selected, l10n: l10n);
 
       return Column(
@@ -451,20 +470,24 @@ class _LanguagePreferenceSection extends StatelessWidget {
           ),
         ],
       );
-    });
+    })();
   }
 }
 
-class _LanguageHeroCard extends StatelessWidget {
-  const _LanguageHeroCard({required this.localeController});
+class _LanguageHeroCard extends ConsumerWidget {
+  const _LanguageHeroCard({
+    required this.localeNotifier,
+    required this.localeState,
+  });
 
-  final LocaleController localeController;
+  final LocaleNotifier localeNotifier;
+  final LocaleState localeState;
 
   @override
-  Widget build(BuildContext context) {
-    return Obx(() {
+  Widget build(BuildContext context, WidgetRef ref) {
+    return (() {
       final l10n = AppLocalizations.of(context);
-      final selected = localeController.localePreference.value;
+      final selected = localeState.preference;
       final selectedLabel = _languagePreferenceLabel(selected, l10n: l10n);
       final selectedHint = switch (selected) {
         AppLocalePreference.system =>
@@ -543,11 +566,11 @@ class _LanguageHeroCard extends StatelessWidget {
           );
         },
       );
-    });
+    })();
   }
 }
 
-class _SettingsSectionCard extends StatelessWidget {
+class _SettingsSectionCard extends ConsumerWidget {
   const _SettingsSectionCard({
     required this.title,
     required this.subtitle,
@@ -567,7 +590,7 @@ class _SettingsSectionCard extends StatelessWidget {
   final String ornamentKey;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
@@ -654,17 +677,21 @@ class _SettingsSectionCard extends StatelessWidget {
   }
 }
 
-class _SettingsHeroCard extends StatelessWidget {
-  const _SettingsHeroCard({required this.themeController});
+class _SettingsHeroCard extends ConsumerWidget {
+  const _SettingsHeroCard({
+    required this.themeNotifier,
+    required this.themeState,
+  });
 
-  final ThemeController themeController;
+  final ThemeNotifier themeNotifier;
+  final ThemeState themeState;
 
   @override
-  Widget build(BuildContext context) {
-    return Obx(() {
+  Widget build(BuildContext context, WidgetRef ref) {
+    return (() {
       final l10n = AppLocalizations.of(context);
-      final preference = themeController.themePreference.value;
-      final style = themeController.themeStyle.value;
+      final preference = themeState.modePreference;
+      final style = themeState.style;
       final systemBrightness = MediaQuery.platformBrightnessOf(context);
       final resolvedDark = preference == AppThemeModePreference.system
           ? systemBrightness == Brightness.dark
@@ -757,27 +784,29 @@ class _SettingsHeroCard extends StatelessWidget {
           );
         },
       );
-    });
+    })();
   }
 }
 
-class _DisplayPreferencesSection extends StatelessWidget {
+class _DisplayPreferencesSection extends ConsumerWidget {
   const _DisplayPreferencesSection({
-    required this.themeController,
+    required this.themeNotifier,
+    required this.themeState,
     required this.ornamentController,
   });
 
-  final ThemeController themeController;
+  final ThemeNotifier themeNotifier;
+  final ThemeState themeState;
   final OrnamentController ornamentController;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    return Obx(() {
+    return (() {
       final l10n = AppLocalizations.of(context);
-      final preference = themeController.themePreference.value;
-      final selectedStyle = themeController.themeStyle.value;
+      final preference = themeState.modePreference;
+      final selectedStyle = themeState.style;
       final ornamentPercent = ornamentController.transparencyPercent.value;
       final matchedPreset = ornamentController.matchedPreset;
       const ornamentOptions = <AppOrnamentTransparencyPreference>[
@@ -823,7 +852,7 @@ class _DisplayPreferencesSection extends StatelessWidget {
                     ),
                     selected: preference == item,
                     onSelected: (_) {
-                      themeController.setThemePreference(item);
+                      themeNotifier.setThemePreference(item);
                     },
                     labelStyle: TextStyle(
                       fontWeight: FontWeight.w700,
@@ -1032,7 +1061,7 @@ class _DisplayPreferencesSection extends StatelessWidget {
                           style: style,
                           selected: selectedStyle == style,
                           l10n: l10n,
-                          onTap: () => themeController.setThemeStyle(style),
+                          onTap: () => themeNotifier.setThemeStyle(style),
                         ),
                       ),
                     )
@@ -1042,11 +1071,11 @@ class _DisplayPreferencesSection extends StatelessWidget {
           ),
         ],
       );
-    });
+    })();
   }
 }
 
-class _ThemeStyleCard extends StatelessWidget {
+class _ThemeStyleCard extends ConsumerWidget {
   const _ThemeStyleCard({
     required this.style,
     required this.selected,
@@ -1060,7 +1089,7 @@ class _ThemeStyleCard extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final preview = _themeStylePreview(
@@ -1155,7 +1184,7 @@ class _ThemeStyleCard extends StatelessWidget {
   }
 }
 
-class _OrnamentPreviewCard extends StatelessWidget {
+class _OrnamentPreviewCard extends ConsumerWidget {
   const _OrnamentPreviewCard({
     required this.accentColor,
     required this.secondaryColor,
@@ -1167,7 +1196,7 @@ class _OrnamentPreviewCard extends StatelessWidget {
   final int transparencyPercent;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final visibilityPercent = 100 - transparencyPercent;
@@ -1261,7 +1290,7 @@ class _OrnamentPreviewCard extends StatelessWidget {
   }
 }
 
-class _SettingsFieldTitle extends StatelessWidget {
+class _SettingsFieldTitle extends ConsumerWidget {
   const _SettingsFieldTitle({
     required this.icon,
     required this.title,
@@ -1275,7 +1304,7 @@ class _SettingsFieldTitle extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = Theme.of(context).colorScheme;
     return Row(
@@ -1333,7 +1362,7 @@ class _SettingsFieldTitle extends StatelessWidget {
   }
 }
 
-class _SettingsActionTile extends StatelessWidget {
+class _SettingsActionTile extends ConsumerWidget {
   const _SettingsActionTile({
     required this.icon,
     required this.accentColor,
@@ -1351,7 +1380,7 @@ class _SettingsActionTile extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final cardColor = enabled

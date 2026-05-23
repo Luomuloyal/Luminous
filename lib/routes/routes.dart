@@ -17,8 +17,7 @@ class RootAppWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeState = ref.watch(themeProvider);
-    final localeState = ref.watch(localeProvider);
-    final themeMode = ref.read(themeProvider.notifier).themeMode;
+        final themeMode = ref.read(themeProvider.notifier).themeMode;
     final locale = ref.read(localeProvider.notifier).locale;
     final router = ref.watch(routerProvider);
 
