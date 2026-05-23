@@ -40,8 +40,6 @@ void main() {
 
     final warmup = AppStartupWarmup(
       userController: UserController(),
-      themeController: ThemeController(),
-      localeController: LocaleController(),
       ornamentController: OrnamentController(),
       reminderGateway: gateway,
       syncSession: (userId) async {

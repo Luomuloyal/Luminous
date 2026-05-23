@@ -3,37 +3,26 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:luminous/stores/app_database.dart';
-import 'package:luminous/stores/locale_controller.dart';
 import 'package:luminous/stores/ornament_controller.dart';
 import 'package:luminous/stores/reminder_local_gateway.dart';
 import 'package:luminous/stores/session_sync_service.dart';
 import 'package:luminous/stores/token_manager.dart';
-import 'package:luminous/stores/theme_controller.dart';
 import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/notification_service.dart';
 
 /// 首帧渲染后的异步预热协调器。
-///
-/// 目标是把 SharedPreferences、数据库、通知插件和网络同步等重操作
-/// 从 `main()` 移到首帧之后，降低冷启动首帧等待时间。
 class AppStartupWarmup {
   AppStartupWarmup({
     required UserController userController,
-    required ThemeController themeController,
-    required LocaleController localeController,
     required OrnamentController ornamentController,
     ReminderLocalGateway? reminderGateway,
     Future<void> Function(String userId)? syncSession,
   }) : _userController = userController,
-       _themeController = themeController,
-       _localeController = localeController,
        _ornamentController = ornamentController,
        _reminderGateway = reminderGateway ?? reminderLocalGateway,
        _syncSession = syncSession ?? sessionSyncService.syncForUser;
 
   final UserController _userController;
-  final ThemeController _themeController;
-  final LocaleController _localeController;
   final OrnamentController _ornamentController;
   final ReminderLocalGateway _reminderGateway;
   final Future<void> Function(String userId) _syncSession;
@@ -54,34 +43,11 @@ class AppStartupWarmup {
   Future<void> _runWarmup() async {
     await Future<void>.delayed(Duration.zero);
 
-    // UI 偏好（主题/语言/氛围装饰）首帧后优先恢复，避免阻塞 runApp 前路径。
-    unawaited(_hydrateUiPreferences());
-
-    // 装饰模板只依赖内存随机种子，尽快在首帧后准备好即可。
     unawaited(_warmOrnaments());
-
-    // SharedPreferences 相关预热最先开始，但不阻塞其它任务。
     unawaited(_warmTokenStore());
-
-    // 恢复用户态是唯一稍微关键一点的首帧后任务；恢复完成后再决定是否云同步。
     unawaited(_restoreUserSession());
-
-    // 数据库和第三方 SDK 都延后一点，避免首帧后瞬间打满 I/O。
     unawaited(_warmDatabase());
     unawaited(_warmNotificationSdk());
-  }
-
-  Future<void> _hydrateUiPreferences() async {
-    try {
-      await Future<void>.delayed(const Duration(milliseconds: 4));
-      await Future.wait<void>([
-        _themeController.init(),
-        _localeController.init(),
-        _ornamentController.init(),
-      ]);
-    } catch (_) {
-      // 偏好恢复失败时沿用默认配置，不阻塞首屏可用性。
-    }
   }
 
   Future<void> _warmOrnaments() async {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:get/get.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/constants/constants.dart';
 import 'package:luminous/pages/CheckIn/checkin.dart';
@@ -14,19 +14,24 @@ import 'package:luminous/pages/Safety/safety_assist.dart';
 import 'package:luminous/pages/Scan/medicine_scan.dart';
 import 'package:luminous/pages/Search/search.dart';
 import 'package:luminous/pages/Settings/settings.dart';
-import 'package:luminous/stores/locale_controller.dart';
+import 'package:luminous/stores/providers/locale_provider.dart';
+import 'package:luminous/stores/providers/theme_provider.dart';
 import 'package:luminous/stores/theme_controller.dart';
 import 'package:luminous/utils/loading_utils.dart';
 
 /// 构建应用根组件。
 ///
 /// 当前项目使用原生 `MaterialApp` 路由表，不依赖 `GetMaterialApp`。
-Widget getRootWidget() {
-  final themeController = Get.find<ThemeController>();
-  final localeController = Get.find<LocaleController>();
-  return Obx(() {
-    final style = themeController.themeStyle.value;
-    final locale = localeController.locale;
+class RootAppWidget extends ConsumerWidget {
+  const RootAppWidget({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeState = ref.watch(themeProvider);
+    final localeState = ref.watch(localeProvider);
+    final themeMode = ref.read(themeProvider.notifier).themeMode;
+    final locale = ref.read(localeProvider.notifier).locale;
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       navigatorKey: LoadingUtils.navigatorKey,
@@ -40,13 +45,13 @@ Widget getRootWidget() {
       ],
       supportedLocales: AppLocalizations.supportedLocales,
       locale: locale,
-      theme: _buildLightTheme(style),
-      darkTheme: _buildDarkTheme(style),
-      themeMode: themeController.themeMode,
+      theme: _buildLightTheme(themeState.style),
+      darkTheme: _buildDarkTheme(themeState.style),
+      themeMode: themeMode,
       initialRoute: '/',
       routes: getRootRoutes(),
     );
-  });
+  }
 }
 
 Map<String, Widget Function(BuildContext)> getRootRoutes() {
