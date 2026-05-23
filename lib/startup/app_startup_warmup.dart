@@ -13,15 +13,18 @@ import 'package:luminous/utils/notification_service.dart';
 class AppStartupWarmup {
   AppStartupWarmup({
     required UserController userController,
+    required Future<void> Function() restoreUserSession,
     required Future<void> Function() warmOrnaments,
     ReminderLocalGateway? reminderGateway,
     Future<void> Function(String userId)? syncSession,
   }) : _userController = userController,
+       _restoreUserSessionTask = restoreUserSession,
        _warmOrnamentsTask = warmOrnaments,
        _reminderGateway = reminderGateway ?? reminderLocalGateway,
        _syncSession = syncSession ?? sessionSyncService.syncForUser;
 
   final UserController _userController;
+  final Future<void> Function() _restoreUserSessionTask;
   final Future<void> Function() _warmOrnamentsTask;
   final ReminderLocalGateway _reminderGateway;
   final Future<void> Function(String userId) _syncSession;
@@ -70,7 +73,7 @@ class AppStartupWarmup {
   Future<void> _restoreUserSession() async {
     try {
       await Future<void>.delayed(const Duration(milliseconds: 80));
-      await _userController.init();
+      await _restoreUserSessionTask();
 
       final userId = _userController.user.value?.id;
       if ((userId ?? '').trim().isNotEmpty) {

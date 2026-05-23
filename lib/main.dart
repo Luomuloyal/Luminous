@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:luminous/core/theme/ornaments/ornament_provider.dart';
-import 'package:luminous/features/auth/data/user_session_store.dart';
 import 'package:luminous/features/auth/providers/user_session_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:luminous/routes/routes.dart';
@@ -17,10 +16,7 @@ Future<void> main() async {
   // Riverpod: 在运行之前异步获取 SharedPreferences，避免每次初始化都闪白。
   final prefs = await SharedPreferences.getInstance();
 
-  final userController = Get.put(
-    UserController(sessionStore: UserSessionStore.fromPreferences(prefs)),
-    permanent: true,
-  );
+  final userController = Get.put(UserController(), permanent: true);
   userController.markSessionPending();
 
   runApp(
@@ -46,14 +42,9 @@ class _LuminousAppState extends ConsumerState<LuminousApp> {
   @override
   void initState() {
     super.initState();
-    final userSessionNotifier = ref.read(userSessionProvider.notifier);
-    widget.userController.attachSessionBridge(
-      restoreUser: userSessionNotifier.restore,
-      persistUser: userSessionNotifier.setUser,
-      clearUser: userSessionNotifier.clear,
-    );
     _startupWarmup = AppStartupWarmup(
       userController: widget.userController,
+      restoreUserSession: ref.read(userSessionProvider.notifier).restore,
       warmOrnaments: () async {
         final ornamentNotifier = ref.read(ornamentProvider.notifier);
         if (!ornamentNotifier.isReady) {
@@ -67,6 +58,15 @@ class _LuminousAppState extends ConsumerState<LuminousApp> {
 
   @override
   Widget build(BuildContext context) {
+    // 监听 Riverpod 中的用户信息并同步到旧有的 UserController
+    ref.listen(currentUserProvider, (previous, next) {
+      widget.userController.user.value = next;
+    });
+
+    ref.listen(userSessionReadyProvider, (previous, next) {
+      widget.userController.sessionReady.value = next;
+    });
+
     return const RootAppWidget();
   }
 }

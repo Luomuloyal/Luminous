@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
 import 'package:luminous/api/auth_api.dart';
 import 'package:luminous/components/auth.dart';
@@ -6,24 +7,30 @@ import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Register/register.dart';
 import 'package:luminous/pages/Login/controllers/login_controller.dart';
+import 'package:luminous/features/auth/providers/auth_service_provider.dart';
 import 'package:luminous/viewmodels/auth.dart';
 
 /// 登录页。
 ///
 /// 页面默认展示邮箱登录（密码/验证码），保留手机号分支逻辑供后续灰度开关。
-class LoginPage extends StatefulWidget {
+class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key, this.authApi = const AuthApi(), this.controller});
 
   final AuthApi authApi;
   final LoginController? controller;
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends ConsumerState<LoginPage> {
   late final LoginController _controller =
-      widget.controller ?? LoginController(authApi: widget.authApi);
+      widget.controller ??
+      LoginController(
+        authApi: widget.authApi,
+        onLoginSuccess: (user) =>
+            ref.read(authServiceProvider).loginSuccess(user),
+      );
 
   AppLocalizations get _l10n => AppLocalizations.of(context)!;
 

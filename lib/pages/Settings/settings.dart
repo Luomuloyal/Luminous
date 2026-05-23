@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/components/app_surface.dart';
 import 'package:luminous/components/soft_banner.dart';
@@ -10,9 +9,9 @@ import 'package:luminous/pages/Settings/profile_settings.dart';
 import 'package:luminous/stores/providers/locale_provider.dart';
 import 'package:luminous/stores/providers/theme_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:luminous/features/auth/providers/auth_service_provider.dart';
 import 'package:luminous/stores/theme_controller.dart';
 import 'package:luminous/stores/locale_controller.dart';
-import 'package:luminous/stores/user_controller.dart';
 
 /// 设置总览页。
 ///
@@ -128,8 +127,7 @@ class SettingsPage extends ConsumerWidget {
               );
 
               if (confirm == true) {
-                final userController = Get.find<UserController>();
-                await userController.logout();
+                await ref.read(authServiceProvider).logout();
                 if (context.mounted) {
                   Navigator.of(context).pop();
                 }

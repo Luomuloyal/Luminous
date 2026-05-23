@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/components/app_surface.dart';
+import 'package:luminous/features/auth/providers/auth_service_provider.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Settings/controllers/profile_settings_controller.dart';
 import 'package:luminous/viewmodels/auth.dart';
@@ -9,18 +11,26 @@ import 'package:luminous/viewmodels/auth.dart';
 /// 个人设置页。
 ///
 /// 支持编辑头像、昵称、性别、生日、职业和地区编码，并同步到后端与本地用户态。
-class ProfileSettingsPage extends StatefulWidget {
+class ProfileSettingsPage extends ConsumerStatefulWidget {
   const ProfileSettingsPage({super.key, this.controller});
 
   final ProfileSettingsController? controller;
 
   @override
-  State<ProfileSettingsPage> createState() => _ProfileSettingsPageState();
+  ConsumerState<ProfileSettingsPage> createState() =>
+      _ProfileSettingsPageState();
 }
 
-class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
+class _ProfileSettingsPageState extends ConsumerState<ProfileSettingsPage> {
   late final ProfileSettingsController _controller =
-      widget.controller ?? ProfileSettingsController();
+      widget.controller ??
+      ProfileSettingsController(
+        onLogout: () => ref.read(authServiceProvider).logout(),
+        onPurgeAccount: (userId) =>
+            ref.read(authServiceProvider).purgeDeletedAccountData(userId),
+        onUserUpdate: (user) =>
+            ref.read(authServiceProvider).loginSuccess(user),
+      );
 
   TextEditingController get _avatarController => _controller.avatarController;
   TextEditingController get _nicknameController =>

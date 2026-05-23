@@ -11,14 +11,20 @@ import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:luminous/stores/providers/shared_preferences_provider.dart';
+
 void main() {
+  late SharedPreferences prefs;
+
   setUp(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues(<String, Object>{});
+    prefs = await SharedPreferences.getInstance();
     Get.testMode = true;
     Get.reset();
     final controller = Get.put(UserController(), permanent: true);
-    await controller.init();
+    controller.sessionReady.value = true;
   });
 
   tearDown(() {
@@ -27,11 +33,14 @@ void main() {
   });
 
   Widget createLoginWidget({AuthApi? authApi}) {
-    return MaterialApp(
-      locale: const Locale('zh'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: LoginPage(authApi: authApi ?? FakeAuthApi()),
+    return ProviderScope(
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      child: MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: LoginPage(authApi: authApi ?? FakeAuthApi()),
+      ),
     );
   }
 

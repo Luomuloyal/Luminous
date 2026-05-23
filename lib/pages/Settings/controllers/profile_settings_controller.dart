@@ -18,12 +18,19 @@ import 'package:luminous/viewmodels/auth.dart';
 /// 负责加载资料、管理表单编辑态、头像选择与资料保存。
 class ProfileSettingsController extends GetxController {
   ProfileSettingsController({
+    required this.onLogout,
+    required this.onPurgeAccount,
+    required this.onUserUpdate,
     UserController? userController,
     UserApi? userApi,
     ImagePicker? imagePicker,
   }) : _userController = userController ?? Get.find<UserController>(),
        _userApi = userApi ?? const UserApi(),
        _imagePicker = imagePicker ?? ImagePicker();
+
+  final Future<void> Function() onLogout;
+  final Future<void> Function(String userId) onPurgeAccount;
+  final Future<void> Function(UserSafe user) onUserUpdate;
 
   final UserController _userController;
   final UserApi _userApi;
@@ -98,7 +105,7 @@ class ProfileSettingsController extends GetxController {
     try {
       final response = await _userApi.getProfile(userId: current.id);
       final user = response.result;
-      await _userController.setUser(user);
+      await onUserUpdate(user);
       if (isClosed) {
         return;
       }
@@ -197,7 +204,7 @@ class ProfileSettingsController extends GetxController {
         provinceCode: provinceCodeController.text,
         cityCode: cityCodeController.text,
       );
-      await _userController.setUser(response.result);
+      await onUserUpdate(response.result);
       if (!context.mounted || isClosed) {
         return;
       }
@@ -245,8 +252,8 @@ class ProfileSettingsController extends GetxController {
 
     try {
       final response = await _userApi.deleteAccount(userId: user.id);
-      await _userController.purgeDeletedAccountData(user.id);
-      await _userController.logout();
+      await onPurgeAccount(user.id);
+      await onLogout();
       if (!context.mounted || isClosed) {
         return true;
       }

@@ -15,7 +15,7 @@ void main() {
     Get.testMode = true;
     Get.reset();
     final controller = Get.put(UserController(), permanent: true);
-    await controller.init();
+    controller.sessionReady.value = true;
   });
 
   tearDown(() {

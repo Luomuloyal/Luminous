@@ -35,8 +35,19 @@ void main() {
         calls.add('reschedule:$userId');
       };
 
+    final controller = UserController();
     final warmup = AppStartupWarmup(
-      userController: UserController(),
+      userController: controller,
+      restoreUserSession: () async {
+        controller.user.value = const UserSafe(
+          id: 'user-1',
+          username: 'tester',
+          email: '',
+          phone: '',
+          name: '',
+          type: 0,
+        );
+      },
       warmOrnaments: () async {},
       reminderGateway: gateway,
       syncSession: (userId) async {

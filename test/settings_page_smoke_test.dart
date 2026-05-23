@@ -14,7 +14,7 @@ void main() {
     Get.testMode = true;
     Get.reset();
     final userController = Get.put(UserController(), permanent: true);
-    await userController.init();
+    userController.sessionReady.value = true;
   });
 
   testWidgets('settings page builds without exceptions', (tester) async {

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:luminous/features/auth/data/user_session_store.dart';
 import 'package:luminous/features/auth/providers/user_session_provider.dart';
 import 'package:luminous/pages/Mine/mine.dart';
 import 'package:luminous/stores/providers/shared_preferences_provider.dart';
@@ -21,10 +20,8 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     final prefs = await SharedPreferences.getInstance();
-    Get.put(
-      UserController(sessionStore: UserSessionStore.fromPreferences(prefs)),
-      permanent: true,
-    );
+    final userController = Get.put(UserController(), permanent: true);
+    userController.sessionReady.value = true;
 
     const user = UserSafe(
       id: 'user-1',

@@ -7,7 +7,6 @@ import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Register/register.dart';
 import 'package:luminous/stores/session_sync_service.dart';
 import 'package:luminous/stores/token_manager.dart';
-import 'package:luminous/stores/user_controller.dart';
 import 'package:luminous/utils/dio_request.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/auth.dart';
@@ -16,8 +15,9 @@ import 'package:luminous/viewmodels/auth.dart';
 ///
 /// 负责管理登录表单、验证码冷却、登录请求与登录后同步链路。
 class LoginController extends GetxController {
-  LoginController({required this.authApi, UserController? userController})
-    : _userController = userController ?? Get.find<UserController>();
+  LoginController({required this.authApi, required this.onLoginSuccess});
+
+  final Future<void> Function(UserSafe user) onLoginSuccess;
 
   static const int _codeCooldownSeconds = 60;
   static final RegExp _emailRegExp = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
@@ -26,7 +26,6 @@ class LoginController extends GetxController {
   static final RegExp _passwordRegExp = RegExp(r'^[A-Za-z0-9]{6,12}$');
 
   final AuthApi authApi;
-  final UserController _userController;
 
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final TextEditingController identifierController = TextEditingController();
@@ -241,7 +240,7 @@ class LoginController extends GetxController {
         await tokenManager.deleteToken();
       }
 
-      await _userController.setUser(loginResult.user);
+      await onLoginSuccess(loginResult.user);
       final syncErrors = await sessionSyncService.syncForUser(
         loginResult.user.id,
       );
