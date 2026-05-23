@@ -46,4 +46,4 @@ app.*.map.json
 # Local presentation / design outputs
 Roadshow/
 outputs/
-feature_timeline_transparent*.png
+lib/assets/data.json
