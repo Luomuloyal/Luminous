@@ -119,3 +119,7 @@ lib/
 - 收缩 3 个旧路径（`pages/Album/album.dart`、controller、`components/album.dart`）为兼容导出壳，更新 `main_shell`、`album_preview_test` 的 import。
 - 完成 `CheckIn` 第十一个结构切片：新增 `lib/features/checkin/presentation/`，迁移打卡页（495行）和 controller，收缩 2 个旧路径，更新 `app_router` 的 import。
 - 修复 `DrugView`/`AlbumView`/`MineView` → 统一为 `XxxPage` 命名，布局组件重命名为 `XxxLayout`；消除 `reminder_edit_page.dart` 的 `use_build_context_synchronously` lint。
+- 完成 `Login` 第十二个结构切片：新增 `lib/features/login/presentation/`，迁移登录页和 controller，`login_controller` 中 `RegisterView` → `RegisterPage` 并更新 import。
+- 完成 `Register` 第十三个结构切片：新增 `lib/features/register/presentation/`，迁移注册页（改名 `RegisterView` → `RegisterPage`）和 controller。
+- 收缩 Login/Register 共 4 个旧路径为兼容导出壳，更新 `app_router` 和 `test/login_page_test.dart` 的 import。
+- `flutter analyze` 和全量 `flutter test`（19 通过）均已确认。

@@ -7,9 +7,9 @@ import 'package:luminous/features/settings/presentation/settings.dart';
 
 import 'package:luminous/features/checkin/presentation/checkin.dart';
 import 'package:luminous/pages/Legal/legal_documents.dart';
-import 'package:luminous/pages/Login/login.dart';
+import 'package:luminous/features/login/presentation/login.dart';
 import 'package:luminous/features/mine/presentation/mine.dart';
-import 'package:luminous/pages/Register/register.dart';
+import 'package:luminous/features/register/presentation/register.dart';
 import 'package:luminous/features/reminders/presentation/reminders.dart';
 import 'package:luminous/features/safety/presentation/safety.dart';
 import 'package:luminous/utils/loading_utils.dart'; // 沿用原本的 NavigatorKey 做兼容
