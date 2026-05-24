@@ -8,10 +8,8 @@ import 'package:luminous/core/theme/ornaments/ornament_provider.dart';
 import 'package:luminous/features/auth/providers/auth_service_provider.dart';
 import 'package:luminous/features/settings/presentation/pages/profile_settings_page.dart';
 import 'package:luminous/l10n/app_localizations.dart';
-import 'package:luminous/stores/locale_controller.dart';
-import 'package:luminous/stores/providers/locale_provider.dart';
-import 'package:luminous/stores/providers/theme_provider.dart';
-import 'package:luminous/stores/theme_controller.dart';
+import 'package:luminous/core/providers/locale_provider.dart';
+import 'package:luminous/core/providers/theme_provider.dart';
 
 part 'pages/settings_pages.dart';
 part 'support/settings_labels.dart';

@@ -3,9 +3,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/constants/constants.dart';
-import 'package:luminous/stores/providers/locale_provider.dart';
-import 'package:luminous/stores/providers/theme_provider.dart';
-import 'package:luminous/stores/theme_controller.dart';
+import 'package:luminous/core/providers/locale_provider.dart';
+import 'package:luminous/core/providers/theme_provider.dart';
 import 'package:luminous/router/app_router.dart';
 
 /// 构建应用根组件。

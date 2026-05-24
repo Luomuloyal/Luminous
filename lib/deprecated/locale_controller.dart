@@ -2,20 +2,11 @@ import 'dart:ui';
 
 import 'package:get/get.dart';
 import 'package:luminous/constants/constants.dart';
+import 'package:luminous/core/providers/locale_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum AppLocalePreference {
-  system,
-  zh,
-  en;
-
-  static AppLocalePreference fromStorage(String? value) {
-    return AppLocalePreference.values.firstWhere(
-      (item) => item.name == value,
-      orElse: () => AppLocalePreference.system,
-    );
-  }
-}
+// Compatibility stub — AppLocalePreference enum has been moved to locale_provider.dart.
+// This file is retained only for deprecated GetX controller compatibility and will be removed.
 
 class LocaleController extends GetxController {
   final Rx<AppLocalePreference> localePreference =

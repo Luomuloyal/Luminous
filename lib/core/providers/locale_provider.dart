@@ -1,8 +1,20 @@
 import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:luminous/constants/constants.dart';
-import 'package:luminous/stores/locale_controller.dart'; // 复用原来的 enum
-import 'package:luminous/stores/providers/shared_preferences_provider.dart';
+import 'package:luminous/core/providers/shared_preferences_provider.dart';
+
+enum AppLocalePreference {
+  system,
+  zh,
+  en;
+
+  static AppLocalePreference fromStorage(String? value) {
+    return AppLocalePreference.values.firstWhere(
+      (item) => item.name == value,
+      orElse: () => AppLocalePreference.system,
+    );
+  }
+}
 
 class LocaleState {
   final AppLocalePreference preference;

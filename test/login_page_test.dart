@@ -11,7 +11,7 @@ import 'package:luminous/viewmodels/auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:luminous/stores/providers/shared_preferences_provider.dart';
+import 'package:luminous/core/providers/shared_preferences_provider.dart';
 
 void main() {
   late SharedPreferences prefs;

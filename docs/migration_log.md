@@ -135,3 +135,4 @@ lib/
 - 继续收口 Settings 文件体积：将 `theme_widgets.dart` 按 hero、display preferences、theme style card、ornament preview 拆分，原 600+ 行文件降至 300 行以内。
 - 继续收口 Safety 文件体积：将安全辅助页纯文案选择函数迁入 `support/safety_assist_text.dart`，使 `safety_assist_page.dart` 降至 600 行以内。
 - 清理 `lib/components/` 兼容导出壳：全仓确认 14 个旧壳（9 个 shared + 5 个 feature）均无外部引用后，移入 `lib/deprecated/` 废弃目录，删除空的 `lib/components/` 目录。`flutter analyze` 无问题。
+- 启动 `stores/` 与 `viewmodels/` 归属决策 Phase 0：已完成前三步——(1) `viewmodels/drug.dart` 兼容壳移入 `lib/deprecated/`；(2) 废弃 GetX 控制器 `user_controller.dart` 直接移入 deprecated，`locale_controller.dart` 和 `theme_controller.dart` 的 enum（`AppLocalePreference`、`AppThemeModePreference`、`AppThemeStyle`）分别提取到 `locale_provider.dart` 和 `theme_provider.dart` 后移入 deprecated，同步更新 `settings.dart` 和 `routes.dart` 的 import；(3) `stores/providers/` 下 3 个 Riverpod Provider（`shared_preferences_provider`、`locale_provider`、`theme_provider`）迁入 `lib/core/providers/`，全仓 13 处 import 同步更新。`flutter analyze` 通过。

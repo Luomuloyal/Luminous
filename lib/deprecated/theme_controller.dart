@@ -1,35 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/constants/constants.dart';
+import 'package:luminous/core/providers/theme_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum AppThemeModePreference {
-  system,
-  light,
-  dark;
-
-  static AppThemeModePreference fromStorage(String? value) {
-    return AppThemeModePreference.values.firstWhere(
-      (item) => item.name == value,
-      orElse: () => AppThemeModePreference.system,
-    );
-  }
-}
-
-enum AppThemeStyle {
-  softGlow,
-  moonMist,
-  divineTree,
-  illusion,
-  lightSand;
-
-  static AppThemeStyle fromStorage(String? value) {
-    return AppThemeStyle.values.firstWhere(
-      (item) => item.name == value,
-      orElse: () => AppThemeStyle.softGlow,
-    );
-  }
-}
+// Compatibility stub — AppThemeModePreference and AppThemeStyle enums have been moved
+// to theme_provider.dart. This file is retained only for deprecated GetX controller
+// compatibility and will be removed.
 
 /// 全局主题控制器。
 ///

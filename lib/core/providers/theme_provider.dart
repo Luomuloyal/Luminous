@@ -1,8 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:luminous/constants/constants.dart';
-import 'package:luminous/stores/theme_controller.dart'; // 复用原来的 enum
-import 'package:luminous/stores/providers/shared_preferences_provider.dart';
+import 'package:luminous/core/providers/shared_preferences_provider.dart';
+
+enum AppThemeModePreference {
+  system,
+  light,
+  dark;
+
+  static AppThemeModePreference fromStorage(String? value) {
+    return AppThemeModePreference.values.firstWhere(
+      (item) => item.name == value,
+      orElse: () => AppThemeModePreference.system,
+    );
+  }
+}
+
+enum AppThemeStyle {
+  softGlow,
+  moonMist,
+  divineTree,
+  illusion,
+  lightSand;
+
+  static AppThemeStyle fromStorage(String? value) {
+    return AppThemeStyle.values.firstWhere(
+      (item) => item.name == value,
+      orElse: () => AppThemeStyle.softGlow,
+    );
+  }
+}
 
 class ThemeState {
   final AppThemeModePreference modePreference;

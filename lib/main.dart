@@ -6,7 +6,7 @@ import 'package:luminous/features/auth/providers/user_session_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:luminous/routes/routes.dart';
 import 'package:luminous/startup/app_startup_warmup.dart';
-import 'package:luminous/stores/providers/shared_preferences_provider.dart';
+import 'package:luminous/core/providers/shared_preferences_provider.dart';
 
 import 'package:luminous/core/providers/global_provider_container.dart';
 
