@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:luminous/pages/Mine/mine.dart';
+import 'package:luminous/features/mine/presentation/mine.dart';
 import 'package:luminous/viewmodels/auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

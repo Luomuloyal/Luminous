@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:luminous/components/mine.dart';
 import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/features/drug/presentation/drug.dart';
 import 'package:luminous/features/home/presentation/home.dart';
+import 'package:luminous/features/mine/presentation/mine.dart';
 import 'package:luminous/viewmodels/auth.dart';
 import 'package:luminous/viewmodels/home.dart';
 import 'package:luminous/viewmodels/mine.dart';

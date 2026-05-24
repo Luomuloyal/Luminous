@@ -113,3 +113,5 @@ lib/
 - 更新全仓 3 个引用方（`app_router`、`reminder_edit_page_test`、`reminder_list_controller_test`）的 import 到新 `features/reminders` 入口。
 - 完成 `Safety` 第八个结构切片：新增 `lib/features/safety/presentation/`，把 `safety_assist.dart`（956行）拆为 page（626行）+ widgets（328行）+ controller 多文件。
 - 将原 `lib/pages/Safety/safety_assist.dart` 及 controller 收缩为兼容导出壳，更新 `main_shell`、`app_router`、`ai_cache_ui_test` 的 import。
+- 完成 `Mine` 第九个结构切片：新增 `lib/features/mine/presentation/`，把 `mine.dart`（113行）、`browse_history.dart`（461行）、`components/mine.dart`（658行拆为 profile card 221行 + page widgets 397行）整合迁移，含 2 个 controller。
+- 收缩 6 个旧路径（`pages/Mine/mine.dart`、`browse_history.dart`、2 个 controller、`components/mine.dart`）为兼容导出壳，更新 `main_shell`、`app_router`、`mine_view_session_test`、`responsive_layout_test` 的 import。

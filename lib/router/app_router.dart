@@ -8,7 +8,7 @@ import 'package:luminous/features/settings/presentation/settings.dart';
 import 'package:luminous/pages/CheckIn/checkin.dart';
 import 'package:luminous/pages/Legal/legal_documents.dart';
 import 'package:luminous/pages/Login/login.dart';
-import 'package:luminous/pages/Mine/browse_history.dart';
+import 'package:luminous/features/mine/presentation/mine.dart';
 import 'package:luminous/pages/Register/register.dart';
 import 'package:luminous/features/reminders/presentation/reminders.dart';
 import 'package:luminous/features/safety/presentation/safety.dart';
