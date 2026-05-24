@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:get/get.dart';
 import 'package:luminous/components/app_surface.dart';
+import 'package:luminous/features/search/presentation/search.dart';
 import 'package:luminous/l10n/app_localizations.dart';
-import 'package:luminous/pages/Search/search.dart';
 import 'package:luminous/pages/Scan/controllers/medicine_scan_controller.dart';
 import 'package:luminous/pages/Scan/models/selected_scan_image.dart';
 import 'package:luminous/utils/media_access_error_text.dart';
@@ -849,7 +849,7 @@ class _MedicineScanPageState extends State<MedicineScanPage> {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) =>
-            SearchView(initialKeyword: keyword, autoSearchOnInit: true),
+            SearchPage(initialKeyword: keyword, autoSearchOnInit: true),
       ),
     );
   }

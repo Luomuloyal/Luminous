@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:luminous/features/search/presentation/search.dart';
 import 'package:luminous/pages/Scan/medicine_scan.dart';
-import 'package:luminous/pages/Search/search.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/medicine.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -53,7 +53,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: SearchView(
+        home: SearchPage(
           initialKeyword: '阿莫西林',
           autoSearchOnInit: true,
           searchExecutor:

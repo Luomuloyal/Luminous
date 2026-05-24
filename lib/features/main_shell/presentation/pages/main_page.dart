@@ -66,7 +66,7 @@ class _MainPageState extends State<MainPage> {
 
   /// 需要在后台预热的二级页面列表。
   static const List<Widget> _secondaryPages = [
-    SearchView(),
+    SearchPage(),
     SafetyAssistPage(),
     SettingsPage(),
     ProfileSettingsPage(),

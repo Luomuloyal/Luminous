@@ -9,7 +9,7 @@ Luminous is already functional, and the current checks pass. The next work shoul
 1. Remove demo behavior from real user flows.
 2. Make user data ownership and auth boundaries explicit.
 3. Reduce heavy client-side work, especially the offline medicine database.
-4. Prepare the backend for a Nest migration without breaking the current Flutter app.
+4. Prepare the backend for a NestJS + PostgreSQL migration without breaking the current Flutter app.
 
 This plan is intentionally incremental. Each phase should leave the app runnable and covered by targeted checks.
 
@@ -41,9 +41,17 @@ Important current architecture notes:
 
 - Flutter uses GetX controllers at page level and `DioRequest` as the unified HTTP entry.
 - Backend is Express + TypeScript with route handlers under `backend/src/handlers`.
+- The current backend data stores are MongoDB + MySQL + Redis.
 - AI calls are already centralized under `backend/src/ai`, with LangChain-compatible helper contracts.
 - The API envelope is unified as `{ code, msg, result }`.
 - The frontend still sends `userId` in several user-scoped requests.
+
+Target backend end-state for this plan:
+
+- Framework: NestJS.
+- Primary data store: PostgreSQL.
+- Optional Redis: keep only where short-lived cache, verification code storage, or AI/text cache materially helps.
+- MongoDB and MySQL are migration sources to retire, not long-term dependencies to preserve.
 
 ## Phase 0: Structure Baseline and File Decomposition
 
@@ -124,7 +132,7 @@ Acceptance:
 1. `Settings`: split `settings.dart`, move the page stack into `lib/features/settings/`. Completed on 2026-05-24.
 2. `Main shell`: split `MainPage`, bottom bar, and ornament rendering responsibilities. Completed on 2026-05-24.
 3. `Home`: separate page composition from home-specific presentation widgets, and make `HomePage` the canonical feature entry while keeping `HomeView` as a thin compatibility shell. Completed on 2026-05-24.
-4. `Search`: separate search page, history, empty state, and result rendering.
+4. `Search`: separate search page, history, empty state, and result rendering, and make `SearchPage` the canonical feature entry while keeping `SearchView` as a thin compatibility shell. Completed on 2026-05-24.
 5. `Scan`: split page orchestration from action tiles, preview, and result presentation.
 6. `Backend auth`: split the large Express auth handler into smaller module-scoped files without starting Nest yet.
 
@@ -240,18 +248,20 @@ Acceptance:
 - Offline search still supports product name, approval number, manufacturer, holder, drug code, and serial number.
 - Add tests for local search query behavior.
 
-## Phase 4: Backend Migration to Nest
+## Phase 4: Backend Migration to NestJS + PostgreSQL
 
-The Nest migration should be a controlled architecture migration, not a product rewrite.
+The backend migration should be a controlled architecture migration, not a product rewrite.
 
 ### 4.1 Migration strategy
 
-Use a parallel Nest backend first, then switch routes gradually.
+Move toward a single NestJS backend with PostgreSQL as the primary store.
+
+If parity verification requires it, a temporary parallel Nest runtime is acceptable during the cutover window, but it is not the desired steady state.
 
 Recommended structure:
 
 ```text
-backend-nest/
+backend/
   src/
     main.ts
     app.module.ts
@@ -276,6 +286,7 @@ Key compatibility rules:
 - Preserve the response envelope `{ code, msg, result }`.
 - Preserve existing JWT token semantics until Flutter no longer depends on them.
 - Reuse the current AI helper contracts where possible.
+- Replace MongoDB + MySQL data ownership with PostgreSQL-backed modules instead of reintroducing dual persistence in the new architecture.
 
 ### 4.2 Suggested Nest module mapping
 
@@ -285,24 +296,27 @@ Key compatibility rules:
 - `reminders`: reminder plans and today reminders.
 - `scan-records`: scan history create/list.
 - `ai`: LangChain gateway, prompt builders, text cache.
-- `db`: Mongo, MySQL, Redis providers.
+- `db`: PostgreSQL access layer and optional Redis providers.
 - `common`: response envelope, error mapping, auth guard, validation pipes.
 
 ### 4.3 Migration phases
 
-1. Scaffold Nest app and duplicate health check.
-2. Move shared config/env parsing into Nest config providers.
-3. Move AI module first because it is already centralized and testable.
-4. Move medicine public routes.
-5. Move auth and JWT guard.
-6. Move user-scoped routes after Phase 2 auth rules are already tested.
-7. Run Express and Nest parity tests before switching deployment.
+1. Define the target PostgreSQL schema that replaces current MongoDB user data and MySQL medicine tables.
+2. Scaffold the NestJS application entry and move shared config/env parsing into Nest config providers.
+3. Add PostgreSQL data access, migration scripts, and seed/import tooling; wire Redis only for clearly justified short-lived cache flows.
+4. Move the AI module first because it is already centralized and testable.
+5. Move medicine public routes and decide whether medicine data lands fully in PostgreSQL or is refreshed into PostgreSQL from an external upstream source.
+6. Move auth, verification-code delivery, and JWT guard.
+7. Move user-scoped routes after Phase 2 auth rules are already tested.
+8. Run Express and Nest parity tests before switching deployment, then retire MongoDB/MySQL runtime dependencies.
 
 Acceptance:
 
 - Flutter does not need route changes during the migration.
 - Express tests have equivalent Nest tests before a route is switched.
-- Docker and deployment docs clearly state which backend entrypoint is active.
+- PostgreSQL becomes the primary persisted source for migrated modules.
+- Redis remains optional and limited to cache/code scenarios rather than becoming a second primary database.
+- Docker and deployment docs clearly state which backend entrypoint is active during the cutover window.
 
 ## Phase 5: Testing and Performance Baseline
 

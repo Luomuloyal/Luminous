@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:luminous/features/main_shell/presentation/main_shell.dart';
+import 'package:luminous/features/search/presentation/search.dart';
 import 'package:luminous/features/settings/presentation/settings.dart';
 
 import 'package:luminous/pages/CheckIn/checkin.dart';
@@ -11,7 +12,6 @@ import 'package:luminous/pages/Register/register.dart';
 import 'package:luminous/pages/Reminders/reminder_list.dart';
 import 'package:luminous/pages/Safety/safety_assist.dart';
 import 'package:luminous/pages/Scan/medicine_scan.dart';
-import 'package:luminous/pages/Search/search.dart';
 import 'package:luminous/utils/loading_utils.dart'; // 沿用原本的 NavigatorKey 做兼容
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -26,7 +26,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/register',
         builder: (context, state) => const RegisterView(),
       ),
-      GoRoute(path: '/search', builder: (context, state) => const SearchView()),
+      GoRoute(path: '/search', builder: (context, state) => const SearchPage()),
       GoRoute(
         path: '/scan',
         builder: (context, state) => const MedicineScanPage(

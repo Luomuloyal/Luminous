@@ -7,13 +7,13 @@ import 'package:luminous/components/app_ornaments.dart';
 import 'package:luminous/constants/constants.dart';
 import 'package:luminous/core/theme/ornaments/ornament_provider.dart';
 import 'package:luminous/features/home/presentation/home.dart';
+import 'package:luminous/features/search/presentation/search.dart';
 import 'package:luminous/features/settings/presentation/settings.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Album/album.dart';
 import 'package:luminous/pages/Drug/drug.dart';
 import 'package:luminous/pages/Mine/mine.dart';
 import 'package:luminous/pages/Safety/safety_assist.dart';
-import 'package:luminous/pages/Search/search.dart';
 import 'package:luminous/pages/Settings/profile_settings.dart';
 
 import 'controllers/main_controller.dart';

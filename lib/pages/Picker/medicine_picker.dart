@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/components/app_surface.dart';
+import 'package:luminous/features/search/presentation/search.dart';
 import 'package:luminous/components/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Picker/controllers/medicine_picker_controller.dart';
-import 'package:luminous/pages/Search/search.dart';
 import 'package:luminous/viewmodels/medicine.dart';
 
 /// 药品选择器页面。
@@ -415,7 +415,7 @@ class MedicinePickerPage extends StatelessWidget {
     /// 从搜索页返回的药品对象。
     final result = await Navigator.of(context).push<MedicineItem>(
       MaterialPageRoute<MedicineItem>(
-        builder: (_) => const SearchView(pickerMode: true),
+        builder: (_) => const SearchPage(pickerMode: true),
       ),
     );
     if (result == null || !context.mounted) return;

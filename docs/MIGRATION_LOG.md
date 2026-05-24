@@ -87,3 +87,7 @@ lib/
 - 调整 `.gitignore` 与 `CONTRIBUTING.md`，将 `.vscode` 改为“默认忽略，放行共享校验配置”的策略，避免把个人本地 IDE 配置带进仓库。
 - 完成 `Home` 第三个结构切片：新增 `lib/features/home/presentation/`，把首页拆成 `controllers/`、`pages/`、`support/`、`widgets/` 多文件，并将正式入口命名统一为 `HomePage`。
 - 将原 `lib/pages/Home/home.dart`、`lib/pages/Home/controllers/home_controller.dart` 与 `lib/components/home.dart` 收缩为兼容壳或导出层，同时把 `Main shell` 与首页相关测试切到新的 `features/home` 入口。
+- 更新根 `README.md`，移除过时的 `Study/`、`.md/` 目录说明，并把后端说明改为“当前基线 + 目标栈”双轨描述：当前仍是 Express + MongoDB/MySQL/Redis，目标迁移为 NestJS + PostgreSQL，Redis 按需保留。
+- 在 `docs/RefactorPlan.md` 中补充后端目标状态：NestJS 作为框架，PostgreSQL 作为主存储，Redis 仅在验证码、缓存和 AI 文本缓存等短生命周期场景按需保留，MongoDB/MySQL 作为迁移源逐步退场。
+- 完成 `Search` 第四个结构切片：新增 `lib/features/search/presentation/`，把搜索页拆为 `controllers/`、`pages/`、`support/`、`widgets/` 多文件，并将正式入口命名统一为 `SearchPage`。
+- 将原 `lib/pages/Search/search.dart`、`lib/pages/Search/controllers/search_controller.dart` 与 `lib/components/search.dart` 收缩为兼容壳或导出层，同时把路由、Main shell、药品选择器、扫码跳转和相关测试切到新的 `features/search` 入口。
