@@ -133,7 +133,7 @@ Acceptance:
 2. `Main shell`: split `MainPage`, bottom bar, and ornament rendering responsibilities. Completed on 2026-05-24.
 3. `Home`: separate page composition from home-specific presentation widgets, and make `HomePage` the canonical feature entry while keeping `HomeView` as a thin compatibility shell. Completed on 2026-05-24.
 4. `Search`: separate search page, history, empty state, and result rendering, and make `SearchPage` the canonical feature entry while keeping `SearchView` as a thin compatibility shell. Completed on 2026-05-24.
-5. `Scan`: split page orchestration from action tiles, preview, and result presentation.
+5. `Scan`: split page orchestration from action tiles, preview, and result presentation. Completed on 2026-05-24.
 6. `Backend auth`: split the large Express auth handler into smaller module-scoped files without starting Nest yet.
 
 ### 0.4 Exit criteria
@@ -352,3 +352,4 @@ Tasks:
 - Set the recommended structure-first execution order to `Settings -> Main shell -> Home -> Search -> Scan -> backend auth`.
 - Started the first structural slice by moving the Settings presentation code toward `lib/features/settings/` while keeping compatibility with existing imports.
 - Completed the second structural slice by moving the main shell presentation and controller code into `lib/features/main_shell/`, splitting the old oversized `main.dart` into page, bottom-bar, and ornament support files while keeping legacy export wrappers.
+- Completed the fifth structural slice by moving scan presentation code into `lib/features/scan/presentation/`, splitting the old scan page into page, image-flow support, labels, preview, sheet, result, and action files while keeping legacy export wrappers.

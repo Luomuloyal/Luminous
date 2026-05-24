@@ -10,7 +10,7 @@ import 'package:luminous/viewmodels/drug.dart';
 import 'package:luminous/viewmodels/medicine.dart';
 import 'package:luminous/pages/Drug/medicine_detail.dart';
 import 'package:luminous/pages/Picker/medicine_picker.dart';
-import 'package:luminous/pages/Scan/medicine_scan.dart';
+import 'package:luminous/features/scan/presentation/scan.dart';
 
 // 药品页
 //

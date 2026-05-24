@@ -91,3 +91,5 @@ lib/
 - 在 `docs/RefactorPlan.md` 中补充后端目标状态：NestJS 作为框架，PostgreSQL 作为主存储，Redis 仅在验证码、缓存和 AI 文本缓存等短生命周期场景按需保留，MongoDB/MySQL 作为迁移源逐步退场。
 - 完成 `Search` 第四个结构切片：新增 `lib/features/search/presentation/`，把搜索页拆为 `controllers/`、`pages/`、`support/`、`widgets/` 多文件，并将正式入口命名统一为 `SearchPage`。
 - 将原 `lib/pages/Search/search.dart`、`lib/pages/Search/controllers/search_controller.dart` 与 `lib/components/search.dart` 收缩为兼容壳或导出层，同时把路由、Main shell、药品选择器、扫码跳转和相关测试切到新的 `features/search` 入口。
+- 完成 `Scan` 第五个结构切片：新增 `lib/features/scan/presentation/`，把扫码页拆为 `controllers/`、`models/`、`pages/`、`support/`、`widgets/` 多文件，并保留 `MedicineScanPage` 作为正式 Page 命名。
+- 将原 `lib/pages/Scan/medicine_scan.dart`、`lib/pages/Scan/controllers/medicine_scan_controller.dart` 与 `lib/pages/Scan/models/selected_scan_image.dart` 收缩为兼容导出层，同时把路由、Home、药品详情、相册重扫和扫码流程测试切到新的 `features/scan` 入口。

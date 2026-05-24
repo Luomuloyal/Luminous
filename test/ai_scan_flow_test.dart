@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:luminous/features/scan/presentation/scan.dart';
 import 'package:luminous/features/search/presentation/search.dart';
-import 'package:luminous/pages/Scan/medicine_scan.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/medicine.dart';
 import 'package:shared_preferences/shared_preferences.dart';

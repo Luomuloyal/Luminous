@@ -116,10 +116,7 @@ class FakeTodayReminderStore implements TodayReminderStore {
     required List<ReminderItem> items,
     Map<String, bool>? overrides,
   }) async {
-    final effectiveOverrides = <String, bool>{
-      ..._overrides,
-      if (overrides != null) ...overrides,
-    };
+    final effectiveOverrides = <String, bool>{..._overrides, ...?overrides};
 
     return items
         .map((item) {
