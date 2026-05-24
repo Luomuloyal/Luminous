@@ -126,3 +126,4 @@ lib/
 - 更新当前 Phase 0 进度 checkpoint：Settings、Main shell、Home、Search、Scan、Shared UI、Responsive shell、Drug、Reminders、Safety、Mine、Album、CheckIn、Login/Register 已迁入 `lib/features/` 或 `lib/shared/` 的目标结构；剩余 Phase 0 收口项主要是 Picker、Legal、Profile settings 等小页面岛、`stores/viewmodels` 后续归属决策、兼容导出壳清理，以及 shared layout 的内容宽度/侧栏/宽屏测试补齐。
 - 继续 shared 小切片：将 `AppCanvas` 与 `AppCanvasPageScaffold` 迁入 `lib/shared/widgets/app_canvas.dart`，旧 `lib/components/app_canvas.dart` 保留兼容导出，并把当前活跃引用切到 shared 路径。
 - 继续 shared 小切片：将 `SoftBanner` 拆入 `lib/shared/widgets/soft_banner/`，按 palette、card、ornaments 拆分为多个小文件，旧 `lib/components/soft_banner.dart` 保留兼容导出，并把当前活跃引用切到 shared 路径。
+- 继续 shared 小切片：将登录/注册共用的 auth UI 迁入 `lib/shared/widgets/auth/`，按 scaffold、cards、method switcher、legal、models 拆分，旧 `lib/components/auth.dart` 保留兼容导出，并把登录/注册页 import 切到 shared 路径。
