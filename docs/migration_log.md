@@ -107,3 +107,7 @@ lib/
 - 旧路径 `components/drug.dart`、`viewmodels/drug.dart`、`pages/Drug/drug.dart`、`pages/Drug/medicine_detail.dart` 及两个 controller 文件均收缩为兼容导出壳。
 - 更新全仓 7 个引用方（`main_shell`、`home`、`search`、`album`、`browse_history`、`ai_cache_ui_test`、`responsive_layout_test`）的 import 到新 `features/drug` 入口。
 - 在 `.gitignore` 中新增 `.flutter` 和 `.flutter_tool_state`，避免 Flutter SDK 本地工具状态文件进入仓库。
+- 完成 `Reminders` 第七个结构切片：新增 `lib/features/reminders/presentation/`，把提醒模块拆为 `pages/`（`reminder_list_page.dart`、`reminder_edit_page.dart`）、`widgets/`（`reminder_list_widgets.dart`、`reminder_card_widget.dart`、`reminder_edit_widgets.dart`）和 `controllers/` 多文件。
+- 将 `lib/pages/Reminders/reminder_list.dart`（730行）拆为 3 个文件（page + 辅助卡片 + 提醒卡片），`reminder_edit.dart`（687行）拆为 2 个文件（page + 6 个编辑组件），全部 ≤600 行。
+- 旧路径 `pages/Reminders/reminder_list.dart`、`pages/Reminders/reminder_edit.dart` 及两个 controller 文件均收缩为兼容导出壳。
+- 更新全仓 3 个引用方（`app_router`、`reminder_edit_page_test`、`reminder_list_controller_test`）的 import 到新 `features/reminders` 入口。
