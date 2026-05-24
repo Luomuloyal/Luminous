@@ -5,7 +5,7 @@ import 'package:luminous/shared/widgets/responsive_quick_grid.dart';
 import 'package:luminous/shared/widgets/soft_banner/soft_banner.dart';
 import 'package:luminous/shared/widgets/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
-import 'package:luminous/viewmodels/auth.dart';
+import 'package:luminous/features/auth/presentation/models/auth.dart';
 
 /// 我的页 Profile 卡片。
 class MineProfileCard extends StatelessWidget {

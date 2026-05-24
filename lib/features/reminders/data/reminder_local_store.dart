@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:luminous/stores/app_database.dart';
+import 'package:luminous/core/local_storage/app_database.dart';
 import 'package:luminous/features/reminders/presentation/models/reminder.dart';
 import 'package:sqflite/sqflite.dart';
 

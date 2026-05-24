@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:luminous/startup/app_startup_warmup.dart';
-import 'package:luminous/viewmodels/auth.dart';
+import 'package:luminous/features/auth/presentation/models/auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/fake_reminder_local_gateway.dart';

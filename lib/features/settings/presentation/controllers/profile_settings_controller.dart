@@ -12,7 +12,7 @@ import 'package:luminous/utils/dio_request.dart';
 import 'package:luminous/utils/media_access_error_text.dart';
 import 'package:luminous/utils/scan_image_processing.dart';
 import 'package:luminous/utils/toast_utils.dart';
-import 'package:luminous/viewmodels/auth.dart';
+import 'package:luminous/features/auth/presentation/models/auth.dart';
 
 /// 个人设置页页面级控制器。
 ///
