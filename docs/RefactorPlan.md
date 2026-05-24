@@ -134,7 +134,42 @@ Phase 0 is considered healthy enough to move faster only when:
 - at least the first active UI modules have a real `features/*` home;
 - old paths are reduced to compatibility shells or removed where safe;
 - shared UI that is used across multiple features has a canonical home under `lib/shared`;
+- responsive layout primitives exist under `lib/shared/layout` or `lib/shared/widgets` so phone, tablet, desktop, and web variants can be added without rewriting feature pages;
 - the repo remains green on the default validation gates.
+
+### 0.5 Responsive readiness checkpoint
+
+Current status on 2026-05-24:
+
+- The refactor has preserved useful responsive seams at the feature and widget level. Migrated pages now have feature-owned entry points such as `HomePage`, `SearchPage`, and `MedicineScanPage`, which makes it possible to add compact, medium, and expanded variants inside each feature later.
+- `lib/shared/widgets/responsive_quick_grid.dart` already centralizes one compact breakpoint at `600dp`, text-scale-aware quick-entry metrics, and `ResponsiveQuickWrap`.
+- Home, Drug, and Mine quick-entry sections already consume the shared responsive quick-grid primitives instead of hardcoding fixed card widths.
+- Settings theme style selection already uses local `500dp` and `720dp` breakpoints to change column count.
+- Several remaining legacy pages use `LayoutBuilder` or `Wrap` for local compact handling, including Album, Drug detail, Reminders, CheckIn, Safety, and Mine.
+- `test/responsive_layout_test.dart` covers narrow mobile widths for the shared quick-entry sections and one long-email Mine profile layout.
+
+Known gaps:
+
+- There is no global app breakpoint taxonomy yet. Width decisions are currently local and ad hoc.
+- `MainPage` is still mobile-first: it always uses a bottom navigation bar. There is no tablet/desktop `NavigationRail`, side navigation, or two-pane shell yet.
+- `AppCanvasPageScaffold` is a visual scaffold, not an adaptive layout scaffold. It does not provide max-width content lanes, side panels, master-detail slots, or desktop content density rules.
+- The app currently changes spacing, wrapping, and card sizing, but it does not yet change feature content between phone, tablet, desktop, and web.
+- Responsive tests currently focus on narrow mobile overflow; tablet, desktop, and web-width regression tests are still missing.
+
+Next responsive foundation tasks before product-facing responsive work:
+
+1. Add `lib/shared/layout/` with named breakpoints and window classes, for example compact, medium, expanded, and web-expanded.
+2. Add a shared adaptive shell that can choose bottom navigation on compact widths and rail/sidebar navigation on wider widths.
+3. Add page content constraints such as max readable width, centered content lanes, and optional side panels.
+4. Convert one migrated feature first, preferably Home, to compact and expanded page variants as the reference pattern.
+5. Expand widget tests to cover at least 393, 768, and 1280 logical-pixel widths.
+
+Started on 2026-05-24:
+
+- Added `lib/shared/layout/` with `AppWindowClass` and global breakpoints: compact `<600`, medium `600-839`, expanded `840-1199`, and web-expanded `>=1200`.
+- Added `AppAdaptiveScaffold` as the first shared adaptive shell for compact bottom navigation versus wide navigation pane.
+- Updated `MainPage` to keep the existing bottom tab bar on compact widths and switch to `NavigationRail` on medium and wider widths. Expanded and web-expanded widths use an extended rail/sidebar presentation.
+- Added `test/adaptive_layout_test.dart` to lock the breakpoint mapping and compact/wide shell switching behavior.
 
 ## Phase 1: Product Trust and Real Data
 
@@ -346,3 +381,5 @@ Tasks:
 - Re-scoped `Phase 0` as Flutter project-base work only; backend auth splitting and NestJS/PostgreSQL implementation are deferred to later backend phases.
 - Started the shared UI base slice by moving app surface, tinted status chip, responsive quick grid, quick entry style, and shared quick entry card primitives into `lib/shared/widgets/`, with old component paths kept as compatibility exports.
 - Split the shared ornament definitions into `lib/shared/widgets/ornaments/`, separating models, banner layouts, section layouts, and layout sets while keeping `lib/components/app_ornaments.dart` as a compatibility export.
+- Recorded the responsive readiness checkpoint: current responsive support is component-level and mobile-overflow focused, while global breakpoints, adaptive app shell, desktop/web content variants, and wider viewport tests still need to be added.
+- Started the responsive foundation by adding shared layout breakpoints, `AppAdaptiveScaffold`, and a medium/expanded `NavigationRail` path for `MainPage` while preserving the compact bottom bar behavior.

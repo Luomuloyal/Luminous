@@ -115,104 +115,174 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
+  Widget _buildPageStack(MainController controller, List<_MainTabItem> tabs) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        IndexedStack(
+          index: controller.currentIndex,
+          children: List<Widget>.generate(
+            tabs.length,
+            (index) => controller.shouldLoadTab(index)
+                ? _pages[index]
+                : const SizedBox.shrink(),
+          ),
+        ),
+        _buildSecondaryPreloadLayer(),
+      ],
+    );
+  }
+
+  Widget _buildCompactBottomNavigation({
+    required ThemeData theme,
+    required bool isDark,
+    required List<_MainTabItem> tablist,
+    required List<Color> tabColors,
+    required Color currentColor,
+    required Color tabBarBackground,
+    required Color systemNavigationBarColor,
+    required Color inactiveColor,
+    required MainController controller,
+  }) {
+    final bottomBedColor = Color.alphaBlend(
+      currentColor.withValues(alpha: isDark ? 0.12 : 0.055),
+      theme.scaffoldBackgroundColor,
+    );
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            bottomBedColor.withValues(alpha: isDark ? 0.92 : 0.90),
+            systemNavigationBarColor,
+          ],
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(12, 0, 12, 6),
+        child: _MainBottomBar(
+          items: tablist,
+          itemColors: tabColors,
+          currentIndex: controller.currentIndex,
+          backgroundColor: tabBarBackground,
+          inactiveColor: inactiveColor,
+          buildIcon: _buildTabIcon,
+          onTap: controller.selectTab,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWideNavigationPane({
+    required AppWindowClass windowClass,
+    required List<_MainTabItem> tablist,
+    required List<Color> tabColors,
+    required Color backgroundColor,
+    required Color inactiveColor,
+    required MainController controller,
+  }) {
+    return _MainNavigationRail(
+      items: tablist,
+      itemColors: tabColors,
+      currentIndex: controller.currentIndex,
+      backgroundColor: backgroundColor,
+      inactiveColor: inactiveColor,
+      extended: windowClass.usesExtendedNavigation,
+      buildIcon: _buildTabIcon,
+      onTap: controller.selectTab,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GetBuilder<MainController>(
       init: _controller,
       global: false,
       builder: (controller) {
-        final l10n = AppLocalizations.of(context);
-        final tablist = _tablist(l10n);
-        final theme = Theme.of(context);
-        final isDark = theme.brightness == Brightness.dark;
-        final tabColors = _resolvedTabColors(theme);
-        final currentColor = tabColors[controller.currentIndex];
-        final secondaryColor =
-            tabColors[(controller.currentIndex + 1) % tabColors.length];
-        final tabBarBackground = Color.alphaBlend(
-          (isDark ? secondaryColor : currentColor).withValues(
-            alpha: isDark ? 0.08 : 0.04,
-          ),
-          theme.cardTheme.color ?? theme.colorScheme.surface,
-        );
-        final bottomBedColor = Color.alphaBlend(
-          currentColor.withValues(alpha: isDark ? 0.12 : 0.055),
-          theme.scaffoldBackgroundColor,
-        );
-        final systemNavigationBarColor = Color.alphaBlend(
-          secondaryColor.withValues(alpha: isDark ? 0.12 : 0.05),
-          bottomBedColor,
-        );
-        final inactiveColor = isDark
-            ? const Color(0xFF94A3B8)
-            : AppUiConstants.TAB_INACTIVE;
-        final overlayStyle =
-            (isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark)
-                .copyWith(
-                  statusBarColor: Colors.transparent,
-                  systemNavigationBarColor: systemNavigationBarColor,
-                  systemNavigationBarDividerColor: Colors.transparent,
-                  statusBarIconBrightness: isDark
-                      ? Brightness.light
-                      : Brightness.dark,
-                  statusBarBrightness: isDark
-                      ? Brightness.dark
-                      : Brightness.light,
-                  systemNavigationBarIconBrightness: isDark
-                      ? Brightness.light
-                      : Brightness.dark,
-                );
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final windowClass = AppWindowClass.fromWidth(constraints.maxWidth);
+            final l10n = AppLocalizations.of(context);
+            final tablist = _tablist(l10n);
+            final theme = Theme.of(context);
+            final isDark = theme.brightness == Brightness.dark;
+            final tabColors = _resolvedTabColors(theme);
+            final currentColor = tabColors[controller.currentIndex];
+            final secondaryColor =
+                tabColors[(controller.currentIndex + 1) % tabColors.length];
+            final tabBarBackground = Color.alphaBlend(
+              (isDark ? secondaryColor : currentColor).withValues(
+                alpha: isDark ? 0.08 : 0.04,
+              ),
+              theme.cardTheme.color ?? theme.colorScheme.surface,
+            );
+            final bottomBedColor = Color.alphaBlend(
+              currentColor.withValues(alpha: isDark ? 0.12 : 0.055),
+              theme.scaffoldBackgroundColor,
+            );
+            final compactSystemNavigationBarColor = Color.alphaBlend(
+              secondaryColor.withValues(alpha: isDark ? 0.12 : 0.05),
+              bottomBedColor,
+            );
+            final systemNavigationBarColor = windowClass.usesBottomNavigation
+                ? compactSystemNavigationBarColor
+                : theme.scaffoldBackgroundColor;
+            final inactiveColor = isDark
+                ? const Color(0xFF94A3B8)
+                : AppUiConstants.TAB_INACTIVE;
+            final overlayStyle =
+                (isDark
+                        ? SystemUiOverlayStyle.light
+                        : SystemUiOverlayStyle.dark)
+                    .copyWith(
+                      statusBarColor: Colors.transparent,
+                      systemNavigationBarColor: systemNavigationBarColor,
+                      systemNavigationBarDividerColor: Colors.transparent,
+                      statusBarIconBrightness: isDark
+                          ? Brightness.light
+                          : Brightness.dark,
+                      statusBarBrightness: isDark
+                          ? Brightness.dark
+                          : Brightness.light,
+                      systemNavigationBarIconBrightness: isDark
+                          ? Brightness.light
+                          : Brightness.dark,
+                    );
 
-        return AnnotatedRegion<SystemUiOverlayStyle>(
-          value: overlayStyle,
-          child: Scaffold(
-            backgroundColor: theme.scaffoldBackgroundColor,
-            extendBody: true,
-            body: AppCanvas(
-              accentColor: currentColor,
-              secondaryAccentColor: secondaryColor,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  IndexedStack(
-                    index: controller.currentIndex,
-                    children: List<Widget>.generate(
-                      tablist.length,
-                      (index) => controller.shouldLoadTab(index)
-                          ? _pages[index]
-                          : const SizedBox.shrink(),
-                    ),
-                  ),
-                  _buildSecondaryPreloadLayer(),
-                ],
-              ),
-            ),
-            bottomNavigationBar: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    bottomBedColor.withValues(alpha: isDark ? 0.92 : 0.90),
-                    systemNavigationBarColor,
-                  ],
-                ),
-              ),
-              child: SafeArea(
-                top: false,
-                minimum: const EdgeInsets.fromLTRB(12, 0, 12, 6),
-                child: _MainBottomBar(
-                  items: tablist,
-                  itemColors: tabColors,
-                  currentIndex: controller.currentIndex,
-                  backgroundColor: tabBarBackground,
+            return AnnotatedRegion<SystemUiOverlayStyle>(
+              value: overlayStyle,
+              child: AppAdaptiveScaffold(
+                windowClass: windowClass,
+                backgroundColor: theme.scaffoldBackgroundColor,
+                compactBottomNavigationBar: _buildCompactBottomNavigation(
+                  theme: theme,
+                  isDark: isDark,
+                  tablist: tablist,
+                  tabColors: tabColors,
+                  currentColor: currentColor,
+                  tabBarBackground: tabBarBackground,
+                  systemNavigationBarColor: compactSystemNavigationBarColor,
                   inactiveColor: inactiveColor,
-                  buildIcon: _buildTabIcon,
-                  onTap: controller.selectTab,
+                  controller: controller,
+                ),
+                wideNavigationPane: _buildWideNavigationPane(
+                  windowClass: windowClass,
+                  tablist: tablist,
+                  tabColors: tabColors,
+                  backgroundColor: theme.scaffoldBackgroundColor,
+                  inactiveColor: inactiveColor,
+                  controller: controller,
+                ),
+                body: AppCanvas(
+                  accentColor: currentColor,
+                  secondaryAccentColor: secondaryColor,
+                  child: _buildPageStack(controller, tablist),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );

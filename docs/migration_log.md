@@ -97,3 +97,7 @@ lib/
 - 更新 `Phase 0` 后续顺序为共享 UI 基座、Auth 展示层、Medicine detail、Reminders 展示层、Safety/Mine 页面壳，先把前端目录结构和文件拆分打稳。
 - 启动共享 UI 基座切片：新增 `lib/shared/widgets/`，迁移 `app_surface`、`tinted_status_chip`、`responsive_quick_grid`、`quick_entry_style` 与 `shared_quick_entry_card`，旧 `lib/components/*` 路径保留兼容导出。
 - 继续共享 UI 基座切片：新增 `lib/shared/widgets/ornaments/`，将 `app_ornaments` 拆为模型、banner 布局、section 布局和布局集合文件，并把旧 `lib/components/app_ornaments.dart` 收缩为兼容导出。
+- 核查并记录响应式预留状态：当前已有组件级响应式基础，包括 `ResponsiveQuickGridMetrics`、`ResponsiveQuickWrap`、feature 级页面入口和窄屏测试；但还没有全局 breakpoint、宽屏导航壳、桌面/Web 内容分流和 768/1280 宽度回归测试。
+- 启动响应式基座：新增 `lib/shared/layout/`，定义 `AppWindowClass` 和全局 breakpoint，并加入 `AppAdaptiveScaffold`。
+- 改造 `MainPage`：compact 宽度保留现有底部导航，medium 及以上宽度切换到 `NavigationRail`，expanded/web-expanded 宽度使用扩展侧栏形态。
+- 新增 `test/adaptive_layout_test.dart` 覆盖 breakpoint 映射和 compact/wide adaptive shell 切换。
