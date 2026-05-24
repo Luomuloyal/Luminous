@@ -39,7 +39,7 @@ Luminous/
 当前迁移基线与执行记录：
 
 - [docs/RefactorPlan.md](docs/RefactorPlan.md)
-- [docs/MIGRATION_LOG.md](docs/MIGRATION_LOG.md)
+- [docs/migration_log.md](docs/migration_log.md)
 
 ## Quick Start
 
@@ -113,7 +113,7 @@ docker compose down
 - Deployment Guide: [docs/lib-docs/deployment-config.md](docs/lib-docs/deployment-config.md)
 - Backend Runtime: [backend/README.md](backend/README.md)
 - Migration Plan: [docs/RefactorPlan.md](docs/RefactorPlan.md)
-- Migration Log: [docs/MIGRATION_LOG.md](docs/MIGRATION_LOG.md)
+- Migration Log: [docs/migration_log.md](docs/migration_log.md)
 
 ## Troubleshooting
 

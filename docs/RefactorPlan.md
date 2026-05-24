@@ -61,6 +61,8 @@ Phase 0 comes before any new product-facing migration slice. The current priorit
 2. Split oversized files before adding more behavior.
 3. Keep all structural changes low-risk, reversible, and behavior-preserving.
 
+Phase 0 is scoped to the Flutter project base. Backend restructuring stays documented in later phases, but Express auth splitting, NestJS scaffolding, and PostgreSQL work should not start until the Flutter directory structure and shared UI foundation are healthy.
+
 ### 0.1 Directory contract
 
 Frontend target direction:
@@ -85,22 +87,6 @@ lib/
     scan/
     reminders/
     auth/
-```
-
-Backend target direction during the pre-Nest cleanup period:
-
-```text
-backend/src/
-  ai/
-  auth/
-  medicines/
-  reminders/
-  scan-records/
-  users/
-  shared/
-    config/
-    http/
-  db/
 ```
 
 Rules:
@@ -134,7 +120,11 @@ Acceptance:
 3. `Home`: separate page composition from home-specific presentation widgets, and make `HomePage` the canonical feature entry while keeping `HomeView` as a thin compatibility shell. Completed on 2026-05-24.
 4. `Search`: separate search page, history, empty state, and result rendering, and make `SearchPage` the canonical feature entry while keeping `SearchView` as a thin compatibility shell. Completed on 2026-05-24.
 5. `Scan`: split page orchestration from action tiles, preview, and result presentation. Completed on 2026-05-24.
-6. `Backend auth`: split the large Express auth handler into smaller module-scoped files without starting Nest yet.
+6. `Shared UI base`: move genuinely cross-feature UI from `lib/components/` into `lib/shared/widgets/` or `lib/shared/layout/`, keeping old component files as compatibility exports where useful.
+7. `Auth presentation`: split login/register pages and auth widgets into `lib/features/auth/presentation/` without changing token/session behavior.
+8. `Medicine detail`: split `medicine_detail.dart` and drug presentation widgets into a feature-owned presentation layer without changing API contracts.
+9. `Reminders presentation`: split reminder list/edit pages into feature-owned page, section, card, and form files without changing reminder data behavior.
+10. `Safety and Mine`: move remaining active page shells toward feature ownership after the shared UI base is stable.
 
 ### 0.4 Exit criteria
 
@@ -143,7 +133,7 @@ Phase 0 is considered healthy enough to move faster only when:
 - the main oversized frontend files have been split into readable units;
 - at least the first active UI modules have a real `features/*` home;
 - old paths are reduced to compatibility shells or removed where safe;
-- the backend no longer depends on one large auth handler file;
+- shared UI that is used across multiple features has a canonical home under `lib/shared`;
 - the repo remains green on the default validation gates.
 
 ## Phase 1: Product Trust and Real Data
@@ -349,7 +339,8 @@ Tasks:
 ### 2026-05-24
 
 - Added `Phase 0` to prioritize directory structure cleanup and oversized file decomposition before resuming faster product-facing migration.
-- Set the recommended structure-first execution order to `Settings -> Main shell -> Home -> Search -> Scan -> backend auth`.
+- Set the recommended structure-first execution order to `Settings -> Main shell -> Home -> Search -> Scan`, then frontend shared UI and remaining active page shells before backend work.
 - Started the first structural slice by moving the Settings presentation code toward `lib/features/settings/` while keeping compatibility with existing imports.
 - Completed the second structural slice by moving the main shell presentation and controller code into `lib/features/main_shell/`, splitting the old oversized `main.dart` into page, bottom-bar, and ornament support files while keeping legacy export wrappers.
 - Completed the fifth structural slice by moving scan presentation code into `lib/features/scan/presentation/`, splitting the old scan page into page, image-flow support, labels, preview, sheet, result, and action files while keeping legacy export wrappers.
+- Re-scoped `Phase 0` as Flutter project-base work only; backend auth splitting and NestJS/PostgreSQL implementation are deferred to later backend phases.

@@ -93,3 +93,5 @@ lib/
 - 将原 `lib/pages/Search/search.dart`、`lib/pages/Search/controllers/search_controller.dart` 与 `lib/components/search.dart` 收缩为兼容壳或导出层，同时把路由、Main shell、药品选择器、扫码跳转和相关测试切到新的 `features/search` 入口。
 - 完成 `Scan` 第五个结构切片：新增 `lib/features/scan/presentation/`，把扫码页拆为 `controllers/`、`models/`、`pages/`、`support/`、`widgets/` 多文件，并保留 `MedicineScanPage` 作为正式 Page 命名。
 - 将原 `lib/pages/Scan/medicine_scan.dart`、`lib/pages/Scan/controllers/medicine_scan_controller.dart` 与 `lib/pages/Scan/models/selected_scan_image.dart` 收缩为兼容导出层，同时把路由、Home、药品详情、相册重扫和扫码流程测试切到新的 `features/scan` 入口。
+- 根据最新迁移节奏，重新收窄 `Phase 0`：当前只处理 Flutter 项目基座，后端 auth 拆分、NestJS 脚手架和 PostgreSQL 改造全部顺延到后续后端阶段。
+- 更新 `Phase 0` 后续顺序为共享 UI 基座、Auth 展示层、Medicine detail、Reminders 展示层、Safety/Mine 页面壳，先把前端目录结构和文件拆分打稳。
