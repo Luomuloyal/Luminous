@@ -146,6 +146,4 @@ Stop-Process -Id <PID> -Force
 
 ## License
 
-当前仓库未附带开源许可证文件。
-
-若计划公开发布，建议新增 `LICENSE`（例如 MIT/Apache-2.0）。
+本项目基于 [Apache License 2.0](LICENSE) 许可开源。详情请参阅源代码中的 `LICENSE` 文件。
