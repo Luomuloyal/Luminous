@@ -10,7 +10,7 @@ import 'package:luminous/features/search/presentation/search.dart';
 import 'package:luminous/features/settings/presentation/settings.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Album/album.dart';
-import 'package:luminous/pages/Drug/drug.dart';
+import 'package:luminous/features/drug/presentation/drug.dart';
 import 'package:luminous/pages/Mine/mine.dart';
 import 'package:luminous/pages/Safety/safety_assist.dart';
 import 'package:luminous/pages/Settings/profile_settings.dart';

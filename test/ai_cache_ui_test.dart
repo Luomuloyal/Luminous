@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-import 'package:luminous/pages/Drug/controllers/medicine_detail_controller.dart';
+import 'package:luminous/features/drug/presentation/drug.dart';
 import 'package:luminous/pages/Safety/controllers/safety_assist_controller.dart';
 import 'package:luminous/pages/Safety/safety_assist.dart';
 import 'package:luminous/utils/dio_request.dart';

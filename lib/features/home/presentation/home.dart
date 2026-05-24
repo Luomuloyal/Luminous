@@ -10,7 +10,7 @@ import 'package:luminous/components/soft_banner.dart';
 import 'package:luminous/shared/widgets/tinted_status_chip.dart';
 import 'package:luminous/features/scan/presentation/scan.dart';
 import 'package:luminous/l10n/app_localizations.dart';
-import 'package:luminous/pages/Drug/medicine_detail.dart';
+import 'package:luminous/features/drug/presentation/drug.dart';
 import 'package:luminous/pages/Picker/medicine_picker.dart';
 import 'package:luminous/stores/reminder_local_gateway.dart';
 import 'package:luminous/utils/app_i18n_text.dart';
