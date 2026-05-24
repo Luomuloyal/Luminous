@@ -127,3 +127,10 @@ lib/
 - 继续 shared 小切片：将 `AppCanvas` 与 `AppCanvasPageScaffold` 迁入 `lib/shared/widgets/app_canvas.dart`，旧 `lib/components/app_canvas.dart` 保留兼容导出，并把当前活跃引用切到 shared 路径。
 - 继续 shared 小切片：将 `SoftBanner` 拆入 `lib/shared/widgets/soft_banner/`，按 palette、card、ornaments 拆分为多个小文件，旧 `lib/components/soft_banner.dart` 保留兼容导出，并把当前活跃引用切到 shared 路径。
 - 继续 shared 小切片：将登录/注册共用的 auth UI 迁入 `lib/shared/widgets/auth/`，按 scaffold、cards、method switcher、legal、models 拆分，旧 `lib/components/auth.dart` 保留兼容导出，并把登录/注册页 import 切到 shared 路径。
+- 继续 shared 小切片：将 `AppSurface` 拆为 `lib/shared/widgets/app_surface/` 下的 surface card、section card、tint、ornament 辅助文件，保留 `app_surface.dart` 作为 shared 入口。
+- 继续 shared 小切片：将 banner/section ornament layout 定义按 primary/secondary 拆分，避免后续继续扩展时再次堆高单文件。
+- 完成 `MedicinePicker` 小页面岛迁移：新增 `lib/features/medicine_picker/presentation/`，迁移药品选择页和 controller，旧 `lib/pages/Picker/*` 保留兼容导出，并把 Home、Drug、Safety、Reminders 的 import 切到新入口。
+- 完成 `Legal` 小页面岛迁移：新增 `lib/features/legal/presentation/`，迁移用户协议和隐私政策页面，旧 `lib/pages/Legal/legal_documents.dart` 保留兼容导出，并把路由 import 切到新入口。
+- 完成 `Profile settings` 小页面岛迁移：将个人资料设置页和 controller 迁入 `lib/features/settings/presentation/`，旧 `lib/pages/Settings/profile_settings.dart` 与 controller 路径保留兼容导出。
+- 继续收口 Settings 文件体积：将 `theme_widgets.dart` 按 hero、display preferences、theme style card、ornament preview 拆分，原 600+ 行文件降至 300 行以内。
+- 继续收口 Safety 文件体积：将安全辅助页纯文案选择函数迁入 `support/safety_assist_text.dart`，使 `safety_assist_page.dart` 降至 600 行以内。

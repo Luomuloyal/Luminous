@@ -5,6 +5,7 @@
 ## 文档索引
 
 - `RefactorPlan.md`：当前 Flutter 优化、状态迁移和后端演进的主计划。
+- `backend-nestjs-pgsql-migration-plan.md`：后端从 Express/MongoDB/MySQL 迁移到 NestJS/PostgreSQL 的分阶段执行计划。
 - `migration_log.md`：GetX/Layer-based 向 Riverpod/GoRouter/Feature-first 迁移的执行记录。
 - `lib-docs/`：前后端接口、部署和联调文档。
 - `Roadshow/`：路演稿、PPT、截图等参赛材料，暂留且不要清理。

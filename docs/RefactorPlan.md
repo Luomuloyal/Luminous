@@ -122,7 +122,7 @@ Completed on 2026-05-24:
 3. `Home`: separate page composition, controller, support data, and widgets under `lib/features/home/presentation/`; `HomePage` is the canonical feature entry.
 4. `Search`: split page, controller, prompt/result slivers, cards, and tip widgets under `lib/features/search/presentation/`; `SearchPage` is the canonical feature entry.
 5. `Scan`: split page orchestration, controller, image-flow support, labels, selected-image model, sheet, photo area, actions, and result section under `lib/features/scan/presentation/`.
-6. `Shared UI base`: move cross-feature surfaces, auth UI primitives, soft banner primitives, status chips, quick-entry styles/cards, responsive quick-grid primitives, ornament layouts, and app canvas scaffolds into `lib/shared/widgets/`.
+6. `Shared UI base`: move cross-feature surfaces, auth UI primitives, soft banner primitives, status chips, quick-entry styles/cards, responsive quick-grid primitives, ornament layouts, and app canvas scaffolds into `lib/shared/widgets/`; split `AppSurface`, auth UI, soft banner, and ornament layout definitions into smaller shared files.
 7. `Responsive shell base`: add `lib/shared/layout/`, global breakpoint/window-class definitions, `AppAdaptiveScaffold`, and compact bottom navigation versus wide rail/sidebar behavior for `MainPage`.
 8. `Drug`: split drug list, medicine detail, controllers, presentation widgets, and presentation models under `lib/features/drug/presentation/`; route-level naming is now `DrugPage`.
 9. `Reminders`: split list/edit pages, controllers, reminder card, list widgets, and edit widgets under `lib/features/reminders/presentation/`.
@@ -131,11 +131,13 @@ Completed on 2026-05-24:
 12. `Album`: split album page, controller, preview, card, page widgets, and slivers under `lib/features/album/presentation/`; route-level naming is now `AlbumPage`.
 13. `CheckIn`: move check-in page and controller under `lib/features/checkin/presentation/`.
 14. `Login` and `Register`: move login/register pages and controllers under `lib/features/login/presentation/` and `lib/features/register/presentation/`; route-level naming is now `RegisterPage`.
+15. `MedicinePicker`: move the cross-feature medicine picker page and controller under `lib/features/medicine_picker/presentation/`, and keep old `lib/pages/Picker/*` paths as compatibility exports.
+16. `Legal` and `Profile settings`: move legal document pages under `lib/features/legal/presentation/`, move profile settings page/controller under `lib/features/settings/presentation/`, and keep old paths as compatibility exports.
 
 Remaining Phase 0 cleanup:
 
-1. Migrate smaller active page islands that still live under `lib/pages/`, especially `Picker`, `Legal`, and `Settings/profile_settings`.
-2. Decide whether data/model-heavy legacy folders such as `lib/stores/` and `lib/viewmodels/` should move in Phase 0 or wait for the Riverpod/domain/data phases.
+1. Audit remaining `lib/pages/` files and remove compatibility exports only after active imports have moved and the removal is low-risk.
+2. Decide whether data/model-heavy legacy folders such as `lib/stores/` and `lib/viewmodels/` should move in Phase 0 or wait for the Riverpod/domain/data phases; `lib/stores/today_reminder_local_store.dart` is still over the preferred migration size and should be split when that layer is addressed.
 3. Retire compatibility export wrappers only after active imports have moved and the removal is low-risk.
 4. Continue the responsive base with shared content lanes, max-width constraints, optional side panels, and one feature-level compact/expanded reference implementation.
 
@@ -289,6 +291,8 @@ Acceptance:
 ## Phase 4: Backend Migration to NestJS + PostgreSQL
 
 The backend migration should be a controlled architecture migration, not a product rewrite.
+
+Detailed execution steps are tracked in `docs/backend-nestjs-pgsql-migration-plan.md`.
 
 ### 4.1 Migration strategy
 

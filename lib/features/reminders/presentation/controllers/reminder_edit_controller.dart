@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/api/reminder_api.dart';
-import 'package:luminous/l10n/app_localizations.dart';
-import 'package:luminous/pages/Picker/medicine_picker.dart';
-import 'package:luminous/stores/my_medicine_repository.dart';
 import 'package:luminous/core/providers/global_provider_container.dart';
 import 'package:luminous/features/auth/providers/user_session_provider.dart';
+import 'package:luminous/features/medicine_picker/presentation/medicine_picker.dart';
+import 'package:luminous/l10n/app_localizations.dart';
+import 'package:luminous/stores/my_medicine_repository.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/viewmodels/medicine.dart';
 import 'package:luminous/viewmodels/reminder.dart';

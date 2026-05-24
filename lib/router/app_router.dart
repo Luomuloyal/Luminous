@@ -6,7 +6,7 @@ import 'package:luminous/features/search/presentation/search.dart';
 import 'package:luminous/features/settings/presentation/settings.dart';
 
 import 'package:luminous/features/checkin/presentation/checkin.dart';
-import 'package:luminous/pages/Legal/legal_documents.dart';
+import 'package:luminous/features/legal/presentation/legal.dart';
 import 'package:luminous/features/login/presentation/login.dart';
 import 'package:luminous/features/mine/presentation/mine.dart';
 import 'package:luminous/features/register/presentation/register.dart';

@@ -13,7 +13,7 @@ import 'package:luminous/features/album/presentation/album.dart';
 import 'package:luminous/features/drug/presentation/drug.dart';
 import 'package:luminous/features/mine/presentation/mine.dart';
 import 'package:luminous/features/safety/presentation/safety.dart';
-import 'package:luminous/pages/Settings/profile_settings.dart';
+import 'package:luminous/features/settings/presentation/pages/profile_settings_page.dart';
 import 'package:luminous/shared/layout/adaptive_layout.dart';
 import 'package:luminous/shared/widgets/ornaments/app_ornaments.dart';
 
