@@ -1,6 +1,6 @@
 import 'package:luminous/constants/constants.dart';
 import 'package:luminous/utils/dio_request.dart';
-import 'package:luminous/viewmodels/home.dart';
+import 'package:luminous/shared/models/home.dart';
 
 /// 首页相关接口封装。
 class HomeApi {

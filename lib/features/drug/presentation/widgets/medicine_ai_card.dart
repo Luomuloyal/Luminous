@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
 import 'package:luminous/l10n/app_localizations.dart';
-import 'package:luminous/viewmodels/medicine.dart';
+import 'package:luminous/shared/models/medicine.dart';
 
 import 'medicine_support_cards.dart';
 import '../pages/medicine_detail_page.dart';

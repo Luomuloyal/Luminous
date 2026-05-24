@@ -15,8 +15,8 @@ import 'package:luminous/features/drug/presentation/drug.dart';
 import 'package:luminous/features/reminders/data/reminder_local_gateway.dart';
 import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/utils/toast_utils.dart';
-import 'package:luminous/viewmodels/home.dart';
-import 'package:luminous/viewmodels/medicine.dart';
+import 'package:luminous/shared/models/home.dart';
+import 'package:luminous/shared/models/medicine.dart';
 
 import 'controllers/home_controller.dart';
 

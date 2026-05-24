@@ -6,7 +6,7 @@ import 'package:luminous/features/drug/presentation/drug.dart';
 import 'package:luminous/features/safety/presentation/safety.dart';
 import 'package:luminous/utils/dio_request.dart';
 import 'package:luminous/features/auth/presentation/models/auth.dart';
-import 'package:luminous/viewmodels/medicine.dart';
+import 'package:luminous/shared/models/medicine.dart';
 import 'package:luminous/features/safety/presentation/models/safety.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

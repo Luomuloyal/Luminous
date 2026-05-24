@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:luminous/features/mine/presentation/models/browse_history.dart';
-import 'package:luminous/viewmodels/medicine.dart';
+import 'package:luminous/shared/models/medicine.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 本地浏览记录仓库。

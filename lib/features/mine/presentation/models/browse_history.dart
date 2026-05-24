@@ -1,5 +1,5 @@
 import 'package:luminous/utils/app_i18n_text.dart';
-import 'package:luminous/viewmodels/medicine.dart';
+import 'package:luminous/shared/models/medicine.dart';
 
 /// 本地浏览记录条目。
 ///

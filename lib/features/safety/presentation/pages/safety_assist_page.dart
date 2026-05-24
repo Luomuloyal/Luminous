@@ -6,7 +6,7 @@ import 'package:luminous/shared/widgets/tinted_status_chip.dart';
 import 'package:luminous/shared/widgets/soft_banner/soft_banner.dart';
 import 'package:luminous/features/medicine_picker/presentation/medicine_picker.dart';
 import 'package:luminous/l10n/app_localizations.dart';
-import 'package:luminous/viewmodels/medicine.dart';
+import 'package:luminous/shared/models/medicine.dart';
 
 import '../controllers/safety_assist_controller.dart';
 import '../widgets/safety_assist_widgets.dart';

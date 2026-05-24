@@ -6,7 +6,7 @@ import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/features/drug/data/my_medicine_repository.dart';
 import 'package:luminous/utils/loading_utils.dart';
 import 'package:luminous/utils/toast_utils.dart';
-import 'package:luminous/viewmodels/medicine.dart';
+import 'package:luminous/shared/models/medicine.dart';
 
 /// 药品选择页控制器。
 ///

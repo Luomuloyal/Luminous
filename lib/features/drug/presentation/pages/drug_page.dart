@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:luminous/features/medicine_picker/presentation/medicine_picker.dart';
 import 'package:luminous/features/scan/presentation/scan.dart';
 import 'package:luminous/l10n/app_localizations.dart';
-import 'package:luminous/viewmodels/medicine.dart';
+import 'package:luminous/shared/models/medicine.dart';
 import 'package:luminous/utils/toast_utils.dart';
 
 import '../controllers/drug_controller.dart';

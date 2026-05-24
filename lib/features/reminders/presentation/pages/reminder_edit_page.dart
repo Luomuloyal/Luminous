@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/shared/widgets/app_canvas.dart';
 import 'package:luminous/l10n/app_localizations.dart';
-import 'package:luminous/viewmodels/medicine.dart';
+import 'package:luminous/shared/models/medicine.dart';
 import 'package:luminous/features/reminders/presentation/models/reminder.dart';
 
 import '../controllers/reminder_edit_controller.dart';

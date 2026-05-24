@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:luminous/constants/constants.dart';
 import 'package:luminous/utils/dio_request.dart';
-import 'package:luminous/viewmodels/medicine.dart';
+import 'package:luminous/shared/models/medicine.dart';
 
 /// 药品服务接口封装层。
 ///

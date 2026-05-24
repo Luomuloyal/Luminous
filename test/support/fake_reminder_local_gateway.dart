@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:luminous/features/reminders/data/reminder_local_gateway.dart';
-import 'package:luminous/viewmodels/home.dart';
+import 'package:luminous/shared/models/home.dart';
 import 'package:luminous/features/reminders/presentation/models/reminder.dart';
 
 class FakeReminderLocalGateway implements ReminderLocalGateway {

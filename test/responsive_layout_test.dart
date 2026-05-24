@@ -5,7 +5,7 @@ import 'package:luminous/features/drug/presentation/drug.dart';
 import 'package:luminous/features/home/presentation/home.dart';
 import 'package:luminous/features/mine/presentation/mine.dart';
 import 'package:luminous/features/auth/presentation/models/auth.dart';
-import 'package:luminous/viewmodels/home.dart';
+import 'package:luminous/shared/models/home.dart';
 import 'package:luminous/features/mine/presentation/models/mine.dart';
 
 void main() {

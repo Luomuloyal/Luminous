@@ -7,7 +7,7 @@ import 'package:luminous/features/medicine_picker/presentation/medicine_picker.d
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/features/drug/data/my_medicine_repository.dart';
 import 'package:luminous/utils/toast_utils.dart';
-import 'package:luminous/viewmodels/medicine.dart';
+import 'package:luminous/shared/models/medicine.dart';
 import 'package:luminous/features/reminders/presentation/models/reminder.dart';
 
 /// 提醒编辑页页面级控制器。

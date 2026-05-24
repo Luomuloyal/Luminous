@@ -7,7 +7,7 @@ import 'package:luminous/shared/widgets/app_surface.dart';
 import 'package:luminous/shared/widgets/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/features/reminders/data/reminder_local_gateway.dart';
-import 'package:luminous/viewmodels/home.dart';
+import 'package:luminous/shared/models/home.dart';
 
 import '../controllers/checkin_controller.dart';
 
