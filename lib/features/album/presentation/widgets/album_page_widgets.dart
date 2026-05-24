@@ -7,8 +7,8 @@ import 'album_slivers.dart';
 import 'album_card.dart';
 
 /// 相册页（Album）的大块 UI 组件集合。
-class AlbumPage extends StatelessWidget {
-  const AlbumPage({
+class AlbumPageLayout extends StatelessWidget {
+  const AlbumPageLayout({
     super.key,
     required this.headerPalette,
     required this.loading,

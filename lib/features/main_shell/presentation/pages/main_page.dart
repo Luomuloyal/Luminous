@@ -59,9 +59,9 @@ class _MainPageState extends State<MainPage> {
   /// 与底部 Tab 一一对应的页面实例列表。
   static const List<Widget> _pages = [
     HomePage(),
-    DrugView(),
-    AlbumView(),
-    MineView(),
+    DrugPage(),
+    AlbumPage(),
+    MinePage(),
   ];
 
   /// 需要在后台预热的二级页面列表。

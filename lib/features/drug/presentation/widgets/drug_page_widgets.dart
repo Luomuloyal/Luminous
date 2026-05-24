@@ -11,9 +11,9 @@ import 'drug_my_medicines_widgets.dart';
 ///
 /// 页面层只负责加载"我的药品"数据、删除和跳转；
 /// 具体分区布局（搜索入口、快捷入口、列表占位等）在这里统一管理。
-class DrugPage extends StatelessWidget {
+class DrugPageLayout extends StatelessWidget {
   /// 创建药品页主视图组件。
-  const DrugPage({
+  const DrugPageLayout({
     super.key,
     required this.quickEntries,
     required this.myMedicines,

@@ -22,9 +22,9 @@ import 'medicine_detail_page.dart';
 /// 药品页。
 ///
 /// 页面上半部分提供药品相关快捷入口，下半部分展示本地"我的药品"列表。
-class DrugView extends StatelessWidget {
+class DrugPage extends StatelessWidget {
   /// 创建药品页组件。
-  const DrugView({super.key});
+  const DrugPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +33,7 @@ class DrugView extends StatelessWidget {
       global: false,
       builder: (controller) {
         final l10n = AppLocalizations.of(context);
-        return DrugPage(
+        return DrugPageLayout(
           quickEntries: _quickEntries(l10n),
           myMedicines: controller.myMedicines,
           loadingMedicines: controller.loadingMedicines,

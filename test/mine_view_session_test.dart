@@ -32,7 +32,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: Scaffold(body: MineView())),
+        child: const MaterialApp(home: Scaffold(body: MinePage())),
       ),
     );
     await tester.pumpAndSettle();

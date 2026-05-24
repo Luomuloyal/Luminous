@@ -5,7 +5,7 @@ import 'package:luminous/features/scan/presentation/scan.dart';
 import 'package:luminous/features/search/presentation/search.dart';
 import 'package:luminous/features/settings/presentation/settings.dart';
 
-import 'package:luminous/pages/CheckIn/checkin.dart';
+import 'package:luminous/features/checkin/presentation/checkin.dart';
 import 'package:luminous/pages/Legal/legal_documents.dart';
 import 'package:luminous/pages/Login/login.dart';
 import 'package:luminous/features/mine/presentation/mine.dart';

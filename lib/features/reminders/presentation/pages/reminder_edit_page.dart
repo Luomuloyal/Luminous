@@ -331,7 +331,7 @@ class _ReminderEditPageState extends State<ReminderEditPage> {
       invalidDateRangeToast: l10n?.reminderEditDateRangeInvalidToast ??
           '开始日期不能晚于结束日期',
     );
-    if (!context.mounted || plan == null) {
+    if (!mounted || plan == null) {
       return;
     }
     Navigator.of(context).pop(plan);

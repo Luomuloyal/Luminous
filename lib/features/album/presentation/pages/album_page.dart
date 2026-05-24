@@ -13,8 +13,8 @@ import '../widgets/album_page_widgets.dart';
 import '../widgets/album_preview.dart';
 
 /// 识别相册页。
-class AlbumView extends StatelessWidget {
-  const AlbumView({super.key});
+class AlbumPage extends StatelessWidget {
+  const AlbumPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +22,7 @@ class AlbumView extends StatelessWidget {
       init: AlbumController(),
       global: false,
       builder: (controller) {
-        return AlbumPage(
+        return AlbumPageLayout(
           headerPalette: SoftBannerPalettes.albumOf(context),
           loading: controller.loading,
           isLoggedIn: controller.isLoggedIn,

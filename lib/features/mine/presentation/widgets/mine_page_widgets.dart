@@ -10,8 +10,8 @@ import 'package:luminous/viewmodels/mine.dart';
 /// 我的页主布局组件。
 ///
 /// 纯布局/展示组件，所有点击逻辑由页面层通过回调注入。
-class MinePage extends StatelessWidget {
-  const MinePage({
+class MinePageLayout extends StatelessWidget {
+  const MinePageLayout({
     super.key,
     required this.headerPalette,
     required this.profileCard,

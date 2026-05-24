@@ -19,9 +19,9 @@ import '../widgets/mine_page_widgets.dart';
 /// 我的页。
 ///
 /// 负责承载个人中心 UI，并通过页面级 GetX controller 接管页面状态。
-class MineView extends ConsumerWidget {
+class MinePage extends ConsumerWidget {
   /// 创建我的页组件。
-  const MineView({super.key, this.controller});
+  const MinePage({super.key, this.controller});
 
   final MineController? controller;
 
@@ -86,7 +86,7 @@ class MineView extends ConsumerWidget {
       global: false,
       builder: (controller) {
         final l10n = AppLocalizations.of(context);
-        return MinePage(
+        return MinePageLayout(
           headerPalette: SoftBannerPalettes.mineOf(context),
           profileCard: MineProfileCard(
             palette: SoftBannerPalettes.mineOf(context),

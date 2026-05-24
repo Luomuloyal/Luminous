@@ -117,3 +117,5 @@ lib/
 - 收缩 6 个旧路径（`pages/Mine/mine.dart`、`browse_history.dart`、2 个 controller、`components/mine.dart`）为兼容导出壳，更新 `main_shell`、`app_router`、`mine_view_session_test`、`responsive_layout_test` 的 import。
 - 完成 `Album` 第十个结构切片：新增 `lib/features/album/presentation/`，把 `components/album.dart`（1075行）拆为 4 个 widget 文件（page_widgets 181 + slivers 450 + card 224 + preview 210），迁移 page 和 controller。
 - 收缩 3 个旧路径（`pages/Album/album.dart`、controller、`components/album.dart`）为兼容导出壳，更新 `main_shell`、`album_preview_test` 的 import。
+- 完成 `CheckIn` 第十一个结构切片：新增 `lib/features/checkin/presentation/`，迁移打卡页（495行）和 controller，收缩 2 个旧路径，更新 `app_router` 的 import。
+- 修复 `DrugView`/`AlbumView`/`MineView` → 统一为 `XxxPage` 命名，布局组件重命名为 `XxxLayout`；消除 `reminder_edit_page.dart` 的 `use_build_context_synchronously` lint。
