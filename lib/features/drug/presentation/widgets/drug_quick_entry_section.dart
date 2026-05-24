@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:luminous/components/soft_banner.dart';
+import 'package:luminous/shared/widgets/soft_banner/soft_banner.dart';
 import 'package:luminous/shared/widgets/responsive_quick_grid.dart';
 import 'package:luminous/shared/widgets/shared_quick_entry_card.dart';
 import 'package:luminous/l10n/app_localizations.dart';

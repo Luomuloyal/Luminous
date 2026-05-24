@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:luminous/features/home/presentation/home.dart';
-import 'package:luminous/components/soft_banner.dart';
+import 'package:luminous/shared/widgets/soft_banner/soft_banner.dart';
 
 void main() {
   const palette = SoftBannerPalette(

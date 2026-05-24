@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:luminous/shared/widgets/app_canvas.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
 import 'package:luminous/shared/widgets/tinted_status_chip.dart';
-import 'package:luminous/components/soft_banner.dart';
+import 'package:luminous/shared/widgets/soft_banner/soft_banner.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/pages/Picker/medicine_picker.dart';
 import 'package:luminous/viewmodels/medicine.dart';

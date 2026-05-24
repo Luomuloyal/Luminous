@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
-import 'package:luminous/components/soft_banner.dart';
+import 'package:luminous/shared/widgets/soft_banner/soft_banner.dart';
 import 'package:luminous/features/auth/providers/user_session_provider.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/viewmodels/mine.dart';

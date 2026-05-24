@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
-import 'package:luminous/components/soft_banner.dart';
+import 'package:luminous/shared/widgets/soft_banner/soft_banner.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 
 import 'album_page_widgets.dart';

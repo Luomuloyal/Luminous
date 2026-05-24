@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:luminous/components/soft_banner.dart';
+import 'package:luminous/shared/widgets/soft_banner/soft_banner.dart';
 import 'package:luminous/features/scan/presentation/scan.dart';
 import 'package:luminous/features/drug/presentation/drug.dart';
 import 'package:luminous/viewmodels/album.dart';
