@@ -80,3 +80,6 @@ lib/
 - 启动 `Settings` 作为第一个结构切片：新增 `lib/features/settings/presentation/`，把设置相关展示代码拆成 `pages/`、`widgets/`、`support/` 多文件。
 - 将原 `lib/pages/Settings/settings.dart` 收缩为兼容导出壳，避免一次性改爆全仓引用。
 - 路由、主页面和设置页测试已切到新的 `features/settings` 入口，并保持 `flutter analyze` 与 `flutter test` 通过。
+- 完成 `Main shell` 第二个结构切片：新增 `lib/features/main_shell/presentation/`，把主页面壳层、底栏、装饰节点和 `MainController` 分拆到独立文件。
+- 将原 `lib/pages/Main/main.dart` 与 `lib/pages/Main/controllers/main_controller.dart` 收缩为兼容导出壳，并把路由入口切到新的 `features/main_shell` 路径。
+- 新增 `test/main_controller_test.dart` 覆盖底栏切换与加载标记的基础行为，随后重新通过 `flutter analyze` 与全量 `flutter test`。

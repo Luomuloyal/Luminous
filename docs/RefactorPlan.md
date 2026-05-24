@@ -337,3 +337,4 @@ Tasks:
 - Added `Phase 0` to prioritize directory structure cleanup and oversized file decomposition before resuming faster product-facing migration.
 - Set the recommended structure-first execution order to `Settings -> Main shell -> Home -> Search -> Scan -> backend auth`.
 - Started the first structural slice by moving the Settings presentation code toward `lib/features/settings/` while keeping compatibility with existing imports.
+- Completed the second structural slice by moving the main shell presentation and controller code into `lib/features/main_shell/`, splitting the old oversized `main.dart` into page, bottom-bar, and ornament support files while keeping legacy export wrappers.

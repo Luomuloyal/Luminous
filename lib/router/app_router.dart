@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:luminous/features/main_shell/presentation/main_shell.dart';
 import 'package:luminous/features/settings/presentation/settings.dart';
 
 import 'package:luminous/pages/CheckIn/checkin.dart';
 import 'package:luminous/pages/Legal/legal_documents.dart';
 import 'package:luminous/pages/Login/login.dart';
-import 'package:luminous/pages/Main/main.dart';
 import 'package:luminous/pages/Mine/browse_history.dart';
 import 'package:luminous/pages/Register/register.dart';
 import 'package:luminous/pages/Reminders/reminder_list.dart';
