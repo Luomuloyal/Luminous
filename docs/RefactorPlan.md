@@ -1,6 +1,6 @@
 # Luminous Optimization and Nest Migration Plan
 
-Last updated: 2026-05-23
+Last updated: 2026-05-24
 
 ## Goal
 
@@ -44,6 +44,99 @@ Important current architecture notes:
 - AI calls are already centralized under `backend/src/ai`, with LangChain-compatible helper contracts.
 - The API envelope is unified as `{ code, msg, result }`.
 - The frontend still sends `userId` in several user-scoped requests.
+
+## Phase 0: Structure Baseline and File Decomposition
+
+Phase 0 comes before any new product-facing migration slice. The current priority is to make the codebase structurally safe to keep evolving:
+
+1. Move new code into the target directory structure instead of extending legacy folders.
+2. Split oversized files before adding more behavior.
+3. Keep all structural changes low-risk, reversible, and behavior-preserving.
+
+### 0.1 Directory contract
+
+Frontend target direction:
+
+```text
+lib/
+  core/
+    providers/
+    router/
+    startup/
+    theme/
+  shared/
+    widgets/
+    layout/
+  features/
+    settings/
+      presentation/
+      providers/
+      data/
+    home/
+    search/
+    scan/
+    reminders/
+    auth/
+```
+
+Backend target direction during the pre-Nest cleanup period:
+
+```text
+backend/src/
+  ai/
+  auth/
+  medicines/
+  reminders/
+  scan-records/
+  users/
+  shared/
+    config/
+    http/
+  db/
+```
+
+Rules:
+
+- `core` is for global runtime capabilities only.
+- `shared` is for cross-feature reusable UI or helpers used by at least two features.
+- `features` owns business-specific presentation/state/data code.
+- Legacy folders may keep thin compatibility wrappers during migration, but new logic should not keep accumulating there.
+
+### 0.2 File decomposition rules
+
+Tasks:
+
+- Split files larger than 600 lines before adding new logic to them.
+- Prefer semantic splits such as `page`, `section`, `card`, `dialog`, `controller_support`, and `labels`, not arbitrary `part1/part2` buckets.
+- Land the split first, then move files into the target directory structure in the same slice when the move is low-risk.
+- Allow temporary export wrappers from old paths when they reduce migration blast radius.
+- Do not combine structure migration with behavior changes unless the behavior fix is required to keep the app compiling or tested.
+
+Acceptance:
+
+- The app still builds and runs after each slice.
+- `flutter analyze` stays green after each frontend slice.
+- Relevant focused tests pass after each slice, and full regression gates run regularly.
+- Large files shrink, and the new target directories become the canonical home for migrated code.
+
+### 0.3 Recommended slice order
+
+1. `Settings`: split `settings.dart`, move the page stack into `lib/features/settings/`.
+2. `Main shell`: split `MainPage`, bottom bar, and ornament rendering responsibilities.
+3. `Home`: separate page composition from home-specific presentation widgets.
+4. `Search`: separate search page, history, empty state, and result rendering.
+5. `Scan`: split page orchestration from action tiles, preview, and result presentation.
+6. `Backend auth`: split the large Express auth handler into smaller module-scoped files without starting Nest yet.
+
+### 0.4 Exit criteria
+
+Phase 0 is considered healthy enough to move faster only when:
+
+- the main oversized frontend files have been split into readable units;
+- at least the first active UI modules have a real `features/*` home;
+- old paths are reduced to compatibility shells or removed where safe;
+- the backend no longer depends on one large auth handler file;
+- the repo remains green on the default validation gates.
 
 ## Phase 1: Product Trust and Real Data
 
@@ -238,3 +331,9 @@ Tasks:
 - Replaced the runtime `UserController` bridge with a temporary global `ProviderContainer` bridge for legacy GetX controllers that cannot yet receive `WidgetRef`.
 - Expanded read-side adoption across Home, reminders, check-in, album, search, scan, settings/profile, and Mine controllers so session reads come from `currentUserProvider` / `userSessionReadyProvider`.
 - Marked the deprecated `SplashPage` as unused and verified it is not connected to the active GoRouter route table.
+
+### 2026-05-24
+
+- Added `Phase 0` to prioritize directory structure cleanup and oversized file decomposition before resuming faster product-facing migration.
+- Set the recommended structure-first execution order to `Settings -> Main shell -> Home -> Search -> Scan -> backend auth`.
+- Started the first structural slice by moving the Settings presentation code toward `lib/features/settings/` while keeping compatibility with existing imports.

@@ -1,0 +1,20 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:luminous/components/app_canvas.dart';
+import 'package:luminous/components/app_surface.dart';
+import 'package:luminous/components/soft_banner.dart';
+import 'package:luminous/components/tinted_status_chip.dart';
+import 'package:luminous/core/theme/ornaments/ornament_provider.dart';
+import 'package:luminous/features/auth/providers/auth_service_provider.dart';
+import 'package:luminous/l10n/app_localizations.dart';
+import 'package:luminous/pages/Settings/profile_settings.dart';
+import 'package:luminous/stores/locale_controller.dart';
+import 'package:luminous/stores/providers/locale_provider.dart';
+import 'package:luminous/stores/providers/theme_provider.dart';
+import 'package:luminous/stores/theme_controller.dart';
+
+part 'pages/settings_pages.dart';
+part 'support/settings_labels.dart';
+part 'widgets/language_widgets.dart';
+part 'widgets/settings_section_widgets.dart';
+part 'widgets/theme_widgets.dart';

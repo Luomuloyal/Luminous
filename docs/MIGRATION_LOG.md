@@ -73,3 +73,10 @@ lib/
 - Home、提醒、打卡、相册、搜索、扫描、个人中心等旧 controller 的用户态读取已切到 Riverpod；`UserController` 不再作为运行时会话同步入口。
 - `SplashPage` 已确认无路由引用，并在文件注释与声明处标记废弃，后续不要重新接回路由。
 - 增加 `test/support/session_test_utils.dart`，测试统一通过 Riverpod 会话夹具注入用户态。
+
+### 2026-05-24
+
+- 在 `docs/RefactorPlan.md` 中新增 `Phase 0`，明确先做目录结构整形和大文件拆分，再恢复更快的产品迁移节奏。
+- 启动 `Settings` 作为第一个结构切片：新增 `lib/features/settings/presentation/`，把设置相关展示代码拆成 `pages/`、`widgets/`、`support/` 多文件。
+- 将原 `lib/pages/Settings/settings.dart` 收缩为兼容导出壳，避免一次性改爆全仓引用。
+- 路由、主页面和设置页测试已切到新的 `features/settings` 入口，并保持 `flutter analyze` 与 `flutter test` 通过。

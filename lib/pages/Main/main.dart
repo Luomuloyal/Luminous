@@ -6,6 +6,7 @@ import 'package:luminous/components/app_ornaments.dart';
 import 'package:luminous/components/app_canvas.dart';
 import 'package:luminous/constants/constants.dart';
 import 'package:luminous/core/theme/ornaments/ornament_provider.dart';
+import 'package:luminous/features/settings/presentation/settings.dart';
 import 'package:luminous/pages/Album/album.dart';
 import 'package:luminous/pages/Drug/drug.dart';
 import 'package:luminous/pages/Home/home.dart';
@@ -15,7 +16,6 @@ import 'package:luminous/pages/Mine/mine.dart';
 import 'package:luminous/pages/Safety/safety_assist.dart';
 import 'package:luminous/pages/Search/search.dart';
 import 'package:luminous/pages/Settings/profile_settings.dart';
-import 'package:luminous/pages/Settings/settings.dart';
 
 // 主页面：底部 Tab 容器
 //
