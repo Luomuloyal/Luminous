@@ -102,39 +102,57 @@ class _HomePageState extends State<HomePage> {
                   ) ??
                   '${next.title} · ${_composeReminderDetail(next)}');
 
-        return SafeArea(
-          child: RefreshIndicator(
-            onRefresh: _refreshHomeData,
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                SliverToBoxAdapter(
-                  child: HomeTopSection(
-                    palette: SoftBannerPalettes.homeOf(context),
-                    todayTipListenable: _todayTipNotifier,
-                    nextText: nextText,
-                    loadingReminders: _controller.loadingReminders,
-                    reminderCount: _reminders.length,
-                    onTapTip: _cycleHealthTip,
-                    onLongPressTip: _showAllHealthTips,
-                  ),
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final windowClass = AppWindowClass.fromWidth(constraints.maxWidth);
+            final maxWidth = AppContentWidths.fromWindowClass(windowClass);
+
+            Widget content = SafeArea(
+              child: RefreshIndicator(
+                onRefresh: _refreshHomeData,
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: HomeTopSection(
+                        palette: SoftBannerPalettes.homeOf(context),
+                        todayTipListenable: _todayTipNotifier,
+                        nextText: nextText,
+                        loadingReminders: _controller.loadingReminders,
+                        reminderCount: _reminders.length,
+                        onTapTip: _cycleHealthTip,
+                        onLongPressTip: _showAllHealthTips,
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: HomeFeatureSection(
+                        items: _entries,
+                        onTap: _onEntryTap,
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: HomeReminderSection(items: _reminders),
+                    ),
+                    SliverToBoxAdapter(
+                      child: HomeCheckInRecordSection(items: _checkInRecords),
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                  ],
                 ),
-                SliverToBoxAdapter(
-                  child: HomeFeatureSection(
-                    items: _entries,
-                    onTap: _onEntryTap,
-                  ),
+              ),
+            );
+
+            if (maxWidth != null) {
+              content = Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxWidth),
+                  child: content,
                 ),
-                SliverToBoxAdapter(
-                  child: HomeReminderSection(items: _reminders),
-                ),
-                SliverToBoxAdapter(
-                  child: HomeCheckInRecordSection(items: _checkInRecords),
-                ),
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
-              ],
-            ),
-          ),
+              );
+            }
+
+            return content;
+          },
         );
       },
     );

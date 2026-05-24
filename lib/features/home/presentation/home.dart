@@ -17,6 +17,7 @@ import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/shared/models/home.dart';
 import 'package:luminous/shared/models/medicine.dart';
+import 'package:luminous/shared/layout/adaptive_layout.dart';
 
 import 'controllers/home_controller.dart';
 

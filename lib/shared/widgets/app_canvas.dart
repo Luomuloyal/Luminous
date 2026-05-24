@@ -87,10 +87,11 @@ class AppCanvas extends StatelessWidget {
 
 /// 带有 [AppCanvas] 背景的通用页面骨架。
 ///
-/// 适合“透明 AppBar + 渐变环境光背景”的详情/选择类页面：
+/// 适合"透明 AppBar + 渐变环境光背景"的详情/选择类页面：
 /// - 让背景连续覆盖到状态栏与 AppBar 区域；
 /// - 统一处理状态栏图标明暗；
 /// - 让内容区域默认从 AppBar 下方开始，避免压到标题栏。
+/// - 通过 [maxContentWidth] 可在宽屏上限制内容可读宽度。
 class AppCanvasPageScaffold extends StatelessWidget {
   const AppCanvasPageScaffold({
     super.key,
@@ -105,6 +106,7 @@ class AppCanvasPageScaffold extends StatelessWidget {
     this.reserveAppBarSpace = true,
     this.safeAreaBottom = false,
     this.appBarSpacing,
+    this.maxContentWidth,
   });
 
   final Widget child;
@@ -118,6 +120,12 @@ class AppCanvasPageScaffold extends StatelessWidget {
   final bool reserveAppBarSpace;
   final bool safeAreaBottom;
   final double? appBarSpacing;
+
+  /// 内容最大宽度，用于在大屏上限制阅读宽度。
+  ///
+  /// 为 `null` 时不约束（默认），适用于紧凑布局。设置后内容将居中显示，
+  /// 最大宽度不会超过该值。典型取值参考 [AppContentWidths]。
+  final double? maxContentWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -145,6 +153,30 @@ class AppCanvasPageScaffold extends StatelessWidget {
               statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
             );
 
+    Widget bodyContent = AppCanvas(
+      accentColor: accentColor,
+      secondaryAccentColor: secondaryAccentColor,
+      baseColor: background,
+      child: SafeArea(
+        bottom: safeAreaBottom,
+        child: Column(
+          children: [
+            if (topSpacing > 0) SizedBox(height: topSpacing),
+            Expanded(child: child),
+          ],
+        ),
+      ),
+    );
+
+    if (maxContentWidth != null && maxContentWidth! > 0) {
+      bodyContent = Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxContentWidth!),
+          child: bodyContent,
+        ),
+      );
+    }
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: overlayStyle,
       child: Scaffold(
@@ -154,20 +186,7 @@ class AppCanvasPageScaffold extends StatelessWidget {
         floatingActionButton: floatingActionButton,
         floatingActionButtonLocation: floatingActionButtonLocation,
         bottomNavigationBar: bottomNavigationBar,
-        body: AppCanvas(
-          accentColor: accentColor,
-          secondaryAccentColor: secondaryAccentColor,
-          baseColor: background,
-          child: SafeArea(
-            bottom: safeAreaBottom,
-            child: Column(
-              children: [
-                if (topSpacing > 0) SizedBox(height: topSpacing),
-                Expanded(child: child),
-              ],
-            ),
-          ),
-        ),
+        body: bodyContent,
       ),
     );
   }
