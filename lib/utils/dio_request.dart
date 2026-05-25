@@ -6,8 +6,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:luminous/constants/constants.dart';
 import 'package:luminous/core/local_storage/token_manager.dart';
+import 'package:luminous/core/network/api_exception.dart';
 import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/utils/loading_utils.dart';
+
+export 'package:luminous/core/network/api_exception.dart';
 
 /// 通用接口返回包装。
 ///
@@ -28,24 +31,6 @@ class ApiResult<T> {
     required this.msg,
     required this.result,
   });
-}
-
-/// 统一的接口异常类型。
-///
-/// 页面层只需要 catch 这一种异常，然后把消息展示给用户即可。
-class ApiException implements Exception {
-  /// 具体错误消息。
-  final String message;
-
-  /// 业务错误码。
-  final String? code;
-
-  /// 创建一个接口异常对象。
-  const ApiException(this.message, {this.code});
-
-  /// 返回可读的错误字符串。
-  @override
-  String toString() => message;
 }
 
 /// 项目统一网络入口。

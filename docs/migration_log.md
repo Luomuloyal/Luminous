@@ -162,3 +162,10 @@ lib/
 - 初始化 Lucent NestJS 基线：启用 SWC build、环境文件约定、配置校验、`/api/v1/health`、request id header、全局 envelope/filter/interceptor，并在 Lucent docs 中补充环境与协议现状。
 - Flutter 小步收口：默认 API 地址和 legacy/Lucent 成功码语义集中到 `GlobalConstants`，移除 `AppI18nText` 对 `Get.locale` 的依赖，修复根组件对 `localeProvider` 状态的监听。
 - 新增 `docs/flutter-followup-improvement-plan.md`，记录当前 GetX 残留、硬编码归属、Lucent client 切换和后续分步骤执行顺序。
+
+### 2026-05-25
+
+- **网络层切片 1**：新增 `lib/core/network/`，放置 `ApiException`（从 `dio_request.dart` 迁出）、`timeout_config.dart`、`LucentApiClient`（解析 `{code,message,data,meta?}`）、`lucent_endpoints.dart`（`/api/v1/health`）和 barrel export `network.dart`。
+- `lib/utils/dio_request.dart`：删除 `ApiException` 类体，改为 `import` + `export` 从新位置；`DioRequest` / `ApiResult<T>` / `dioRequest` 单例零改动。
+- 旧 Express `{code,msg,result}` 只走 `DioRequest`，新 Lucent `{code,message,data,meta?}` 只走 `LucentApiClient`，两个 client 不交叉解析。
+- `flutter analyze` 零问题通过。

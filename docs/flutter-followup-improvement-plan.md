@@ -55,8 +55,21 @@ Last updated: 2026-05-25
 完成标准：
 
 - 旧 API 行为不变。
-- 新 Lucent client 有最小单元测试覆盖 success/error envelope。
+- 新 Lucent client 有最小单元测试覆盖 success/error envelope。（→ 切片 5）
 - README 或本文件记录运行方式：`flutter run --dart-define=API_BASE_URL=http://127.0.0.1:3000`。
+
+**进度：切片 1 完成 ✅（2026-05-25）**
+
+已交付：
+
+- `lib/core/network/api_exception.dart` — `ApiException` 迁出 + `hasCode()` helper
+- `lib/core/network/timeout_config.dart` — 超时常量（default / AI safety / AI scan）
+- `lib/core/network/lucent_client.dart` — `LucentApiClient` + `LucentApiResult<T>` + `LucentPaginationMeta`
+- `lib/core/network/lucent_endpoints.dart` — `/api/v1/health`
+- `lib/core/network/network.dart` — barrel export
+- `lib/utils/dio_request.dart` — `ApiException` 类体迁出，改为 re-export；`DioRequest` 零改动
+
+验证：`flutter analyze` 零问题通过。剩余：单元测试（切片 5）。
 
 ### Step 2：硬编码常量二次收口
 
