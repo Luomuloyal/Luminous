@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:luminous/core/theme/ornaments/ornament_provider.dart';
 import 'package:luminous/features/auth/providers/user_session_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:luminous/routes/routes.dart';
+import 'package:luminous/core/startup/root_app_widget.dart';
 import 'package:luminous/startup/app_startup_warmup.dart';
 import 'package:luminous/core/providers/shared_preferences_provider.dart';
 

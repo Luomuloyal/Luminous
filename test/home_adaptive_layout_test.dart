@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart';
 import 'package:luminous/features/home/presentation/home.dart';
 import 'package:luminous/shared/layout/adaptive_layout.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/fake_reminder_local_gateway.dart';
 import 'support/session_test_utils.dart';
@@ -12,7 +14,12 @@ void main() {
     late FakeReminderLocalGateway gateway;
 
     setUp(() {
+      Get.testMode = true;
+      Get.reset();
+      SharedPreferences.setMockInitialValues(<String, Object>{});
       gateway = FakeReminderLocalGateway();
+      addTearDown(gateway.dispose);
+      addTearDown(Get.reset);
     });
 
     Future<void> pumpHomeAt(
@@ -35,13 +42,14 @@ void main() {
           ),
         ),
       );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 250));
     }
 
     testWidgets('renders without overflow at compact width (393px)', (
       tester,
     ) async {
       await pumpHomeAt(tester, 393);
-      await tester.pumpAndSettle();
 
       // Compact should not crash and should show the basic sections.
       expect(find.byType(HomePage), findsOneWidget);
@@ -52,7 +60,6 @@ void main() {
       tester,
     ) async {
       await pumpHomeAt(tester, 768);
-      await tester.pumpAndSettle();
 
       expect(find.byType(HomePage), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -66,7 +73,6 @@ void main() {
       tester,
     ) async {
       await pumpHomeAt(tester, 1280);
-      await tester.pumpAndSettle();
 
       expect(find.byType(HomePage), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -80,10 +86,7 @@ void main() {
       expect(AppContentWidths.fromWindowClass(AppWindowClass.compact), isNull);
       expect(AppContentWidths.fromWindowClass(AppWindowClass.medium), 640);
       expect(AppContentWidths.fromWindowClass(AppWindowClass.expanded), 800);
-      expect(
-        AppContentWidths.fromWindowClass(AppWindowClass.webExpanded),
-        840,
-      );
+      expect(AppContentWidths.fromWindowClass(AppWindowClass.webExpanded), 840);
     });
   });
 }

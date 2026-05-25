@@ -51,4 +51,4 @@ app.*.map.json
 # Local presentation / design outputs
 Roadshow/
 outputs/
-lib/assets/data.json
+lib/assets/StandardCode_full.xlsx

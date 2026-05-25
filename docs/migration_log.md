@@ -143,3 +143,9 @@ lib/
 - 清理 `stores/` 与 `viewmodels/` 兼容导出壳：全仓确认 0 处残留引用后，`stores/` 11 个壳 + `viewmodels/` 11 个壳移入 `lib/deprecated/stores/` 与 `lib/deprecated/viewmodels/`，删除空的 `lib/stores/` 与 `lib/viewmodels/` 目录。同步整理 `lib/deprecated/` 为 `components/`、`getx/`、`stores/`、`viewmodels/` 四个子目录分类。`flutter analyze` 通过。
 - 清理 `lib/pages/` 旧目录：更新 2 个测试文件引用到新 feature 路径后，全仓确认 0 处残留引用，将 `pages/` 下 16 个子目录（36 个兼容壳 + Splash 废弃页）全部移入 `lib/deprecated/pages/`，删除空的 `lib/pages/` 目录。`flutter analyze` 通过。
 - 响应式补齐 Phase 0：(A) `AppCanvasPageScaffold` 新增 `maxContentWidth` 参数，支持在宽屏上居中约束内容宽度；(B) 新增 `lib/shared/layout/content_constraints.dart`，定义 `AppContentWidths` 辅助类（compact=null、medium=640、expanded=800、webExpanded=840）；(C) Home 页面接入 `LayoutBuilder` + `AppWindowClass` + `AppContentWidths`，compact 全宽、medium+ 居中约束，作为 feature 自适应页面参考模式；(D) 新增 `test/home_adaptive_layout_test.dart` 覆盖 393/768/1280 宽度下的布局行为和 `AppContentWidths` 单元测试。`flutter analyze` 通过。
+- 修复 `home_adaptive_layout_test.dart` 超时：补齐 `SharedPreferences` mock、Get test mode 和 fake gateway 释放，并把布局测试从 `pumpAndSettle` 改为有限帧推进，避免等待持续动画/异步刷新。
+- 拆分 `TodayReminderLocalStore`：将 store 契约和私有提醒元数据拆为 `today_reminder_store.dart` 与 `today_reminder_meta.dart`，主实现文件降至 600 行以内。
+- 资产收口：确认 `lib/assets/StandardCode_full.xlsx` 已被 Git 跟踪且未被代码引用，将其从索引剥离并加入 `.gitignore`；同时把 Flutter asset 声明从 `lib/assets/` 整目录改为显式白名单，避免本地 xlsx 被打入应用包。
+- 资产收口：全量 `data.json` 与 `StandardCode_full.xlsx` 已由用户备份到仓库外；项目内删除 xlsx，并将 `lib/assets/data.json` 替换为仅含 2 条药品数据的开发样例，保留离线搜索的轻量兜底能力。
+- 常量收口：将 `constants.dart` 拆为 `global_constants.dart`、`http_constants.dart`、`app_ui_constants.dart` 和 `app_release_info.dart`，保留 `constants.dart` 作为兼容 barrel。
+- 路由入口收口：`lib/routes/routes.dart` 实际承载 RootApp 与主题构建，已迁入 `lib/core/startup/root_app_widget.dart`，`main.dart` 改为从 core startup 引入，活跃代码不再保留 `lib/routes/`。

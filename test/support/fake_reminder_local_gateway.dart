@@ -23,6 +23,10 @@ class FakeReminderLocalGateway implements ReminderLocalGateway {
   Future<void> Function(String userId)? onSyncRemoteToLocal;
   Future<void> Function(String userId)? onRescheduleFromLocal;
 
+  Future<void> dispose() async {
+    await _revisionController.close();
+  }
+
   void setPlans(String userId, List<ReminderPlan> plans) {
     _plansByUser[userId.trim()] = List<ReminderPlan>.from(plans);
   }

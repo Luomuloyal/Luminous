@@ -133,13 +133,15 @@ Completed on 2026-05-24:
 14. `Login` and `Register`: move login/register pages and controllers under `lib/features/login/presentation/` and `lib/features/register/presentation/`; route-level naming is now `RegisterPage`.
 15. `MedicinePicker`: move the cross-feature medicine picker page and controller under `lib/features/medicine_picker/presentation/`, and keep old `lib/pages/Picker/*` paths as compatibility exports.
 16. `Legal` and `Profile settings`: move legal document pages under `lib/features/legal/presentation/`, move profile settings page/controller under `lib/features/settings/presentation/`, and keep old paths as compatibility exports.
+17. `Legacy directory cleanup`: retire active `lib/components/`, `lib/pages/`, `lib/stores/`, and `lib/viewmodels/` usage; old compatibility and deprecated code now lives under `lib/deprecated/`.
+18. `Root and constants cleanup`: move `RootAppWidget` out of `lib/routes/` into `lib/core/startup/`, split constants by responsibility, and keep `constants.dart` as a barrel export.
 
 Remaining Phase 0 cleanup:
 
-1. Audit remaining `lib/pages/` files and remove compatibility exports only after active imports have moved and the removal is low-risk.
-2. Decide whether data/model-heavy legacy folders such as `lib/stores/` and `lib/viewmodels/` should move in Phase 0 or wait for the Riverpod/domain/data phases; `lib/stores/today_reminder_local_store.dart` is still over the preferred migration size and should be split when that layer is addressed.
-3. Retire compatibility export wrappers only after active imports have moved and the removal is low-risk.
-4. Continue the responsive base with shared content lanes, max-width constraints, optional side panels, and one feature-level compact/expanded reference implementation.
+1. Continue the responsive base with shared content lanes, max-width constraints, optional side panels, and one feature-level compact/expanded reference implementation beyond Home.
+2. Replace hand-written API JSON model serialization with generated model code in a dedicated slice, preferably using `json_serializable` plus `build_runner` after model ownership has stabilized.
+3. Add a minimal integration/e2e smoke suite after the Phase 0 routing and startup structure is stable, focused on app launch, auth navigation, and one primary medicine/reminder flow.
+4. Decide when to retire `lib/deprecated/` files from the repository entirely after one stable checkpoint confirms no rollback path is needed.
 
 ### 0.4 Exit criteria
 
@@ -268,8 +270,9 @@ Acceptance:
 
 Problem:
 
-- `lib/assets/data.json` is about 52 MB.
-- `LocalMedicineStore` loads and decodes the whole JSON asset, then scans it linearly.
+- The full medicine source data has been moved out of the app repository and backed up externally.
+- `lib/assets/data.json` is now a tiny two-row development sample so local search can keep working without bundling the full source dataset.
+- `LocalMedicineStore` still loads and decodes the JSON asset, then scans it linearly, so this is only acceptable for the temporary sample dataset.
 
 Preferred direction:
 
@@ -284,7 +287,7 @@ Tasks:
 
 Acceptance:
 
-- First offline search no longer decodes a 52 MB JSON file on the UI isolate.
+- The app no longer bundles the full medicine JSON source.
 - Offline search still supports product name, approval number, manufacturer, holder, drug code, and serial number.
 - Add tests for local search query behavior.
 
