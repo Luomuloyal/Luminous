@@ -166,6 +166,10 @@ Feature 页面内的硬编码替换可随各 feature 迁移逐步进行。`flutt
 - 相关测试不再需要 `Get.testMode` / `Get.reset`。
 - 每个 feature 至少保留一个 smoke/widget test。
 
+**进度：全部完成 ✅（2026-05-25）**
+
+`main_shell` / `album` / `checkin` / `medicine_picker` / `mine` + `browse_history` 五个 feature 全部从 GetX 迁到 Riverpod（Notifier / AsyncNotifier / Provider），页面均为 `ConsumerWidget`，`get/get.dart` import 已移除。`dart analyze` 零 error/warning。
+
 ### Step 4：GetX 迁移第二批：认证与用户态
 
 目标：把登录、注册、个人资料设置收口到现有 `features/auth/providers/`。

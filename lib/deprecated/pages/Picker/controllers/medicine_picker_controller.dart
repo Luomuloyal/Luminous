@@ -1,2 +1,2 @@
-// Compatibility export. New code should import the feature entry instead.
-export 'package:luminous/features/medicine_picker/presentation/controllers/medicine_picker_controller.dart';
+// [DEPRECATED] 此路径仅保留为旧 import 兼容。
+export 'package:luminous/deprecated/getx/medicine_picker_controller.dart';

@@ -1,107 +1,89 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:luminous/shared/widgets/app_canvas.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
 import 'package:luminous/shared/widgets/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/features/drug/presentation/drug.dart';
+import 'package:luminous/features/auth/providers/user_session_provider.dart';
 import 'package:luminous/features/mine/presentation/models/browse_history.dart';
 
-import '../controllers/browse_history_controller.dart';
+import '../providers/mine_provider.dart';
 
 /// 浏览记录页。
-///
-/// 展示本机最近查看过的药品详情，并支持再次打开、删除与清空。
-class BrowseHistoryPage extends StatelessWidget {
+class BrowseHistoryPage extends ConsumerWidget {
   const BrowseHistoryPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return GetBuilder<BrowseHistoryController>(
-      init: BrowseHistoryController(),
-      global: false,
-      builder: (controller) {
-        final l10n = AppLocalizations.of(context);
-        final scheme = Theme.of(context).colorScheme;
-        return AppCanvasPageScaffold(
-          appBar: AppBar(
-            title: Text(l10n?.mineBrowseHistoryPageTitle ?? '浏览记录'),
-            centerTitle: true,
-            backgroundColor: Colors.transparent,
-            surfaceTintColor: Colors.transparent,
-            foregroundColor: const Color(0xFF0F172A),
-            actions: [
-              IconButton(
-                onPressed: controller.loading || controller.busy
-                    ? null
-                    : controller.load,
-                icon: controller.loading
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.refresh_rounded),
-              ),
-              IconButton(
-                onPressed: controller.items.isEmpty || controller.busy
-                    ? null
-                    : () => _confirmClearAll(context, controller),
-                icon: const Icon(Icons.delete_sweep_rounded),
-                tooltip:
-                    l10n?.mineBrowseHistoryClearAction ??
-                    l10n?.searchHistoryClearAction ??
-                    '清空',
-              ),
-            ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    final entriesAsync = ref.watch(browseHistoryProvider);
+    final isLoggedIn = ref.watch(
+      currentUserProvider.select((u) => u?.hasData ?? false),
+    );
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final items = entriesAsync.hasValue ? entriesAsync.value! : const <BrowseHistoryEntry>[];
+    final loading = entriesAsync.isLoading;
+
+    return AppCanvasPageScaffold(
+      appBar: AppBar(
+        title: Text(l10n?.mineBrowseHistoryPageTitle ?? '浏览记录'),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: const Color(0xFF0F172A),
+        actions: [
+          IconButton(
+            onPressed: loading ? null : () => ref.invalidate(browseHistoryProvider),
+            icon: loading
+                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.refresh_rounded),
           ),
-          appBarSpacing: 30,
-          accentColor: scheme.secondary,
-          secondaryAccentColor: Color.lerp(
-            scheme.primary,
-            scheme.tertiary,
-            0.48,
-          )!,
-          child: RefreshIndicator(
-            onRefresh: controller.load,
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),
-              children: [
-                _HistoryHeroCard(controller: controller),
-                const SizedBox(height: 10),
-                if (controller.items.isEmpty && !controller.loading)
-                  _EmptyStateCard(
-                    onTapSearch: () => Navigator.pushNamed(context, '/search'),
-                  )
-                else
-                  ...controller.items.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final item = entry.value;
-                    return Padding(
-                      padding: EdgeInsets.only(
-                        bottom: index == controller.items.length - 1 ? 0 : 8,
-                      ),
-                      child: _HistoryItemCard(
-                        entry: item,
-                        busy: controller.busy,
-                        onTap: () => _openDetail(context, item),
-                        onRemove: () => controller.remove(item),
-                      ),
-                    );
-                  }),
-              ],
-            ),
+          IconButton(
+            onPressed: items.isEmpty
+                ? null
+                : () => _confirmClearAll(context, ref),
+            icon: const Icon(Icons.delete_sweep_rounded),
+            tooltip: l10n?.mineBrowseHistoryClearAction ?? '清空',
           ),
-        );
-      },
+        ],
+      ),
+      appBarSpacing: 30,
+      accentColor: scheme.secondary,
+      secondaryAccentColor: Color.lerp(scheme.primary, scheme.tertiary, 0.48)!,
+      child: RefreshIndicator(
+        onRefresh: () async => ref.invalidate(browseHistoryProvider),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),
+          children: [
+            _HistoryHeroCard(items: items, isLoggedIn: isLoggedIn),
+            const SizedBox(height: 10),
+            if (items.isEmpty && !loading)
+              _EmptyStateCard(
+                onTapSearch: () => Navigator.pushNamed(context, '/search'),
+              )
+            else
+              ...items.asMap().entries.map((entry) {
+                final index = entry.key;
+                final item = entry.value;
+                return Padding(
+                  padding: EdgeInsets.only(bottom: index == items.length - 1 ? 0 : 8),
+                  child: _HistoryItemCard(
+                    entry: item,
+                    busy: false,
+                    onTap: () => _openDetail(context, item),
+                    onRemove: () => ref.read(browseHistoryProvider.notifier).remove(item),
+                  ),
+                );
+              }),
+          ],
+        ),
+      ),
     );
   }
 
-  Future<void> _confirmClearAll(
-    BuildContext context,
-    BrowseHistoryController controller,
-  ) async {
+  Future<void> _confirmClearAll(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
@@ -109,8 +91,7 @@ class BrowseHistoryPage extends StatelessWidget {
         return AlertDialog(
           title: Text(l10n?.mineBrowseHistoryClearConfirmTitle ?? '清空浏览记录'),
           content: Text(
-            l10n?.mineBrowseHistoryClearConfirmMessage ??
-                '清空后将删除当前账号下的本机浏览记录，且无法恢复。',
+            l10n?.mineBrowseHistoryClearConfirmMessage ?? '清空后将删除当前账号下的本机浏览记录，且无法恢复。',
           ),
           actions: [
             TextButton(
@@ -119,18 +100,14 @@ class BrowseHistoryPage extends StatelessWidget {
             ),
             FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text(
-                l10n?.mineBrowseHistoryConfirmAction ??
-                    l10n?.searchHistoryClearAction ??
-                    '清空',
-              ),
+              child: Text(l10n?.mineBrowseHistoryConfirmAction ?? '清空'),
             ),
           ],
         );
       },
     );
     if (confirmed == true) {
-      await controller.clearAll();
+      await ref.read(browseHistoryProvider.notifier).clearAll();
     }
   }
 
@@ -144,9 +121,10 @@ class BrowseHistoryPage extends StatelessWidget {
 }
 
 class _HistoryHeroCard extends StatelessWidget {
-  const _HistoryHeroCard({required this.controller});
+  const _HistoryHeroCard({required this.items, required this.isLoggedIn});
 
-  final BrowseHistoryController controller;
+  final List<BrowseHistoryEntry> items;
+  final bool isLoggedIn;
 
   @override
   Widget build(BuildContext context) {
@@ -163,21 +141,12 @@ class _HistoryHeroCard extends StatelessWidget {
         children: [
           Text(
             l10n?.mineBrowseHistoryHeroTitle ?? '最近查看',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
-              color: scheme.onSurface,
-            ),
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: scheme.onSurface),
           ),
           const SizedBox(height: 4),
           Text(
             l10n?.mineBrowseHistoryHeroSubtitle ?? '进入药品详情后会自动记录，方便稍后继续查看。',
-            style: TextStyle(
-              fontSize: 12.8,
-              height: 1.45,
-              color: scheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(fontSize: 12.8, height: 1.45, color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -186,19 +155,13 @@ class _HistoryHeroCard extends StatelessWidget {
             children: [
               TintedStatusChip(
                 icon: Icons.history_rounded,
-                text:
-                    l10n?.mineBrowseHistoryCountLabel(controller.count) ??
-                    '${controller.count} 条记录',
+                text: l10n?.mineBrowseHistoryCountLabel(items.length) ?? '${items.length} 条记录',
                 color: scheme.secondary,
               ),
               TintedStatusChip(
-                icon: controller.isLoggedIn
-                    ? Icons.person_rounded
-                    : Icons.phone_android_rounded,
-                text: controller.isLoggedIn
-                    ? (l10n?.mineBrowseHistoryScopeAccount ?? '当前账号')
-                    : (l10n?.mineBrowseHistoryScopeGuest ?? '本机游客记录'),
-                color: Color.lerp(scheme.primary, scheme.tertiary, 0.34)!,
+                icon: isLoggedIn ? Icons.person_rounded : Icons.phone_android_rounded,
+                text: isLoggedIn ? (l10n?.mineBrowseHistoryScopeAccount ?? '当前账号') : (l10n?.mineBrowseHistoryScopeGuest ?? '本机游客记录'),
+                color: isLoggedIn ? scheme.primary : scheme.tertiary,
               ),
             ],
           ),
@@ -210,89 +173,43 @@ class _HistoryHeroCard extends StatelessWidget {
 
 class _EmptyStateCard extends StatelessWidget {
   const _EmptyStateCard({required this.onTapSearch});
-
   final VoidCallback onTapSearch;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final accent = Color.lerp(scheme.secondary, scheme.primary, 0.42)!;
-    return AppSectionCard(
-      accentColor: accent,
-      secondaryColor: Color.lerp(scheme.tertiary, scheme.secondary, 0.42)!,
-      ornamentKey: 'mine.browse-history.empty',
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 18),
-      radius: 18,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 58,
-            height: 58,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: appTintedSurface(
-                context,
-                accent,
-                lightAlpha: 0.12,
-                darkAlpha: 0.20,
-              ),
-              border: Border.all(
-                color: appTintedBorder(
-                  context,
-                  accent,
-                  lightAlpha: 0.18,
-                  darkAlpha: 0.26,
-                ),
-              ),
+    return Center(
+      child: AppSectionCard(
+        accentColor: Color.lerp(scheme.tertiary, scheme.secondary, 0.35)!,
+        secondaryColor: Color.lerp(scheme.primary, scheme.tertiary, 0.4)!,
+        ornamentKey: 'mine.browse-history.empty',
+        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
+        radius: 18,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.history_rounded, size: 42, color: Color(0xFF94A3B8)),
+            const SizedBox(height: 10),
+            Text(l10n?.mineBrowseHistoryEmptyTitle ?? '暂无浏览记录', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: scheme.onSurface)),
+            const SizedBox(height: 6),
+            Text(l10n?.mineBrowseHistoryEmptySubtitle ?? '查看药品详情后会记录在这里', textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 14),
+            FilledButton.icon(
+              onPressed: onTapSearch,
+              icon: const Icon(Icons.search),
+              label: const Text('去搜索'),
+              style: FilledButton.styleFrom(minimumSize: const Size(120, 40), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
             ),
-            child: Icon(
-              Icons.history_toggle_off_rounded,
-              color: accent,
-              size: 30,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            l10n?.mineBrowseHistoryEmptyTitle ?? '还没有浏览记录',
-            style: TextStyle(
-              fontSize: 15.5,
-              fontWeight: FontWeight.w800,
-              color: scheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            l10n?.mineBrowseHistoryEmptySubtitle ?? '去搜索或识别药品，打开详情后就会自动出现在这里。',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12.8,
-              height: 1.5,
-              color: scheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 14),
-          FilledButton.tonalIcon(
-            onPressed: onTapSearch,
-            icon: const Icon(Icons.search_rounded),
-            label: Text(l10n?.mineBrowseHistoryOpenSearchAction ?? '去搜索药品'),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
 class _HistoryItemCard extends StatelessWidget {
-  const _HistoryItemCard({
-    required this.entry,
-    required this.busy,
-    required this.onTap,
-    required this.onRemove,
-  });
-
+  const _HistoryItemCard({required this.entry, required this.busy, required this.onTap, required this.onRemove});
   final BrowseHistoryEntry entry;
   final bool busy;
   final VoidCallback onTap;
@@ -300,162 +217,47 @@ class _HistoryItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final accent = Color.lerp(scheme.secondary, scheme.primary, 0.42)!;
-    final secondary = Color.lerp(scheme.tertiary, scheme.secondary, 0.36)!;
-    final tips = entry.displayTips;
     return AppSectionCard(
-      accentColor: accent,
-      secondaryColor: secondary,
-      ornamentKey: _historyItemOrnamentKey(entry.identityKey),
-      ornamentVisibilityScale: 0.22,
-      padding: const EdgeInsets.fromLTRB(12, 11, 12, 11),
-      radius: 16,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(14),
-            child: Ink(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: appTintedSurface(
-                  context,
-                  accent,
-                  lightAlpha: 0.10,
-                  darkAlpha: 0.18,
+      accentColor: scheme.primary,
+      secondaryColor: scheme.secondary,
+      ornamentKey: 'mine.browse-history.item',
+      padding: EdgeInsets.zero,
+      radius: 18,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 12, 6, 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(color: scheme.primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
+                  child: Icon(Icons.medication_outlined, color: scheme.primary, size: 18),
                 ),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(Icons.medication_rounded, color: accent, size: 22),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: InkWell(
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(14),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 1),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            entry.displayTitle,
-                            style: TextStyle(
-                              fontSize: 14.6,
-                              fontWeight: FontWeight.w800,
-                              color: scheme.onSurface,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _formatHistoryTimeLabel(context, entry.viewedAt),
-                          style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(entry.displayTitle, style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800, color: scheme.onSurface)),
+                      if (entry.displaySubtitle.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(entry.displaySubtitle, style: TextStyle(fontSize: 12.2, height: 1.4, color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
                       ],
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      entry.displaySubtitle,
-                      style: TextStyle(
-                        fontSize: 12.4,
-                        fontWeight: FontWeight.w600,
-                        color: scheme.onSurfaceVariant,
-                        height: 1.35,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      tips.isNotEmpty
-                          ? tips
-                          : (entry.approvalNo.isNotEmpty
-                                ? (l10n?.searchApprovalNoPrefix(
-                                        entry.approvalNo,
-                                      ) ??
-                                      '批准文号: ${entry.approvalNo}')
-                                : entry.drugCode),
-                      style: TextStyle(
-                        fontSize: 11.8,
-                        fontWeight: FontWeight.w600,
-                        color: Color.lerp(
-                          scheme.onSurfaceVariant,
-                          scheme.onSurface,
-                          0.12,
-                        ),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+                IconButton(onPressed: busy ? null : onRemove, icon: const Icon(Icons.close_rounded, size: 20), color: scheme.onSurfaceVariant),
+              ],
             ),
           ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: busy ? null : onRemove,
-            child: Container(
-              width: 36,
-              height: 36,
-              alignment: Alignment.center,
-              child: Icon(
-                Icons.close_rounded,
-                size: 20,
-                color: busy
-                    ? scheme.onSurfaceVariant.withValues(alpha: 0.28)
-                    : scheme.onSurfaceVariant.withValues(alpha: 0.72),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
-}
-
-String _formatHistoryTimeLabel(BuildContext context, DateTime? viewedAt) {
-  if (viewedAt == null) {
-    return '';
-  }
-  final now = DateTime.now();
-  final local = viewedAt.toLocal();
-  final today = DateTime(now.year, now.month, now.day);
-  final viewedDay = DateTime(local.year, local.month, local.day);
-  final daysAgo = today.difference(viewedDay).inDays;
-  final hour = local.hour.toString().padLeft(2, '0');
-  final minute = local.minute.toString().padLeft(2, '0');
-  if (daysAgo == 0) {
-    return '$hour:$minute';
-  }
-  if (daysAgo == 1) {
-    return '昨天 $hour:$minute';
-  }
-  if (daysAgo < 7) {
-    return '$daysAgo天前';
-  }
-  return '${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')}';
-}
-
-String _historyItemOrnamentKey(String identityKey) {
-  final trimmed = identityKey.trim();
-  if (trimmed.isEmpty) {
-    return 'mine.browse-history.item.none';
-  }
-  return 'mine.browse-history.item.$trimmed';
 }
