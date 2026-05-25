@@ -185,6 +185,12 @@ Feature 页面内的硬编码替换可随各 feature 迁移逐步进行。`flutt
 - 无新增 request body `userId` 授权逻辑。
 - 认证失败和 token 过期路径有明确错误展示。
 
+**进度：login ✅ | register ✅ | profile_settings ⏳（2026-05-25）**
+
+- `LoginPage`：`GetBuilder<LoginController>` → `ConsumerStatefulWidget` + `LoginNotifier`（Notifier）。表单 controllers 在 Widget State，验证/登录/发码/倒计时在 Notifier。旧 `LoginController` → `deprecated/getx/`。
+- `RegisterPage`：`StatefulWidget` + `GetBuilder<RegisterController>` → `ConsumerStatefulWidget` + `RegisterNotifier`（Notifier）。同 login 模式。旧 `RegisterController` → `deprecated/getx/`。
+- `ProfileSettingsPage` 待迁移。`dart analyze` 零问题。
+
 ### Step 5：GetX 迁移第三批：后端强相关功能
 
 目标：等 Lucent 关键 contract 稳定后，迁移网络强相关 feature。

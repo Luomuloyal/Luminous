@@ -185,3 +185,8 @@ lib/
   - `medicine_picker`：`MedicinePickerNotifier`（AsyncNotifier），`MedicinePickerPage` 转为 `ConsumerWidget`，旧 `MedicinePickerController` → deprecated。
   - `mine` + `browse_history`：`browseHistoryProvider`（AsyncNotifier）+ `browseHistoryPreviewProvider`（Provider），`MinePage` / `BrowseHistoryPage` 转为 `ConsumerWidget`，`MineController` / `BrowseHistoryController` → deprecated。
   - 五个 feature 的 `get/get.dart` import 均已移除。`dart analyze` 零 error/warning。
+
+- **Step 4 GetX 迁移第二批 — login + register（2026-05-25）**：
+  - `LoginPage`：`GetBuilder<LoginController>` → `ConsumerStatefulWidget` + `LoginNotifier`（Notifier，`providers/login_provider.dart`）。Notifier 管理 `sendingCode`/`submitting`/`codeCountdown` + 验证 + `sendCode()` + `login()` + 倒计时。旧 `LoginController` → `deprecated/getx/`。
+  - `RegisterPage`：`StatefulWidget` + `GetBuilder<RegisterController>` → `ConsumerStatefulWidget` + `RegisterNotifier`（Notifier，`providers/register_provider.dart`）。同 login 模式。旧 `RegisterController` → `deprecated/getx/`。
+  - `dart analyze` 零问题。
