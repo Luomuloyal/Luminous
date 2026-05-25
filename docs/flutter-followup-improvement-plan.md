@@ -104,6 +104,20 @@ Last updated: 2026-05-25
 
 验证：`flutter analyze` 零问题通过。
 
+**切片 5 完成 ✅（2026-05-25）**
+
+Lucent client envelope 单元测试：
+
+- 新增 `test/lucent_client_test.dart`（206 行），10 个测试覆盖：
+  - `LucentPaginationMeta.fromJson` — 全字段 / 缺省字段
+  - `LucentResponseMeta.fromJson` — null / 含分页
+  - `LucentApiResult.isOk` — OK / 非 OK
+  - `parseLucentResponse` — success / null data / error + message / error 空 message / paginated / missing code
+- `lucent_client.dart` 新增 `@visibleForTesting parseLucentResponse()` 静态方法
+- `/api/v1/health` 联通需后端运行，测试代码已预留 `lucentClient.get(LucentEndpoints.health, ...)` 路径
+
+验证：`flutter analyze` 零问题通过（`flutter test` 受本机 Flutter 工具环境限制，详见 `flutter_0*.log`）。
+
 ### Step 2：硬编码常量二次收口
 
 目标：把“配置”和“设计 token”拆到更明确的归属，不让 `constants/` 继续成为杂物桶。

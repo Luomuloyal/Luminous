@@ -174,4 +174,6 @@ lib/
 
 - **album GetX → Riverpod（切片 3）**：新建 `AlbumEntriesNotifier`（AsyncNotifier，`providers/album_provider.dart`），`build()` 中 `ref.watch(currentUserProvider)` 替代手动 `_userWorker` 监听；`AlbumPage` 从 `StatelessWidget` + `GetBuilder<AlbumController>` 转为 `ConsumerWidget`。旧 `AlbumController` 移入 `lib/deprecated/getx/`。`AlbumPageLayout` 等 widget 零改动。`flutter analyze` 零问题通过。
 
+- **Lucent client envelope 单元测试（切片 5）**：新增 `test/lucent_client_test.dart`（206 行，10 个测试），覆盖 `LucentPaginationMeta`、`LucentResponseMeta`、`LucentApiResult.isOk` 和 `parseLucentResponse` 的 success / error / paginated / missing code 分支。`lucent_client.dart` 新增 `@visibleForTesting parseLucentResponse()` 静态方法供测试使用。`flutter analyze` 零问题通过。
+
 - **root_app_widget 主题 spec 拆分（切片 4）**：新建 `lib/core/theme/app_theme_spec.dart`（169 行），迁入 `AppThemeSpec` 类、`themeSpecFor()`、`fallbackThemeSpec`、`safeThemeSpec()` 和 6 个颜色辅助函数。`root_app_widget.dart` 从 469 行降至 301 行。`flutter analyze` 零问题通过。

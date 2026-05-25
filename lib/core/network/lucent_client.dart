@@ -315,3 +315,33 @@ class LucentApiClient {
 
 /// 对外暴露的 Lucent 网络入口实例。
 final lucentClient = LucentApiClient.instance;
+
+/// 暴露用于测试的 envelope 解析入口。
+///
+/// 将 `_request` 中的核心解析逻辑提取为可测试的静态方法。
+@visibleForTesting
+LucentApiResult<T> parseLucentResponse<T>({
+  required Map<String, dynamic> rawData,
+  required T Function(dynamic json) decoder,
+}) {
+  final code = (rawData['code'] ?? '').toString();
+  final message = (rawData['message'] ?? '').toString();
+
+  if (code != GlobalConstants.LUCENT_SUCCESS_CODE) {
+    throw ApiException(
+      message.isNotEmpty ? message : 'Request failed',
+      code: code,
+    );
+  }
+
+  return LucentApiResult<T>(
+    code: code,
+    message: message,
+    data: decoder(rawData['data']),
+    meta: rawData['meta'] != null
+        ? LucentResponseMeta.fromJson(
+            rawData['meta'] as Map<String, dynamic>,
+          )
+        : null,
+  );
+}
