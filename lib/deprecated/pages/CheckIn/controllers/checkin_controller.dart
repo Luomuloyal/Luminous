@@ -1,2 +1,2 @@
-// Compatibility export — the real implementation lives under lib/features/checkin/.
-export 'package:luminous/features/checkin/presentation/controllers/checkin_controller.dart';
+// [DEPRECATED] 此路径仅保留为旧 import 兼容。
+export 'package:luminous/deprecated/getx/checkin_controller.dart';

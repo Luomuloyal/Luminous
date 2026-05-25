@@ -12,7 +12,7 @@ import 'package:luminous/utils/message_utils.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/shared/models/home.dart';
 
-class CheckInController extends GetxController {
+@Deprecated('Use CheckInNotifier (Riverpod) instead') class CheckInController extends GetxController {
   CheckInController({ReminderLocalGateway? reminderGateway})
     : _reminderGateway = reminderGateway ?? reminderLocalGateway;
 
