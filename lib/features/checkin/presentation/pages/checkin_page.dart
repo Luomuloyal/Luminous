@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/shared/widgets/app_canvas.dart';
+import 'package:luminous/shared/design_tokens/design_tokens.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
 import 'package:luminous/shared/widgets/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
@@ -227,7 +228,7 @@ class CheckInPage extends StatelessWidget {
                     foregroundColor: scheme.onPrimary,
                     minimumSize: const Size(double.infinity, 46),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(AppRadius.small),
                     ),
                   ),
                   child: Text(l10n?.checkInNeedLoginAction ?? '去登录'),
@@ -257,7 +258,7 @@ class CheckInPage extends StatelessWidget {
             child: Text(
               text,
               style: const TextStyle(
-                fontSize: 12.5,
+                fontSize: AppTypography.tab,
                 height: 1.45,
                 color: Color(0xFF92400E),
                 fontWeight: FontWeight.w700,
@@ -392,7 +393,7 @@ class _CheckInCard extends StatelessWidget {
                 color:
                     (done ? const Color(0xFF10B981) : const Color(0xFFF59E0B))
                         .withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.chip),
               ),
               child: Icon(
                 Icons.access_time_rounded,
@@ -431,7 +432,7 @@ class _CheckInCard extends StatelessWidget {
                   Text(
                     _buildExtraLine(item, l10n),
                     style: TextStyle(
-                      fontSize: 12.2,
+                      fontSize: AppTypography.cardMeta,
                       height: 1.4,
                       color: scheme.onSurfaceVariant,
                       fontWeight: FontWeight.w600,
@@ -452,7 +453,7 @@ class _CheckInCard extends StatelessWidget {
                 foregroundColor: Colors.white,
                 minimumSize: const Size(84, 40),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.chip),
                 ),
               ),
               child: Text(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
+import 'package:luminous/shared/design_tokens/design_tokens.dart';
 import 'package:luminous/shared/widgets/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/features/reminders/presentation/models/reminder.dart';
@@ -73,7 +74,7 @@ class ReminderCard extends StatelessWidget {
                         lightAlpha: 0.12,
                         darkAlpha: 0.22,
                       ),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.chip),
                     ),
                     child: Icon(Icons.alarm_rounded, color: accent, size: 19),
                   ),
@@ -121,7 +122,7 @@ class ReminderCard extends StatelessWidget {
               Text(
                 _buildScheduleLine(item, l10n),
                 style: TextStyle(
-                  fontSize: 12.2,
+                  fontSize: AppTypography.cardMeta,
                   color: scheme.onSurfaceVariant,
                   fontWeight: FontWeight.w600,
                 ),

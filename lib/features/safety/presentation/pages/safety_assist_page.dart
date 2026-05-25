@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:luminous/shared/widgets/app_canvas.dart';
+import 'package:luminous/shared/design_tokens/design_tokens.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
 import 'package:luminous/shared/widgets/tinted_status_chip.dart';
 import 'package:luminous/shared/widgets/soft_banner/soft_banner.dart';
@@ -256,7 +257,7 @@ class SafetyAssistPage extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppRadius.small),
       child: Ink(
         padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
         decoration: BoxDecoration(
@@ -266,7 +267,7 @@ class SafetyAssistPage extends StatelessWidget {
             lightAlpha: 0.05,
             darkAlpha: 0.11,
           ),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.small),
           border: Border.all(
             color: appTintedBorder(
               context,
@@ -284,7 +285,7 @@ class SafetyAssistPage extends StatelessWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppRadius.small),
               ),
               child: Icon(Icons.medication_outlined, color: color, size: 20),
             ),
@@ -300,7 +301,7 @@ class SafetyAssistPage extends StatelessWidget {
                         child: Text(
                           label,
                           style: TextStyle(
-                            fontSize: 13.8,
+                            fontSize: AppTypography.cardTitle,
                             fontWeight: FontWeight.w800,
                             color: scheme.onSurface,
                           ),
@@ -376,7 +377,7 @@ class SafetyAssistPage extends StatelessWidget {
               style: FilledButton.styleFrom(
                 minimumSize: const Size(double.infinity, 44),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
                 ),
               ),
               child: controller.loading
@@ -408,7 +409,7 @@ class SafetyAssistPage extends StatelessWidget {
                 ).withValues(alpha: 0.12),
                 foregroundColor: const Color(0xFFB91C1C),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(AppRadius.small),
                   side: const BorderSide(color: Color(0xFFEF4444)),
                 ),
               ),
@@ -467,7 +468,7 @@ class SafetyAssistPage extends StatelessWidget {
                         lightAlpha: 0.06,
                         darkAlpha: 0.12,
                       ),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.chip),
                       border: Border.all(
                         color: appTintedBorder(
                           context,

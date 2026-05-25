@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:luminous/shared/widgets/responsive_quick_grid.dart';
+import 'package:luminous/shared/design_tokens/design_tokens.dart';
 import 'package:luminous/shared/widgets/soft_banner/soft_banner.dart';
 import 'package:luminous/shared/widgets/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
@@ -177,7 +178,7 @@ class MineProfileCard extends StatelessWidget {
                         alpha: isDark ? 0.28 : 0.20,
                       ),
                       iconSize: 16,
-                      fontSize: 12.2,
+                      fontSize: AppTypography.cardMeta,
                       fontWeight: FontWeight.w700,
                       padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
                     ),
@@ -190,7 +191,7 @@ class MineProfileCard extends StatelessWidget {
                         alpha: isDark ? 0.28 : 0.20,
                       ),
                       iconSize: 16,
-                      fontSize: 12.2,
+                      fontSize: AppTypography.cardMeta,
                       fontWeight: FontWeight.w700,
                       padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
                     ),
@@ -205,7 +206,7 @@ class MineProfileCard extends StatelessWidget {
                         alpha: isDark ? 0.28 : 0.20,
                       ),
                       iconSize: 16,
-                      fontSize: 12.2,
+                      fontSize: AppTypography.cardMeta,
                       fontWeight: FontWeight.w700,
                       padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
                     ),

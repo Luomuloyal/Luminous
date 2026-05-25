@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/features/album/presentation/models/album.dart';
+import 'package:luminous/shared/design_tokens/design_tokens.dart';
 
 import 'album_page_widgets.dart';
 
@@ -138,7 +139,7 @@ class AlbumCard extends StatelessWidget {
                       maxLines: 3,
                       softWrap: true,
                       style: TextStyle(
-                        fontSize: 13.8,
+                        fontSize: AppTypography.cardTitle,
                         fontWeight: FontWeight.w800,
                         color: titleColor,
                         height: 1.24,

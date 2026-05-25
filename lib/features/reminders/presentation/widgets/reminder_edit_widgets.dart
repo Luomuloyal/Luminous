@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
+import 'package:luminous/shared/design_tokens/design_tokens.dart';
 import 'package:luminous/shared/widgets/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/shared/models/medicine.dart';
@@ -47,7 +48,7 @@ class ReminderEditHeroCard extends StatelessWidget {
                 lightAlpha: 0.13,
                 darkAlpha: 0.22,
               ),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppRadius.small),
             ),
             child: const Icon(
               Icons.notifications_active_outlined,
@@ -227,15 +228,15 @@ class ReminderEditInputField extends StatelessWidget {
           darkAlpha: 0.11,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.small),
           borderSide: BorderSide(color: scheme.outline.withValues(alpha: 0.6)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.small),
           borderSide: BorderSide(color: scheme.outline.withValues(alpha: 0.6)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.small),
           borderSide: const BorderSide(color: Color(0xFF0EA5E9), width: 1.4),
         ),
       ),
@@ -269,7 +270,7 @@ class ReminderEditTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppRadius.small),
       child: Ink(
         padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
         decoration: BoxDecoration(
@@ -279,7 +280,7 @@ class ReminderEditTile extends StatelessWidget {
             lightAlpha: 0.05,
             darkAlpha: 0.12,
           ),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.small),
           border: Border.all(
             color: appTintedBorder(
               context,
@@ -296,7 +297,7 @@ class ReminderEditTile extends StatelessWidget {
               height: 36,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.chip),
               ),
               child: Icon(icon, color: color, size: 20),
             ),
@@ -317,7 +318,7 @@ class ReminderEditTile extends StatelessWidget {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: 12.5,
+                      fontSize: AppTypography.tab,
                       color: scheme.onSurfaceVariant,
                       fontWeight: FontWeight.w600,
                     ),
