@@ -11,6 +11,9 @@ import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/core/providers/locale_provider.dart';
 import 'package:luminous/core/providers/theme_provider.dart';
 
+export 'pages/profile_settings_page.dart';
+export 'providers/profile_settings_provider.dart';
+
 part 'pages/settings_pages.dart';
 part 'support/settings_labels.dart';
 part 'widgets/language_widgets.dart';

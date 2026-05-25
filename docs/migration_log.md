@@ -186,7 +186,8 @@ lib/
   - `mine` + `browse_history`：`browseHistoryProvider`（AsyncNotifier）+ `browseHistoryPreviewProvider`（Provider），`MinePage` / `BrowseHistoryPage` 转为 `ConsumerWidget`，`MineController` / `BrowseHistoryController` → deprecated。
   - 五个 feature 的 `get/get.dart` import 均已移除。`dart analyze` 零 error/warning。
 
-- **Step 4 GetX 迁移第二批 — login + register（2026-05-25）**：
-  - `LoginPage`：`GetBuilder<LoginController>` → `ConsumerStatefulWidget` + `LoginNotifier`（Notifier，`providers/login_provider.dart`）。Notifier 管理 `sendingCode`/`submitting`/`codeCountdown` + 验证 + `sendCode()` + `login()` + 倒计时。旧 `LoginController` → `deprecated/getx/`。
-  - `RegisterPage`：`StatefulWidget` + `GetBuilder<RegisterController>` → `ConsumerStatefulWidget` + `RegisterNotifier`（Notifier，`providers/register_provider.dart`）。同 login 模式。旧 `RegisterController` → `deprecated/getx/`。
+- **Step 4 GetX 迁移第二批 — login + register + profile_settings（2026-05-25）**：
+  - `LoginPage`：`GetBuilder<LoginController>` → `ConsumerStatefulWidget` + `LoginNotifier`（Notifier）。旧 `LoginController` → `deprecated/getx/`。
+  - `RegisterPage`：`StatefulWidget` + `GetBuilder<RegisterController>` → `ConsumerStatefulWidget` + `RegisterNotifier`。旧 `RegisterController` → `deprecated/getx/`。
+  - `ProfileSettingsPage`：`ConsumerStatefulWidget` + `ProfileSettingsNotifier`（Notifier），管理 loading/saving/deleting/gender。旧 `ProfileSettingsController` → `deprecated/getx/`。
   - `dart analyze` 零问题。
