@@ -1,2 +1,2 @@
-// Compatibility export.
-export 'package:luminous/features/login/presentation/controllers/login_controller.dart';
+// [DEPRECATED] 此路径仅保留为旧 import 兼容。
+export 'package:luminous/deprecated/getx/login_controller.dart';
