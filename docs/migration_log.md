@@ -173,3 +173,5 @@ lib/
 - **main_shell GetX → Riverpod（切片 2）**：新建 `MainShellNotifier` + `MainShellState`（`providers/main_shell_provider.dart`），`MainPage` 从 `StatefulWidget` + `GetBuilder<MainController>` 转为 `ConsumerWidget`，`main_shell.dart` 移除 `package:get/get.dart` import。旧 `MainController` 移入 `lib/deprecated/getx/`，测试同步切到 Riverpod `ProviderContainer`。`flutter analyze` 零问题通过。
 
 - **album GetX → Riverpod（切片 3）**：新建 `AlbumEntriesNotifier`（AsyncNotifier，`providers/album_provider.dart`），`build()` 中 `ref.watch(currentUserProvider)` 替代手动 `_userWorker` 监听；`AlbumPage` 从 `StatelessWidget` + `GetBuilder<AlbumController>` 转为 `ConsumerWidget`。旧 `AlbumController` 移入 `lib/deprecated/getx/`。`AlbumPageLayout` 等 widget 零改动。`flutter analyze` 零问题通过。
+
+- **root_app_widget 主题 spec 拆分（切片 4）**：新建 `lib/core/theme/app_theme_spec.dart`（169 行），迁入 `AppThemeSpec` 类、`themeSpecFor()`、`fallbackThemeSpec`、`safeThemeSpec()` 和 6 个颜色辅助函数。`root_app_widget.dart` 从 469 行降至 301 行。`flutter analyze` 零问题通过。

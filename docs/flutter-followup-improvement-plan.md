@@ -95,6 +95,15 @@ Last updated: 2026-05-25
 
 验证：`flutter analyze` 零问题通过。
 
+**切片 4 完成 ✅（2026-05-25）**
+
+`root_app_widget.dart` 主题 spec 拆分：
+
+- 新建 `lib/core/theme/app_theme_spec.dart`（169 行）— `AppThemeSpec` 类 + `themeSpecFor()` + `fallbackThemeSpec` + `safeThemeSpec()` + 6 个颜色辅助函数
+- `root_app_widget.dart`：469 → 301 行，删除迁出部分，改为 import
+
+验证：`flutter analyze` 零问题通过。
+
 ### Step 2：硬编码常量二次收口
 
 目标：把“配置”和“设计 token”拆到更明确的归属，不让 `constants/` 继续成为杂物桶。
