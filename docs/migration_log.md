@@ -169,3 +169,5 @@ lib/
 - `lib/utils/dio_request.dart`：删除 `ApiException` 类体，改为 `import` + `export` 从新位置；`DioRequest` / `ApiResult<T>` / `dioRequest` 单例零改动。
 - 旧 Express `{code,msg,result}` 只走 `DioRequest`，新 Lucent `{code,message,data,meta?}` 只走 `LucentApiClient`，两个 client 不交叉解析。
 - `flutter analyze` 零问题通过。
+
+- **main_shell GetX → Riverpod（切片 2）**：新建 `MainShellNotifier` + `MainShellState`（`providers/main_shell_provider.dart`），`MainPage` 从 `StatefulWidget` + `GetBuilder<MainController>` 转为 `ConsumerWidget`，`main_shell.dart` 移除 `package:get/get.dart` import。旧 `MainController` 移入 `lib/deprecated/getx/`，测试同步切到 Riverpod `ProviderContainer`。`flutter analyze` 零问题通过。

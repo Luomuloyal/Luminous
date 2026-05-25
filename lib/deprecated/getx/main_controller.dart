@@ -1,10 +1,14 @@
+// ignore_for_file: depend_on_referenced_packages
+
 import 'dart:async';
 
 import 'package:get/get.dart';
 
-/// 主页面页面级控制器。
+/// [DEPRECATED] 旧 GetX 主页面控制器。
 ///
-/// 负责底部 Tab 的选中状态与冷启动后的分批预加载策略。
+/// 已由 `lib/features/main_shell/presentation/providers/main_shell_provider.dart`
+/// 中的 [MainShellNotifier] 替代。本文件仅保留为历史参考，不应在新代码中使用。
+@Deprecated('Use MainShellNotifier (Riverpod) instead')
 class MainController extends GetxController {
   MainController({required this.pageCount, required this.secondaryPageCount});
 

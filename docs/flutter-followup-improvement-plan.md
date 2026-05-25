@@ -71,6 +71,18 @@ Last updated: 2026-05-25
 
 验证：`flutter analyze` 零问题通过。剩余：单元测试（切片 5）。
 
+**切片 2 完成 ✅（2026-05-25）**
+
+`main_shell` GetX → Riverpod：
+
+- 新建 `providers/main_shell_provider.dart` — `MainShellNotifier`（Notifier）+ `MainShellState`，Tab 切换和冷启动预加载策略原样迁移
+- `main_page.dart`：`MainPage` 从 `StatefulWidget` + `GetBuilder<MainController>` → `ConsumerWidget`
+- `main_shell.dart`：移除 `import 'package:get/get.dart'`，provider 替代 controller export
+- `main_controller.dart` → `lib/deprecated/getx/main_controller.dart`（零引用，仅历史保留）
+- `test/main_controller_test.dart` → Riverpod `ProviderContainer` + `mainShellProvider`
+
+验证：`flutter analyze` 零问题通过。
+
 ### Step 2：硬编码常量二次收口
 
 目标：把“配置”和“设计 token”拆到更明确的归属，不让 `constants/` 继续成为杂物桶。
