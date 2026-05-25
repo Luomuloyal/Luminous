@@ -83,6 +83,18 @@ Last updated: 2026-05-25
 
 验证：`flutter analyze` 零问题通过。
 
+**切片 3 完成 ✅（2026-05-25）**
+
+`album` GetX → Riverpod `AsyncNotifier`：
+
+- 新建 `providers/album_provider.dart` — `AlbumEntriesNotifier`（AsyncNotifier），`build()` 中 `ref.watch(currentUserProvider)` 自动感知用户变化触发重新加载
+- `album_page.dart`：`AlbumPage` 从 `StatelessWidget` + `GetBuilder<AlbumController>` → `ConsumerWidget`
+- `album.dart` barrel：`controllers/` export → `providers/`
+- `album_controller.dart` → `lib/deprecated/getx/`（零引用）
+- `AlbumPageLayout` 等 widget 文件零改动
+
+验证：`flutter analyze` 零问题通过。
+
 ### Step 2：硬编码常量二次收口
 
 目标：把“配置”和“设计 token”拆到更明确的归属，不让 `constants/` 继续成为杂物桶。

@@ -15,7 +15,11 @@ import 'package:luminous/features/album/presentation/models/album.dart';
 import 'package:luminous/shared/models/medicine.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 
-/// 相册页控制器。
+/// [DEPRECATED] 旧 GetX 相册页控制器。
+///
+/// 已由 `lib/features/album/presentation/providers/album_provider.dart`
+/// 中的 [AlbumEntriesNotifier] 替代。本文件仅保留为历史参考。
+@Deprecated('Use AlbumEntriesNotifier (Riverpod) instead')
 class AlbumController extends GetxController {
   AlbumController({AlbumLocalStore? albumStore})
     : _albumStore = albumStore ?? albumLocalStore;
