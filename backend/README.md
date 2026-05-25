@@ -1,6 +1,6 @@
 # Luminous App Backend
 
-App 后端服务，提供认证与药品能力接口。
+App 后端服务，提供认证、药品能力接口与后续个人健康副驾驶能力。当前运行时仍是 Express，目标迁移方向是 NestJS + PostgreSQL + Prisma + Redis + Passport。
 
 ## Stack
 
@@ -11,6 +11,22 @@ App 后端服务，提供认证与药品能力接口。
 - Redis（验证码存储，5 分钟过期）
 - MySQL (药品库)
 - LangChain AI 网关（OpenAI-compatible endpoint，兼容豆包/方舟）
+
+Target stack:
+
+- NestJS
+- PostgreSQL
+- Prisma
+- Redis
+- Passport JWT strategy
+- Markdown-oriented medicine detail and AI/copilot responses
+
+Large external knowledge sources:
+
+- `D:\DrugDataBase\FullDrugDetail.xlsx`
+- `D:\DrugDataBase`
+
+这些数据只作为本地/部署导入源，不进入 Git，不打包进 Flutter。
 
 ## Directory Layout
 
@@ -126,7 +142,7 @@ docker run --rm -p 8787:8787 --env-file backend/.env.development luminous-backen
 docker compose up -d --build
 ```
 
-`docker-compose.yml` 会同时启动 backend、mongodb、redis、mysql。
+`docker-compose.yml` 当前会同时启动 backend、mongodb、redis、mysql。目标迁移完成后应只保留 backend、PostgreSQL、Redis 和必要网关。
 
 ## API Summary
 
@@ -152,7 +168,9 @@ docker compose up -d --build
 - `POST /api/medicines/scan-record-create`
 - `POST /api/medicines/scan-record-list`
 
-Full schema and examples: [../.md/lib-docs/backend-api.md](../.md/lib-docs/backend-api.md)
+Full schema and examples: [../docs/lib-docs/backend-api.md](../docs/lib-docs/backend-api.md)
+
+Knowledge platform plan: [../docs/knowledge-data-platform-plan.md](../docs/knowledge-data-platform-plan.md)
 
 ## Response Envelope
 
@@ -167,7 +185,7 @@ Full schema and examples: [../.md/lib-docs/backend-api.md](../.md/lib-docs/backe
 ## Integration Notes
 
 - Flutter base URL config: `lib/constants/constants.dart`
-- Flutter network parser: `lib/utils/DioRequest.dart`
+- Flutter network parser: `lib/utils/dio_request.dart`
 
 请确保 Flutter 的 `GlobalConstants.BASE_URL` 指向本服务地址。
 
@@ -216,4 +234,5 @@ Stop-Process -Id <PID> -Force
 ## Related Docs
 
 - Project README: [../README.md](../README.md)
-- Deployment Config: [../.md/lib-docs/deployment-config.md](../.md/lib-docs/deployment-config.md)
+- Backend migration plan: [../docs/backend-nestjs-pgsql-migration-plan.md](../docs/backend-nestjs-pgsql-migration-plan.md)
+- Knowledge data platform plan: [../docs/knowledge-data-platform-plan.md](../docs/knowledge-data-platform-plan.md)

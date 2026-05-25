@@ -87,7 +87,7 @@ lib/
 - 调整 `.gitignore` 与 `CONTRIBUTING.md`，将 `.vscode` 改为“默认忽略，放行共享校验配置”的策略，避免把个人本地 IDE 配置带进仓库。
 - 完成 `Home` 第三个结构切片：新增 `lib/features/home/presentation/`，把首页拆成 `controllers/`、`pages/`、`support/`、`widgets/` 多文件，并将正式入口命名统一为 `HomePage`。
 - 将原 `lib/pages/Home/home.dart`、`lib/pages/Home/controllers/home_controller.dart` 与 `lib/components/home.dart` 收缩为兼容壳或导出层，同时把 `Main shell` 与首页相关测试切到新的 `features/home` 入口。
-- 更新根 `README.md`，移除过时的 `Study/`、`.md/` 目录说明，并把后端说明改为“当前基线 + 目标栈”双轨描述：当前仍是 Express + MongoDB/MySQL/Redis，目标迁移为 NestJS + PostgreSQL，Redis 按需保留。
+- 更新根 `README.md`，移除过时的 `Study/`、`.md/` 目录说明，并把后端说明改为“当前基线 + 目标栈”双轨描述：当前仍是 Express + MongoDB/MySQL/Redis，目标迁移为 NestJS + PostgreSQL；后续目标栈进一步明确为 Prisma/Redis/Passport。
 - 在 `docs/RefactorPlan.md` 中补充后端目标状态：NestJS 作为框架，PostgreSQL 作为主存储，Redis 仅在验证码、缓存和 AI 文本缓存等短生命周期场景按需保留，MongoDB/MySQL 作为迁移源逐步退场。
 - 完成 `Search` 第四个结构切片：新增 `lib/features/search/presentation/`，把搜索页拆为 `controllers/`、`pages/`、`support/`、`widgets/` 多文件，并将正式入口命名统一为 `SearchPage`。
 - 将原 `lib/pages/Search/search.dart`、`lib/pages/Search/controllers/search_controller.dart` 与 `lib/components/search.dart` 收缩为兼容壳或导出层，同时把路由、Main shell、药品选择器、扫码跳转和相关测试切到新的 `features/search` 入口。
@@ -151,3 +151,7 @@ lib/
 - 路由入口收口：`lib/routes/routes.dart` 实际承载 RootApp 与主题构建，已迁入 `lib/core/startup/root_app_widget.dart`，`main.dart` 改为从 core startup 引入，活跃代码不再保留 `lib/routes/`。
 - 记录 Phase 0 后续技术债优先级：先补最小 `integration_test` smoke，再单独开 `json_serializable`/`build_runner` 模型生成迁移；复杂不可变模型再评估 `freezed`/`freezed_annotation`，不和结构收口混做。
 - 在重构计划中补充包和落点：`json_annotation`、`build_runner`、`json_serializable`、可选 `freezed`/`freezed_annotation`；`integration_test`；`collection`；本地 SQLite 后续评估 `drift`/`drift_flutter`/`drift_dev`；并明确 `retrofit`、Markdown/AI 文本渲染和大表单库暂不进入 Phase 0。
+- 新增 `docs/knowledge-data-platform-plan.md`，将 `D:\DrugDataBase\FullDrugDetail.xlsx`（204,844 条药品数据、29 列说明书/商品字段）和 `D:\DrugDataBase`（DrugBank XML/CSV/FASTA/SDF）定位为后端知识库导入源，不进入 Git、不打包到 Flutter。
+- 更新产品愿景与技术路线：`Promise.md` 从“AI RAG 说明书翻译”调整为“权威药品知识库 + Markdown 详情 + AI 健康副驾驶”，药品事实由 PostgreSQL 知识表提供，AI 主要负责解释、总结、安全提示、报告解读和健康计划。
+- 更新后端迁移文档：目标栈明确为 NestJS + PostgreSQL + Prisma + Redis + Passport，新增 `KnowledgeModule`、`SafetyModule`、`CopilotModule`、`ReportsModule`，并补充 xlsx/DrugBank staging、normalization、Markdown sections、`detailMarkdown` 和导入验收规则。
+- 更新 API/README/隐私文档：药品详情规划返回结构化 `sections` 与 `detailMarkdown`，AI 输出规划优先 Markdown；隐私政策补充健康记录、AI 上下文处理和限时分享边界。

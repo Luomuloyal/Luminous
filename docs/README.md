@@ -5,7 +5,9 @@
 ## 文档索引
 
 - `RefactorPlan.md`：当前 Flutter 优化、状态迁移和后端演进的主计划。
-- `backend-nestjs-pgsql-migration-plan.md`：后端从 Express/MongoDB/MySQL 迁移到 NestJS/PostgreSQL 的分阶段执行计划。
+- `knowledge-data-platform-plan.md`：新药品知识库、DrugBank、Markdown 展示、AI 职责重分配和数据导入路线。
+- `backend-nestjs-pgsql-migration-plan.md`：后端从 Express/MongoDB/MySQL 迁移到 NestJS/PostgreSQL/Prisma/Redis/Passport 的分阶段执行计划。
+- `Promise.md`：Personal Health Copilot 的产品愿景、端侧职责和阶段路线。
 - `migration_log.md`：GetX/Layer-based 向 Riverpod/GoRouter/Feature-first 迁移的执行记录。
 - `lib-docs/`：前后端接口、部署和联调文档。
 - `Roadshow/`：路演稿、PPT、截图等参赛材料，暂留且不要清理。
@@ -17,3 +19,4 @@
 - 新增迁移代码要有意识落到目标结构：共享基础能力放 `lib/core/`，跨业务复用 UI 放 `lib/shared/`，业务模块放 `lib/features/`。
 - 控制文件规模：单文件最好 300 行以内，300-600 行可接受，超过 600 行时优先拆分再继续扩展。
 - 迁移涉及行为变化时，同步更新测试与这里的相关文档。
+- 外部大体量数据源只在文档中记录路径和导入规则，不进入 Git；当前新知识库规划以 `knowledge-data-platform-plan.md` 为准。

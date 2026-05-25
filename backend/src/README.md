@@ -1,6 +1,6 @@
 # backend/src 说明
 
-`backend/src` 是 App 后端服务源码目录。
+`backend/src` 是当前 Express App 后端服务源码目录。目标后端会迁移到 NestJS + PostgreSQL + Prisma + Redis + Passport；迁移完成前，本目录仍是当前运行时基线。
 
 ## 分层约定
 
@@ -11,6 +11,13 @@
 - `http/`: 统一响应、参数读取、错误处理、JWT 中间件
 - `models/`: Mongoose 数据模型
 - `routes/`: 路由注册
+
+目标 Nest 模块会增加：
+
+- `knowledge/`: xlsx/DrugBank 导入状态、source metadata、知识映射
+- `safety/`: 药品相互作用、特殊人群风险和 AI 辅助安全解释
+- `copilot/`: grounded explanation、报告解读、健康计划和分享摘要
+- `reports/`: 报告上传、OCR、结构化指标和解释入口
 
 ## 启动链路
 
@@ -29,8 +36,9 @@
 ## 相关文档
 
 - 后端服务说明: [../README.md](../README.md)
-- API 文档: [../../.md/lib-docs/backend-api.md](../../.md/lib-docs/backend-api.md)
-- 部署文档: [../../.md/lib-docs/deployment-config.md](../../.md/lib-docs/deployment-config.md)
+- API 文档: [../../docs/lib-docs/backend-api.md](../../docs/lib-docs/backend-api.md)
+- 后端迁移计划: [../../docs/backend-nestjs-pgsql-migration-plan.md](../../docs/backend-nestjs-pgsql-migration-plan.md)
+- 知识库数据平台计划: [../../docs/knowledge-data-platform-plan.md](../../docs/knowledge-data-platform-plan.md)
 
 ## 运行补充
 

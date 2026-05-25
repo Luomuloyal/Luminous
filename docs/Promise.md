@@ -1,224 +1,192 @@
-# Luminous 智慧健康守护舱 - 全终端演进与商业路演愿景
+# Luminous Personal Health Copilot Vision
 
-**文档说明**：本文档记录了 Luminous 项目从“移动端智慧用药助手”向“全终端全生命周期智慧健康管家 (Personal Health Copilot)”的升维规划。本文档不仅指导代码层面的架构演进，同时为各类创新创业竞赛（如“挑战杯”、“互联网+”）提供核心话术和商业叙事支撑。
+Last updated: 2026-05-25
 
----
+## 1. Product position
 
-## 1. 核心定位升维：从“用药助手”到“数字健康资产中枢”
+Luminous is no longer planned as only a medicine search app or a medication reminder. The target is a personal and family health management copilot:
 
-### 1.1 破局思考
+> Use authoritative medicine knowledge, personal health records, cross-device Flutter experiences, and guarded AI workflows to help users understand, manage, and share their health actions.
 
-如果仅仅停留在“扫药盒+定闹钟”，项目的天花板很容易触顶（同类竞品多，用户黏性过度依赖单一行为）。
-通过发挥 Flutter 的跨端优势与 AI RAG（检索增强生成）的能力，我们将 Luminous 重新定义为：
-**“基于大模型与跨端生态的下一代个人与家庭健康数据中枢”**。
+Core boundary:
 
-它不再只是为了“吃药”存在，而是帮你收集、翻译、管理、分享你一生的健康数据（体检、用药、症状、体征）。
+- Luminous does not diagnose.
+- Luminous does not replace doctors or prescriptions.
+- Luminous translates, organizes, reminds, compares, and helps users prepare better health decisions.
 
-### 1.2 最终目的
+## 2. Why the new data changes the plan
 
-- **对个人**：把晦涩难懂的医疗报告、说明书翻译成大白话，提供 actionable（可执行）的健康建议。
-- **对家庭**：打破空间限制，成为异地子女监控父母健康（是否按时吃药、心率是否异常）的桥梁。
-- **对社会/临床**：沉淀个人级、长序列的“真实世界数据”(RWD - Real World Data)，作为个人看病就医时的“随身电子病历”。
+The project now has two much stronger data sources:
 
----
+- `D:\DrugDataBase\FullDrugDetail.xlsx`: 204,844 rows of Chinese medicine product and label-style details, including dosage, contraindications, precautions, special population use, interactions, pharmacology, barcode, and national drug code.
+- `D:\DrugDataBase`: DrugBank data, including a large XML knowledge base and target/protein/drug-link files.
 
-## 2. 释放 Flutter 优势：构建“多端协同”矩阵
+This changes the role of AI:
 
-Flutter 的核心优势是 `Write once, run anywhere`，我们在不同端赋予系统不同的核心使命，形成降维打击。
+- Drug facts should come from the database, not from model-generated guesses.
+- Medicine detail pages should be rendered from structured fields and Markdown.
+- AI should become a copilot layer that explains, compares, summarizes, and personalizes based on authoritative retrieved data and user context.
 
-### 2.1 移动端 (Mobile App: iOS / Android)
+The detailed data architecture is tracked in `docs/knowledge-data-platform-plan.md`.
 
-- **定位**：敏捷的数据采集终端与即时执行者。
-- **职责**：
-  - 高频数据录入（拍照识药、体检单 OCR 采集、语音输入症状）。
-  - 连接传感器（蓝牙低功耗 BLE 接入智能手表、手环、血压仪）。
-  - LBS 推送与系统级通知（服药提醒、复诊吃药提醒）。
+## 3. Experience vision by terminal
 
-### 2.2 网页端 (Web Portal)
+### Mobile app
 
-- **定位**：零门槛的家庭关怀与医患分享看板。
-- **职责**：
-  - **家庭互联看板**：子女免安装，在办公室打开网页扫码即可查看家里的老人今天的用药情况和心率波动。一旦异常，Web 端报警。
-  - **医生临时授权看板**：去医院看病，生成一个时效性二维码/链接给医生。医生 PC 浏览器打开，立刻看到该患者近 3 个月的用药史卡片和症状折线图，辅助问诊。
+Role: fast capture and daily execution.
 
-### 2.3 桌面端 (Desktop: macOS / Windows)
+- Scan medicine packages and search the medicine knowledge base.
+- View medicine instructions as structured cards and Markdown sections.
+- Create reminders and check in medication usage.
+- Capture reports, symptoms, vitals, and medication response logs.
+- Receive safe, limited AI explanations and follow-up suggestions.
 
-- **定位**：深度的个人健康数据银行。
-- **职责**：
-  - **沉浸式分析**：手机屏幕无法做长序列数据分析。PC 端提供大屏仪表盘（Dashboard），对比分析长达五年的“血脂曲线”与“用药历史”。
-  - **档案归档拖拽**：支持跨桌面拖拽 PDF 报告、化验单图片进行批量智能解析与归纳，建立终身健康档案库。
+### Web portal
 
----
+Role: family care and time-limited sharing.
 
-## 3. 核心功能演进路线图
+- Family dashboard for medication adherence and key health signals.
+- Doctor sharing link with short-lived access token.
+- Readable health timeline and medication summary before consultations.
 
-### 阶段一：打透用药闭环（当前核心）
+### Desktop
 
-- 拍照识药 -> AI RAG 说明书翻译 -> 建立服药计划 -> 按时打卡。
-- **技术动作**：当前完善中，需引入本地数据库消除巨大 JSON 文件依赖。
-- 我们会在阶段一停留很久,要先保证阶段一显示效果,后端架构升级到nestjs,项目整体重构完成之后才会进入到下一阶段
+Role: long-range health data bank.
 
-### 阶段二：切入检验报告解读（近期突破口）
+- Large-screen medicine, symptom, report, and vitals analysis.
+- Drag-and-drop report import.
+- Multi-year health timeline and medicine-response comparison.
 
-- 用户拍摄血常规、尿常规、体检单单页。
-- AI 基于当前患者的病史，直接用大白话解释“偏高的甘油三酯”意味着什么，并且给出饮食调整和就诊建议。
+## 4. Core product stages
 
-### 阶段三：端云融合与 IoT 接入（护城河深水区）
+### Stage 1: Medication closed loop
 
-- “药品响应性”闭环：记录 `用药 -> 1小时后症状缓解程度`，形成个人体质标签。
-- 引入健康手环 API 数据，将客观体征（心率血氧）与主观用药进行联合图表分析。
+Goal: make the medicine experience strong enough before broad health expansion.
 
----
+- Search and scan medicine.
+- Show database-backed medicine detail.
+- Render long instructions with Markdown.
+- Create medication plans and reminders.
+- Record check-ins and response logs.
+- Replace old AI detail generation with authoritative detail + optional plain-language explanation.
 
-## 4. 技术底层设计与依赖推荐
+Technology focus:
 
-### 4.1 Flutter 端层面的架构调整
+- Finish Flutter Phase 0 project foundation.
+- Add minimal integration smoke tests.
+- Build the backend knowledge platform around PostgreSQL.
+- Keep massive source datasets outside the Flutter app and outside Git.
 
-为了支撑全终端和海量离线需求，需要引入以下能力：
+### Stage 2: Medicine safety and personalization
 
-1. **响应式 UI (Responsive UI) 基建**
-   - **推荐依赖**: `responsive_builder` 或自带的 `LayoutBuilder`。
-   - **设计**: 将目前的页面抽离为 `Widget`。手机端使用 `BottomNavigationBar`，当屏幕宽度 `> 800px` 时，自动转化为左侧边栏 (NavigationRail) 或拉宽的分屏双块布局。
-2. **端侧结构化数据存储 (Local First)**
-   - **推荐依赖**: `isar` 或 `sqflite`。
-   - **设计**: 放弃加载 52MB JSON。把海量药品数据、用户的长线健康记录封装在本地数据库。`isar` 是针对 Flutter 高度优化的 NoSQL 库，支持超高速全文检索，非常适合跨端的本地搜索。
-3. **安全与隐私保护**
-   - **推荐依赖**: `flutter_secure_storage`。
-   - **设计**: 医疗隐私最敏感，Token、私钥必须基于平台 Keychain/Keystore 保存。
-4. **端侧轻量智能 (Edge AI - 选做拔高)**
-   - **推荐依赖**: `google_mlkit_text_recognition`。
-   - **设计**: 实现无网环境下的基础文本提取，保护隐私，不上云也能提取文字。
+Goal: turn medicine records into a personal safety layer.
 
-### 4.2 后端（Node.js / NestJS 规划）
+- Cross-check current medicines, allergies, special population flags, and DrugBank enrichment.
+- Summarize possible interaction or caution signals.
+- Ask follow-up questions instead of giving diagnoses.
+- Generate doctor-ready Markdown summaries.
 
-1. **多端鉴权体系**：支持微信扫码（绑定老年人设备）、OAuth 2.0，以及面向医生 Web 看板的临时临时凭证 (Temporary Access Token)。
-2. **大模型中台架构**：
-   - 目前在 `backend/src/ai`，需增加 Prompt 管理器：专门针对“体检报告解析”、“儿科用药风险”、“慢性病饮食建议”设立独立的系统级提示词编排模块。
+### Stage 3: Report interpretation and health timeline
 
----
+Goal: expand from medicine to personal health records.
 
-## 5. 竞赛路演核心话术库 (Pitch Scripts)
+- OCR and parse lab/physical-exam reports.
+- Track abnormal metrics over time.
+- Explain metrics in plain language with source boundaries.
+- Link reports, symptoms, medicines, and vitals into a timeline.
 
-这套话术可直接用于答辩PPT的提词器和问答环节。
+### Stage 4: Family and clinician collaboration
 
-### 🔥 一句话介绍 (Elevator Pitch)
+Goal: make health data shareable without losing privacy control.
 
-> "各位评委好，Luminous 不只是一个吃药闹钟，它是基于大语言模型与多端架构（Flutter）打造的下一代**个人与家庭全域健康智慧守护舱**。"
+- Family care dashboard.
+- Temporary doctor access.
+- Audit logs for viewed or shared data.
+- Share summaries rather than raw private data by default.
 
-### 💥 痛点直击 (Pain Points)
+## 5. Knowledge and AI principles
 
-> "当前数字医疗体系存在严重的‘数据孤岛’和‘认知鸿沟’：
->
-> 1. **认知鸿沟**：药盒上的‘神经痛’患者不懂；化验单上的‘↑ ⬇’箭头患者看不明白。
-> 2. **执行断点**：打工人和学生生活节奏快，一忙就忘吃药，事后无记录，复诊靠回忆。
-> 3. **家庭孤岛**：父母在老家乱吃药、吃错药，身在大城市的儿女完全不知情。"
+Authoritative sources:
 
-### 💡 解决方案体系 (Solution)
+- Chinese medicine product and instruction detail comes from PostgreSQL tables imported from the xlsx.
+- Scientific enrichment comes from DrugBank-derived tables and reviewed mappings.
+- User context comes from user-owned health records in PostgreSQL.
 
-> "Luminous 发挥全终端协同优势提供降维解决方案：
->
-> - **手机端**：随时随地拍照识药、拍报告单。利用拥有 16 万条权威药品库的 AI RAG 系统，让专业医学术语‘说人话’，变成清晰的图文建议与打卡闹钟。
-> - **Web/桌面端**：打破信息壁垒，提供家庭互联看板。儿女在网页端只需一眼，就能监控老家父母是否按时服药；去医院时，授权临时链接，秒级向医生复现过去一年的数字健康时间轴。"
+AI is allowed to:
 
-### 🏰 我们的护城河 / 为什么是我们 (Moat & Competitive Advantage)
+- Explain database sections in simpler language.
+- Summarize a selected medicine or user timeline.
+- Compare medicines and user context with explicit uncertainty.
+- Generate Markdown checklists and consultation summaries.
+- Interpret reports with guardrails and disclaimer text.
 
-> 1. **严守合规底线**：市面上的 AI 老想着‘代替医生诊断’，那是高风险的。Luminous **不诊断、分开药**，我们只做精准的‘说明书翻译官’与‘行动监督者’。
-> 2. **数据资产沉淀**：竞争对手只提供单次查询，Luminous 提供闭环数据。我们通过高频打卡记录，未来将能提供针对每一个体独一无二的‘真实世界医疗数据 (RWD)’。
-> 3. **低成本极速跨端**：依托自主研发的 Flutter 框架底座，我们仅用一套代码库即可向微信小程序、Windows、macOS 和 Web 并行输出，技术杠杆率极高。"
+AI is not allowed to:
 
-### ❓ 评委常见刁钻问题 QA (Q&A Defense)
+- Invent dosage, contraindications, or interactions when structured data exists.
+- Diagnose diseases.
+- Recommend prescription changes without telling the user to consult a clinician.
+- Hide uncertainty or omit source context.
 
-- **Q: 你们和市面上那些智慧医疗 App（微医/平安健康）有什么区别？**
-  - A: "传统医疗平台是重医疗服务（挂号、买药、问诊网络）。我们是轻量级的个人健康资产管理。他们赚的是医院和流转的钱，我们提供的是高频的本地工具和个人数据的专属权，是互补关系而非竞争关系。"
-- **Q: 万一 AI 解读错误导致医疗事故怎么办？**
-  - A: "我们通过三层防护解决。第一：底层强制挂载 16 万条国家标准的结构化药品库进行校验（RAG）；第二：Prompt 中强制限制模型不可给出医疗诊断；第三：UI 全流程显著位置带有‘请遵医嘱，勿替代诊断’的强制免责声明。我们是翻译工具，不是医生替代品。"
+## 6. Markdown direction
 
-下面是原文:
+Markdown becomes the default long-text display format:
 
-你说得太对了！如果仅仅局限于“吃药闹钟”或者“查药工具”，确实浪费了 **Flutter 真正的跨平台协同能力**，也把项目的商业想象力做小了。
+- Medicine instruction sections should support Markdown rendering.
+- AI responses should be Markdown by default.
+- Backend should return structured sections plus generated Markdown.
+- Flutter should render Markdown consistently and keep safety disclaimers visible.
 
-如果我们将目标放大，把 **Luminous** 定义为覆盖全终端的**“全生命周期智慧健康管家（Personal Health Copilot）”**，整个项目的维度将得到质的飞跃。
+This replaces the current pattern of hand-written text segmentation and complex regular expressions.
 
-结合 Flutter 的特性和未来的广阔市场，我为你重新梳理一套**“降维打击”级别的发展蓝图与备赛规划**：
+## 7. Backend direction
 
----
+Target backend:
 
-### 一、 释放 Flutter 优势：构建“多端协同”的健康生态
+- NestJS framework.
+- PostgreSQL primary database.
+- Prisma schema, migrations, and import scripts.
+- Redis for verification codes, cooldowns, short-lived cache, and selected AI result cache.
+- Passport JWT strategy for protected routes.
+- LangChain/OpenAI-compatible gateway for AI calls.
 
-Flutter 的灵魂是“一套代码，多端运行”。我们要利用这一点，打造一个**各司其职、端云协同**的健康生态闭环：
+The backend migration is tracked in `docs/backend-nestjs-pgsql-migration-plan.md`.
 
-#### 1. 移动端 (Mobile App)：**“敏捷的数据采集终端与执行者”**
+## 8. Competition and pitch framing
 
-- **核心使命**：便携、随时随地、传感器交互。
-- **功能进化**：
-  - **一键采集**：除了拍药盒，还能**拍体检报告、拍化验单**（利用现有 AI 能力做 OCR 结构化提取）。
-  - **智能穿戴接入**：未来利用移动端蓝牙，接入智能手表/血压计，采集心率、血氧、血压等动态体征数据。
-  - **日常打卡**：用药打卡、情绪记录、疼痛指数记录。
+One-sentence pitch:
 
-#### 2. Web 网页端 (Web Portal)：**“零门槛的家庭关怀/轻问诊看板”**
+> Luminous is a cross-device personal health copilot that turns authoritative medicine knowledge and personal health records into safe, readable, actionable health management.
 
-- **核心使命**：共享、跨越数字鸿沟、即开即用。
-- **功能进化**：
-  - **家庭互联看板**：子女在办公室打开浏览器，就能看到异地父母今天的用药状态、本周血压趋势。一旦父母漏服或体征异常，Web 端直接弹窗预警。
-  - **给医生的“分享链接”**：去医院看病时，不再需要带一堆破旧的病历本。生成一个 24 小时有效的 Web 链接或者二维码给医生，医生扫码能在网页上看到你过去三个月的用药史和体征波动图，辅助医生快速诊断。
+Problem:
 
-#### 3. 桌面端 (PC/Mac Desktop)：**“深度的个人健康数据银行”**
+- Medicine labels and health reports are hard to understand.
+- Personal health records are scattered across apps, papers, hospitals, and family conversations.
+- Medication adherence and real-world response are rarely recorded.
+- AI health products are risky if they try to replace clinicians.
 
-- **核心使命**：沉浸式分析、大排版、时间轴管理。
-- **功能进化**：
-  - **长序列健康复盘**：手机屏幕太小，不适合看复杂的折线图。PC 端可以展示长达一年的“用药-体征-症状”拉通对比分析（比如：吃了某种降压药后，这一周的血压折线图是否平稳）。
-  - **结构化病历管理**：支持用户用拖拽的方式将历年的 PDF/图片体检报告丢进去，系统自动归档并提取关键指标（如：胆固醇、尿酸历史对比曲线）。变成用户的“终身电子病历库”。
+Solution:
 
----
+- Authoritative drug knowledge base for medicine facts.
+- Markdown explanations for readable details.
+- AI copilot for explanation, summary, safety prompts, and health planning.
+- Cross-device Flutter experience for capture, analysis, and sharing.
 
-### 二、 核心切入点：从“用药”升维到“健康全量管理”
+Moat:
 
-基于现有的 RAG（检索增强生成）和大语言模型能力，功能发展可以向这几个方向横向拓展：
+- Structured Chinese medicine product knowledge plus DrugBank enrichment.
+- Longitudinal personal response data.
+- Clear safety boundary: not diagnosis, not prescription replacement.
+- Cross-terminal execution from mobile to web to desktop.
 
-1. **AI 医疗报告解读（破圈痛点）**
-   - **痛点**：普通人看体检报告/血常规报告，只懂看“箭头（⬆/⬇）”，不知道背后代表的心血管风险或代谢风险。
-   - **功能**：原有的“懂药”升级为“懂报告”。上传化验单，AI 结合用户的基础病史，用大白话解释每一项指标异常的关联性，并给出“该看什么科”、“饮食该注意什么”的建议。
+## 9. Immediate execution focus
 
-2. **从“单一用药”到“药食同源与体征干预”**
-   - **现状**：提示你要吃“二甲双胍”。
-   - **升级**：系统检测到你今天吃了降糖药，同时推送一条饮食建议：“今日服用降糖类药物，您的 AI 助手建议您午餐避开高升糖指数食物，并建议在饭后步行20分钟。昨日同一时间您的血糖波动较大，请注意。”
+Do not jump directly into broad product expansion.
 
-3. **症状闭环跟踪（Cause and Effect）**
-   - 原本的复盘只是“我吃了药”。变成：**“由于（偏头痛）->吃了（布洛芬）->1小时后（痛感从8降到2）”**。
-   - 这将形成极具价值的**个人真实世界响应数据 (RWD)**，真正实现个性化医疗的基础。
+Current order:
 
----
-
-### 三、 备赛与路演的“降维打击”新话术
-
-如果是参加大赛，你可以用这套宏大的叙事来拔高项目的格局（建议重新命名为类似 **Luminous：全域智慧健康守护舱** 等更大气的名字）。
-
-- **一句话介绍 (Elevator Pitch)**：
-  “Luminous 不只是一个吃药闹钟，它是基于大模型与跨端技术打造的**下一代个人与家庭健康数据中枢**。”
-
-- **直击痛点 (Problem)**：
-  “当前医疗体系是碎片的。病历散落在各个医院，报告是一张张难懂的纸，用药只是没人监督的盲区。你的健康数据不属于你自己，你在面对医生时常常一问三不知。”
-
-- **解决方案 (Solution)**：
-  “利用 Flutter 技术栈，Luminous 打造了‘采、存、看、管’全覆盖生态。
-  用手机随时随地**拍报告、拍药盒**；用电脑端管理**终身健康时间轴**；用 Web 端实现跨地域的**医患信息共享与家庭守护**。
-  结合本地知识库与 AI RAG 技术，我们将晦涩的医学术语转化为普通人的健康执行指南。”
-
-- **商业/社会价值 (Value)**：
-  “对个人，它是无所不知的健康管家；对家庭，它是连接异地父母健康的纽带；对社会，它是从‘被动治病’向‘主动健康管理’转型的基础设施，顺应国家《健康中国》数字化倡议！”
-
----
-
-### 四、 如何在当前代码基础上演进？
-
-既然你看得这么长远，那么当前的代码可以通过以下技术路径平滑演进：
-
-1. **Flutter 响应式改造 (Responsive UI)**
-   - **开发行动**：在现有的 pages 体系下，引入 `LayoutBuilder` 或是类似 `responsive_builder` 的方案。
-   - 让现有的“小屏幕”逻辑自动适应 Web 和 PC 端的大宽屏（例如：手机端是底部导航栏，PC端自动变成侧边栏；手机端卡片是列表堆叠，PC端变成瀑布流或分屏视图）。
-2. **多端编译配置**
-   - **开发行动**：启用当前的 web、windows、macos 目录目录（我看到你项目里已经有了这些文件夹），在本地测试 `flutter run -d chrome` 或 `flutter run -d windows`，调通并跑通目前的功能。
-3. **增加“报告解读”能力**
-   - **开发行动**：复用现有的 “OCR + 后端 AI 提词器 (Prompt)” 链路。后台新建一个 `ReportAnalysisPrompt`，前端新增一个“拍照报告”按钮。这是从“用药”跨接到“大健康”成本最低、效果最惊艳的一步。
-
-你能把眼光放大到全终端和健康助手，这是一个**非常具有决赛潜力**的方向。如果需要，我可以帮你设计**响应式（手机+电脑）的架构调整方案**，或者帮你一起构思**解读体检报告的后端大语言模型 Prompt**。你想先从哪里突破？
+1. Finish Flutter Phase 0 foundation.
+2. Add minimal smoke tests.
+3. Define backend contract tests.
+4. Build PostgreSQL/Prisma import path for the new medicine knowledge source.
+5. Add Markdown rendering to medicine detail and AI output surfaces.
+6. Reposition AI detail into copilot workflows.

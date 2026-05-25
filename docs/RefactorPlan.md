@@ -1,6 +1,6 @@
 # Luminous Optimization and Nest Migration Plan
 
-Last updated: 2026-05-24
+Last updated: 2026-05-25
 
 ## Goal
 
@@ -8,8 +8,9 @@ Luminous is already functional, and the current checks pass. The next work shoul
 
 1. Remove demo behavior from real user flows.
 2. Make user data ownership and auth boundaries explicit.
-3. Reduce heavy client-side work, especially the offline medicine database.
-4. Prepare the backend for a NestJS + PostgreSQL migration without breaking the current Flutter app.
+3. Replace weak medicine data foundations with a server-side knowledge platform.
+4. Introduce Markdown as the standard long-text display path for medicine details and AI output.
+5. Prepare the backend for a NestJS + PostgreSQL + Prisma + Redis + Passport migration without breaking the current Flutter app.
 
 This plan is intentionally incremental. Each phase should leave the app runnable and covered by targeted checks.
 
@@ -45,13 +46,22 @@ Important current architecture notes:
 - AI calls are already centralized under `backend/src/ai`, with LangChain-compatible helper contracts.
 - The API envelope is unified as `{ code, msg, result }`.
 - The frontend still sends `userId` in several user-scoped requests.
+- `lib/assets/data.json` is only a tiny development fixture. It is not the future medicine knowledge source.
+- New external knowledge sources exist outside Git: `D:\DrugDataBase\FullDrugDetail.xlsx` and `D:\DrugDataBase`.
 
 Target backend end-state for this plan:
 
 - Framework: NestJS.
 - Primary data store: PostgreSQL.
-- Optional Redis: keep only where short-lived cache, verification code storage, or AI/text cache materially helps.
+- Data access and import tooling: Prisma, with raw SQL allowed for search ranking/import cases Prisma cannot express cleanly.
+- Auth guards: Passport with JWT strategy.
+- Redis: keep for verification codes, cooldowns, short-lived cache, and selected AI result cache.
 - MongoDB and MySQL are migration sources to retire, not long-term dependencies to preserve.
+- Medicine facts come from PostgreSQL-backed knowledge tables, not AI-generated text.
+
+Detailed knowledge/data direction:
+
+- `docs/knowledge-data-platform-plan.md` is the source of truth for the new xlsx + DrugBank data platform, Markdown strategy, and AI responsibility split.
 
 ## Phase 0: Structure Baseline and File Decomposition
 
@@ -296,7 +306,7 @@ Acceptance:
 #### Deferred package decisions
 
 - Keep `dio` and the current `DioRequest` wrapper during Phase 0. `retrofit` and `retrofit_generator` can wait until the NestJS/PostgreSQL API shape is stable and endpoint count justifies generated clients.
-- Do not continue growing AI text segmentation with complex regular expressions. Prefer backend structured JSON; if the UI contract is Markdown-like, evaluate a Markdown renderer such as `flutter_markdown` in a later UI slice.
+- Do not continue growing AI text segmentation with complex regular expressions. The new knowledge-platform direction is backend structured sections plus Markdown output; add a renderer such as `flutter_markdown` in the dedicated Markdown UI slice.
 - Do not add a large form library for auth validation. Keep phone, code, and password rules centralized in `AuthValidators`; email validation can use a small validator package later if the benefit becomes clear.
 
 ## Phase 1: Product Trust and Real Data
@@ -377,32 +387,40 @@ Acceptance:
 - Frontend user-scoped APIs no longer depend on locally supplied `userId`.
 - Contract docs match route behavior.
 
-## Phase 3: Offline Medicine Search Performance
+## Phase 3: Medicine Knowledge Platform and Markdown Detail
 
 Problem:
 
-- The full medicine source data has been moved out of the app repository and backed up externally.
-- `lib/assets/data.json` is now a tiny two-row development sample so local search can keep working without bundling the full source dataset.
-- `LocalMedicineStore` still loads and decodes the JSON asset, then scans it linearly, so this is only acceptable for the temporary sample dataset.
+- The old medicine foundation is too weak for the Personal Health Copilot vision.
+- The full xlsx and DrugBank datasets are far beyond what Flutter should bundle or scan locally.
+- `LocalMedicineStore` still loads and decodes the tiny JSON fixture, which is acceptable only for development fallback.
+- Long medicine text and AI text are still displayed through custom UI/string segmentation instead of Markdown.
 
 Preferred direction:
 
-- Replace the JSON fallback search with a prebuilt local SQLite database using FTS.
+- Build a backend PostgreSQL medicine knowledge platform from the external xlsx and DrugBank sources.
+- Keep Flutter clients thin: they query backend APIs and render structured sections/Markdown.
+- Use local Flutter storage only for user-owned offline data or small cached snapshots, not the full knowledge base.
 
 Tasks:
 
-- Add a build/import script that converts the medicine source data into a compact SQLite asset.
-- Move local search to SQLite queries instead of full JSON decode.
-- Keep the same `MedicineSearchResult` contract.
-- Load the local database lazily and off the startup path.
+- Follow the data architecture in `docs/knowledge-data-platform-plan.md`.
+- Add PostgreSQL/Prisma staging tables and import scripts for `D:\DrugDataBase\FullDrugDetail.xlsx`.
+- Stream DrugBank XML/CSV into backend staging tables; never load the full XML into memory.
+- Normalize medicine product, instruction section, identifier, category, search document, and DrugBank enrichment tables.
+- Keep the existing medicine search/detail API compatible while adding richer structured sections and `detailMarkdown`.
+- Add Flutter Markdown rendering for medicine detail and AI/copilot outputs.
+- Replace AI-generated generic medicine detail with database-backed detail and optional grounded explanation.
 
 Acceptance:
 
-- The app no longer bundles the full medicine JSON source.
-- Offline search still supports product name, approval number, manufacturer, holder, drug code, and serial number.
-- Add tests for local search query behavior.
+- Full source datasets remain outside Git and outside Flutter assets.
+- xlsx source row count, imported staging row count, and normalized target count are reported and explainable.
+- Medicine search supports product name, brand, approval number, manufacturer, barcode, and national drug code.
+- Medicine detail returns structured sections and Markdown without breaking old Flutter clients during the transition.
+- AI outputs and medicine detail can render Markdown safely in Flutter.
 
-## Phase 4: Backend Migration to NestJS + PostgreSQL
+## Phase 4: Backend Migration to NestJS + PostgreSQL + Prisma + Redis + Passport
 
 The backend migration should be a controlled architecture migration, not a product rewrite.
 
@@ -410,7 +428,7 @@ Detailed execution steps are tracked in `docs/backend-nestjs-pgsql-migration-pla
 
 ### 4.1 Migration strategy
 
-Move toward a single NestJS backend with PostgreSQL as the primary store.
+Move toward a single NestJS backend with PostgreSQL as the primary store and Prisma as the schema/import/migration tool.
 
 If parity verification requires it, a temporary parallel Nest runtime is acceptable during the cutover window, but it is not the desired steady state.
 
@@ -433,7 +451,12 @@ backend/
     my-medicines/
     scan-records/
     ai/
+    knowledge/
+    copilot/
+    reports/
+    safety/
     db/
+    prisma/
 ```
 
 Key compatibility rules:
@@ -442,35 +465,44 @@ Key compatibility rules:
 - Preserve the response envelope `{ code, msg, result }`.
 - Preserve existing JWT token semantics until Flutter no longer depends on them.
 - Reuse the current AI helper contracts where possible.
+- Use Passport JWT strategy for protected routes.
 - Replace MongoDB + MySQL data ownership with PostgreSQL-backed modules instead of reintroducing dual persistence in the new architecture.
+- Keep Redis limited to short-lived state and cache.
+- Keep Prisma as the primary data access layer; use raw SQL for Chinese search ranking and import-heavy paths when needed.
 
 ### 4.2 Suggested Nest module mapping
 
-- `auth`: login, register, refresh, user profile, verification code delivery.
-- `medicines`: search, detail, AI detail, AI safety, scan recognition.
+- `auth`: login, register, refresh, user profile, verification code delivery, Passport strategies/guards.
+- `medicines`: search, database-backed detail, Markdown sections, scan recognition.
+- `knowledge`: source metadata, xlsx/DrugBank import status, source mapping, enrichment lookup.
 - `my-medicines`: user medicine collection.
 - `reminders`: reminder plans and today reminders.
 - `scan-records`: scan history create/list.
-- `ai`: LangChain gateway, prompt builders, text cache.
+- `ai`: LangChain gateway, prompt builders, parser, text cache.
+- `copilot`: grounded explanation, medicine safety review, report summaries, doctor/family share summaries.
+- `reports`: report upload/OCR/structured metrics, later health-report interpretation.
+- `safety`: deterministic and AI-assisted interaction/risk checks.
 - `db`: PostgreSQL access layer and optional Redis providers.
 - `common`: response envelope, error mapping, auth guard, validation pipes.
 
 ### 4.3 Migration phases
 
-1. Define the target PostgreSQL schema that replaces current MongoDB user data and MySQL medicine tables.
+1. Define the target PostgreSQL schema for user data, medicine knowledge, DrugBank enrichment, and source metadata.
 2. Scaffold the NestJS application entry and move shared config/env parsing into Nest config providers.
-3. Add PostgreSQL data access, migration scripts, and seed/import tooling; wire Redis only for clearly justified short-lived cache flows.
-4. Move the AI module first because it is already centralized and testable.
-5. Move medicine public routes and decide whether medicine data lands fully in PostgreSQL or is refreshed into PostgreSQL from an external upstream source.
-6. Move auth, verification-code delivery, and JWT guard.
-7. Move user-scoped routes after Phase 2 auth rules are already tested.
-8. Run Express and Nest parity tests before switching deployment, then retire MongoDB/MySQL runtime dependencies.
+3. Add Prisma, PostgreSQL migrations, and import script scaffolding; wire Redis only for clearly justified short-lived flows.
+4. Freeze current Express API contracts and add parity tests.
+5. Move public medicine search/detail first, backed by PostgreSQL knowledge tables and Markdown sections.
+6. Move AI into grounded copilot services instead of preserving generic AI detail as a long-term feature.
+7. Move auth, verification-code delivery, Passport JWT guard, and users.
+8. Move user-scoped routes after Phase 2 auth rules are already tested.
+9. Run Express and Nest parity tests before switching deployment, then retire MongoDB/MySQL runtime dependencies.
 
 Acceptance:
 
 - Flutter does not need route changes during the migration.
 - Express tests have equivalent Nest tests before a route is switched.
 - PostgreSQL becomes the primary persisted source for migrated modules.
+- Prisma migrations and import scripts can rebuild the knowledge tables from external sources.
 - Redis remains optional and limited to cache/code scenarios rather than becoming a second primary database.
 - Docker and deployment docs clearly state which backend entrypoint is active during the cutover window.
 

@@ -21,6 +21,8 @@ Notes:
 - `code = "1"` 表示业务成功。
 - `code != "1"` 表示业务失败，`msg` 提供错误信息。
 - 业务失败常见为 HTTP 200 + `code != "1"`；框架或中间件错误可能返回 4xx/5xx。
+- NestJS 迁移期间仍保持此 envelope；后续新增的药品知识库字段会优先向后兼容。
+- 新药品长文本和 AI/copilot 输出默认面向 Markdown 渲染，事实字段仍以结构化 JSON 为准。
 
 ## 2. Authentication
 
@@ -275,6 +277,34 @@ or
 
 Success `result`: 单个药品对象（字段同搜索结果条目）。
 
+Planned enriched `result` after knowledge-platform migration:
+
+```json
+{
+  "id": "medicine-product-id",
+  "productName": "药品名称",
+  "approvalNo": "国药准字...",
+  "manufacturer": "生产厂家",
+  "packageSpec": "包装规格",
+  "barcode": "条形码",
+  "nationalDrugCode": "药品本位码",
+  "sections": [
+    {
+      "key": "dosage",
+      "title": "用法用量",
+      "content": "结构化原文..."
+    }
+  ],
+  "detailMarkdown": "## 用法用量\n\n结构化原文..."
+}
+```
+
+Compatibility notes:
+
+- 旧字段在迁移窗口内继续保留。
+- `sections` 是事实来源，`detailMarkdown` 是展示层产物。
+- Markdown 不应包含未转义 HTML。
+
 Failure examples:
 
 - `msg: "drugCode 或 approvalNo 不能为空"`
@@ -283,6 +313,12 @@ Failure examples:
 ### 4.3 AI Detail
 
 - `POST /api/medicines/ai-detail`
+
+Status:
+
+- Compatibility endpoint. The long-term direction is to retire generic AI-generated medicine detail.
+- Medicine facts should come from database-backed `detail` sections and `detailMarkdown`.
+- Future AI output should move to grounded copilot explanation endpoints.
 
 Request body:
 
@@ -296,9 +332,15 @@ Success `result`:
 
 ```json
 {
-  "text": "AI 解读文本..."
+  "text": "AI 解读文本...",
+  "markdown": "## 通俗解释\n\n..."
 }
 ```
+
+Planned response rule:
+
+- `markdown` becomes the preferred display field.
+- AI must explain based on selected medicine sections and include disclaimer/source context.
 
 Failure examples:
 
@@ -339,9 +381,15 @@ Success `result`:
 
 ```json
 {
-  "text": "AI 安全分析文本..."
+  "text": "AI 安全分析文本...",
+  "markdown": "## 安全提示\n\n..."
 }
 ```
+
+Planned response rule:
+
+- `markdown` becomes the preferred display field.
+- Safety review should combine deterministic database checks, user context, and AI explanation. AI must not invent contraindications or diagnose.
 
 Failure examples:
 
