@@ -117,7 +117,7 @@ class MedicineItem {
 }
 
 /// 药品搜索接口的分页结果。
-@JsonSerializable(createFactory: false)
+@JsonSerializable(createFactory: false, createToJson: false)
 class MedicineSearchResult {
   /// 当前页返回的药品列表。
   final List<MedicineItem> items;

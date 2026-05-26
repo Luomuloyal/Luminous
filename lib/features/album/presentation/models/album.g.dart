@@ -6,5 +6,7 @@ part of 'album.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-Map<String, dynamic> _$IdResultToJson(IdResult instance) =>
-    <String, dynamic>{'id': instance.id};
+Map<String, dynamic> _$IdResultToJson(IdResult instance) => <String, dynamic>{
+  'id': instance.id,
+  'hasId': instance.hasId,
+};

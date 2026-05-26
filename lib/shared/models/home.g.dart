@@ -15,7 +15,3 @@ Map<String, dynamic> _$ReminderItemToJson(ReminderItem instance) =>
       'dosage': instance.dosage,
       'done': instance.done,
     };
-
-Map<String, dynamic> _$TodayRemindersResultToJson(
-  TodayRemindersResult instance,
-) => <String, dynamic>{'date': instance.date, 'items': instance.items};

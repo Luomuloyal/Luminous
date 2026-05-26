@@ -147,7 +147,7 @@ class HomeCheckInRecordData {
   });
 }
 
-@JsonSerializable(createFactory: false)
+@JsonSerializable(createFactory: false, createToJson: false)
 class TodayRemindersResult {
   /// 数据对应的日期（yyyy-MM-dd）。
   final String date;

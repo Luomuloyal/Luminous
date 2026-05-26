@@ -1,9 +1,14 @@
+import 'package:json_annotation/json_annotation.dart';
+
 import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/shared/models/medicine.dart';
+
+part 'browse_history.g.dart';
 
 /// 本地浏览记录条目。
 ///
 /// 记录最近查看过的药品详情，用于“我的 > 浏览记录”页面展示与再次打开。
+@JsonSerializable(createFactory: false)
 class BrowseHistoryEntry {
   const BrowseHistoryEntry({
     required this.identityKey,
@@ -62,19 +67,7 @@ class BrowseHistoryEntry {
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'identityKey': identityKey,
-      'productName': productName,
-      'dosageForm': dosageForm,
-      'specification': specification,
-      'manufacturer': manufacturer,
-      'marketingAuthorizationHolder': marketingAuthorizationHolder,
-      'drugCode': drugCode,
-      'approvalNo': approvalNo,
-      'viewedAtMillis': viewedAtMillis,
-    };
-  }
+  Map<String, dynamic> toJson() => _$BrowseHistoryEntryToJson(this);
 
   bool get hasIdentity => identityKey.isNotEmpty;
 

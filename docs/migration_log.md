@@ -227,3 +227,40 @@ lib/
 - `flutter analyze`：No issues。
 - `flutter test`：**118/118 通过**（原 77 + Step 12-13 新增 41 个模型 test，加上 8 个回归修复 = 全绿）。
 - `integration_test/app_smoke_test.dart`：需要移动设备/模拟器，当前环境无可用设备（Windows 桌面构建因 C++ debug CRT 链接器错误阻塞，Web 不支持 Flutter integration_test 运行器），测试逻辑就绪。
+
+### Step 13（收尾）：JSON 生成迁移第二批 (2026-06-02)
+
+盘点 `lib/features/` 下 6 个尚未迁移的 model 文件，实际需要 JSON 迁移的仅 2 个（其余为纯 UI 展示模型或 DB row mapper）：
+
+- `search.dart` — `SearchResultItemData`：纯 UI 模型，无 fromJson/toJson → 跳过
+- `drug_models.dart` — `DrugQuickEntry` / `DrugMedicineCardViewModel`：纯 UI + DB mapper → 跳过
+- `mine.dart` — `MineQuickActionData`：纯 UI 模型 → 跳过
+- `selected_scan_image.dart` — `SelectedScanImage`：Uint8List 内存模型 → 跳过
+
+**实际迁移 2 文件、4 类：**
+
+| 文件 | 类 | 操作 |
+|------|-----|------|
+| `reminder.dart` | `ReminderMedicineRef` | 加 `@JsonSerializable`，替换 `toJson` 为生成 |
+| `reminder.dart` | `ReminderPlan` | 加 `@JsonSerializable`，替换 `toJson` 为生成（保留复杂 `fromJson`） |
+| `reminder.dart` | `ReminderListResult` | 加 `@JsonSerializable`，补手写 `toJson`（嵌套列表需逐元素 `.toJson()`） |
+| `browse_history.dart` | `BrowseHistoryEntry` | 加 `@JsonSerializable`，替换 `toJson` 为生成 |
+
+**build_runner 修复：**
+
+- `MedicineSearchResult`、`TodayRemindersResult`、`ReminderListResult` 添加 `createToJson: false`，消除手动 `toJson` 导致的 3 个 `unused_element` warning。
+- `MyMedicineRecord` 补充 `toJson() => _$MyMedicineRecordToJson(this)`，消除第 4 个 warning，同时为 `MyMedicineListResult` 提供嵌套序列化支持。
+
+**新增测试：**
+
+- `test/features/reminders/presentation/models/reminder_test.dart`（16 tests）：
+  `ReminderMedicineRef` fromJson 边界 + round-trip；
+  `ReminderPlan` fromJson/`_id` fallback/legacy字段/medicines推导/hasId/displayTitle；
+  `ReminderListResult` fromJson 边界 + round-trip。
+- `test/features/mine/presentation/models/browse_history_test.dart`（17 tests）：
+  `BrowseHistoryEntry` fromJson 边界 + round-trip + display getters + `fromMedicineItem`/`toMedicineItem` 往返。
+
+**验证结果**
+
+- `flutter analyze`：No issues found。
+- `flutter test`：**151/151 通过**（原 118 + 新增 33）。

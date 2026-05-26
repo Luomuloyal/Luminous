@@ -1,6 +1,11 @@
+import 'package:json_annotation/json_annotation.dart';
+
 import 'package:luminous/utils/app_i18n_text.dart';
 
+part 'reminder.g.dart';
+
 /// 提醒中绑定的单个药品引用。
+@JsonSerializable(createFactory: false)
 class ReminderMedicineRef {
   final String drugCode;
   final String approvalNo;
@@ -20,13 +25,7 @@ class ReminderMedicineRef {
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'drugCode': drugCode,
-      'approvalNo': approvalNo,
-      'productName': productName,
-    };
-  }
+  Map<String, dynamic> toJson() => _$ReminderMedicineRefToJson(this);
 }
 
 /// 用药提醒计划对象。
@@ -34,6 +33,7 @@ class ReminderMedicineRef {
 /// 该对象既用于：
 /// - 后端接口的序列化/反序列化；
 /// - 本地 SQLite 缓存（reminders 表）。
+@JsonSerializable(createFactory: false)
 class ReminderPlan {
   /// 提醒计划 id（后端可能返回 `id` 或 `_id`）。
   final String id;
@@ -133,27 +133,7 @@ class ReminderPlan {
     );
   }
 
-  /// 序列化为 JSON Map，用于接口上报或本地持久化。
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'userId': userId,
-      'time': time,
-      'drugCode': drugCode,
-      'approvalNo': approvalNo,
-      'productName': productName,
-      'medicines': medicines
-          .map((item) => item.toJson())
-          .toList(growable: false),
-      'dosage': dosage,
-      'subtitle': subtitle,
-      'enabled': enabled,
-      'repeatRule': repeatRule,
-      'method': method,
-      'startDate': startDate,
-      'endDate': endDate,
-    };
-  }
+  Map<String, dynamic> toJson() => _$ReminderPlanToJson(this);
 
   /// 是否有有效 id。
   ///
@@ -233,6 +213,7 @@ String _composeProductName(List<ReminderMedicineRef> medicines) {
 }
 
 /// 提醒计划列表接口返回模型。
+@JsonSerializable(createFactory: false, createToJson: false)
 class ReminderListResult {
   /// 当前用户的提醒计划列表。
   final List<ReminderPlan> items;
@@ -254,4 +235,8 @@ class ReminderListResult {
         : <ReminderPlan>[];
     return ReminderListResult(items: items);
   }
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'items': items.map((e) => e.toJson()).toList(),
+      };
 }

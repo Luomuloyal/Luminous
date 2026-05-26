@@ -61,8 +61,9 @@ pnpm build
 - `collection`、`json_annotation`、`build_runner`、`json_serializable` 已加入依赖。
 - **JSON 生成迁移已完成**：15 个共享模型使用 `@JsonSerializable(createFactory: false)` + 手写 `fromJson`；嵌套容器 `toJson` 回归已修复。
 - 所有文件 ≤600 行。
-- `flutter test` **118/118 通过**；`flutter analyze` 零 issue。
+- `flutter test` **151/151 通过**；`flutter analyze` 零 issue。
 - `test/support/fake_sqflite_database.dart` 覆盖生产路径 WHERE / ORDER BY 模式。
+- **Step 13 JSON 生成迁移第二批已完成**：`reminder.dart` 3 类 + `browse_history.dart` 1 类；新增 33 个模型测试；全量 151 通过。
 
 当前还未完成：
 

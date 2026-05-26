@@ -19,15 +19,6 @@ Map<String, dynamic> _$MedicineItemToJson(MedicineItem instance) =>
       'drugCodeRemark': instance.drugCodeRemark,
     };
 
-Map<String, dynamic> _$MedicineSearchResultToJson(
-  MedicineSearchResult instance,
-) => <String, dynamic>{
-  'items': instance.items,
-  'total': instance.total,
-  'page': instance.page,
-  'pageSize': instance.pageSize,
-};
-
 Map<String, dynamic> _$MedicineAiDetailResultToJson(
   MedicineAiDetailResult instance,
 ) => <String, dynamic>{

@@ -1,27 +1,25 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'scan.dart';
+part of 'browse_history.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-Map<String, dynamic> _$ScanCandidateToJson(ScanCandidate instance) =>
+Map<String, dynamic> _$BrowseHistoryEntryToJson(BrowseHistoryEntry instance) =>
     <String, dynamic>{
-      'drugCode': instance.drugCode,
-      'approvalNo': instance.approvalNo,
+      'identityKey': instance.identityKey,
       'productName': instance.productName,
       'dosageForm': instance.dosageForm,
       'specification': instance.specification,
       'manufacturer': instance.manufacturer,
-      'score': instance.score,
+      'marketingAuthorizationHolder': instance.marketingAuthorizationHolder,
+      'drugCode': instance.drugCode,
+      'approvalNo': instance.approvalNo,
+      'viewedAtMillis': instance.viewedAtMillis,
       'hasIdentity': instance.hasIdentity,
-      'displayName': instance.displayName,
+      'displayTitle': instance.displayTitle,
       'displaySubtitle': instance.displaySubtitle,
-    };
-
-Map<String, dynamic> _$MedicineScanResultToJson(MedicineScanResult instance) =>
-    <String, dynamic>{
-      'candidates': instance.candidates,
-      'thumbBase64': instance.thumbBase64,
+      'displayTips': instance.displayTips,
+      'viewedAt': instance.viewedAt.toIso8601String(),
     };

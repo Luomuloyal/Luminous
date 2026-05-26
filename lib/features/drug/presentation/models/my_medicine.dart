@@ -74,6 +74,8 @@ class MyMedicineRecord {
     );
   }
 
+  Map<String, dynamic> toJson() => _$MyMedicineRecordToJson(this);
+
   /// 序列化为本地数据库行数据。
   Map<String, dynamic> toLocalMap() {
     return {
