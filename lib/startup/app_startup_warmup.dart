@@ -5,7 +5,9 @@ import 'package:flutter/widgets.dart';
 import 'package:luminous/core/local_storage/app_database.dart';
 import 'package:luminous/features/reminders/data/reminder_local_gateway.dart';
 import 'package:luminous/features/auth/data/session_sync_service.dart';
+import 'package:luminous/constants/global_constants.dart' as g;
 import 'package:luminous/core/local_storage/token_manager.dart';
+import 'package:luminous/features/auth/data/token_refresh_service.dart';
 import 'package:luminous/features/auth/providers/user_session_provider.dart';
 import 'package:luminous/core/providers/global_provider_container.dart';
 import 'package:luminous/utils/notification_service.dart';
@@ -63,6 +65,20 @@ class AppStartupWarmup {
     try {
       await Future<void>.delayed(const Duration(milliseconds: 40));
       await tokenManager.init();
+
+      // Initialise the global token refresh service.
+      // The Dio interceptor references this singleton to debounce 401s.
+      final service = TokenRefreshService(baseUrl: g.GlobalConstants.BASE_URL);
+      service.onSessionExpired(() {
+        try {
+          globalProviderContainer
+              .read(userSessionProvider.notifier)
+              .clear();
+        } catch (_) {
+          // Container may not be registered yet in edge cases.
+        }
+      });
+      tokenRefreshService = service;
     } catch (_) {
       // 预热失败时保持惰性初始化，不影响应用使用。
     }

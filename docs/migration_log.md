@@ -278,3 +278,32 @@ lib/
 
 - `flutter analyze`：No issues found。
 - `flutter test`：**158/158 通过**（151 + 新增 7）。
+
+### Step 15：安全 token 存储与会话过期 (2026-06-02)
+
+**架构变更：**
+
+- 新增 `SecureTokenStore` 抽象接口（`lib/core/local_storage/secure_token_store.dart`），定义 `read/write/delete/containsKey` 四个操作。
+- 新增 `FlutterSecureTokenStore`（`flutter_secure_storage` 实现，Android Keystore / iOS Keychain）。
+- 新增 `SharedPrefsTokenStore`（SharedPreferences fallback，供 Web/桌面/测试使用）。
+- 新增 `token_store_factory.dart` — `createPlatformTokenStore()` 平台自适应工厂：移动端用加密存储，Web/桌面 fallback 到 SharedPreferences；附带文档说明。
+- **改造 `TokenManager`**：构造函数接受可选 `SecureTokenStore`；`init()` 首次调用时自动从旧的 SharedPreferences 迁移 token 到安全存储（best-effort）；读写删除全部通过 `SecureTokenStore`；空字符串 setToken 自动删除 entry。对外接口不变（`getToken/setToken/deleteToken`）。
+- **新增 `TokenRefreshService`**（`lib/features/auth/data/token_refresh_service.dart`）：
+  - 封装 `/api/auth/refresh` 调用，使用独立 Dio 实例避免拦截器递归。
+  - **并发防抖**：`_pendingRefresh` Future 使同一时刻多个 401 共享一次 refresh HTTP 调用。
+  - 成功：持久化新 token；失败：清 token → 回调 `onSessionExpired` → 清 user session。
+  - Session 过期回调由 startup warmup 注册，调用 `userSessionProvider.notifier.clear()`。
+  - 构造函数支持注入 Dio 和 TokenManager，便于测试。
+- **重构 Dio 401 拦截器**（`dio_request.dart`）：原来 ~40 行内联 refresh 逻辑替换为 `tokenRefreshService?.refresh()` 调用 + retry 逻辑。
+- **Startup warmup**（`app_startup_warmup.dart`）：`_warmTokenStore()` 中初始化 `tokenRefreshService` 全局单例，注入 baseUrl 和 session 过期回调。
+- **依赖**：`pubspec.yaml` 新增 `flutter_secure_storage: ^9.2.4`。
+
+**新增测试：**
+
+- `test/core/local_storage/token_manager_test.dart`（9 tests）：in-memory fake store，覆盖 init/迁移、读写删、空值删除、跨读取一致性。
+- `test/features/auth/data/token_refresh_service_test.dart`（6 tests）：FakeAdapter Dio mock，覆盖刷新成功、无 refresh token、服务端错误、网络错误、并发防抖（3 并发→1 HTTP）、失败回调仅触发一次。
+
+**验证结果**
+
+- `flutter analyze`：No issues found。
+- `flutter test`：**173/173 通过**（158 + 新增 15）。

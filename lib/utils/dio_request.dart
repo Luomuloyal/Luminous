@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:luminous/constants/constants.dart';
 import 'package:luminous/core/local_storage/token_manager.dart';
+import 'package:luminous/features/auth/data/token_refresh_service.dart';
 import 'package:luminous/core/network/api_exception.dart';
 import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/utils/loading_utils.dart';
@@ -108,47 +109,20 @@ class DioRequest {
           // ===== 无感刷新 Token 逻辑 =====
           if (statusCode == 401 &&
               error.requestOptions.path != HttpConstants.REFRESH_TOKEN) {
-            final refreshToken = await tokenManager.getRefreshToken();
-            if (refreshToken.isNotEmpty) {
-              try {
-                // 使用全新 Dio 实例避免进入死循环拦截
-                final refreshDio = Dio(
-                  BaseOptions(baseUrl: GlobalConstants.BASE_URL),
-                );
-                final refreshRes = await refreshDio.post<dynamic>(
-                  HttpConstants.REFRESH_TOKEN,
-                  data: {'refreshToken': refreshToken},
-                );
-
-                if (refreshRes.statusCode == 200 && refreshRes.data != null) {
-                  final data = refreshRes.data;
-                  if (data is Map &&
-                      data['code']?.toString() ==
-                          GlobalConstants.SUCCESS_CODE) {
-                    final result = data['result'];
-                    final newAccessToken = result['accessToken'] as String;
-                    final newRefreshToken = result['refreshToken'] as String;
-
-                    // 持久化新的 Token
-                    await tokenManager.setToken(newAccessToken);
-                    await tokenManager.setRefreshToken(newRefreshToken);
-
-                    // 修改原请求的 Header
-                    final options = error.requestOptions;
-                    options.headers['Authorization'] = 'Bearer $newAccessToken';
-
-                    // 重新发起因为 401 被拒绝的请求
-                    final retryResponse = await _dio.fetch<dynamic>(options);
-                    return handler.resolve(retryResponse);
-                  }
+            final service = tokenRefreshService;
+            if (service != null) {
+              final refreshed = await service.refresh();
+              if (refreshed) {
+                final newAccessToken = await tokenManager.getToken();
+                if (newAccessToken.isNotEmpty) {
+                  final options = error.requestOptions;
+                  options.headers['Authorization'] =
+                      'Bearer $newAccessToken';
+                  final retryResponse =
+                      await _dio.fetch<dynamic>(options);
+                  return handler.resolve(retryResponse);
                 }
-              } catch (e) {
-                // 刷新失败（例如网络不通，或 Refresh Token 也已过期）
-                debugPrint('[DIO][REFRESH_ERR] $e');
               }
-
-              // 刷新失败后清空本地 token，后续请求会按未登录态处理。
-              await tokenManager.deleteToken();
             }
           }
           // ===============================
