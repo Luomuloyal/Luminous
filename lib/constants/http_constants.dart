@@ -4,15 +4,6 @@
 ///
 /// API 层统一引用这里的路径，避免在业务代码里散落硬编码接口字符串。
 class HttpConstants {
-  /// 旧 Express API 前缀。
-  static const String LEGACY_API_PREFIX = '/api';
-
-  /// Lucent API 前缀。
-  ///
-  /// 当前常量仍描述旧 Express 路径；迁移 Lucent 时应为 `/api/v1`
-  /// 建立新的 client/route 常量，避免两套协议混在同一个调用入口。
-  static const String LUCENT_API_V1_PREFIX = '/api/v1';
-
   /// 获取验证码接口。
   static const String SEND_CODE = '/api/auth/codes';
 

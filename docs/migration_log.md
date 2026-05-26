@@ -331,3 +331,44 @@ lib/
 - `token_refresh_service.dart`：`_doRefresh` 的 `catch (_)` 缩窄为 `on DioException catch (_)`，避免吞掉编程错误。
 - `dio_request.dart`：401 拦截器增加冷启动兜底——`tokenRefreshService` 为 null 时（warmup 失败场景）直接清空过期 token，避免挂死在 broken credential 状态。
 - `app_startup_warmup.dart`：移除 session 过期回调中的 try-catch，异常不再被静默吞没。
+
+### 遗留代码清理 (2026-06-02)
+
+全仓审计（不计旧版本兼容），发现并删除 6 项死代码：
+
+| 文件 | 原因 |
+|------|------|
+| `lib/core/network/network.dart` | 空 barrel，无任何引用 |
+| `lib/core/network/legacy_express_endpoints.dart` | 与 `HttpConstants` 完全重复，无引用 |
+| `lib/core/network/lucent_endpoints.dart` | 仅含 `health` 端点，从未使用 |
+| `lib/core/network/timeout_config.dart` | 从未被 import |
+| `lib/utils/gallery_saver.dart` | 全仓零引用，死代码 |
+| `lib/features/drug/presentation/controllers/` | 空目录 |
+
+确认已清理完毕的项目：
+- `lib/deprecated/` — 空目录（之前清理）
+- `lib/components/`, `lib/pages/`, `lib/stores/`, `lib/viewmodels/` — 全部不存在
+- GetX — `pubspec.yaml` 无依赖，`lib/` 和 `test/` 零引用
+- `global_provider_container.dart` — 保留（4 个非 widget 工具类仍在使用，需后续重构）
+
+### 常量与魔数清理 (2026-06-02)
+
+**删除的死常量：**
+
+| 来源 | 常量 | 原因 |
+|------|------|------|
+| `global_constants.dart` | `TOKEN_KEY`, `REFRESH_TOKEN_KEY` | TokenManager 自有一份私有 key，这两个零引用 |
+| `storage_keys.dart` | 整个文件（7 个常量） | 全仓零引用，重构中间产物 |
+| `http_constants.dart` | `LEGACY_API_PREFIX`, `LUCENT_API_V1_PREFIX` | 零引用，计划性常量 |
+
+**提取的魔数：**
+
+| 文件 | 原值 | 新常量 |
+|------|------|--------|
+| `medicine_api.dart:55-56` | `Duration(milliseconds: 1600)` × 2 | `_healthCheckTimeoutMs = 1600` |
+
+**保留的项：**
+
+- `GlobalConstants.SUCCESS_CODE` → `LEGACY_SUCCESS_CODE` 间接引用链保留 — 为 Lucent 迁移预留的合理设计提示
+- `backend/` 目录保留 — 仍在 `docker-compose.prod.yml` 中生产运行
+- 散落 `Color(0xFF...)` 字面量暂不统一 — 属于各 feature 独立样式，需设计决策

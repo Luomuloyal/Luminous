@@ -61,12 +61,6 @@ class GlobalConstants {
   /// `DioRequest` 静默改成双协议混用。
   static const String SUCCESS_CODE = LEGACY_SUCCESS_CODE;
 
-  /// 本地存储 AT 时使用的 key。
-  static const String TOKEN_KEY = 'luminous_access_token';
-
-  /// 本地存储 RT 时使用的 key。
-  static const String REFRESH_TOKEN_KEY = 'luminous_refresh_token';
-
   /// 本地存储用户信息时使用的 key。
   ///
   /// 用户会话持久化层会使用这个 key 保存登录用户信息。
