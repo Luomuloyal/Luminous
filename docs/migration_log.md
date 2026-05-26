@@ -368,3 +368,22 @@ home (Step 1), search (Step 2), drug (Step 3-4), reminders (Step 5), safety (Ste
 - `flutter analyze`：零 issue。`flutter test`：59/59 通过。
 
 **下一步：** Step 6 — 迁移 Reminder Edit 状态到 Riverpod。
+
+### 2026-05-26 — Step 6：迁移 Reminder Edit 状态（完成）
+
+- 新建 `lib/features/reminders/presentation/providers/reminder_edit_provider.dart`（235 行）：
+  - `ReminderEditState` 不可变状态模型（selectedMedicines、time、startDate、endDate、enabled、saving、isEdit）。
+  - `ReminderEditNotifier extends Notifier<ReminderEditState>` 替代旧 `ReminderEditController`。
+  - 表单业务逻辑（药品选择/删除、时间日期设置、保存+验证）全部迁入 notifier。
+  - `save()` 通过 `ReminderApi.upsert` + `myMedicineRepository.addMedicine` 同步药品关联。
+- `ReminderEditPage`：`StatefulWidget` + `GetBuilder` → `ConsumerStatefulWidget`。
+  - TextEditingController（subtitle/dosage）保留在 page 层。
+  - `initState` → `Future.microtask` 延迟 `initialize(initial)`。
+  - Toast/验证逻辑从 controller 迁移到 page 层。
+- 旧 `ReminderEditController` 迁入 `deprecated/getx/reminder_edit_controller.dart`（标记 @Deprecated）。
+- `controllers/reminder_edit_controller.dart` 变为兼容重新导出壳。
+- 更新 `test/reminder_edit_page_test.dart`：`Get.testMode`/`Get.reset` → `ProviderScope` + `UncontrolledProviderScope`。
+- `reminders.dart` barrel 新增 provider 导出。
+- `flutter analyze`：零 error。`flutter test`：59/59 通过。
+
+**下一步：** Step 7 — 迁移 Safety + Scan 状态到 Riverpod。

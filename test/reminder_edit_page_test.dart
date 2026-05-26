@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get/get.dart';
 import 'package:luminous/features/reminders/presentation/reminders.dart';
 import 'package:luminous/features/reminders/presentation/models/reminder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,9 +11,6 @@ void main() {
   setUp(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues(<String, Object>{});
-    Get.testMode = true;
-    Get.reset();
-    await createTestProviderContainer();
   });
 
   testWidgets('editing dosage and extra content keeps linked identity', (
@@ -32,12 +29,19 @@ void main() {
       method: 'notification',
     );
 
-    await tester.pumpWidget(
-      const MaterialApp(home: ReminderEditPage(initial: initialPlan)),
-    );
+    final container = await createTestProviderContainer();
+    addTearDown(container.dispose);
 
-    expect(find.textContaining('Drug Code: drug-001'), findsOneWidget);
-    expect(find.textContaining('Approval No.: H123456'), findsOneWidget);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: ReminderEditPage(initial: initialPlan),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pumpAndSettle();
 
     expect(find.textContaining('Drug Code: drug-001'), findsOneWidget);
     expect(find.textContaining('Approval No.: H123456'), findsOneWidget);
