@@ -387,3 +387,31 @@ home (Step 1), search (Step 2), drug (Step 3-4), reminders (Step 5), safety (Ste
 - `flutter analyze`：零 error。`flutter test`：59/59 通过。
 
 **下一步：** Step 7 — 迁移 Safety + Scan 状态到 Riverpod。
+
+### 2026-05-26 — Step 7：迁移 Safety + Scan 状态（完成）
+
+- **Safety 模块：**
+  - 新建 `lib/features/safety/presentation/providers/safety_provider.dart`（166 行）：
+    - `SafetyState` 不可变状态模型（mode/medicineA/medicineB/loading/result）。
+    - `SafetyNotifier extends Notifier<SafetyState>`：管理 AI 安全查询、取消、模式切换、药品选择。
+    - `safetyQueryProvider` 注入 SafetyApi.query，测试可覆写。
+  - `safety.dart` barrel 新增 provider 导出，`hide QueryMedicineAiSafety` 解决 typedef 重复。
+  - `controllers/safety_assist_controller.dart` 变为兼容重新导出壳。
+  - 旧 `SafetyAssistController` 完整代码保留在 `deprecated/getx/safety_assist_controller.dart`。
+  - Safety page 暂未迁移（由 GetBuilder → ConsumerWidget 需较大改动），但 provider 基础设施就绪。
+
+- **Scan 模块：**
+  - 新建 `lib/features/scan/presentation/providers/medicine_scan_provider.dart`（181 行）：
+    - `ScanState` 不可变状态模型（photoBytes/scanning/savingToAlbum/scanResult/selectedIndex/lastError）。
+    - `ScanNotifier extends Notifier<ScanState>`：管理拍照识别、候选选择、软件相册保存。
+    - `scanAlbumStoreProvider` 注入 AlbumLocalStore。
+  - `scan.dart` barrel 新增 provider 导出。
+  - `controllers/medicine_scan_controller.dart` 变为兼容重新导出壳。
+  - 旧 `MedicineScanController` 完整代码保留在 `deprecated/getx/medicine_scan_controller.dart`。
+  - Scan page 暂未迁移（part-file 架构 + 多个支持文件需同步改动），但 provider 基础设施就绪。
+
+- **验证：**
+  - `flutter analyze`：零 error，4 warnings（均为 deprecated 代码中 unused import/element）。
+  - `flutter test`：59/59 通过。
+
+**下一步：** Step 8 — 对照 sequential plan 继续后续步。

@@ -13,6 +13,7 @@ import 'package:luminous/utils/toast_utils.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 export 'controllers/medicine_scan_controller.dart';
+export 'providers/medicine_scan_provider.dart';
 export 'models/selected_scan_image.dart';
 
 part 'pages/medicine_scan_page.dart';
