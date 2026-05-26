@@ -436,7 +436,18 @@ home (Step 1), search (Step 2), drug (Step 3-4), reminders (Step 5), safety (Ste
 
 **GetX 已从项目中完全抹除。**
 
-**下一步：** Step 11 — 扩展 integration smoke。
+**下一步：** Step 12 — JSON 生成迁移第一批。
+
+### 2026-05-26 — Step 11：扩展 integration smoke（完成）
+
+- 扩展现有 `integration_test/app_smoke_test.dart`：
+  - 保留原有启动 + 主导航 smoke（2 tests）。
+  - 新增各 tab 导航不崩溃测试（1 test，覆盖 Home/Drug/Reminders/Safety/Mine 5 个 tab）。
+  - 新增登录页表单渲染测试（1 test，验证 TextFormField + ElevatedButton 存在）。
+- **无法在本机执行**：Windows target 缺少 C++ 编译器（`No CMAKE_CXX_COMPILER`），Web target 不支持 `integration_test`。
+- 测试逻辑本身已写就，待有可用设备或桌面编译环境后可直接运行。
+
+**下一步：** Step 12 — JSON 生成迁移第一批。
 
 ### 2026-05-26 — Step 10：大文件二次拆分（首轮）
 
@@ -448,4 +459,4 @@ home (Step 1), search (Step 2), drug (Step 3-4), reminders (Step 5), safety (Ste
 - 其余计划文件（`search_prompt_slivers.dart` 494 行、`today_reminder_local_store.dart` 552 行等）均在不触发 600 行红线的范围内，可后续按职责继续拆，但不改动行为。
 - 验证：`dart analyze lib`：0 errors, 1 warning。`flutter test`：全量通过。
 
-**下一步：** Step 11 — 扩展 integration smoke。
+**下一步：** Step 12 — JSON 生成迁移第一批。
