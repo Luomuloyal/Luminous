@@ -350,3 +350,21 @@ home (Step 1), search (Step 2), drug (Step 3-4), reminders (Step 5), safety (Ste
 - `flutter analyze`：零 issue。`flutter test`：59/59 通过。
 
 **下一步：** Step 5 — 迁移 Reminders 列表状态到 Riverpod。
+
+### 2026-05-26 — Step 5：迁移 Reminders 列表状态（完成）
+
+- 新建 `lib/features/reminders/presentation/providers/reminder_list_provider.dart`（298 行）：
+  - `ReminderListState` 不可变状态模型（items、loading、syncing、error、busyReminderIds）。
+  - `ReminderListNotifier extends Notifier<ReminderListState>` 替代旧 `ReminderListController`。
+  - `reminderListGatewayProvider` 注入 ReminderLocalGateway。
+  - `load()`/`sync()`/`applySavedPlan()`/`toggleEnabled()`/`deletePlan()` 返回错误消息供 page 层 toast。
+  - busyReminderIds 防重复操作、revision stream 监听、排序。
+- `ReminderListPage`：`StatelessWidget` + `GetBuilder` → `ConsumerWidget`。
+  - Toast 显示逻辑从 controller 迁移到 page 层。
+  - `isLoggedIn` 改为 `ref.read(currentUserProvider)` 直接读取。
+- 旧 `ReminderListController` 迁入 `deprecated/getx/reminder_list_controller.dart`。
+- `controllers/reminder_list_controller.dart` 变为兼容重新导出壳。
+- `reminders.dart` barrel 新增 provider 导出。
+- `flutter analyze`：零 issue。`flutter test`：59/59 通过。
+
+**下一步：** Step 6 — 迁移 Reminder Edit 状态到 Riverpod。
