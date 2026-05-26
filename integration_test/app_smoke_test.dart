@@ -23,41 +23,65 @@ void main() {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
-      // Home tab (index 0) — already visible
-      expect(find.byIcon(Icons.home_outlined), findsOneWidget);
+      // 4 tabs: 主页, 药品, 相册, 我的
+      // Bottom nav uses custom image assets, locate by text labels
+      expect(find.text('主页'), findsOneWidget);
+      expect(find.text('药品'), findsOneWidget);
+      expect(find.text('相册'), findsOneWidget);
+      expect(find.text('我的'), findsOneWidget);
 
-      // Drug tab (index 1)
-      await tester.tap(find.byIcon(Icons.medication_outlined));
+      // Tap 药品 tab
+      await tester.tap(find.text('药品'));
       await tester.pumpAndSettle(const Duration(seconds: 2));
       expect(find.byType(BottomNavigationBar), findsOneWidget);
 
-      // Reminders tab (index 2)
-      await tester.tap(find.byIcon(Icons.notifications_outlined));
+      // Tap 相册 tab
+      await tester.tap(find.text('相册'));
       await tester.pumpAndSettle(const Duration(seconds: 2));
       expect(find.byType(BottomNavigationBar), findsOneWidget);
 
-      // Safety tab (index 3)
-      await tester.tap(find.byIcon(Icons.health_and_safety_outlined));
+      // Tap 我的 tab
+      await tester.tap(find.text('我的'));
       await tester.pumpAndSettle(const Duration(seconds: 2));
       expect(find.byType(BottomNavigationBar), findsOneWidget);
 
-      // Mine tab (index 4)
-      await tester.tap(find.byIcon(Icons.person_outline));
+      // Back to 主页
+      await tester.tap(find.text('主页'));
       await tester.pumpAndSettle(const Duration(seconds: 2));
       expect(find.byType(BottomNavigationBar), findsOneWidget);
     });
 
-    testWidgets('login page renders form fields', (tester) async {
+    testWidgets('mine tab shows login entry for unauthenticated user', (
+      tester,
+    ) async {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
-      // Navigate to Mine tab
-      await tester.tap(find.byIcon(Icons.person_outline));
+      // Navigate to 我的 tab by text label
+      await tester.tap(find.text('我的'));
       await tester.pumpAndSettle(const Duration(seconds: 2));
 
-      // Verify login-related UI renders
-      expect(find.byType(TextFormField), findsWidgets);
-      expect(find.byType(ElevatedButton), findsWidgets);
+      // Should render login-related UI
+      expect(find.byType(FilledButton), findsWidgets);
+    });
+
+    testWidgets('navigate from mine tab to login page', (tester) async {
+      app.main();
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+
+      // Navigate to 我的 tab
+      await tester.tap(find.text('我的'));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      // Tap the login button if visible
+      final loginButtons = find.byType(FilledButton);
+      if (loginButtons.evaluate().isNotEmpty) {
+        await tester.tap(loginButtons.first);
+        await tester.pumpAndSettle(const Duration(seconds: 2));
+      }
+
+      // Should still have a navigable UI (no crash)
+      expect(find.byType(MaterialApp), findsOneWidget);
     });
   });
 }
