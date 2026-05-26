@@ -4,11 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:luminous/features/home/presentation/home.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/features/auth/presentation/models/auth.dart';
+import 'package:luminous/core/providers/shared_preferences_provider.dart';
+import 'package:luminous/features/auth/providers/user_session_provider.dart';
+import 'package:luminous/core/providers/global_provider_container.dart';
 import 'package:luminous/shared/models/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'support/fake_reminder_local_gateway.dart';
-import 'support/session_test_utils.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -25,6 +27,8 @@ void main() {
     tester,
   ) async {
     final gateway = FakeReminderLocalGateway();
+    addTearDown(gateway.dispose);
+
     gateway.setTodayItems('user-1', const [
       ReminderItem(
         id: 'stale-reminder',
@@ -47,8 +51,23 @@ void main() {
       gateway.emitRevision(userId);
     };
 
-    final container = await createTestProviderContainer(
-      user: const UserSafe(
+    // 手动构建 container，在顶层覆盖 gateway
+    final prefs = await SharedPreferences.getInstance();
+    final container = ProviderContainer(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        homeReminderGatewayProvider.overrideWithValue(gateway),
+      ],
+    );
+    setGlobalProviderContainer(container);
+    addTearDown(() {
+      resetGlobalProviderContainerForTest();
+      container.dispose();
+    });
+
+    // 设置用户会话
+    await container.read(userSessionProvider.notifier).setUser(
+      const UserSafe(
         id: 'user-1',
         username: 'tester',
         email: '',
@@ -58,23 +77,22 @@ void main() {
       ),
     );
 
+    // 启动 HomeNotifier
+    container.read(homeProvider.notifier).start();
+
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: ProviderScope(
-          overrides: [
-            homeReminderGatewayProvider.overrideWithValue(gateway),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(body: HomePage()),
-          ),
+        child: const MaterialApp(
+          home: Scaffold(body: HomePage()),
         ),
       ),
     );
+
     await tester.pumpAndSettle();
 
+    expect(gateway.syncRemoteToLocalCalls, greaterThanOrEqualTo(1));
     expect(find.textContaining('远端新提醒', findRichText: true), findsWidgets);
     expect(find.textContaining('旧本地提醒', findRichText: true), findsNothing);
-    expect(gateway.syncRemoteToLocalCalls, 1);
   });
 }

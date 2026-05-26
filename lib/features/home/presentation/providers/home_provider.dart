@@ -117,7 +117,7 @@ class HomeNotifier extends Notifier<HomeState> {
   /// 启动初始数据加载。应在 widget 树构建完成后调用（如 initState + addPostFrameCallback）。
   void start() {
     if (state.isClosed) return;
-    refreshIfReady();
+    refreshIfReady(force: true);
   }
 
   // ── 本地化数据注入 ──

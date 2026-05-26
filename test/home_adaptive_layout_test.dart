@@ -11,11 +11,16 @@ import 'support/session_test_utils.dart';
 void main() {
   group('HomePage adaptive layout', () {
     late FakeReminderLocalGateway gateway;
+    late ProviderContainer container;
 
-    setUp(() {
+    setUp(() async {
       SharedPreferences.setMockInitialValues(<String, Object>{});
       gateway = FakeReminderLocalGateway();
-      addTearDown(gateway.dispose);
+      container = await createTestProviderContainer();
+      addTearDown(() async {
+        await gateway.dispose();
+        container.dispose();
+      });
     });
 
     Future<void> pumpHomeAt(
@@ -23,7 +28,6 @@ void main() {
       double width, {
       double height = 800,
     }) async {
-      final container = await createTestProviderContainer();
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,

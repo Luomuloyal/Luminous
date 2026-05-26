@@ -18,6 +18,18 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    // 使用 Future 延迟：在 build 完成后（而非期间）修改 provider。
+    Future(() {
+      if (mounted) {
+        _initLocalizedData();
+        ref.read(homeProvider.notifier).start();
+      }
+    });
+  }
+
   AppLocalizations? get _l10n => AppLocalizations.of(context);
 
   List<HomeFeatureItemData> get _entries {
@@ -71,6 +83,11 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // applyLocalizedData 在 initState 的 post-frame callback 中调用，
+    // 以避免在 widget 构建期间修改 provider。
+  }
+
+  void _initLocalizedData() {
     ref.read(homeProvider.notifier).applyLocalizedData(
       healthTips: _buildHomeHealthTips(_l10n),
       demoReminders: _buildHomeDemoReminders(_l10n),

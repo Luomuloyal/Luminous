@@ -211,7 +211,7 @@ lib/
 
 **`flutter analyze`：** 通过，零 issue（Flutter 3.44.0 / Dart 3.12.0）。
 
-**`flutter test`：** 因环境问题无法运行。`PROGRAMFILES(X86)` 环境变量缺失导致 `test_core` 包在 `_globalConfigPath` 处空指针崩溃。需在修复环境变量后重新验证。
+**`flutter test`：** 初始因 `PROGRAMFILES(X86)`/`HOME`/`APPDATA` 等环境变量缺失崩溃。修复后 59/59 全部通过。运行需设置：`HOME=%USERPROFILE% PROGRAMFILES=C:\Program Files "PROGRAMFILES(X86)=C:\Program Files (x86)" APPDATA=%USERPROFILE%\AppData\Roaming LOCALAPPDATA=%USERPROFILE%\AppData\Local`
 
 **活跃 GetX（lib/ 非 deprecated 目录，32 处匹配）：**
 
