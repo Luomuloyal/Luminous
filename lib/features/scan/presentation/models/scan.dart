@@ -1,10 +1,14 @@
+import 'package:json_annotation/json_annotation.dart';
 import 'package:luminous/utils/app_i18n_text.dart';
+
+part 'scan.g.dart';
 
 // 药品识别相关的数据模型。
 //
 // 该文件用于承载 `/medicine-scan` 接口返回的数据结构，并提供一些 UI 友好的展示字段。
 
 /// 药品识别候选结果对象。
+@JsonSerializable(createFactory: false)
 class ScanCandidate {
   /// 识别结果对应的药品编码（本位码）。
   final String drugCode;
@@ -73,9 +77,12 @@ class ScanCandidate {
         ? AppI18nText.pick(zh: '暂无规格信息', en: 'No specification info')
         : parts.join(' · ');
   }
+
+  Map<String, dynamic> toJson() => _$ScanCandidateToJson(this);
 }
 
 /// 药品识别接口返回的整体结果对象。
+@JsonSerializable(createFactory: false)
 class MedicineScanResult {
   /// 识别出的候选药品列表。
   final List<ScanCandidate> candidates;
@@ -107,6 +114,8 @@ class MedicineScanResult {
       thumbBase64: (json['thumbBase64'] ?? '').toString(),
     );
   }
+
+  Map<String, dynamic> toJson() => _$MedicineScanResultToJson(this);
 }
 
 /// 将动态类型数值安全解析为 `double`。
@@ -120,3 +129,4 @@ double _parseDouble(dynamic value) {
   }
   return double.tryParse((value ?? '').toString()) ?? 0.0;
 }
+

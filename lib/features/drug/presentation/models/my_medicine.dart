@@ -1,8 +1,13 @@
-/// “我的药品”记录对象。
+import 'package:json_annotation/json_annotation.dart';
+
+part 'my_medicine.g.dart';
+
+/// "我的药品"记录对象。
 ///
 /// 该对象同时用于：
 /// - 前端和后端之间的同步协议；
 /// - 本地 SQLite `my_medicines` 表的缓存落库。
+@JsonSerializable(createFactory: false)
 class MyMedicineRecord {
   /// 远端记录 id。
   final String id;
@@ -88,6 +93,7 @@ class MyMedicineRecord {
 }
 
 /// “我的药品”列表接口返回对象。
+@JsonSerializable(createFactory: false)
 class MyMedicineListResult {
   /// 记录列表。
   final List<MyMedicineRecord> items;
@@ -109,4 +115,6 @@ class MyMedicineListResult {
         : <MyMedicineRecord>[];
     return MyMedicineListResult(items: items);
   }
+
+  Map<String, dynamic> toJson() => _$MyMedicineListResultToJson(this);
 }

@@ -1,6 +1,10 @@
+import 'package:json_annotation/json_annotation.dart';
 import 'package:luminous/utils/app_i18n_text.dart';
 
+part 'album.g.dart';
+
 /// 相册（识别记录）相关的数据模型。
+@JsonSerializable(createFactory: false)
 class IdResult {
   /// 创建记录/资源后返回的 id。
   final String id;
@@ -15,6 +19,8 @@ class IdResult {
 
   /// 是否包含有效 id。
   bool get hasId => id.trim().isNotEmpty;
+
+  Map<String, dynamic> toJson() => _$IdResultToJson(this);
 }
 
 /// 相册页使用的本地记录模型。

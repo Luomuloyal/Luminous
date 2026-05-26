@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:json_annotation/json_annotation.dart';
+
+part 'home.g.dart';
 
 /// 首页模块相关的数据模型。
 ///
 /// 仅放置页面与组件共享的数据结构，不包含 Widget 实现。
+@JsonSerializable(createFactory: false)
 class ReminderItem {
   /// 提醒 id（后端可能返回 `id` 或 `_id`）。
   final String id;
@@ -43,9 +47,11 @@ class ReminderItem {
       done: json['done'] == true,
     );
   }
+
+  Map<String, dynamic> toJson() => _$ReminderItemToJson(this);
 }
 
-/// 首页“常用功能”入口数据。
+/// 首页"常用功能"入口数据。
 class HomeFeatureItemData {
   /// 功能入口的唯一 id（用于点击分发）。
   final String id;
@@ -62,7 +68,7 @@ class HomeFeatureItemData {
   /// 功能入口主题色。
   final Color color;
 
-  /// 创建一个“常用功能”入口数据对象。
+  /// 创建一个"常用功能"入口数据对象。
   const HomeFeatureItemData({
     required this.id,
     required this.title,
@@ -72,7 +78,7 @@ class HomeFeatureItemData {
   });
 }
 
-/// 首页“今日提醒”区域使用的展示数据。
+/// 首页"今日提醒"区域使用的展示数据。
 class HomeReminderItemData {
   /// 提醒左侧图标。
   final IconData icon;
@@ -99,7 +105,7 @@ class HomeReminderItemData {
   });
 }
 
-/// 首页“打卡记录”区域使用的展示数据。
+/// 首页"打卡记录"区域使用的展示数据。
 class HomeCheckInRecordData {
   /// 对应日期键（yyyy-MM-dd）。
   final String dateKey;
@@ -130,6 +136,7 @@ class HomeCheckInRecordData {
   });
 }
 
+@JsonSerializable(createFactory: false)
 class TodayRemindersResult {
   /// 数据对应的日期（yyyy-MM-dd）。
   final String date;
@@ -158,4 +165,6 @@ class TodayRemindersResult {
       items: items,
     );
   }
+
+  Map<String, dynamic> toJson() => _$TodayRemindersResultToJson(this);
 }

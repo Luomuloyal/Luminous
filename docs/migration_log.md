@@ -436,7 +436,24 @@ home (Step 1), search (Step 2), drug (Step 3-4), reminders (Step 5), safety (Ste
 
 **GetX 已从项目中完全抹除。**
 
-**下一步：** Step 12 — JSON 生成迁移第一批。
+**下一步：** Step 13 — JSON 生成迁移第二批。
+
+### 2026-05-26 — Step 12：JSON 生成迁移第一批（完成）
+
+- 迁移 `lib/shared/models/medicine.dart`：
+  - `MedicineItem`、`MedicineSearchResult`、`MedicineAiDetailResult` 添加 `@JsonSerializable(createFactory: false)`。
+  - 保留手写 `fromJson` 不变，新增生成的 `toJson`。
+  - 5 个 getter 加 `@JsonKey(includeToJson: false)` 排除。
+- 迁移 `lib/shared/models/home.dart`：
+  - `ReminderItem`、`TodayRemindersResult` 添加 `@JsonSerializable(createFactory: false)`。
+  - 保留手写 `fromJson`，新增生成的 `toJson`。
+- 运行 `dart run build_runner build`，生成 `medicine.g.dart` + `home.g.dart`。
+- 新增模型测试：
+  - `test/shared/models/medicine_model_test.dart`（6 tests）
+  - `test/shared/models/home_model_test.dart`（5 tests）
+- 验证：`dart analyze lib`：No issues。全量测试通过。
+
+**下一步：** Step 13 — JSON 生成迁移第二批。
 
 ### 2026-05-26 — Step 11：扩展 integration smoke（完成）
 
@@ -447,7 +464,24 @@ home (Step 1), search (Step 2), drug (Step 3-4), reminders (Step 5), safety (Ste
 - **无法在本机执行**：Windows target 缺少 C++ 编译器（`No CMAKE_CXX_COMPILER`），Web target 不支持 `integration_test`。
 - 测试逻辑本身已写就，待有可用设备或桌面编译环境后可直接运行。
 
-**下一步：** Step 12 — JSON 生成迁移第一批。
+**下一步：** Step 13 — JSON 生成迁移第二批。
+
+### 2026-05-26 — Step 12：JSON 生成迁移第一批（完成）
+
+- 迁移 `lib/shared/models/medicine.dart`：
+  - `MedicineItem`、`MedicineSearchResult`、`MedicineAiDetailResult` 添加 `@JsonSerializable(createFactory: false)`。
+  - 保留手写 `fromJson` 不变，新增生成的 `toJson`。
+  - 5 个 getter 加 `@JsonKey(includeToJson: false)` 排除。
+- 迁移 `lib/shared/models/home.dart`：
+  - `ReminderItem`、`TodayRemindersResult` 添加 `@JsonSerializable(createFactory: false)`。
+  - 保留手写 `fromJson`，新增生成的 `toJson`。
+- 运行 `dart run build_runner build`，生成 `medicine.g.dart` + `home.g.dart`。
+- 新增模型测试：
+  - `test/shared/models/medicine_model_test.dart`（6 tests）
+  - `test/shared/models/home_model_test.dart`（5 tests）
+- 验证：`dart analyze lib`：No issues。全量测试通过。
+
+**下一步：** Step 13 — JSON 生成迁移第二批。
 
 ### 2026-05-26 — Step 10：大文件二次拆分（首轮）
 
@@ -459,4 +493,21 @@ home (Step 1), search (Step 2), drug (Step 3-4), reminders (Step 5), safety (Ste
 - 其余计划文件（`search_prompt_slivers.dart` 494 行、`today_reminder_local_store.dart` 552 行等）均在不触发 600 行红线的范围内，可后续按职责继续拆，但不改动行为。
 - 验证：`dart analyze lib`：0 errors, 1 warning。`flutter test`：全量通过。
 
-**下一步：** Step 12 — JSON 生成迁移第一批。
+**下一步：** Step 13 — JSON 生成迁移第二批。
+
+### 2026-05-26 — Step 12：JSON 生成迁移第一批（完成）
+
+- 迁移 `lib/shared/models/medicine.dart`：
+  - `MedicineItem`、`MedicineSearchResult`、`MedicineAiDetailResult` 添加 `@JsonSerializable(createFactory: false)`。
+  - 保留手写 `fromJson` 不变，新增生成的 `toJson`。
+  - 5 个 getter 加 `@JsonKey(includeToJson: false)` 排除。
+- 迁移 `lib/shared/models/home.dart`：
+  - `ReminderItem`、`TodayRemindersResult` 添加 `@JsonSerializable(createFactory: false)`。
+  - 保留手写 `fromJson`，新增生成的 `toJson`。
+- 运行 `dart run build_runner build`，生成 `medicine.g.dart` + `home.g.dart`。
+- 新增模型测试：
+  - `test/shared/models/medicine_model_test.dart`（6 tests）
+  - `test/shared/models/home_model_test.dart`（5 tests）
+- 验证：`dart analyze lib`：No issues。全量测试通过。
+
+**下一步：** Step 13 — JSON 生成迁移第二批。

@@ -1,6 +1,10 @@
+import 'package:json_annotation/json_annotation.dart';
 import 'package:luminous/utils/app_i18n_text.dart';
 
+part 'medicine.g.dart';
+
 /// 药品搜索、详情、AI 解读共用的数据模型。
+@JsonSerializable(createFactory: false)
 class MedicineItem {
   /// 药品表中的序号字段。
   final String serialNo;
@@ -59,11 +63,13 @@ class MedicineItem {
   }
 
   /// 当前药品是否具备可用于详情查询的身份字段。
+  @JsonKey(includeToJson: false)
   bool get hasIdentity => drugCode.isNotEmpty || approvalNo.isNotEmpty;
 
   /// 页面展示时的主标题。
   ///
   /// 若产品名称为空，则回退为“未知药品”。
+  @JsonKey(includeToJson: false)
   String get displayName => productName.isEmpty
       ? AppI18nText.pick(zh: '未知药品', en: 'Unknown medicine')
       : productName;
@@ -71,6 +77,7 @@ class MedicineItem {
   /// 页面展示时的副标题。
   ///
   /// 由剂型和规格组合而成。
+  @JsonKey(includeToJson: false)
   String get displaySubtitle {
     final parts = <String>[
       if (dosageForm.isNotEmpty) dosageForm,
@@ -84,6 +91,7 @@ class MedicineItem {
   /// 页面展示时的补充提示信息。
   ///
   /// 优先使用生产厂家，其次使用上市许可持有人。
+  @JsonKey(includeToJson: false)
   String get displayTips {
     if (manufacturer.isNotEmpty) {
       return manufacturer;
@@ -97,15 +105,19 @@ class MedicineItem {
   /// 页面展示时的徽标文本。
   ///
   /// 优先展示剂型，没有剂型时回退为“药品”。
+  @JsonKey(includeToJson: false)
   String get displayBadge {
     if (dosageForm.isNotEmpty) {
       return dosageForm;
     }
     return AppI18nText.pick(zh: '药品', en: 'Medicine');
   }
+
+  Map<String, dynamic> toJson() => _$MedicineItemToJson(this);
 }
 
 /// 药品搜索接口的分页结果。
+@JsonSerializable(createFactory: false)
 class MedicineSearchResult {
   /// 当前页返回的药品列表。
   final List<MedicineItem> items;
@@ -149,7 +161,10 @@ class MedicineSearchResult {
   }
 
   /// 当前分页结果是否还有下一页数据可继续加载。
+  @JsonKey(includeToJson: false)
   bool get hasMore => page * pageSize < total;
+
+  Map<String, dynamic> toJson() => _$MedicineSearchResultToJson(this);
 }
 
 /// 安全解析分页大小。
@@ -165,6 +180,7 @@ int _parsePageSize(dynamic value, {required int fallback}) {
 }
 
 /// AI 药品详情解读结果。
+@JsonSerializable(createFactory: false)
 class MedicineAiDetailResult {
   /// AI 返回的纯文本解读内容。
   final String text;
@@ -197,9 +213,13 @@ class MedicineAiDetailResult {
   }
 
   /// AI 是否返回了有效文本。
+  @JsonKey(includeToJson: false)
   bool get hasText => text.trim().isNotEmpty;
 
+  @JsonKey(includeToJson: false)
   bool get isCached => source.trim().toLowerCase() == 'cache';
+
+  Map<String, dynamic> toJson() => _$MedicineAiDetailResultToJson(this);
 }
 
 DateTime? _parseAiTimestamp(dynamic value) {

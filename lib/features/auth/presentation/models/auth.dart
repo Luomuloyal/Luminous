@@ -1,4 +1,7 @@
+import 'package:json_annotation/json_annotation.dart';
 import 'package:luminous/utils/app_i18n_text.dart';
+
+part 'auth.g.dart';
 
 /// 认证模块相关的数据模型集合。
 ///
@@ -43,19 +46,20 @@ extension AuthLoginModeValue on AuthLoginMode {
       this == AuthLoginMode.password ? 'password' : 'code';
 }
 
+@JsonSerializable(createFactory: false)
 class CodeTicketResult {
-  /// 验证码发送记录 id（后端可能返回 `id` 或 `_id`）。
   final String id;
 
-  /// 创建一个验证码发送结果对象。
   const CodeTicketResult({required this.id});
 
-  /// 从后端 JSON 反序列化为 `CodeTicketResult`。
   factory CodeTicketResult.fromJson(Map<String, dynamic> json) {
     return CodeTicketResult(id: (json['id'] ?? json['_id'] ?? '').toString());
   }
+
+  Map<String, dynamic> toJson() => _$CodeTicketResultToJson(this);
 }
 
+@JsonSerializable(createFactory: false)
 class RegisterResult {
   /// 注册结果 id（后端可能返回 `id` 或 `_id`）。
   final String id;
@@ -81,14 +85,18 @@ class RegisterResult {
       refreshToken: (json['refreshToken'] ?? '').toString(),
     );
   }
+
+  Map<String, dynamic> toJson() => _$RegisterResultToJson(this);
 }
 
 /// 登录接口返回对象。
+@JsonSerializable(createFactory: false)
 class LoginResult {
   /// 登录后的用户信息。
   final UserSafe user;
 
   /// 登录后返回的访问令牌 (accessToken)。
+  @JsonKey(name: 'accessToken')
   final String token;
 
   /// 用于后续无感续签的 token。
@@ -116,6 +124,8 @@ class LoginResult {
       refreshToken: (json['refreshToken'] ?? '').toString(),
     );
   }
+
+  Map<String, dynamic> toJson() => _$LoginResultToJson(this);
 }
 
 /// 登录后前端使用的“安全用户对象”。
