@@ -6,7 +6,6 @@ import 'package:luminous/shared/widgets/soft_banner/soft_banner.dart';
 import 'package:luminous/shared/widgets/tinted_status_chip.dart';
 import 'package:luminous/core/theme/ornaments/ornament_provider.dart';
 import 'package:luminous/features/auth/providers/auth_service_provider.dart';
-import 'package:luminous/features/settings/presentation/pages/profile_settings_page.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/core/providers/locale_provider.dart';
 import 'package:luminous/core/providers/theme_provider.dart';

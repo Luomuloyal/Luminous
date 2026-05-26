@@ -33,7 +33,4 @@ class AppRoutes {
 
   /// 个人资料设置页。
   static const String profileSettings = '/profile-settings';
-
-  /// 法律文档页（用户协议/隐私政策）。
-  static const String legalDocuments = '/legal-documents';
 }

@@ -44,11 +44,7 @@ class SettingsPage extends ConsumerWidget {
                     l10n?.settingsProfileSubtitle ?? '完善头像、昵称、性别、生日和职业等个人资料',
                 enabled: true,
                 onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const ProfileSettingsPage(),
-                    ),
-                  );
+                  Navigator.of(context).pushNamed('/profile-settings');
                 },
               ),
               const SizedBox(height: 10),

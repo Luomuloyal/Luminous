@@ -4,12 +4,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:luminous/api/medicine_api.dart';
 import 'package:luminous/features/auth/providers/user_session_provider.dart';
+import 'package:luminous/core/providers/shared_preferences_provider.dart';
 import 'package:luminous/features/drug/data/local_medicine_store.dart';
 import 'package:luminous/features/drug/data/my_medicine_repository.dart';
 import 'package:luminous/features/search/presentation/models/search.dart';
 import 'package:luminous/shared/models/medicine.dart';
 import 'package:luminous/utils/message_utils.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 // ── Provider 注入 ──
 
@@ -188,7 +188,7 @@ class SearchNotifier extends Notifier<SearchState> {
   // ── 最近搜索 ──
 
   Future<void> _loadRecentKeywords() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = ref.read(sharedPreferencesProvider);
     final stored = prefs.getStringList(_storageKey);
     final sanitized = _sanitizeRecentKeywords(stored ?? const <String>[]);
     _hasPersistedRecentKeywords = stored != null;
@@ -500,7 +500,7 @@ class SearchNotifier extends Notifier<SearchState> {
   }
 
   Future<void> _persistRecentKeywords() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = ref.read(sharedPreferencesProvider);
     await prefs.setStringList(_storageKey, state.recentKeywords);
   }
 

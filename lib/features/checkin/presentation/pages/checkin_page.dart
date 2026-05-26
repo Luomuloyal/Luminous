@@ -151,6 +151,7 @@ class _CheckInContent extends ConsumerWidget {
     WidgetRef ref,
     ReminderItem item,
   ) async {
+    final l10n = AppLocalizations.of(context);
     if (item.done) {
       await _confirmAndMarkUndone(context, ref, item);
       return;
@@ -158,7 +159,10 @@ class _CheckInContent extends ConsumerWidget {
     final notifier = ref.read(checkinItemsProvider.notifier);
     await notifier.markDone(item);
     if (!context.mounted) return;
-    ToastUtils.instance.show(context, '已记录到当前设备');
+    ToastUtils.instance.show(
+      context,
+      l10n?.checkInMarkedDoneToast ?? 'Saved on this device',
+    );
   }
 
   Future<void> _confirmAndMarkUndone(
@@ -195,6 +199,9 @@ class _CheckInContent extends ConsumerWidget {
     final notifier = ref.read(checkinItemsProvider.notifier);
     await notifier.markUndone(item);
     if (!context.mounted) return;
-    ToastUtils.instance.show(context, '已改为未打卡');
+    ToastUtils.instance.show(
+      context,
+      l10n?.checkInMarkedUndoneToast ?? 'Marked as not checked in',
+    );
   }
 }

@@ -411,3 +411,29 @@ lib/
 - **导航**：多处 `Navigator.push(MaterialPageRoute(...))` 绕过 GoRouter — 影响 URL 同步和认证拦截
 - **路由**：`/profile-settings` 定义但未注册 GoRoute；`LegalDocumentsPage` 死代码（已拆为单独路由）
 - **SQL**：全部参数化查询，零注入风险 ✅
+
+### 国际化 + 安全审查 (2026-06-02)
+
+**修复 2 处硬编码 Toast（有现成 l10n key）：**
+
+| 文件 | 原来 | 改为 |
+|------|------|------|
+| `checkin_page.dart:161` | `'已记录到当前设备'` | `l10n?.checkInMarkedDoneToast` |
+| `checkin_page.dart:201` | `'已改为未打卡'` | `l10n?.checkInMarkedUndoneToast` |
+
+**安全审查通过项：**
+- 无硬编码 API key/secret ✅
+- `debugPrint` 全部在 `kDebugMode` 守卫下 ✅
+- 日志不泄露 token/密码/手机号 ✅
+- 全项目统一用 Dio（无裸 http）✅
+- 无深层链接注入风险 ✅
+
+**资源管理审查通过项：**
+- 6 个 `TextEditingController` + 1 个 `ScrollController` 全部在 `dispose()` 释放 ✅
+- 2 个 `StreamSubscription` 全部在 `ref.onDispose` 取消 ✅
+- 所有 `Timer` 有关联 cancel ✅
+
+**记录不修复（规模或风险不匹配）：**
+- `medicine_ai_card.dart` 多处硬编码中文 section headers / AI 说明 — 属于 AI 解析逻辑层，需设计级改造
+- `BASE_URL` 默认值 `https://devluo.com` 硬编码 — 可通过 `--dart-define` 覆盖
+- `ListView(children:)` 16 处 — 性能专项后续处理
