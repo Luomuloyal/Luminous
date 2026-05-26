@@ -58,15 +58,18 @@ class ScanCandidate {
   /// 当前候选是否具备“可用于后续详情查询”的身份字段。
   ///
   /// 只要 drugCode 或 approvalNo 任意一个非空即可。
+  @JsonKey(includeToJson: false)
   bool get hasIdentity =>
       drugCode.trim().isNotEmpty || approvalNo.trim().isNotEmpty;
 
   /// 页面展示用的候选标题（优先使用产品名称）。
+  @JsonKey(includeToJson: false)
   String get displayName => productName.trim().isEmpty
       ? AppI18nText.pick(zh: '未知药品', en: 'Unknown medicine')
       : productName.trim();
 
   /// 页面展示用的候选副标题（剂型 + 规格）。
+  @JsonKey(includeToJson: false)
   String get displaySubtitle {
     /// 用于拼接副标题的字段片段。
     final parts = <String>[

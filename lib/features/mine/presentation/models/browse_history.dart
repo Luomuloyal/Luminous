@@ -69,12 +69,15 @@ class BrowseHistoryEntry {
 
   Map<String, dynamic> toJson() => _$BrowseHistoryEntryToJson(this);
 
+  @JsonKey(includeToJson: false)
   bool get hasIdentity => identityKey.isNotEmpty;
 
+  @JsonKey(includeToJson: false)
   String get displayTitle => productName.isEmpty
       ? AppI18nText.pick(zh: '未知药品', en: 'Unknown medicine')
       : productName;
 
+  @JsonKey(includeToJson: false)
   String get displaySubtitle {
     final parts = <String>[
       if (dosageForm.isNotEmpty) dosageForm,
@@ -85,6 +88,7 @@ class BrowseHistoryEntry {
         : parts.join(' · ');
   }
 
+  @JsonKey(includeToJson: false)
   String get displayTips {
     if (manufacturer.isNotEmpty) {
       return manufacturer;
@@ -98,6 +102,7 @@ class BrowseHistoryEntry {
     return '';
   }
 
+  @JsonKey(includeToJson: false)
   DateTime get viewedAt => viewedAtMillis > 0
       ? DateTime.fromMillisecondsSinceEpoch(viewedAtMillis)
       : DateTime.fromMillisecondsSinceEpoch(0);

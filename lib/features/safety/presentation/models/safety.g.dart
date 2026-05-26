@@ -13,6 +13,4 @@ Map<String, dynamic> _$MedicineAiSafetyResultToJson(
   'source': instance.source,
   'cachedAt': instance.cachedAt?.toIso8601String(),
   'expiresAt': instance.expiresAt?.toIso8601String(),
-  'hasText': instance.hasText,
-  'isCached': instance.isCached,
 };

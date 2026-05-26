@@ -38,8 +38,10 @@ class MedicineAiSafetyResult {
   }
 
   /// 是否包含有效文本内容。
+  @JsonKey(includeToJson: false)
   bool get hasText => text.trim().isNotEmpty;
 
+  @JsonKey(includeToJson: false)
   bool get isCached => source.trim().toLowerCase() == 'cache';
 
   Map<String, dynamic> toJson() => _$MedicineAiSafetyResultToJson(this);

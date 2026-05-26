@@ -138,11 +138,13 @@ class ReminderPlan {
   /// 是否有有效 id。
   ///
   /// 在部分流程中可用它判断“这是新增还是更新”。
+  @JsonKey(includeToJson: false)
   bool get hasId => id.trim().isNotEmpty;
 
   /// 页面展示用的标题（时间 + 药品名）。
   ///
   /// 例如：`08:30 维生素D`。
+  @JsonKey(includeToJson: false)
   String get displayTitle {
     final t = time.trim();
     final name = productName.trim().isNotEmpty

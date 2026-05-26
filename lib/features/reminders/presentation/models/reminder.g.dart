@@ -30,6 +30,4 @@ Map<String, dynamic> _$ReminderPlanToJson(ReminderPlan instance) =>
       'method': instance.method,
       'startDate': instance.startDate,
       'endDate': instance.endDate,
-      'hasId': instance.hasId,
-      'displayTitle': instance.displayTitle,
     };

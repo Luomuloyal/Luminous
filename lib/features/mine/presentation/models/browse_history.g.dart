@@ -17,9 +17,4 @@ Map<String, dynamic> _$BrowseHistoryEntryToJson(BrowseHistoryEntry instance) =>
       'drugCode': instance.drugCode,
       'approvalNo': instance.approvalNo,
       'viewedAtMillis': instance.viewedAtMillis,
-      'hasIdentity': instance.hasIdentity,
-      'displayTitle': instance.displayTitle,
-      'displaySubtitle': instance.displaySubtitle,
-      'displayTips': instance.displayTips,
-      'viewedAt': instance.viewedAt.toIso8601String(),
     };

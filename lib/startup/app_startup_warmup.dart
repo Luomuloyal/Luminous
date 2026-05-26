@@ -70,13 +70,9 @@ class AppStartupWarmup {
       // The Dio interceptor references this singleton to debounce 401s.
       final service = TokenRefreshService(baseUrl: g.GlobalConstants.BASE_URL);
       service.onSessionExpired(() {
-        try {
-          globalProviderContainer
-              .read(userSessionProvider.notifier)
-              .clear();
-        } catch (_) {
-          // Container may not be registered yet in edge cases.
-        }
+        globalProviderContainer
+            .read(userSessionProvider.notifier)
+            .clear();
       });
       tokenRefreshService = service;
     } catch (_) {

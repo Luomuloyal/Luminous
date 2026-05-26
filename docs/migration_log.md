@@ -307,3 +307,27 @@ lib/
 
 - `flutter analyze`：No issues found。
 - `flutter test`：**173/173 通过**（158 + 新增 15）。
+
+### Code Review 修复 (2026-06-02)
+
+自动化审查发现以下问题并全部修复：
+
+**🔴 JSON 序列化泄漏（5 个文件）**
+
+`json_serializable` 生成的 `_$XxxToJson` 默认将**所有非静态 getter**（包括 computed getter）序列化到 JSON。已在 5 个模型的 11 个 computed getter 上添加 `@JsonKey(includeToJson: false)`：
+
+| 文件 | 类 | 受影响的 getter |
+|------|-----|----------------|
+| `browse_history.dart` | `BrowseHistoryEntry` | `hasIdentity`, `displayTitle`, `displaySubtitle`, `displayTips`, `viewedAt` |
+| `reminder.dart` | `ReminderPlan` | `hasId`, `displayTitle` |
+| `scan.dart` | `ScanCandidate` | `hasIdentity`, `displayName`, `displaySubtitle` |
+| `album.dart` | `IdResult` | `hasId` |
+| `safety.dart` | `MedicineAiSafetyResult` | `hasText`, `isCached` |
+
+这些 getter 包含 locale 依赖文本（`displayTitle`→`AppI18nText.pick`）或计算字段（`hasId`/`viewedAt`），序列化到 JSON 会污染存储/API payload。
+
+**🟠 防御性修复**
+
+- `token_refresh_service.dart`：`_doRefresh` 的 `catch (_)` 缩窄为 `on DioException catch (_)`，避免吞掉编程错误。
+- `dio_request.dart`：401 拦截器增加冷启动兜底——`tokenRefreshService` 为 null 时（warmup 失败场景）直接清空过期 token，避免挂死在 broken credential 状态。
+- `app_startup_warmup.dart`：移除 session 过期回调中的 try-catch，异常不再被静默吞没。

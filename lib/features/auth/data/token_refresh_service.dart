@@ -86,9 +86,9 @@ class TokenRefreshService {
           }
         }
       }
-    } catch (_) {
-      // Network error, invalid token, server 5xx → all treated as
-      // refresh failure triggering session expiry.
+    } on DioException catch (_) {
+      // Network error, timeout, server 5xx → all treated as refresh failure
+      // triggering session expiry. Non-Dio exceptions rethrow.
     }
 
     await _handleRefreshFailure();

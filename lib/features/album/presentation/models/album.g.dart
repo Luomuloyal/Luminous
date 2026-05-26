@@ -8,5 +8,4 @@ part of 'album.dart';
 
 Map<String, dynamic> _$IdResultToJson(IdResult instance) => <String, dynamic>{
   'id': instance.id,
-  'hasId': instance.hasId,
 };

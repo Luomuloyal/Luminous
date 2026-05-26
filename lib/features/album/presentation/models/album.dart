@@ -18,6 +18,7 @@ class IdResult {
   }
 
   /// 是否包含有效 id。
+  @JsonKey(includeToJson: false)
   bool get hasId => id.trim().isNotEmpty;
 
   Map<String, dynamic> toJson() => _$IdResultToJson(this);

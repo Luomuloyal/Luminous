@@ -15,9 +15,6 @@ Map<String, dynamic> _$ScanCandidateToJson(ScanCandidate instance) =>
       'specification': instance.specification,
       'manufacturer': instance.manufacturer,
       'score': instance.score,
-      'hasIdentity': instance.hasIdentity,
-      'displayName': instance.displayName,
-      'displaySubtitle': instance.displaySubtitle,
     };
 
 Map<String, dynamic> _$MedicineScanResultToJson(MedicineScanResult instance) =>

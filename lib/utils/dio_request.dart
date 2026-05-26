@@ -123,6 +123,11 @@ class DioRequest {
                   return handler.resolve(retryResponse);
                 }
               }
+            } else {
+              // Cold-start fallback: if the refresh service hasn't been
+              // initialised yet (e.g. warmup failed), clear stale tokens
+              // so the app doesn't hang with broken credentials.
+              await tokenManager.deleteToken();
             }
           }
           // ===============================
