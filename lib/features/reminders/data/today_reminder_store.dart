@@ -1,4 +1,5 @@
-part of 'today_reminder_local_store.dart';
+import 'package:luminous/shared/models/home.dart';
+import 'package:luminous/features/reminders/presentation/models/reminder.dart';
 
 abstract interface class TodayReminderStore {
   ({int start, int end, String dateKey}) todayRange();

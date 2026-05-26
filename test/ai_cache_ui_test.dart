@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:luminous/features/safety/presentation/safety.dart';
 import 'package:luminous/core/providers/global_provider_container.dart';
 import 'package:luminous/core/providers/shared_preferences_provider.dart';
-import 'package:luminous/features/safety/presentation/providers/safety_provider.dart';
 import 'package:luminous/features/drug/presentation/providers/medicine_detail_provider.dart';
 import 'package:luminous/utils/dio_request.dart';
 import 'package:luminous/features/auth/presentation/models/auth.dart';

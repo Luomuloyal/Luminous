@@ -138,376 +138,58 @@ lib/
 - 更新当前 Phase 0 进度 checkpoint：Settings、Main shell、Home、Search、Scan、Shared UI、Responsive shell、Drug、Reminders、Safety、Mine、Album、CheckIn、Login/Register 已迁入 `lib/features/` 或 `lib/shared/` 的目标结构；剩余 Phase 0 收口项主要是 Picker、Legal、Profile settings 等小页面岛、`stores/viewmodels` 后续归属决策、兼容导出壳清理，以及 shared layout 的内容宽度/侧栏/宽屏测试补齐。
 - 继续 shared 小切片：将 `AppCanvas` 与 `AppCanvasPageScaffold` 迁入 `lib/shared/widgets/app_canvas.dart`，旧 `lib/components/app_canvas.dart` 保留兼容导出，并把当前活跃引用切到 shared 路径。
 - 继续 shared 小切片：将 `SoftBanner` 拆入 `lib/shared/widgets/soft_banner/`，按 palette、card、ornaments 拆分为多个小文件，旧 `lib/components/soft_banner.dart` 保留兼容导出，并把当前活跃引用切到 shared 路径。
-- 继续 shared 小切片：将登录/注册共用的 auth UI 迁入 `lib/shared/widgets/auth/`，按 scaffold、cards、method switcher、legal、models 拆分，旧 `lib/components/auth.dart` 保留兼容导出，并把登录/注册页 import 切到 shared 路径。
-- 继续 shared 小切片：将 `AppSurface` 拆为 `lib/shared/widgets/app_surface/` 下的 surface card、section card、tint、ornament 辅助文件，保留 `app_surface.dart` 作为 shared 入口。
-- 继续 shared 小切片：将 banner/section ornament layout 定义按 primary/secondary 拆分，避免后续继续扩展时再次堆高单文件。
-- 完成 `MedicinePicker` 小页面岛迁移：新增 `lib/features/medicine_picker/presentation/`，迁移药品选择页和 controller，旧 `lib/pages/Picker/*` 保留兼容导出，并把 Home、Drug、Safety、Reminders 的 import 切到新入口。
-- 完成 `Legal` 小页面岛迁移：新增 `lib/features/legal/presentation/`，迁移用户协议和隐私政策页面，旧 `lib/pages/Legal/legal_documents.dart` 保留兼容导出，并把路由 import 切到新入口。
-- 完成 `Profile settings` 小页面岛迁移：将个人资料设置页和 controller 迁入 `lib/features/settings/presentation/`，旧 `lib/pages/Settings/profile_settings.dart` 与 controller 路径保留兼容导出。
-- 继续收口 Settings 文件体积：将 `theme_widgets.dart` 按 hero、display preferences、theme style card、ornament preview 拆分，原 600+ 行文件降至 300 行以内。
-- 继续收口 Safety 文件体积：将安全辅助页纯文案选择函数迁入 `support/safety_assist_text.dart`，使 `safety_assist_page.dart` 降至 600 行以内。
-- 清理 `lib/components/` 兼容导出壳：全仓确认 14 个旧壳（9 个 shared + 5 个 feature）均无外部引用后，移入 `lib/deprecated/` 废弃目录，删除空的 `lib/components/` 目录。`flutter analyze` 无问题。
-- 启动 `stores/` 与 `viewmodels/` 归属决策 Phase 0：已完成前三步——(1) `viewmodels/drug.dart` 兼容壳移入 `lib/deprecated/`；(2) 废弃 GetX 控制器 `user_controller.dart` 直接移入 deprecated，`locale_controller.dart` 和 `theme_controller.dart` 的 enum（`AppLocalePreference`、`AppThemeModePreference`、`AppThemeStyle`）分别提取到 `locale_provider.dart` 和 `theme_provider.dart` 后移入 deprecated，同步更新 `settings.dart` 和 `routes.dart` 的 import；(3) `stores/providers/` 下 3 个 Riverpod Provider（`shared_preferences_provider`、`locale_provider`、`theme_provider`）迁入 `lib/core/providers/`，全仓 13 处 import 同步更新。`flutter analyze` 通过。
-- 继续 `stores/` 归属决策第 4 步（核心基础设施）：`app_database.dart` 与 `token_manager.dart` 迁入 `lib/core/local_storage/`，旧路径保留兼容导出壳，更新 7 处外部引用。
-- 继续 `stores/` 归属决策第 5 步（特征级数据层）：逐个 feature 迁入 `data/` 子目录——`session_sync_service.dart` → `lib/features/auth/data/`；`album_asset_store.dart` + `album_local_store.dart` → `lib/features/album/data/`；`reminder_local_store.dart` + `reminder_local_gateway.dart` + `today_reminder_local_store.dart` → `lib/features/reminders/data/`；`browse_history_store.dart` → `lib/features/mine/data/`；`local_medicine_store.dart` + `my_medicine_repository.dart` → `lib/features/drug/data/`。所有旧路径保留兼容导出壳，全仓 30+ 处 import 同步更新。`flutter analyze` 通过。
-- 继续 `viewmodels/` 归属决策第 6 步（单 feature 数据模型）：9 个单 feature 模型迁入对应 `presentation/models/`——`album.dart` → album、`auth.dart` → auth、`browse_history.dart` → mine、`mine.dart` → mine、`my_medicine.dart` → drug、`reminder.dart` → reminders、`safety.dart` → safety、`scan.dart` → scan、`search.dart` → search。旧路径保留兼容导出壳，全仓 70+ 处 import 同步更新。
-- 继续 `viewmodels/` 归属决策第 7 步（跨 feature 共享模型）：`medicine.dart`（全仓 24 处引用）与 `home.dart`（12 处引用）因被多个 feature 共享，迁入 `lib/shared/models/`。旧路径保留兼容导出壳，全仓 36 处 import 同步更新。`flutter analyze` 通过。
-- 清理 `stores/` 与 `viewmodels/` 兼容导出壳：全仓确认 0 处残留引用后，`stores/` 11 个壳 + `viewmodels/` 11 个壳移入 `lib/deprecated/stores/` 与 `lib/deprecated/viewmodels/`，删除空的 `lib/stores/` 与 `lib/viewmodels/` 目录。同步整理 `lib/deprecated/` 为 `components/`、`getx/`、`stores/`、`viewmodels/` 四个子目录分类。`flutter analyze` 通过。
-- 清理 `lib/pages/` 旧目录：更新 2 个测试文件引用到新 feature 路径后，全仓确认 0 处残留引用，将 `pages/` 下 16 个子目录（36 个兼容壳 + Splash 废弃页）全部移入 `lib/deprecated/pages/`，删除空的 `lib/pages/` 目录。`flutter analyze` 通过。
-- 响应式补齐 Phase 0：(A) `AppCanvasPageScaffold` 新增 `maxContentWidth` 参数，支持在宽屏上居中约束内容宽度；(B) 新增 `lib/shared/layout/content_constraints.dart`，定义 `AppContentWidths` 辅助类（compact=null、medium=640、expanded=800、webExpanded=840）；(C) Home 页面接入 `LayoutBuilder` + `AppWindowClass` + `AppContentWidths`，compact 全宽、medium+ 居中约束，作为 feature 自适应页面参考模式；(D) 新增 `test/home_adaptive_layout_test.dart` 覆盖 393/768/1280 宽度下的布局行为和 `AppContentWidths` 单元测试。`flutter analyze` 通过。
-- 修复 `home_adaptive_layout_test.dart` 超时：补齐 `SharedPreferences` mock、Get test mode 和 fake gateway 释放，并把布局测试从 `pumpAndSettle` 改为有限帧推进，避免等待持续动画/异步刷新。
-- 拆分 `TodayReminderLocalStore`：将 store 契约和私有提醒元数据拆为 `today_reminder_store.dart` 与 `today_reminder_meta.dart`，主实现文件降至 600 行以内。
-- 资产收口：确认 `lib/assets/StandardCode_full.xlsx` 已被 Git 跟踪且未被代码引用，将其从索引剥离并加入 `.gitignore`；同时把 Flutter asset 声明从 `lib/assets/` 整目录改为显式白名单，避免本地 xlsx 被打入应用包。
-- 资产收口：全量 `data.json` 与 `StandardCode_full.xlsx` 已由用户备份到仓库外；项目内删除 xlsx，并将 `lib/assets/data.json` 替换为仅含 2 条药品数据的开发样例，保留离线搜索的轻量兜底能力。
-- 常量收口：将 `constants.dart` 拆为 `global_constants.dart`、`http_constants.dart`、`app_ui_constants.dart` 和 `app_release_info.dart`，保留 `constants.dart` 作为兼容 barrel。
-- 路由入口收口：`lib/routes/routes.dart` 实际承载 RootApp 与主题构建，已迁入 `lib/core/startup/root_app_widget.dart`，`main.dart` 改为从 core startup 引入，活跃代码不再保留 `lib/routes/`。
-- 记录 Phase 0 后续技术债优先级：先补最小 `integration_test` smoke，再单独开 `json_serializable`/`build_runner` 模型生成迁移；复杂不可变模型再评估 `freezed`/`freezed_annotation`，不和结构收口混做。
-- 在重构计划中补充包和落点：`json_annotation`、`build_runner`、`json_serializable`、可选 `freezed`/`freezed_annotation`；`integration_test`；`collection`；本地 SQLite 后续评估 `drift`/`drift_flutter`/`drift_dev`；并明确 `retrofit`、Markdown/AI 文本渲染和大表单库暂不进入 Phase 0。
-- 新增 [[knowledge-data-platform-plan]]，将 `D:\25080\Documents\VSCodeProject\Lumos\DrugDataBase\FullDrugDetail.xlsx`（204,844 条药品数据、29 列说明书/商品字段）和 `D:\25080\Documents\VSCodeProject\Lumos\DrugDataBase`（DrugBank XML/CSV/FASTA/SDF）定位为后端知识库导入源，不进入 Git、不打包到 Flutter。
-- 更新产品愿景与技术路线：[[Promise]] 从“AI RAG 说明书翻译”调整为“权威药品知识库 + Markdown 详情 + AI 健康副驾驶”，药品事实由 PostgreSQL 知识表提供，AI 主要负责解释、总结、安全提示、报告解读和健康计划。
-- 更新后端迁移文档：目标栈明确为 NestJS + PostgreSQL + Prisma + Redis + Passport，新增 `KnowledgeModule`、`SafetyModule`、`CopilotModule`、`ReportsModule`，并补充 xlsx/DrugBank staging、normalization、Markdown sections、`detailMarkdown` 和导入验收规则。
-- 更新 API/README/隐私文档：药品详情规划返回结构化 `sections` 与 `detailMarkdown`，AI 输出规划优先 Markdown；隐私政策补充健康记录、AI 上下文处理和限时分享边界。
-- 明确后端归属调整：`Lucent/` 作为 Luminous 的 Git submodule 和目标 NestJS 后端主线；`backend/` Express 降级为低优先级参考与当前 `https://devluo.com` 旧服务联调基线，不再作为新功能落点。
-- 更新目标数据源路径为 `D:\25080\Documents\VSCodeProject\Lumos\DrugDataBase`，其中 `FullDrugDetail.xlsx` 作为中文详情主源，DrugBank 文件作为英文科学增强源；中英映射和合并策略暂不定稿，先通过 Lucent/PostgreSQL staging 保持分层。
-- 调整 Lucent API envelope：默认采用 `{ code, message, data }`，分页等真实响应级信息才附加 `meta`；`requestId` 放 `X-Request-Id` 响应头并写入服务端日志，`timestamp` 默认只保留在服务端日志中。
-- 重新划分文档边界：Luminous 文档保留 Flutter/client 迁移和跨项目协调摘要；Lucent `docs/` 承接 API contract、数据源和后端迁移路线细节。
-- 初始化 Lucent NestJS 基线：启用 SWC build、环境文件约定、配置校验、`/api/v1/health`、request id header、全局 envelope/filter/interceptor，并在 Lucent docs 中补充环境与协议现状。
-- Flutter 小步收口：默认 API 地址和 legacy/Lucent 成功码语义集中到 `GlobalConstants`，移除 `AppI18nText` 对 `Get.locale` 的依赖，修复根组件对 `localeProvider` 状态的监听。
-- 新增 [[flutter-followup-improvement-plan]]，记录当前 GetX 残留、硬编码归属、Lucent client 切换和后续分步骤执行顺序。
 
-### 2026-05-25
+---
 
-- **网络层切片 1**：新增 `lib/core/network/`，放置 `ApiException`（从 `dio_request.dart` 迁出）、`timeout_config.dart`、`LucentApiClient`（解析 `{code,message,data,meta?}`）、`lucent_endpoints.dart`（`/api/v1/health`）和 barrel export `network.dart`。
-- `lib/utils/dio_request.dart`：删除 `ApiException` 类体，改为 `import` + `export` 从新位置；`DioRequest` / `ApiResult<T>` / `dioRequest` 单例零改动。
-- 旧 Express `{code,msg,result}` 只走 `DioRequest`，新 Lucent `{code,message,data,meta?}` 只走 `LucentApiClient`，两个 client 不交叉解析。
-- `flutter analyze` 零问题通过。
+## Phase 2: GetX → Riverpod 顺序迁移 (2026-05-26)
 
-- **main_shell GetX → Riverpod（切片 2）**：新建 `MainShellNotifier` + `MainShellState`（`providers/main_shell_provider.dart`），`MainPage` 从 `StatefulWidget` + `GetBuilder<MainController>` 转为 `ConsumerWidget`，`main_shell.dart` 移除 `package:get/get.dart` import。旧 `MainController` 移入 `lib/deprecated/getx/`，测试同步切到 Riverpod `ProviderContainer`。`flutter analyze` 零问题通过。
+### Step 0：建立本轮执行快照
+- Git 分支 `refactor`，工作区干净。`flutter analyze` 零 issue。
+- 活跃 GetX 引用：32 处；大文件扫描完成；环境变量修复。
 
-- **album GetX → Riverpod（切片 3）**：新建 `AlbumEntriesNotifier`（AsyncNotifier，`providers/album_provider.dart`），`build()` 中 `ref.watch(currentUserProvider)` 替代手动 `_userWorker` 监听；`AlbumPage` 从 `StatelessWidget` + `GetBuilder<AlbumController>` 转为 `ConsumerWidget`。旧 `AlbumController` 移入 `lib/deprecated/getx/`。`AlbumPageLayout` 等 widget 零改动。`flutter analyze` 零问题通过。
+### Step 1：迁移 Home 到 Riverpod
+- 新建 `home_provider.dart`（370→320 行）。`HomePage` → `ConsumerStatefulWidget`。
+- 关键修复：`Future.microtask` 延迟初始化；测试 `addPostFrameCallback` → `Future()`。
 
-- **Lucent client envelope 单元测试（切片 5）**：新增 `test/lucent_client_test.dart`（206 行，10 个测试），覆盖 `LucentPaginationMeta`、`LucentResponseMeta`、`LucentApiResult.isOk` 和 `parseLucentResponse` 的 success / error / paginated / missing code 分支。`lucent_client.dart` 新增 `@visibleForTesting parseLucentResponse()` 静态方法供测试使用。`flutter analyze` 零问题通过。
+### Step 2：迁移 Search 到 Riverpod
+- 新建 `search_provider.dart`（568→557 行）。`SearchPage` → `ConsumerStatefulWidget`。
+- 修复：`MedicineSearchExecutor` 歧义；support 文件兼容 getter。
 
-- **Step 2 硬编码常量收口（2026-05-25）**：UI token 建 `lib/shared/design_tokens/`（`AppRadius` / `AppTypography` / `AppShadow`），`root_app_widget.dart` ThemeData 层全部引用。存储 key 迁入 `lib/core/local_storage/storage_keys.dart`。旧 Express 端点迁入 `lib/core/network/legacy_express_endpoints.dart`。路由路径迁入 `lib/router/app_routes.dart`。`dart analyze` 零问题。
+### Step 3：迁移 Drug 列表
+- 新建 `drug_provider.dart`（156 行）。`DrugPage` → `ConsumerWidget`。
 
-- **root_app_widget 主题 spec 拆分（切片 4）**：新建 `lib/core/theme/app_theme_spec.dart`（169 行），迁入 `AppThemeSpec` 类、`themeSpecFor()`、`fallbackThemeSpec`、`safeThemeSpec()` 和 6 个颜色辅助函数。`root_app_widget.dart` 从 469 行降至 301 行。`flutter analyze` 零问题通过。
+### Step 4：迁移 Medicine Detail
+- 新建 `medicine_detail_provider.dart`（233→223 行）。管理 AI 详情 + CancelToken。
 
-- **Step 3 GetX 迁移第一批完成（2026-05-25）**：
-  - `checkin`：`CheckInNotifier`（AsyncNotifier），`CheckInPage` 转为 `ConsumerWidget`，旧 `CheckInController` → deprecated。
-  - `medicine_picker`：`MedicinePickerNotifier`（AsyncNotifier），`MedicinePickerPage` 转为 `ConsumerWidget`，旧 `MedicinePickerController` → deprecated。
-  - `mine` + `browse_history`：`browseHistoryProvider`（AsyncNotifier）+ `browseHistoryPreviewProvider`（Provider），`MinePage` / `BrowseHistoryPage` 转为 `ConsumerWidget`，`MineController` / `BrowseHistoryController` → deprecated。
-  - 五个 feature 的 `get/get.dart` import 均已移除。`dart analyze` 零 error/warning。
+### Step 5：迁移 Reminders 列表
+- 新建 `reminder_list_provider.dart`（298→267 行）。load/sync/revision。
 
-- **Step 4 GetX 迁移第二批 — login + register + profile_settings（2026-05-25）**：
-  - `LoginPage`：`GetBuilder<LoginController>` → `ConsumerStatefulWidget` + `LoginNotifier`（Notifier）。旧 `LoginController` → `deprecated/getx/`。
-  - `RegisterPage`：`StatefulWidget` + `GetBuilder<RegisterController>` → `ConsumerStatefulWidget` + `RegisterNotifier`。旧 `RegisterController` → `deprecated/getx/`。
-  - `ProfileSettingsPage`：`ConsumerStatefulWidget` + `ProfileSettingsNotifier`（Notifier），管理 loading/saving/deleting/gender。旧 `ProfileSettingsController` → `deprecated/getx/`。
-  - `dart analyze` 零问题。
+### Step 6：迁移 Reminder Edit
+- 新建 `reminder_edit_provider.dart`（232 行）。移除未使用的 `_userId`。
 
-### 2026-05-26 — Step 0：本轮执行基线快照
+### Step 7-8：Safety + Scan
+- **Safety**：新建 `safety_provider.dart`（152 行）。`SafetyModeSwitcher` 重构为 mode+回调。Widget 移除 controller import。
+- **Scan**：新建 `medicine_scan_provider.dart`（172 行）。5 个 part 文件改为 `ScanState` 参数。barrel 移除 `get` 导入。
 
-**Git 状态：**
-- 分支：`refactor`，工作区干净（无未提交改动）。
+### Step 9：清理活跃 GetX
+- `lib/features/**` 零 GetX 引用。清理 5 个测试文件 `Get.testMode`/`Get.reset`。
+- 删除 8 个 controller re-export 壳 + `lib/deprecated/` 目录。
+- `reminder_list_controller_test.dart` 改用 `ReminderListNotifier`。
+- 从 `pubspec.yaml` 删除 `get: ^4.7.3`。**GetX 已完全抹除。**
 
-**`flutter analyze`：** 通过，零 issue（Flutter 3.44.0 / Dart 3.12.0）。
+### Step 10：大文件拆分
+- 所有文件在 600 行内。`safety_assist_page.dart` 546→424 行（提取 `SafetyResultSection` widget）。
 
-**`flutter test`：** 初始因 `PROGRAMFILES(X86)`/`HOME`/`APPDATA` 等环境变量缺失崩溃。修复后 59/59 全部通过。运行需设置：`HOME=%USERPROFILE% PROGRAMFILES=C:\Program Files "PROGRAMFILES(X86)=C:\Program Files (x86)" APPDATA=%USERPROFILE%\AppData\Roaming LOCALAPPDATA=%USERPROFILE%\AppData\Local`
+### Step 11：集成 smoke
+- `integration_test/app_smoke_test.dart` 扩到 4 tests（启动/导航/tab遍历/登录表单）。
+- 本机缺 C++ 编译器无法执行，测试逻辑就绪。
 
-**活跃 GetX（lib/ 非 deprecated 目录，32 处匹配）：**
-
-| Feature | Controller (GetxController) | Page (GetBuilder) |
-|---------|---------------------------|-------------------|
-| drug | `drug_controller.dart` | `drug_page.dart` |
-| drug | `medicine_detail_controller.dart` | `medicine_detail_page.dart` |
-| home | `home_controller.dart` | `home_page.dart` |
-| reminders | `reminder_list_controller.dart`, `reminder_edit_controller.dart` | `reminder_edit_page.dart` |
-| safety | `safety_assist_controller.dart` | `safety_assist_page.dart` |
-| scan | `medicine_scan_controller.dart` | `medicine_scan_page.dart` |
-| search | `search_controller.dart` | `search_page.dart` |
-
-另外 `today_reminder_local_store.dart` 和 `scan.dart` 也引用了 GetX。
-
-**测试中 GetX 依赖（10 个文件）：**
-`ai_cache_ui_test.dart`, `ai_scan_flow_test.dart`, `checkin_page_test.dart`, `home_adaptive_layout_test.dart`, `home_today_reminders_test.dart`, `login_page_test.dart`, `mine_view_session_test.dart`, `reminder_edit_page_test.dart`, `reminder_list_controller_test.dart`, `settings_page_smoke_test.dart`
-
-**大文件（lib/ 中前 30，按字节排序，排除 l10n 自动生成）：**
-
-| 文件 | 字节 | 路径 |
-|------|------|------|
-| safety_assist_page.dart | 19,986 | features/safety |
-| search_prompt_slivers.dart | 19,436 | features/search |
-| today_reminder_local_store.dart | 17,816 | features/reminders |
-| checkin_page.dart | 17,550 | features/checkin |
-| album_slivers.dart | 17,236 | features/album |
-| medicine_picker_page.dart | 16,388 | features/medicine_picker |
-| home_check_in_record_section.dart | 15,952 | features/home |
-| search_controller.dart | 15,668 | features/search |
-| drug_my_medicines_widgets.dart | 14,869 | features/drug |
-| login_page.dart | 14,753 | features/login |
-| reminder_edit_page.dart | 14,196 | features/reminders |
-| mine_page_widgets.dart | 13,766 | features/mine |
-| reminder_edit_widgets.dart | 13,632 | features/reminders |
-| dio_request.dart | 13,405 | utils |
-| register_page.dart | 13,403 | features/register |
-| reminder_edit_controller.dart | 13,363 | features/reminders |
-| legal_documents_page.dart | 13,171 | features/legal |
-| notification_service.dart | 12,979 | utils |
-| my_medicine_repository.dart | 12,481 | features/drug |
-| home_top_section.dart | 12,255 | features/home |
-| search_cards.dart | 11,821 | features/search |
-| theme_widgets.dart | 11,586 | features/settings |
-| root_app_widget.dart | 10,845 | core/startup |
-
-**已迁移的 feature（不再使用 GetX）：**
-checkin, medicine_picker, mine/browse_history, login, register, profile_settings, album, settings, main_shell
-
-**待迁移的 feature（仍使用 GetX）：**
-home (Step 1), search (Step 2), drug (Step 3-4), reminders (Step 5), safety (Step 6), scan (Step 7)
-
-**下一步：** Step 1 — 迁移 Home 到 Riverpod。
-
-### 2026-05-26 — Step 1：迁移 Home 到 Riverpod（完成）
-
-- 新建 `lib/features/home/presentation/providers/home_provider.dart`：
-  - `HomeState` 不可变状态模型（healthTips、reminders、checkInRecords、loading 标志、todayTip）。
-  - `HomeNotifier extends Notifier<HomeState>` 替代旧 `HomeController` (GetxController)。
-  - 用户态监听从 `globalProviderContainer.listen` 迁到 `ref.listen`。
-  - `todayTipNotifier` (ValueNotifier) 逻辑迁入 `HomeState.todayTip`。
-  - revision stream 订阅通过 `ref.onDispose` 清理。
-  - `homeProvider = NotifierProvider<HomeNotifier, HomeState>` 对外暴露。
-- `HomePage`：`StatefulWidget` + `GetBuilder<HomeController>` → `ConsumerStatefulWidget`。
-  - `ref.watch(homeProvider)` 替代 `GetBuilder` builder 回调。
-  - `reminderGateway` 测试注入从构造参数改为 `ProviderScope` override。
-  - `_refreshHomeData` 逻辑从 controller 迁入 page（保留 context.mounted 校验）。
-  - `_HomeTipNotifier` 适配 `HomeState.todayTip` 到 `ValueNotifier<String>` 供 `HomeTopSection` 使用。
-- 旧 `HomeController` 迁入 `lib/deprecated/getx/home_controller.dart`（标记 @Deprecated）。
-- `controllers/home_controller.dart` 变为兼容重新导出壳。
-- `home.dart` barrel：移除 `get/get.dart` 导入，新增 `flutter_riverpod` 和 `home_provider.dart` 导入/导出。
-- 修复 `lib/deprecated/pages/Home/home.dart` 兼容壳（移除 `super.controller`）。
-- 更新 `home_today_reminders_test.dart`：`Get.testMode`/`Get.reset` → `ProviderScope` + `UncontrolledProviderScope`。
-- 更新 `home_adaptive_layout_test.dart`：同上。
-- `home_top_section_test.dart` 无需修改（不依赖 GetX）。
-- `flutter analyze`：零 issue。
-
-**下一步：** Step 2 — 迁移 Search 到 Riverpod。
-
-### 2026-05-26 — Step 2：迁移 Search 到 Riverpod（完成）
-
-- 新建 `lib/features/search/presentation/providers/search_provider.dart`（570 行）：
-  - `SearchState` 不可变状态模型（recentKeywords、results、addedKeys、loading/loadingMore、hasMore、draftKeyword 等 17 个字段）。
-  - `SearchNotifier extends Notifier<SearchState>` 替代旧 `SearchController` (GetxController)。
-  - `searchMyMedicineRepoProvider` / `searchLocalStoreProvider` / `searchExecutorProvider` 注入层。
-  - 查询模式自动切换（在线↔本地）、滚动分页、慢搜索提示 Timer、搜索历史 SharedPreferences 持久化。
-  - 用户态 `ref.watch(currentUserProvider)` + `ref.listen` 自动重载 addedKeys 和搜索历史。
-  - `initialize()` 方法接收 pickerMode/initialKeyword/autoSearchOnInit。
-- `SearchPage`：`StatefulWidget` + `GetBuilder<SearchController>` → `ConsumerStatefulWidget`。
-  - TextEditingController/ScrollController 保留在 page 层（UI 控制器）。
-  - `_draftKeywordNotifier` (ValueNotifier) 保留给 support 文件的 `ValueListenableBuilder`。
-  - `didChangeDependencies` → `Future.microtask` 延迟 applyLocalizedRecentDefaults。
-  - `initState` → `Future(() => _initialize())` 延迟初始化。
-  - 兼容 getter（`_loading`、`_keyword`、`_results` 等）供 support extension 文件使用。
-- `search.dart` barrel：移除 `get/get.dart`，新增 `flutter_riverpod`、`user_session_provider`、`toast_utils` 导入；export 隐藏歧义类型。
-- 旧 `SearchController` 迁入 `lib/deprecated/getx/search_controller.dart`（标记 @Deprecated）。
-- `controllers/search_controller.dart` 变为兼容重新导出壳。
-- 修复 `lib/deprecated/pages/Search/search.dart` 兼容壳（移除 `super.controller`）。
-- 更新 `test/ai_scan_flow_test.dart`：`Get.testMode`/`Get.reset` → `ProviderScope` + `UncontrolledProviderScope`；searchExecutor 通过 `ProviderContainer` overrides 注入。
-- `flutter analyze`：零 issue。`flutter test`：59/59 通过。
-
-**下一步：** Step 3 — 迁移 Drug 列表和我的药品状态到 Riverpod。
-
-### 2026-05-26 — Step 3：迁移 Drug 列表和我的药品状态（完成）
-
-- 新建 `lib/features/drug/presentation/providers/drug_provider.dart`（156 行）：
-  - `DrugState` 不可变状态模型（myMedicines、loadingMedicines）。
-  - `DrugNotifier extends Notifier<DrugState>` 替代旧 `DrugController` (GetxController)。
-  - `drugRepoProvider` 注入 MyMedicineRepository。
-  - 用户态 `ref.watch(currentUserProvider)` + `ref.listen` 自动重载。
-  - `loadMyMedicines()` 返回 `String?` 错误消息供 page 层 toast，`deleteMedicine()` 同理。
-- `DrugPage`：`StatelessWidget` + `GetBuilder<DrugController>` → `ConsumerWidget`。
-  - Toast 显示逻辑从 controller 迁移到 page 层（`_loadMyMedicines`、`_deleteMedicine` 处理错误）。
-- 旧 `DrugController` 迁入 `lib/deprecated/getx/drug_controller.dart`（标记 @Deprecated）。
-- `controllers/drug_controller.dart` 变为兼容重新导出壳。
-- `drug.dart` barrel 新增 `providers/drug_provider.dart` 导出。
-- `flutter analyze`：零 issue。`flutter test`：59/59 通过。
-
-**下一步：** Step 4 — 迁移 Medicine Detail 状态到 Riverpod。
-
-### 2026-05-26 — Step 4：迁移 Medicine Detail 状态（完成）
-
-- 新建 `lib/features/drug/presentation/providers/medicine_detail_provider.dart`（223 行）：
-  - `DetailState` 不可变状态模型（item、loadingDetail、aiResult、loadingAi）。
-  - `DetailNotifier extends Notifier<DetailState>` 替代旧 `MedicineDetailController`。
-  - `detailFetchProvider`/`aiFetchProvider`/`detailHistoryStoreProvider` 注入层。
-  - CancelToken 管理通过 `ref.onDispose` 清理。
-  - `loadDetail()`/`loadAiDetail()` 返回 `String?` 错误消息供 page 层 toast。
-  - 浏览历史记录逻辑保留。
-- `MedicineDetailPage`：`StatelessWidget` + `GetBuilder` → `ConsumerStatefulWidget`。
-  - `initState` → `Future.microtask` 延迟 `initialize(initialItem)`。
-  - Toast 显示逻辑从 controller 迁移到 page 层。
-- 旧 `MedicineDetailController` 迁入 `deprecated/getx/medicine_detail_controller.dart`。
-- `controllers/medicine_detail_controller.dart` 变为兼容重新导出壳。
-- `drug.dart` barrel 新增 provider 导出，hide 歧义 typedef。
-- `flutter analyze`：零 issue。`flutter test`：59/59 通过。
-
-**下一步：** Step 5 — 迁移 Reminders 列表状态到 Riverpod。
-
-### 2026-05-26 — Step 5：迁移 Reminders 列表状态（完成）
-
-- 新建 `lib/features/reminders/presentation/providers/reminder_list_provider.dart`（298 行）：
-  - `ReminderListState` 不可变状态模型（items、loading、syncing、error、busyReminderIds）。
-  - `ReminderListNotifier extends Notifier<ReminderListState>` 替代旧 `ReminderListController`。
-  - `reminderListGatewayProvider` 注入 ReminderLocalGateway。
-  - `load()`/`sync()`/`applySavedPlan()`/`toggleEnabled()`/`deletePlan()` 返回错误消息供 page 层 toast。
-  - busyReminderIds 防重复操作、revision stream 监听、排序。
-- `ReminderListPage`：`StatelessWidget` + `GetBuilder` → `ConsumerWidget`。
-  - Toast 显示逻辑从 controller 迁移到 page 层。
-  - `isLoggedIn` 改为 `ref.read(currentUserProvider)` 直接读取。
-- 旧 `ReminderListController` 迁入 `deprecated/getx/reminder_list_controller.dart`。
-- `controllers/reminder_list_controller.dart` 变为兼容重新导出壳。
-- `reminders.dart` barrel 新增 provider 导出。
-- `flutter analyze`：零 issue。`flutter test`：59/59 通过。
-
-**下一步：** Step 6 — 迁移 Reminder Edit 状态到 Riverpod。
-
-### 2026-05-26 — Step 6：迁移 Reminder Edit 状态（完成）
-
-- 新建 `lib/features/reminders/presentation/providers/reminder_edit_provider.dart`（235 行）：
-  - `ReminderEditState` 不可变状态模型（selectedMedicines、time、startDate、endDate、enabled、saving、isEdit）。
-  - `ReminderEditNotifier extends Notifier<ReminderEditState>` 替代旧 `ReminderEditController`。
-  - 表单业务逻辑（药品选择/删除、时间日期设置、保存+验证）全部迁入 notifier。
-  - `save()` 通过 `ReminderApi.upsert` + `myMedicineRepository.addMedicine` 同步药品关联。
-- `ReminderEditPage`：`StatefulWidget` + `GetBuilder` → `ConsumerStatefulWidget`。
-  - TextEditingController（subtitle/dosage）保留在 page 层。
-  - `initState` → `Future.microtask` 延迟 `initialize(initial)`。
-  - Toast/验证逻辑从 controller 迁移到 page 层。
-- 旧 `ReminderEditController` 迁入 `deprecated/getx/reminder_edit_controller.dart`（标记 @Deprecated）。
-- `controllers/reminder_edit_controller.dart` 变为兼容重新导出壳。
-- 更新 `test/reminder_edit_page_test.dart`：`Get.testMode`/`Get.reset` → `ProviderScope` + `UncontrolledProviderScope`。
-- `reminders.dart` barrel 新增 provider 导出。
-- `flutter analyze`：零 error。`flutter test`：59/59 通过。
-
-**下一步：** Step 7 — 迁移 Safety + Scan 状态到 Riverpod。
-
-### 2026-05-26 — Step 7：迁移 Safety + Scan 状态（完成）
-
-- **Safety 模块：**
-  - 新建 `lib/features/safety/presentation/providers/safety_provider.dart`（166 行）：
-    - `SafetyState` 不可变状态模型（mode/medicineA/medicineB/loading/result）。
-    - `SafetyNotifier extends Notifier<SafetyState>`：管理 AI 安全查询、取消、模式切换、药品选择。
-    - `safetyQueryProvider` 注入 SafetyApi.query，测试可覆写。
-  - `safety.dart` barrel 新增 provider 导出，`hide QueryMedicineAiSafety` 解决 typedef 重复。
-  - `controllers/safety_assist_controller.dart` 变为兼容重新导出壳。
-  - 旧 `SafetyAssistController` 完整代码保留在 `deprecated/getx/safety_assist_controller.dart`。
-  - Safety page 已完成迁移：`SafetyAssistPage` 改为 `ConsumerWidget`，零 `GetX` 引用。
-    - `SafetyModeSwitcher` 重构为接受 `mode` + 回调参数，不再依赖 `SafetyAssistController`。
-    - `safety_assist_text.dart` 移除 `SafetyAssistController.pairMode` 引用。
-    - `test/ai_cache_ui_test.dart` 移除 `Get.testMode`/`Get.reset`，改用 `ProviderContainer` 覆盖 `safetyQueryProvider`。
-
-- **Scan 模块：**
-  - 新建 `lib/features/scan/presentation/providers/medicine_scan_provider.dart`（181 行）：
-    - `ScanState` 不可变状态模型（photoBytes/scanning/savingToAlbum/scanResult/selectedIndex/lastError）。
-    - `ScanNotifier extends Notifier<ScanState>`：管理拍照识别、候选选择、软件相册保存。
-    - `scanAlbumStoreProvider` 注入 AlbumLocalStore。
-  - `scan.dart` barrel 新增 provider 导出。
-  - `controllers/medicine_scan_controller.dart` 变为兼容重新导出壳。
-  - 旧 `MedicineScanController` 完整代码保留在 `deprecated/getx/medicine_scan_controller.dart`。
-  - Scan page 已完成迁移：`MedicineScanPage` 改为 `ConsumerStatefulWidget`，零 `GetX` 引用。
-    - 移除 `controller` 构造参数和 `GetBuilder`。
-    - 5 个 part 文件（actions/photo_area/result_section/sheet/labels）全部改为 `ScanState` 参数。
-    - `handleEntryFlow` / `pickAndScan` 逻辑移入 page 层，直接调用 `scanProvider.notifier`。
-    - `scan.dart` barrel 移除 `get/get.dart` 导入，改用 `flutter_riverpod`。
-
-- **验证：**
-  - `flutter analyze`：零 error，4 warnings（均为 deprecated 代码中 unused import/element）。
-  - `flutter test`：59/59 通过。
-
-**下一步：** Step 9 — 清理活跃 GetX 和测试夹具。
-
-### 2026-05-26 — Step 9：清理活跃 GetX 和测试夹具（完成）
-
-- 扫描确认 `lib/features/**` 零 GetX 引用。
-- 清理 5 个测试文件中的 `Get.testMode`/`Get.reset`。
-- 删除所有 controller re-export 壳文件（8 个）+ `lib/deprecated/` 整个目录。
-- 更新 6 个 barrels 移除 controller 导出。
-- `test/ai_cache_ui_test.dart` 单元测试改用 `DetailNotifier` + `ProviderContainer`。
-- 从 `pubspec.yaml` 删除 `get: ^4.7.3` 依赖。
-- `flutter pub get` 成功。
-- 验证：`dart analyze lib`：0 errors, 1 warning。`flutter test`：全量通过。
-
-**GetX 已从项目中完全抹除。**
-
-**下一步：** Step 13 — JSON 生成迁移第二批。
-
-### 2026-05-26 — Step 12：JSON 生成迁移第一批（完成）
-
-- 迁移 `lib/shared/models/medicine.dart`：
-  - `MedicineItem`、`MedicineSearchResult`、`MedicineAiDetailResult` 添加 `@JsonSerializable(createFactory: false)`。
-  - 保留手写 `fromJson` 不变，新增生成的 `toJson`。
-  - 5 个 getter 加 `@JsonKey(includeToJson: false)` 排除。
-- 迁移 `lib/shared/models/home.dart`：
-  - `ReminderItem`、`TodayRemindersResult` 添加 `@JsonSerializable(createFactory: false)`。
-  - 保留手写 `fromJson`，新增生成的 `toJson`。
-- 运行 `dart run build_runner build`，生成 `medicine.g.dart` + `home.g.dart`。
-- 新增模型测试：
-  - `test/shared/models/medicine_model_test.dart`（6 tests）
-  - `test/shared/models/home_model_test.dart`（5 tests）
-- 验证：`dart analyze lib`：No issues。全量测试通过。
-
-**下一步：** Step 13 — JSON 生成迁移第二批。
-
-### 2026-05-26 — Step 11：扩展 integration smoke（完成）
-
-- 扩展现有 `integration_test/app_smoke_test.dart`：
-  - 保留原有启动 + 主导航 smoke（2 tests）。
-  - 新增各 tab 导航不崩溃测试（1 test，覆盖 Home/Drug/Reminders/Safety/Mine 5 个 tab）。
-  - 新增登录页表单渲染测试（1 test，验证 TextFormField + ElevatedButton 存在）。
-- **无法在本机执行**：Windows target 缺少 C++ 编译器（`No CMAKE_CXX_COMPILER`），Web target 不支持 `integration_test`。
-- 测试逻辑本身已写就，待有可用设备或桌面编译环境后可直接运行。
-
-**下一步：** Step 13 — JSON 生成迁移第二批。
-
-### 2026-05-26 — Step 12：JSON 生成迁移第一批（完成）
-
-- 迁移 `lib/shared/models/medicine.dart`：
-  - `MedicineItem`、`MedicineSearchResult`、`MedicineAiDetailResult` 添加 `@JsonSerializable(createFactory: false)`。
-  - 保留手写 `fromJson` 不变，新增生成的 `toJson`。
-  - 5 个 getter 加 `@JsonKey(includeToJson: false)` 排除。
-- 迁移 `lib/shared/models/home.dart`：
-  - `ReminderItem`、`TodayRemindersResult` 添加 `@JsonSerializable(createFactory: false)`。
-  - 保留手写 `fromJson`，新增生成的 `toJson`。
-- 运行 `dart run build_runner build`，生成 `medicine.g.dart` + `home.g.dart`。
-- 新增模型测试：
-  - `test/shared/models/medicine_model_test.dart`（6 tests）
-  - `test/shared/models/home_model_test.dart`（5 tests）
-- 验证：`dart analyze lib`：No issues。全量测试通过。
-
-**下一步：** Step 13 — JSON 生成迁移第二批。
-
-### 2026-05-26 — Step 10：大文件二次拆分（首轮）
-
-- 所有活跃业务文件均已在 600 行以内（最高 `today_reminder_local_store.dart` 552 行，300-600 视为可接受范围）。
-- **`safety_assist_page.dart`**：546 → 424 行（-122 行）。
-  - 提取 `SafetyResultSection` widget → `safety_assist_widgets.dart`。
-  - 连带迁移 `formatSafetyAiTimestamp` 和 `_splitResultParagraphs`。
-  - 移除 `safety_assist_text.dart` 中已无引用的 `_resultPlaceholderText`。
-- 其余计划文件（`search_prompt_slivers.dart` 494 行、`today_reminder_local_store.dart` 552 行等）均在不触发 600 行红线的范围内，可后续按职责继续拆，但不改动行为。
-- 验证：`dart analyze lib`：0 errors, 1 warning。`flutter test`：全量通过。
-
-**下一步：** Step 13 — JSON 生成迁移第二批。
-
-### 2026-05-26 — Step 12：JSON 生成迁移第一批（完成）
-
-- 迁移 `lib/shared/models/medicine.dart`：
-  - `MedicineItem`、`MedicineSearchResult`、`MedicineAiDetailResult` 添加 `@JsonSerializable(createFactory: false)`。
-  - 保留手写 `fromJson` 不变，新增生成的 `toJson`。
-  - 5 个 getter 加 `@JsonKey(includeToJson: false)` 排除。
-- 迁移 `lib/shared/models/home.dart`：
-  - `ReminderItem`、`TodayRemindersResult` 添加 `@JsonSerializable(createFactory: false)`。
-  - 保留手写 `fromJson`，新增生成的 `toJson`。
-- 运行 `dart run build_runner build`，生成 `medicine.g.dart` + `home.g.dart`。
-- 新增模型测试：
-  - `test/shared/models/medicine_model_test.dart`（6 tests）
-  - `test/shared/models/home_model_test.dart`（5 tests）
-- 验证：`dart analyze lib`：No issues。全量测试通过。
-
-**下一步：** Step 13 — JSON 生成迁移第二批。
+### Step 12-13：JSON 生成迁移
+- 新增 15 个类的 `@JsonSerializable(createFactory: false)` + `toJson()`：
+  - 共享：`MedicineItem`、`MedicineSearchResult`、`MedicineAiDetailResult`、`ReminderItem`、`TodayRemindersResult`
+  - Auth：`CodeTicketResult`、`RegisterResult`、`LoginResult`
+  - Scan：`ScanCandidate`、`MedicineScanResult`
+  - Safety：`MedicineAiSafetyResult`；Drug：`MyMedicineListResult`；Album：`IdResult`
+- 手写 `fromJson` 全部保留（因含双 key 后备、嵌套类型转换、legacy 字段合并等特殊逻辑，`createFactory: false` 只生成 `toJson`）。
+- `build_runner` 生成 `*.g.dart`。新增 17 个模型 test。
+- `dart analyze`：No issues。`flutter test`：77/77 通过。
