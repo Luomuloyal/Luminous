@@ -421,4 +421,19 @@ home (Step 1), search (Step 2), drug (Step 3-4), reminders (Step 5), safety (Ste
   - `flutter analyze`：零 error，4 warnings（均为 deprecated 代码中 unused import/element）。
   - `flutter test`：59/59 通过。
 
-**下一步：** Step 8 — 对照 sequential plan 继续后续步。
+**下一步：** Step 9 — 清理活跃 GetX 和测试夹具。
+
+### 2026-05-26 — Step 9：清理活跃 GetX 和测试夹具（完成）
+
+- 扫描确认 `lib/features/**` 零 GetX 引用。
+- 清理 5 个测试文件中的 `Get.testMode`/`Get.reset`。
+- 删除所有 controller re-export 壳文件（8 个）+ `lib/deprecated/` 整个目录。
+- 更新 6 个 barrels 移除 controller 导出。
+- `test/ai_cache_ui_test.dart` 单元测试改用 `DetailNotifier` + `ProviderContainer`。
+- 从 `pubspec.yaml` 删除 `get: ^4.7.3` 依赖。
+- `flutter pub get` 成功。
+- 验证：`dart analyze lib`：0 errors, 1 warning。`flutter test`：全量通过。
+
+**GetX 已从项目中完全抹除。**
+
+**下一步：** Step 10 — 大文件二次拆分。

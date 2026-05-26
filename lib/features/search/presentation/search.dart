@@ -13,8 +13,6 @@ import 'package:luminous/features/search/presentation/models/search.dart';
 import 'providers/search_provider.dart';
 import 'widgets/search_cards.dart';
 
-export 'controllers/search_controller.dart'
-    hide MedicineSearchExecutor, MedicineQueryMode;
 export 'providers/search_provider.dart';
 
 part 'pages/search_page.dart';

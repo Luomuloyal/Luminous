@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get/get.dart';
 import 'package:luminous/api/auth_api.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/features/login/presentation/login.dart';
@@ -20,13 +19,10 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues(<String, Object>{});
     prefs = await SharedPreferences.getInstance();
-    Get.testMode = true;
-    Get.reset();
   });
 
   tearDown(() {
     ToastUtils.instance.dismiss();
-    Get.reset();
   });
 
   Widget createLoginWidget({AuthApi? authApi}) {

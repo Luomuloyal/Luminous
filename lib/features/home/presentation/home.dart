@@ -22,7 +22,6 @@ import 'package:luminous/shared/layout/adaptive_layout.dart';
 
 import 'providers/home_provider.dart';
 
-export 'controllers/home_controller.dart';
 export 'providers/home_provider.dart';
 
 part 'pages/home_page.dart';

@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get/get.dart';
 import 'package:luminous/features/reminders/presentation/reminders.dart';
 import 'package:luminous/features/auth/presentation/models/auth.dart';
 import 'package:luminous/features/reminders/presentation/models/reminder.dart';
@@ -11,12 +10,10 @@ import 'support/session_test_utils.dart';
 void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
-    Get.testMode = true;
-    Get.reset();
     await createTestProviderContainer();
   });
 
-  tearDown(Get.reset);
+  tearDown(() {});
 
   test('empty reminder list stays empty instead of seeding defaults', () async {
     await setTestSessionUser(

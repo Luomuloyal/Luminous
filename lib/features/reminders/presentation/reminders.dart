@@ -2,8 +2,6 @@
 
 export 'pages/reminder_list_page.dart';
 export 'pages/reminder_edit_page.dart';
-export 'controllers/reminder_list_controller.dart';
-export 'controllers/reminder_edit_controller.dart';
 export 'providers/reminder_list_provider.dart';
 export 'providers/reminder_edit_provider.dart';
 export 'widgets/reminder_list_widgets.dart';

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get/get.dart';
 import 'package:luminous/features/checkin/presentation/checkin.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/features/auth/presentation/models/auth.dart';
@@ -17,8 +16,6 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
-    Get.testMode = true;
-    Get.reset();
     container = await createTestProviderContainer(
       user: const UserSafe(
         id: 'user-1',
@@ -40,7 +37,6 @@ void main() {
 
   tearDown(() {
     ToastUtils.instance.dismiss();
-    Get.reset();
   });
 
   testWidgets('checkin page renders local today snapshot items', (
