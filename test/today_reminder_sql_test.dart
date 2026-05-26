@@ -110,8 +110,8 @@ void main() {
       final result = await loadTodayDoneSet(
         db: db,
         userId: 'u1',
-        startMs: 0,
-        endMs: 999999999999,
+        startMs: now - 1000,
+        endMs: now + 1000,
       );
       expect(result, {'rem-1', 'rem-2'});
     });
@@ -180,8 +180,8 @@ void main() {
       final result = await loadTodayCheckinRecordsFromDb(
         db: db,
         userId: 'u1',
-        startMs: 0,
-        endMs: 999999999999,
+        startMs: now - 1000,
+        endMs: now + 1000,
         todayKey: '2026-05-26',
         items: items,
       );

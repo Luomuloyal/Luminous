@@ -55,15 +55,18 @@ pnpm build
 当前项目已经完成：
 
 - Flutter 目录主线迁入 `lib/core`、`lib/shared`、`lib/features`。
-- 主壳、Album、CheckIn、MedicinePicker、Mine/BrowseHistory、Login/Register、ProfileSettings 已迁 Riverpod。
+- **GetX 已完全抹除**：全部 13 个 feature 切片已迁 Riverpod，`pubspec.yaml` 不含 `get`。
 - legacy Express client 与 Lucent client 已拆分。
-- `integration_test/app_smoke_test.dart` 已存在，但只覆盖启动和主导航。
+- `integration_test/app_smoke_test.dart` 已存在，含 5 项 smoke 测试。
 - `collection`、`json_annotation`、`build_runner`、`json_serializable` 已加入依赖。
+- **JSON 生成迁移已完成**：15 个共享模型使用 `@JsonSerializable(createFactory: false)` + 手写 `fromJson`；嵌套容器 `toJson` 回归已修复。
+- 所有文件 ≤600 行。
+- `flutter test` **118/118 通过**；`flutter analyze` 零 issue。
+- `test/support/fake_sqflite_database.dart` 覆盖生产路径 WHERE / ORDER BY 模式。
 
 当前还未完成：
 
-- 活跃 GetX 仍在 Home、Search、Drug、Reminders、Scan、Safety。
-- Lucent 还未成为 Flutter 主数据源。
+- Lucent 还未成为 Flutter 主数据源（当前仍以 legacy Express backend 为主要数据源）。
 - 药品知识平台还未从 `DrugDataBase` 导入到 PostgreSQL。
 - Markdown 药品详情和 AI 输出还未成为主展示路径。
 - 用药闭环还没有完全建立在权威药品知识和 JWT 用户边界上。

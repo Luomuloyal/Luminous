@@ -193,3 +193,37 @@ lib/
 - 手写 `fromJson` 全部保留（因含双 key 后备、嵌套类型转换、legacy 字段合并等特殊逻辑，`createFactory: false` 只生成 `toJson`）。
 - `build_runner` 生成 `*.g.dart`。新增 17 个模型 test。
 - `dart analyze`：No issues。`flutter test`：77/77 通过。
+
+### Step 14：JSON 生成迁移回归修复 (2026-06-02)
+
+`build_runner` 重跑后全量 `flutter test` 发现 8 个失败，归为两组：
+
+**A. toJson 嵌套对象序列化缺陷（2 个模型）**
+
+`@JsonSerializable(createFactory: false)` 生成的 `_$TodayRemindersResultToJson` 和 `_$MedicineSearchResultToJson` 直接将 `List<ReminderItem>` / `List<MedicineItem>` 写入结果 Map，而手写 `fromJson` 通过 `whereType<Map>()` 过滤子项。生成代码未对列表元素递归调用 `.toJson()`，导致 `toJson → fromJson` 往返后 `items` 长度为 0。
+
+- `lib/shared/models/home.dart`：`TodayRemindersResult.toJson()` 改为手动实现，对 `items` 逐元素调用 `.toJson()`。
+- `lib/shared/models/medicine.dart`：`MedicineSearchResult.toJson()` 同样改为手动实现。
+- 注意：后续新增带嵌套模型的容器类，若 `fromJson` 用 `whereType<Map>()` 做类型安全过滤，则 `toJson` 不能依赖生成代码——必须手写以保证往返一致性。
+
+**B. `ReminderItem.fromJson` done 字段解析不完整**
+
+`json['done'] == true` 仅匹配 Dart 字面量 `true`，不处理后端可能返回的 `1` / `"yes"` / `"true"` 等表达。新增 `_parseTruthy()` 静态方法覆盖 `bool` / `int` / `String` 三种类型。
+
+**C. 测试环境 locale 耦合**
+
+`medicine_test.dart` 硬编码 `contains('未知')`，但 `AppI18nText.pick` 在测试中因 `PlatformDispatcher.locale` 为 `en` 而返回 `'Unknown medicine'`。改为 `isNotEmpty`，不绑定具体语言回退文本。
+
+**D. FakeSqfliteDatabase WHERE / ORDER BY 覆盖不足**
+
+生产代码 `loadTodayDoneSet`、`loadReminderMetaMap`、`loadTodayCheckinRecordsFromDb` 用到的 `userId = ? AND takenAt >= ? AND takenAt < ?` 和 `time ASC, id ASC` / `takenAt DESC, id DESC` 未被 fake DB 支持，导致 4 个测试失败。
+
+- `test/support/fake_sqflite_database.dart`：`_matchesWhere` 新增复合范围 WHERE 子句；`_sortRows` 新增两个 ORDER BY 模式。
+- `test/today_reminder_sql_test.dart`：两处 `endMs: 999999999999`（~2001年）修正为 `now ± 1000`，使插入行的 `takenAt` 实际落在查询时间窗口内——此前因 fake DB 直接抛 `UnsupportedError` 而掩盖了窗口错误。
+
+**验证结果**
+
+- `build_runner build`：246 输入全部跳过（已有最新生成文件）。
+- `flutter analyze`：No issues。
+- `flutter test`：**118/118 通过**（原 77 + Step 12-13 新增 41 个模型 test，加上 8 个回归修复 = 全绿）。
+- `integration_test/app_smoke_test.dart`：需要移动设备/模拟器，当前环境无可用设备（Windows 桌面构建因 C++ debug CRT 链接器错误阻塞，Web 不支持 Flutter integration_test 运行器），测试逻辑就绪。

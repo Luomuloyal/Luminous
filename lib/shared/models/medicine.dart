@@ -164,7 +164,12 @@ class MedicineSearchResult {
   @JsonKey(includeToJson: false)
   bool get hasMore => page * pageSize < total;
 
-  Map<String, dynamic> toJson() => _$MedicineSearchResultToJson(this);
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'items': items.map((e) => e.toJson()).toList(),
+        'total': total,
+        'page': page,
+        'pageSize': pageSize,
+      };
 }
 
 /// 安全解析分页大小。

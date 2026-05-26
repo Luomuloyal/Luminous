@@ -44,11 +44,22 @@ class ReminderItem {
       title: (json['title'] ?? '').toString(),
       dosage: (json['dosage'] ?? '').toString(),
       subtitle: (json['subtitle'] ?? '').toString(),
-      done: json['done'] == true,
+      done: _parseTruthy(json['done']),
     );
   }
 
   Map<String, dynamic> toJson() => _$ReminderItemToJson(this);
+
+  /// Backend may return booleans, ints, or strings for truthy fields.
+  static bool _parseTruthy(dynamic value) {
+    if (value is bool) return value;
+    if (value is int) return value != 0;
+    if (value is String) {
+      final lowered = value.toLowerCase().trim();
+      return lowered == 'true' || lowered == 'yes' || lowered == '1';
+    }
+    return false;
+  }
 }
 
 /// 首页"常用功能"入口数据。
@@ -166,5 +177,8 @@ class TodayRemindersResult {
     );
   }
 
-  Map<String, dynamic> toJson() => _$TodayRemindersResultToJson(this);
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'date': date,
+        'items': items.map((e) => e.toJson()).toList(),
+      };
 }
