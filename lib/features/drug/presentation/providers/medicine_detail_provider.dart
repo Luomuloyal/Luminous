@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:luminous/api/medicine_api.dart';
 import 'package:luminous/utils/dio_request.dart';
@@ -199,7 +200,9 @@ class DetailNotifier extends Notifier<DetailState> {
         userId: ref.read(currentUserProvider)?.id,
         item: item,
       );
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[medicine_detail] recordMedicine failed: $e');
+    }
   }
 }
 

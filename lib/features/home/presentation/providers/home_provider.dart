@@ -195,7 +195,8 @@ class HomeNotifier extends Notifier<HomeState> {
         if (!_canApplyReminderResult(requestId, userId)) return;
         _applyReminderItems(refreshedItems);
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[home] loadTodayReminders failed: $e');
       if (_canApplyReminderResult(requestId, userId)) {
         state = state.copyWith(reminders: const []);
       }
@@ -236,7 +237,8 @@ class HomeNotifier extends Notifier<HomeState> {
       state = state.copyWith(
         checkInRecords: List<HomeCheckInRecordData>.from(records),
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[home] loadCheckInRecords failed: $e');
       if (_canApplyCheckInResult(requestId, userId)) {
         state = state.copyWith(checkInRecords: const []);
       }

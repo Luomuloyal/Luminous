@@ -393,3 +393,21 @@ lib/
 - API 层：`LucentApiClient` 独立客户端体系（未激活，等待 Lucent 迁移）；`medicine_api.dart` 健康检查裸 Dio（设计意图明确）
 - Provider：4 个 `AsyncNotifier` 返回裸 `List<T>` 无 State wrapper，与其余 12 个 provider 不一致
 - 测试覆盖：`drug/`、`legal/`、`medicine_picker/` 完全无专属测试文件
+
+### 错误处理加固 (2026-06-02)
+
+修复 5 处静默吞异常的 `catch (_) {}`，改为带模块标签的 `debugPrint`：
+
+| 文件 | 方法 | 修复 |
+|------|------|------|
+| `reminder_edit_provider.dart:223` | `saveMedicine` | 空 catch → `debugPrint('[reminder_edit] …')` |
+| `medicine_detail_provider.dart:202` | `recordMedicine` | 同上 |
+| `home_provider.dart:198` | `loadTodayReminders` | 增加 `debugPrint`（保留 reset 兜底行为） |
+| `home_provider.dart:240` | `loadCheckInRecords` | 同上 |
+| `search_provider.dart:182` | `_loadAddedKeys` | 空 catch → `debugPrint('[search] …')` |
+
+其他审计发现（记录不修复）：
+- **性能**：16 处 `ListView(children: [...])` 未使用 `ListView.builder` — 大规模改动，建议在后续专项重构
+- **导航**：多处 `Navigator.push(MaterialPageRoute(...))` 绕过 GoRouter — 影响 URL 同步和认证拦截
+- **路由**：`/profile-settings` 定义但未注册 GoRoute；`LegalDocumentsPage` 死代码（已拆为单独路由）
+- **SQL**：全部参数化查询，零注入风险 ✅

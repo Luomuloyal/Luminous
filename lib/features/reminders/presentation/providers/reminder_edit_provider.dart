@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:luminous/api/reminder_api.dart';
 import 'package:luminous/features/drug/data/my_medicine_repository.dart';
@@ -220,7 +221,9 @@ class ReminderEditNotifier extends Notifier<ReminderEditState> {
           source: 'reminder',
           userId: scopedUserId,
         );
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('[reminder_edit] saveMedicine failed: $e');
+      }
     }
   }
 }

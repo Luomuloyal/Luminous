@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:luminous/api/medicine_api.dart';
 import 'package:luminous/features/auth/providers/user_session_provider.dart';
@@ -179,7 +180,9 @@ class SearchNotifier extends Notifier<SearchState> {
       final keys = await _repo.loadIdentityKeys(userId: userId);
       if ( _sameStringSet(state.addedKeys, keys)) return;
       state = state.copyWith(addedKeys: keys);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[search] _loadAddedKeys failed: $e');
+    }
   }
 
   // ── 最近搜索 ──
