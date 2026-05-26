@@ -437,3 +437,20 @@ lib/
 - `medicine_ai_card.dart` 多处硬编码中文 section headers / AI 说明 — 属于 AI 解析逻辑层，需设计级改造
 - `BASE_URL` 默认值 `https://devluo.com` 硬编码 — 可通过 `--dart-define` 覆盖
 - `ListView(children:)` 16 处 — 性能专项后续处理
+
+### 技术债归档 (2026-06-02)
+
+将五轮审查中"记录但不修复"的问题整理入 `docs/current-sequential-execution-plan.md` 的"已知技术债"章节：
+
+| 类别 | 数量 | 关键项 |
+|------|------|--------|
+| 性能 | 1 | `ListView.builder` 替换 |
+| 导航 | 2 | `Navigator.push` 绕过 GoRouter |
+| 国际化 | 1 | AI 卡片中文解析逻辑 |
+| 架构 | 3 | `global_provider_container` 移除、State wrapper 统一 |
+| 测试覆盖 | 6 个 feature | drug/legal/medicine_picker 完全无测试 |
+
+同时修复了 4 项：
+- 删除 dead `legalDocuments` 路由常量
+- 注册 `/profile-settings` GoRoute + 切 `pushNamed`
+- `search_provider` 统一用 `sharedPreferencesProvider`（去重 `SharedPreferences.getInstance()`）

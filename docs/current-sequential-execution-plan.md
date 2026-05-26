@@ -61,9 +61,10 @@ pnpm build
 - `collection`、`json_annotation`、`build_runner`、`json_serializable` 已加入依赖。
 - **JSON 生成迁移已完成**：15 个共享模型使用 `@JsonSerializable(createFactory: false)` + 手写 `fromJson`；嵌套容器 `toJson` 回归已修复。
 - 所有文件 ≤600 行。
-- `flutter test` **151/151 通过**；`flutter analyze` 零 issue。
+- `flutter test` **173/173 通过**；`flutter analyze` 零 issue。
 - `test/support/fake_sqflite_database.dart` 覆盖生产路径 WHERE / ORDER BY 模式。
-- **Step 13 JSON 生成迁移第二批已完成**：`reminder.dart` 3 类 + `browse_history.dart` 1 类；新增 33 个模型测试；全量 151 通过。
+- Step 13-15 + 五轮审查全部完成：JSON 迁移 19 类 + token 安全存储 + 集合比较 + 43 项修复。
+- `flutter_secure_storage` 已集成，`TokenRefreshService` 已实现并发防抖。
 
 当前还未完成：
 
@@ -71,6 +72,49 @@ pnpm build
 - 药品知识平台还未从 `DrugDataBase` 导入到 PostgreSQL。
 - Markdown 药品详情和 AI 输出还未成为主展示路径。
 - 用药闭环还没有完全建立在权威药品知识和 JWT 用户边界上。
+
+### 已知技术债（2026-06-02 五轮审查记录，待处理）
+
+以下问题已确认存在但暂不修复，原因标注为规模/跨层/需设计决策：
+
+**性能：**
+
+| 问题 | 影响 | 建议 |
+|------|------|------|
+| 16 处 `ListView(children: [...])` 未用 `ListView.builder` | 列表增长后性能下降 | 逐文件替换为 builder + itemExtent |
+
+**导航：**
+
+| 问题 | 影响 | 建议 |
+|------|------|------|
+| 多处 `Navigator.push(MaterialPageRoute(...))` | 绕过 GoRouter 的 URL 同步和认证拦截 | 统一改用 `pushNamed` 或注册 GoRoute |
+| Theme/Language 设置子页无 GoRoute | 同上 | 注册路由或保持现状（模态子页合理） |
+
+**国际化：**
+
+| 问题 | 影响 | 建议 |
+|------|------|------|
+| `medicine_ai_card.dart` 中文 section headers 和 `endsWith('建议')` 逻辑 | 非中文 locale 下 AI 解析失效 | AI 返回结构化 JSON 或做 locale-aware 解析 |
+
+**架构：**
+
+| 问题 | 影响 | 建议 |
+|------|------|------|
+| `global_provider_container.dart` 全局容器 | 4 个非 widget 工具类绕过 Riverpod 树层级 | 重构为构造函数 DI 注入，删除全局容器 |
+| 4 个 `AsyncNotifierProvider` 返回裸 `List<T>` 无 State wrapper | 与其余 12 个 provider 风格不一致 | 统一加 `XxxState` wrapper |
+| `LegalDocumentsPage` 死代码 | 无影响（已拆为单独路由） | 已清理 |
+| `BASE_URL` 默认值 `https://devluo.com` 硬编码 | 生产地址泄露到源码 | 通过 `--dart-define` 覆盖或 CI/CD 注入 |
+
+**测试覆盖缺口：**
+
+| Feature | 状态 |
+|---------|------|
+| `drug/` | 完全无专属测试 |
+| `legal/` | 完全无专属测试 |
+| `medicine_picker/` | 完全无专属测试 |
+| `home/` | 无 `home_provider_test.dart` |
+| `login/` | 无 `login_provider_test.dart` |
+| `album/` | 无 `album_provider_test.dart` |
 
 ## Step 0：建立本轮执行快照
 
