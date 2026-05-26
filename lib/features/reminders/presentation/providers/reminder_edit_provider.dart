@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:luminous/api/reminder_api.dart';
-import 'package:luminous/features/auth/providers/user_session_provider.dart';
 import 'package:luminous/features/drug/data/my_medicine_repository.dart';
 import 'package:luminous/features/reminders/presentation/models/reminder.dart';
 import 'package:luminous/shared/models/medicine.dart';
@@ -59,8 +58,6 @@ class ReminderEditState {
 
 /// 提醒编辑页状态管理器。
 class ReminderEditNotifier extends Notifier<ReminderEditState> {
-  String get _userId => ref.read(currentUserProvider)?.id ?? '';
-
   @override
   ReminderEditState build() {
     return const ReminderEditState();

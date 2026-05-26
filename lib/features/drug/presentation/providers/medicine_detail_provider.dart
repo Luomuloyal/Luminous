@@ -21,7 +21,6 @@ typedef FetchMedicineAiDetail = Future<ApiResult<MedicineAiDetailResult>> Functi
   CancelToken? cancelToken,
 });
 
-/// 注入 provider。
 final detailFetchProvider = Provider<FetchMedicineDetail>(
   (ref) => MedicineApi.fetchDetail,
 );
@@ -34,40 +33,34 @@ final detailHistoryStoreProvider = Provider<BrowseHistoryStore>(
   (ref) => browseHistoryStore,
 );
 
-/// 药品详情页状态。
 class DetailState {
   const DetailState({
     required this.item,
     this.loadingDetail = false,
     this.aiResult,
     this.loadingAi = false,
-    this.isClosed = false,
   });
 
   final MedicineItem item;
   final bool loadingDetail;
   final MedicineAiDetailResult? aiResult;
   final bool loadingAi;
-  final bool isClosed;
 
   DetailState copyWith({
     MedicineItem? item,
     bool? loadingDetail,
     MedicineAiDetailResult? aiResult,
     bool? loadingAi,
-    bool? isClosed,
   }) {
     return DetailState(
       item: item ?? this.item,
       loadingDetail: loadingDetail ?? this.loadingDetail,
       aiResult: aiResult ?? this.aiResult,
       loadingAi: loadingAi ?? this.loadingAi,
-      isClosed: isClosed ?? this.isClosed,
     );
   }
 }
 
-/// 药品详情页状态管理器。
 class DetailNotifier extends Notifier<DetailState> {
   CancelToken? _detailCancelToken;
   CancelToken? _aiCancelToken;
@@ -98,15 +91,12 @@ class DetailNotifier extends Notifier<DetailState> {
     );
   }
 
-  /// 初始化详情页，设置初始 item 并开始加载。
   void initialize(MedicineItem initialItem) {
-    if (state.isClosed) return;
     state = state.copyWith(item: initialItem);
     _recordHistory(initialItem);
     unawaited(loadDetail());
   }
 
-  /// 拉取药品基础详情。返回错误消息供 page 层 toast。
   Future<String?> loadDetail() async {
     if (state.loadingDetail || !state.item.hasIdentity) return null;
 
@@ -121,26 +111,22 @@ class DetailNotifier extends Notifier<DetailState> {
         approvalNo: state.item.approvalNo,
         cancelToken: cancelToken,
       );
-      if (state.isClosed) return null;
       if (response.result.productName.isNotEmpty) {
         state = state.copyWith(item: response.result);
         _recordHistory(response.result);
       }
     } catch (error) {
-      if (state.isClosed || _isCanceledError(error)) return null;
+      if (_isCanceledError(error)) return null;
       return _extractError(error);
     } finally {
       if (identical(_detailCancelToken, cancelToken)) {
         _detailCancelToken = null;
       }
-      if (!state.isClosed) {
-        state = state.copyWith(loadingDetail: false);
-      }
+      state = state.copyWith(loadingDetail: false);
     }
     return null;
   }
 
-  /// 拉取 AI 药品解读。返回错误消息供 page 层 toast。
   Future<String?> loadAiDetail({bool refresh = false}) async {
     if (state.loadingAi || !state.item.hasIdentity) return null;
 
@@ -156,13 +142,12 @@ class DetailNotifier extends Notifier<DetailState> {
         refresh: refresh,
         cancelToken: cancelToken,
       );
-      if (state.isClosed) return null;
       state = state.copyWith(aiResult: response.result);
       if (!response.result.hasText) {
         return 'aiNoContent';
       }
     } catch (error) {
-      if (state.isClosed || _isCanceledError(error)) return null;
+      if (_isCanceledError(error)) return null;
       if (_isLikelyNetworkFailure(error)) {
         return 'aiNetworkError';
       }
@@ -171,31 +156,22 @@ class DetailNotifier extends Notifier<DetailState> {
       if (identical(_aiCancelToken, cancelToken)) {
         _aiCancelToken = null;
       }
-      if (!state.isClosed) {
-        state = state.copyWith(loadingAi: false);
-      }
+      state = state.copyWith(loadingAi: false);
     }
     return null;
   }
 
-  /// 取消当前 AI 解读请求。返回 toast 消息供 page 层显示。
   String cancelAiDetail() {
     _aiCancelToken?.cancel('user canceled');
     _aiCancelToken = null;
-    if (state.loadingAi && !state.isClosed) {
+    if (state.loadingAi) {
       state = state.copyWith(loadingAi: false);
     }
-    return _cancelToastText();
-  }
-
-  String _cancelToastText() {
     return '已取消获取详细信息';
   }
 
   bool _isCanceledError(Object error) {
-    if (error is DioException && error.type == DioExceptionType.cancel) {
-      return true;
-    }
+    if (error is DioException && error.type == DioExceptionType.cancel) return true;
     final text = error.toString().toLowerCase();
     return text.contains('cancel') || text.contains('canceled');
   }
@@ -227,7 +203,6 @@ class DetailNotifier extends Notifier<DetailState> {
   }
 }
 
-/// 药品详情页 provider。
 final detailProvider = NotifierProvider<DetailNotifier, DetailState>(() {
   return DetailNotifier();
 });

@@ -52,8 +52,7 @@ class SearchState {
     this.autoSearchOnInit = false,
     this.initialKeyword = '',
     this.page = 1,
-    this.isClosed = false,
-  });
+    });
 
   final List<String> recentKeywords;
   final List<MedicineItem> results;
@@ -73,8 +72,6 @@ class SearchState {
   final bool autoSearchOnInit;
   final String initialKeyword;
   final int page;
-  final bool isClosed;
-
   SearchState copyWith({
     List<String>? recentKeywords,
     List<MedicineItem>? results,
@@ -91,9 +88,7 @@ class SearchState {
     bool? pickerMode,
     bool? autoSearchOnInit,
     String? initialKeyword,
-    int? page,
-    bool? isClosed,
-  }) {
+    int? page,  }) {
     return SearchState(
       recentKeywords: recentKeywords ?? this.recentKeywords,
       results: results ?? this.results,
@@ -110,9 +105,7 @@ class SearchState {
       pickerMode: pickerMode ?? this.pickerMode,
       autoSearchOnInit: autoSearchOnInit ?? this.autoSearchOnInit,
       initialKeyword: initialKeyword ?? this.initialKeyword,
-      page: page ?? this.page,
-      isClosed: isClosed ?? this.isClosed,
-    );
+      page: page ?? this.page,    );
   }
 }
 
@@ -155,8 +148,6 @@ class SearchNotifier extends Notifier<SearchState> {
     required String initialKeyword,
     required bool autoSearchOnInit,
   }) {
-    if (state.isClosed) return;
-
     state = state.copyWith(
       pickerMode: pickerMode,
       initialKeyword: initialKeyword,
@@ -186,7 +177,7 @@ class SearchNotifier extends Notifier<SearchState> {
     try {
       final userId = _userId;
       final keys = await _repo.loadIdentityKeys(userId: userId);
-      if (state.isClosed || _sameStringSet(state.addedKeys, keys)) return;
+      if ( _sameStringSet(state.addedKeys, keys)) return;
       state = state.copyWith(addedKeys: keys);
     } catch (_) {}
   }
@@ -197,7 +188,6 @@ class SearchNotifier extends Notifier<SearchState> {
     final prefs = await SharedPreferences.getInstance();
     final stored = prefs.getStringList(_storageKey);
     final sanitized = _sanitizeRecentKeywords(stored ?? const <String>[]);
-    if (state.isClosed) return;
     _hasPersistedRecentKeywords = stored != null;
     _historyClearedByUser = stored != null && sanitized.isEmpty;
     _seededRecentKeywords = null;
@@ -213,7 +203,7 @@ class SearchNotifier extends Notifier<SearchState> {
     if (_sameStringList(_localizedRecentDefaults, sanitized)) return;
     _localizedRecentDefaults = sanitized;
     final updated = _buildSyncedKeywords(state.recentKeywords);
-    if (!state.isClosed) {
+    {
       state = state.copyWith(recentKeywords: updated);
     }
   }
@@ -250,7 +240,7 @@ class SearchNotifier extends Notifier<SearchState> {
 
   Future<void> _detectInitialQueryMode() async {
     final reachable = await MedicineApi.isBackendReachable();
-    if (state.isClosed || reachable) return;
+    if ( reachable) return;
     state = state.copyWith(queryMode: MedicineQueryMode.local);
   }
 
@@ -336,8 +326,6 @@ class SearchNotifier extends Notifier<SearchState> {
         source: 'search',
         userId: _userId,
       );
-      if (state.isClosed) return result;
-
       if (!result.added) {
         state = state.copyWith(
           addedKeys: {...state.addedKeys, identityKey},
@@ -377,7 +365,7 @@ class SearchNotifier extends Notifier<SearchState> {
         results: const [],
       );
       _slowSearchHintTimer = Timer(const Duration(milliseconds: 300), () {
-        if (state.isClosed ||
+        if (
             !_isActiveSearchRequest(requestId) ||
             !state.loading) {
           return;
@@ -425,7 +413,7 @@ class SearchNotifier extends Notifier<SearchState> {
       }
     } finally {
       _slowSearchHintTimer?.cancel();
-      if (_isActiveSearchRequest(requestId) && !state.isClosed) {
+      if (_isActiveSearchRequest(requestId)) {
         state = state.copyWith(
           loading: false,
           loadingMore: false,
@@ -525,8 +513,7 @@ class SearchNotifier extends Notifier<SearchState> {
   }
 
   bool _canApplySearchResult(int requestId, String keyword) {
-    return !state.isClosed &&
-        _isActiveSearchRequest(requestId) &&
+    return _isActiveSearchRequest(requestId) &&
         keyword == state.keyword.trim();
   }
 

@@ -15,29 +15,23 @@ class DrugState {
   const DrugState({
     this.myMedicines = const [],
     this.loadingMedicines = false,
-    this.isClosed = false,
   });
 
   final List<Map<String, dynamic>> myMedicines;
   final bool loadingMedicines;
-  final bool isClosed;
 
   DrugState copyWith({
     List<Map<String, dynamic>>? myMedicines,
     bool? loadingMedicines,
-    bool? isClosed,
   }) {
     return DrugState(
       myMedicines: myMedicines ?? this.myMedicines,
       loadingMedicines: loadingMedicines ?? this.loadingMedicines,
-      isClosed: isClosed ?? this.isClosed,
     );
   }
 }
 
 /// 药品页状态管理器。
-///
-/// 替代旧 GetX `DrugController`，管理"我的药品"列表加载、同步与删除。
 class DrugNotifier extends Notifier<DrugState> {
   MyMedicineRepository get _repo => ref.read(drugRepoProvider);
 
@@ -52,17 +46,11 @@ class DrugNotifier extends Notifier<DrugState> {
       unawaited(loadMyMedicines());
     });
 
-    // 初始加载
-    Future.microtask(() {
-      if (!state.isClosed) loadMyMedicines();
-    });
+    Future.microtask(() => loadMyMedicines());
 
     return const DrugState();
   }
 
-  /// 从本地数据库加载"我的药品"列表，并在登录态下同步远端。
-  ///
-  /// 返回加载过程中可能发生的错误，供 page 层显示 toast。
   Future<String?> loadMyMedicines() async {
     final scopedUserId = _userId.trim();
     if (state.loadingMedicines) {
@@ -94,10 +82,10 @@ class DrugNotifier extends Notifier<DrugState> {
         return 'drugLoadFailed';
       }
     } finally {
-      if (_isActiveLoadRequest(requestId) && !state.isClosed) {
+      if (_isActiveLoadRequest(requestId)) {
         state = state.copyWith(loadingMedicines: false);
       }
-      if (_isActiveLoadRequest(requestId) && _reloadQueued && !state.isClosed) {
+      if (_isActiveLoadRequest(requestId) && _reloadQueued) {
         _reloadQueued = false;
         unawaited(loadMyMedicines());
       }
@@ -105,20 +93,16 @@ class DrugNotifier extends Notifier<DrugState> {
     return null;
   }
 
-  /// 删除一条"我的药品"记录。
-  ///
-  /// 返回 null 表示成功，返回错误消息表示失败。
   Future<String?> deleteMedicine(Map<String, dynamic> row) async {
     try {
       await _repo.deleteMedicine(row, userId: _userId);
       await loadMyMedicines();
-      return null; // 成功，page 层显示 "已移除" toast
+      return null;
     } catch (_) {
       return 'drugDeleteFailed';
     }
   }
 
-  /// 把数据库行数据转换为 `MedicineItem`。
   MedicineItem toMedicineItem(Map<String, dynamic> row) {
     return MedicineItem(
       serialNo: '',
@@ -134,9 +118,7 @@ class DrugNotifier extends Notifier<DrugState> {
   }
 
   bool _canApplyLoadResult(int requestId, String scopedUserId) {
-    return !state.isClosed &&
-        _isActiveLoadRequest(requestId) &&
-        scopedUserId == _userId.trim();
+    return _isActiveLoadRequest(requestId) && scopedUserId == _userId.trim();
   }
 
   bool _isActiveLoadRequest(int requestId) {
@@ -150,7 +132,6 @@ class DrugNotifier extends Notifier<DrugState> {
   }
 }
 
-/// 药品页状态 provider。
 final drugProvider = NotifierProvider<DrugNotifier, DrugState>(() {
   return DrugNotifier();
 });

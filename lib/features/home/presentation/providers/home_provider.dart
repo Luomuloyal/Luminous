@@ -7,14 +7,10 @@ import 'package:luminous/features/auth/providers/user_session_provider.dart';
 import 'package:luminous/features/reminders/data/reminder_local_gateway.dart';
 import 'package:luminous/shared/models/home.dart';
 
-/// 首页 ReminderLocalGateway 注入 provider。
 final homeReminderGatewayProvider = Provider<ReminderLocalGateway>(
   (ref) => reminderLocalGateway,
 );
 
-/// 首页状态。
-///
-/// 从旧 `HomeController` 的可变字段迁入不可变状态模型。
 class HomeState {
   const HomeState({
     this.healthTips = const [],
@@ -26,7 +22,6 @@ class HomeState {
     this.demoCheckInRecords = const [],
     this.todayTip = '',
     this.lastRequestedUserId,
-    this.isClosed = false,
   });
 
   final List<String> healthTips;
@@ -39,9 +34,6 @@ class HomeState {
   final String todayTip;
   final String? lastRequestedUserId;
 
-  /// 标记 notifier 已关闭，后续 update 作废。
-  final bool isClosed;
-
   HomeState copyWith({
     List<String>? healthTips,
     List<HomeReminderItemData>? reminders,
@@ -52,7 +44,6 @@ class HomeState {
     List<HomeCheckInRecordData>? demoCheckInRecords,
     String? todayTip,
     String? lastRequestedUserId,
-    bool? isClosed,
   }) {
     return HomeState(
       healthTips: healthTips ?? this.healthTips,
@@ -66,15 +57,10 @@ class HomeState {
       todayTip: todayTip ?? this.todayTip,
       lastRequestedUserId:
           lastRequestedUserId ?? this.lastRequestedUserId,
-      isClosed: isClosed ?? this.isClosed,
     );
   }
 }
 
-/// 首页状态管理器。
-///
-/// 替代旧 GetX `HomeController`，使用 Riverpod `Notifier` 管理
-/// 健康提示、今日提醒、打卡记录和加载状态。
 class HomeNotifier extends Notifier<HomeState> {
   ReminderLocalGateway get _gateway => ref.read(homeReminderGatewayProvider);
 
@@ -95,18 +81,14 @@ class HomeNotifier extends Notifier<HomeState> {
     });
 
     ref.listen(currentUserProvider, (prev, next) {
-      Future.microtask(() {
-        if (!state.isClosed) refreshIfReady();
-      });
+      Future.microtask(() => refreshIfReady());
     });
 
     ref.listen(userSessionReadyProvider, (prev, ready) {
       if (ready && prev != ready) {
         Future.microtask(() {
-          if (!state.isClosed) {
-            state = state.copyWith(lastRequestedUserId: null);
-            refreshIfReady();
-          }
+          state = state.copyWith(lastRequestedUserId: null);
+          refreshIfReady();
         });
       }
     });
@@ -114,24 +96,17 @@ class HomeNotifier extends Notifier<HomeState> {
     return const HomeState();
   }
 
-  /// 启动初始数据加载。应在 widget 树构建完成后调用（如 initState + addPostFrameCallback）。
   void start() {
-    if (state.isClosed) return;
     refreshIfReady(force: true);
   }
-
-  // ── 本地化数据注入 ──
 
   void applyLocalizedData({
     required List<String> healthTips,
     required List<HomeReminderItemData> demoReminders,
     required List<HomeCheckInRecordData> demoCheckInRecords,
   }) {
-    if (state.isClosed) return;
-
     final newReminders = List<HomeReminderItemData>.from(demoReminders);
 
-    // 管理健康提示
     String nextTip = state.todayTip;
     if (healthTips.isNotEmpty &&
         (nextTip.isEmpty || !healthTips.contains(nextTip))) {
@@ -161,10 +136,8 @@ class HomeNotifier extends Notifier<HomeState> {
     }
   }
 
-  // ── 核心刷新逻辑 ──
-
   void refreshIfReady({bool force = false}) {
-    if (!ref.read(userSessionReadyProvider) || state.isClosed) return;
+    if (!ref.read(userSessionReadyProvider)) return;
 
     final userId = _currentUserId;
     _bindRevision(userId);
@@ -197,12 +170,9 @@ class HomeNotifier extends Notifier<HomeState> {
     unawaited(loadCheckInRecords());
   }
 
-  // ── 提醒加载 ──
-
   Future<void> loadReminders({bool syncRemote = false}) async {
     final userId = _currentUserId;
     if (userId.isEmpty) {
-      if (state.isClosed) return;
       state = state.copyWith(
         loadingReminders: false,
         reminders: List<HomeReminderItemData>.from(state.demoReminders),
@@ -230,16 +200,14 @@ class HomeNotifier extends Notifier<HomeState> {
         state = state.copyWith(reminders: const []);
       }
     } finally {
-      if (_isActiveReminderRequest(requestId) && !state.isClosed) {
+      if (_isActiveReminderRequest(requestId)) {
         state = state.copyWith(loadingReminders: false);
       }
     }
   }
 
-  // ── 打卡记录加载 ──
-
   Future<void> loadCheckInRecords() async {
-    if (state.loadingCheckInRecords && !state.isClosed) {
+    if (state.loadingCheckInRecords) {
       _checkInReloadQueued = true;
       return;
     }
@@ -247,7 +215,6 @@ class HomeNotifier extends Notifier<HomeState> {
     final userId = _currentUserId;
     if (userId.isEmpty) {
       _checkInReloadQueued = false;
-      if (state.isClosed) return;
       state = state.copyWith(
         loadingCheckInRecords: false,
         checkInRecords:
@@ -274,19 +241,15 @@ class HomeNotifier extends Notifier<HomeState> {
         state = state.copyWith(checkInRecords: const []);
       }
     } finally {
-      if (_isActiveCheckInRequest(requestId) && !state.isClosed) {
+      if (_isActiveCheckInRequest(requestId)) {
         state = state.copyWith(loadingCheckInRecords: false);
       }
-      if (_isActiveCheckInRequest(requestId) &&
-          _checkInReloadQueued &&
-          !state.isClosed) {
+      if (_isActiveCheckInRequest(requestId) && _checkInReloadQueued) {
         _checkInReloadQueued = false;
         unawaited(loadCheckInRecords());
       }
     }
   }
-
-  // ── 健康提示 ──
 
   void cycleHealthTip() {
     final tips = state.healthTips;
@@ -306,8 +269,6 @@ class HomeNotifier extends Notifier<HomeState> {
     state = state.copyWith(todayTip: nextTip);
   }
 
-  // ── 内部辅助 ──
-
   void _bindRevision(String userId) {
     _revisionSubscription?.cancel();
     final scopedUserId = userId.trim();
@@ -315,14 +276,12 @@ class HomeNotifier extends Notifier<HomeState> {
 
     _revisionSubscription =
         _gateway.watchRevision(scopedUserId).listen((_) {
-      if (state.isClosed) return;
       unawaited(loadReminders());
       unawaited(loadCheckInRecords());
     });
   }
 
   void _applyReminderItems(List<ReminderItem> items) {
-    if (state.isClosed) return;
     state = state.copyWith(
       reminders: items.map(_mapReminderItem).toList(growable: false),
     );
@@ -344,9 +303,7 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   bool _canApplyReminderResult(int requestId, String userId) {
-    return !state.isClosed &&
-        _isActiveReminderRequest(requestId) &&
-        userId == _currentUserId;
+    return _isActiveReminderRequest(requestId) && userId == _currentUserId;
   }
 
   bool _isActiveReminderRequest(int requestId) {
@@ -354,9 +311,7 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 
   bool _canApplyCheckInResult(int requestId, String userId) {
-    return !state.isClosed &&
-        _isActiveCheckInRequest(requestId) &&
-        userId == _currentUserId;
+    return _isActiveCheckInRequest(requestId) && userId == _currentUserId;
   }
 
   bool _isActiveCheckInRequest(int requestId) {
@@ -364,7 +319,6 @@ class HomeNotifier extends Notifier<HomeState> {
   }
 }
 
-/// 首页状态 provider。
 final homeProvider = NotifierProvider<HomeNotifier, HomeState>(() {
   return HomeNotifier();
 });
