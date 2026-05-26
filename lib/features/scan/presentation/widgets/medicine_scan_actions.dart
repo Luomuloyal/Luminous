@@ -2,12 +2,12 @@ part of '../scan.dart';
 
 extension _MedicineScanActions on _MedicineScanPageState {
   Widget _buildActionsSection(
-    MedicineScanController controller,
+    ScanState state,
     AppLocalizations? l10n,
   ) {
-    final selected = controller.selectedCandidate;
+    final selected = state.selectedCandidate;
     final hasResult = selected != null;
-    final searchKeyword = controller.searchKeyword;
+    final searchKeyword = state.searchKeyword;
 
     return Column(
       children: [
@@ -16,20 +16,23 @@ extension _MedicineScanActions on _MedicineScanPageState {
           color: const Color(0xFF0EA5E9),
           label: _actionRescanLabel(l10n),
           subtitle: _actionRescanSubtitle(l10n),
-          onTap: controller.scanning
+          onTap: state.scanning
               ? null
-              : () => controller.pickAndScan(
-                  pickImage: () => pickMedicineScanImage(context),
-                ),
+              : () {
+                  ref.read(scanProvider.notifier).applyImageAndScan(
+                    bytes: state.photoBytes!,
+                    mimeType: 'image/jpeg',
+                  );
+                },
         ),
         const SizedBox(height: 10),
         _ActionTile(
           icon: Icons.photo_library_outlined,
           color: const Color(0xFF6366F1),
           label: _actionSaveAlbumLabel(l10n),
-          subtitle: _actionSaveAlbumSubtitle(l10n, controller.savingToAlbum),
-          onTap: hasResult && controller.canSaveToAlbum
-              ? controller.saveToAppAlbum
+          subtitle: _actionSaveAlbumSubtitle(l10n, state.savingToAlbum),
+          onTap: hasResult && state.canSaveToAlbum
+              ? () => ref.read(scanProvider.notifier).saveToAppAlbum()
               : null,
         ),
         const SizedBox(height: 10),
@@ -40,7 +43,7 @@ extension _MedicineScanActions on _MedicineScanPageState {
           subtitle: _actionSearchSubtitle(l10n, searchKeyword.isNotEmpty),
           onTap: searchKeyword.isEmpty
               ? null
-              : () => _searchSelectedMedicine(controller),
+              : () => _searchSelectedMedicine(state),
         ),
         const SizedBox(height: 10),
         _ActionTile(
@@ -48,17 +51,15 @@ extension _MedicineScanActions on _MedicineScanPageState {
           color: const Color(0xFF94A3B8),
           label: _actionCancelLabel(l10n),
           subtitle: _actionCancelSubtitle(l10n),
-          onTap: controller.scanning ? null : () => Navigator.maybePop(context),
+          onTap: state.scanning ? null : () => Navigator.maybePop(context),
         ),
       ],
     );
   }
 
-  Future<void> _searchSelectedMedicine(
-    MedicineScanController controller,
-  ) async {
+  Future<void> _searchSelectedMedicine(ScanState state) async {
     final l10n = AppLocalizations.of(context);
-    final keyword = controller.searchKeyword;
+    final keyword = state.searchKeyword;
     if (keyword.isEmpty) {
       ToastUtils.instance.show(context, _searchMissingKeywordToastText(l10n));
       return;

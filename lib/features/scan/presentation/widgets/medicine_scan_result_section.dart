@@ -2,12 +2,12 @@ part of '../scan.dart';
 
 extension _MedicineScanResultSection on _MedicineScanPageState {
   Widget _buildResultSection(
-    MedicineScanController controller,
+    ScanState state,
     AppLocalizations? l10n,
   ) {
-    final result = controller.scanResult;
+    final result = state.scanResult;
     final scheme = Theme.of(context).colorScheme;
-    if (controller.scanning) {
+    if (state.scanning) {
       return Container(
         padding: const EdgeInsets.symmetric(vertical: 24),
         alignment: Alignment.center,
@@ -45,13 +45,13 @@ extension _MedicineScanResultSection on _MedicineScanPageState {
             ...result.candidates.asMap().entries.map((entry) {
               final index = entry.key;
               final c = entry.value;
-              final selected = index == controller.selectedIndex;
+              final selected = index == state.selectedIndex;
               return Padding(
                 padding: EdgeInsets.only(
                   bottom: index == result.candidates.length - 1 ? 0 : 10,
                 ),
                 child: InkWell(
-                  onTap: () => controller.selectCandidate(index),
+                  onTap: () => ref.read(scanProvider.notifier).selectCandidate(index),
                   borderRadius: BorderRadius.circular(14),
                   child: Ink(
                     padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),

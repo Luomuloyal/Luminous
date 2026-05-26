@@ -3,7 +3,7 @@ part of '../scan.dart';
 extension _MedicineScanSheet on _MedicineScanPageState {
   Widget _buildSheet(
     ScrollController scrollController,
-    MedicineScanController controller,
+    ScanState state,
     AppLocalizations? l10n,
   ) {
     final theme = Theme.of(context);
@@ -28,25 +28,25 @@ extension _MedicineScanSheet on _MedicineScanPageState {
             ),
           ),
           const SizedBox(height: 10),
-          _buildHeaderRow(controller, l10n),
+          _buildHeaderRow(state, l10n),
           const SizedBox(height: 12),
-          if (controller.lastError != null)
-            _buildErrorCard(controller.lastError!),
-          _buildResultSection(controller, l10n),
+          if (state.lastError != null)
+            _buildErrorCard(state.lastError!),
+          _buildResultSection(state, l10n),
           const SizedBox(height: 10),
-          _buildActionsSection(controller, l10n),
+          _buildActionsSection(state, l10n),
         ],
       ),
     );
   }
 
   Widget _buildHeaderRow(
-    MedicineScanController controller,
+    ScanState state,
     AppLocalizations? l10n,
   ) {
     final scheme = Theme.of(context).colorScheme;
     final title = _pageTitle(l10n);
-    final subtitle = _headerSubtitle(l10n, controller);
+    final subtitle = _headerSubtitle(l10n, state);
 
     return Row(
       children: [
@@ -93,11 +93,17 @@ extension _MedicineScanSheet on _MedicineScanPageState {
           ),
         ),
         FilledButton.tonalIcon(
-          onPressed: controller.scanning
+          onPressed: state.scanning
               ? null
-              : () => controller.pickAndScan(
-                  pickImage: () => pickMedicineScanImage(context),
-                ),
+              : () {
+                  final bytes = state.photoBytes;
+                  if (bytes != null) {
+                    ref.read(scanProvider.notifier).applyImageAndScan(
+                      bytes: bytes,
+                      mimeType: 'image/jpeg',
+                    );
+                  }
+                },
           icon: const Icon(Icons.camera_alt_rounded, size: 16),
           label: Text(l10n?.scanRetakeAction ?? 'Retake'),
         ),

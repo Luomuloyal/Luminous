@@ -411,7 +411,11 @@ home (Step 1), search (Step 2), drug (Step 3-4), reminders (Step 5), safety (Ste
   - `scan.dart` barrel 新增 provider 导出。
   - `controllers/medicine_scan_controller.dart` 变为兼容重新导出壳。
   - 旧 `MedicineScanController` 完整代码保留在 `deprecated/getx/medicine_scan_controller.dart`。
-  - Scan page 暂未迁移（part-file 架构 + 多个支持文件需同步改动），但 provider 基础设施就绪。
+  - Scan page 已完成迁移：`MedicineScanPage` 改为 `ConsumerStatefulWidget`，零 `GetX` 引用。
+    - 移除 `controller` 构造参数和 `GetBuilder`。
+    - 5 个 part 文件（actions/photo_area/result_section/sheet/labels）全部改为 `ScanState` 参数。
+    - `handleEntryFlow` / `pickAndScan` 逻辑移入 page 层，直接调用 `scanProvider.notifier`。
+    - `scan.dart` barrel 移除 `get/get.dart` 导入，改用 `flutter_riverpod`。
 
 - **验证：**
   - `flutter analyze`：零 error，4 warnings（均为 deprecated 代码中 unused import/element）。

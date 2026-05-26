@@ -2,10 +2,10 @@ part of '../scan.dart';
 
 extension _MedicineScanPhotoArea on _MedicineScanPageState {
   Widget _buildPhotoArea(
-    MedicineScanController controller,
+    ScanState state,
     AppLocalizations? l10n,
   ) {
-    final bytes = controller.photoBytes;
+    final bytes = state.photoBytes;
     return Container(
       color: Colors.black,
       alignment: Alignment.center,
