@@ -314,3 +314,20 @@ home (Step 1), search (Step 2), drug (Step 3-4), reminders (Step 5), safety (Ste
 - `flutter analyze`：零 issue。`flutter test`：59/59 通过。
 
 **下一步：** Step 3 — 迁移 Drug 列表和我的药品状态到 Riverpod。
+
+### 2026-05-26 — Step 3：迁移 Drug 列表和我的药品状态（完成）
+
+- 新建 `lib/features/drug/presentation/providers/drug_provider.dart`（156 行）：
+  - `DrugState` 不可变状态模型（myMedicines、loadingMedicines）。
+  - `DrugNotifier extends Notifier<DrugState>` 替代旧 `DrugController` (GetxController)。
+  - `drugRepoProvider` 注入 MyMedicineRepository。
+  - 用户态 `ref.watch(currentUserProvider)` + `ref.listen` 自动重载。
+  - `loadMyMedicines()` 返回 `String?` 错误消息供 page 层 toast，`deleteMedicine()` 同理。
+- `DrugPage`：`StatelessWidget` + `GetBuilder<DrugController>` → `ConsumerWidget`。
+  - Toast 显示逻辑从 controller 迁移到 page 层（`_loadMyMedicines`、`_deleteMedicine` 处理错误）。
+- 旧 `DrugController` 迁入 `lib/deprecated/getx/drug_controller.dart`（标记 @Deprecated）。
+- `controllers/drug_controller.dart` 变为兼容重新导出壳。
+- `drug.dart` barrel 新增 `providers/drug_provider.dart` 导出。
+- `flutter analyze`：零 issue。`flutter test`：59/59 通过。
+
+**下一步：** Step 4 — 迁移 Medicine Detail 状态到 Riverpod。

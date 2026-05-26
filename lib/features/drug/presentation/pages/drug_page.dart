@@ -1,59 +1,39 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:luminous/features/medicine_picker/presentation/medicine_picker.dart';
 import 'package:luminous/features/scan/presentation/scan.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/shared/models/medicine.dart';
 import 'package:luminous/utils/toast_utils.dart';
 
-import '../controllers/drug_controller.dart';
 import '../models/drug_models.dart';
+import '../providers/drug_provider.dart';
 import '../widgets/drug_page_widgets.dart';
 import 'medicine_detail_page.dart';
 
-// 药品页
-//
-// 设计要点：
-// - 无顶部色块，直接展示搜索入口 + 快捷入口
-// - 下方为"我的药品"列表，使用 SliverList.builder 按需加载
-// - 药品可通过手动搜索或拍照识别两种方式添加
 /// 药品页。
 ///
 /// 页面上半部分提供药品相关快捷入口，下半部分展示本地"我的药品"列表。
-class DrugPage extends StatelessWidget {
-  /// 创建药品页组件。
+class DrugPage extends ConsumerWidget {
   const DrugPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return GetBuilder<DrugController>(
-      init: DrugController(),
-      global: false,
-      builder: (controller) {
-        final l10n = AppLocalizations.of(context);
-        return DrugPageLayout(
-          quickEntries: _quickEntries(l10n),
-          myMedicines: controller.myMedicines,
-          loadingMedicines: controller.loadingMedicines,
-          onRefresh: controller.loadMyMedicines,
-          onTapSearch: () async {
-            await Navigator.pushNamed(context, '/search');
-            if (context.mounted) {
-              await controller.loadMyMedicines();
-            }
-          },
-          onTapQuickEntry: (entry) => _onTapQuick(context, controller, entry),
-          onTapMedicineRow: (row) =>
-              _openMedicineDetail(context, controller, row),
-          onDeleteMedicine: controller.deleteMedicine,
-        );
-      },
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(drugProvider);
+    final l10n = AppLocalizations.of(context);
+
+    return DrugPageLayout(
+      quickEntries: _quickEntries(l10n),
+      myMedicines: state.myMedicines,
+      loadingMedicines: state.loadingMedicines,
+      onRefresh: () => _loadMyMedicines(ref, context),
+      onTapSearch: () => _onTapSearch(context, ref),
+      onTapQuickEntry: (entry) => _onTapQuick(context, ref, entry),
+      onTapMedicineRow: (row) => _openMedicineDetail(context, ref, row),
+      onDeleteMedicine: (row) => _deleteMedicine(context, ref, row),
     );
   }
 
-  /// 药品页顶部"快捷入口"的配置列表。
   List<DrugQuickEntry> _quickEntries(AppLocalizations? l10n) {
     return [
       DrugQuickEntry(
@@ -83,15 +63,30 @@ class DrugPage extends StatelessWidget {
     ];
   }
 
-  /// 根据数据库行数据打开药品详情页。
-  ///
-  /// 这里会先把数据库行转换为 `MedicineItem`，作为详情页初始对象传入。
+  Future<void> _loadMyMedicines(WidgetRef ref, BuildContext context) async {
+    final error = await ref.read(drugProvider.notifier).loadMyMedicines();
+    if (error != null && context.mounted) {
+      _showError(context, error);
+    }
+  }
+
+  Future<void> _onTapSearch(BuildContext context, WidgetRef ref) async {
+    await Navigator.pushNamed(context, '/search');
+    if (context.mounted) {
+      final error =
+          await ref.read(drugProvider.notifier).loadMyMedicines();
+      if (error != null && context.mounted) {
+        _showError(context, error);
+      }
+    }
+  }
+
   void _openMedicineDetail(
     BuildContext context,
-    DrugController controller,
+    WidgetRef ref,
     Map<String, dynamic> row,
   ) {
-    final item = controller.toMedicineItem(row);
+    final item = ref.read(drugProvider.notifier).toMedicineItem(row);
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => MedicineDetailPage(initialItem: item),
@@ -99,26 +94,30 @@ class DrugPage extends StatelessWidget {
     );
   }
 
-  /// 处理顶部"快捷入口"点击。
-  ///
-  /// 有 routeName 的入口直接走命名路由；
-  /// 没有 routeName 的入口根据 entryKey 走自定义逻辑。
   Future<void> _onTapQuick(
     BuildContext context,
-    DrugController controller,
+    WidgetRef ref,
     DrugQuickEntry entry,
   ) async {
     if (entry.routeName.isNotEmpty) {
       await Navigator.pushNamed(context, entry.routeName);
       if (context.mounted) {
-        await controller.loadMyMedicines();
+        final error =
+            await ref.read(drugProvider.notifier).loadMyMedicines();
+        if (error != null && context.mounted) {
+          _showError(context, error);
+        }
       }
       return;
     }
     if (entry.entryKey == 'scan') {
       await openMedicineScanFlow(context, mode: ScanEntryMode.actions);
       if (context.mounted) {
-        await controller.loadMyMedicines();
+        final error =
+            await ref.read(drugProvider.notifier).loadMyMedicines();
+        if (error != null && context.mounted) {
+          _showError(context, error);
+        }
       }
       return;
     }
@@ -132,9 +131,26 @@ class DrugPage extends StatelessWidget {
     );
   }
 
-  /// 先打开药品选择器，再进入对应药品的详情页。
-  ///
-  /// 这是"AI 解读"入口的第一步：先让用户选一款药。
+  Future<void> _deleteMedicine(
+    BuildContext context,
+    WidgetRef ref,
+    Map<String, dynamic> row,
+  ) async {
+    final error = await ref.read(drugProvider.notifier).deleteMedicine(row);
+    if (!context.mounted) return;
+    if (error != null) {
+      ToastUtils.instance.show(
+        context,
+        AppLocalizations.of(context)?.drugDeleteFailedToast ?? '删除失败',
+      );
+    } else {
+      ToastUtils.instance.show(
+        context,
+        AppLocalizations.of(context)?.drugDeletedToast ?? '已从我的药品中移除',
+      );
+    }
+  }
+
   Future<void> _pickAndOpenDetail(BuildContext context) async {
     final item = await Navigator.of(context).push<MedicineItem>(
       MaterialPageRoute<MedicineItem>(
@@ -149,5 +165,9 @@ class DrugPage extends StatelessWidget {
         builder: (_) => MedicineDetailPage(initialItem: item),
       ),
     );
+  }
+
+  void _showError(BuildContext context, String error) {
+    ToastUtils.instance.showError(context, error);
   }
 }
