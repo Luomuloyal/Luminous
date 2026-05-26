@@ -305,6 +305,7 @@ class MineMenuItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final trimmedBadge = (badgeText ?? '').trim();
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
@@ -350,10 +351,10 @@ class MineMenuItem extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if ((badgeText ?? '').trim().isNotEmpty) ...[
+                      if (trimmedBadge.isNotEmpty) ...[
                         const SizedBox(width: 8),
                         TintedStatusChip(
-                          text: badgeText!.trim(),
+                          text: trimmedBadge,
                           color: accentColor,
                           enablePopup: false,
                           fontSize: 10.6,

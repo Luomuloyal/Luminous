@@ -372,3 +372,24 @@ lib/
 - `GlobalConstants.SUCCESS_CODE` → `LEGACY_SUCCESS_CODE` 间接引用链保留 — 为 Lucent 迁移预留的合理设计提示
 - `backend/` 目录保留 — 仍在 `docker-compose.prod.yml` 中生产运行
 - 散落 `Color(0xFF...)` 字面量暂不统一 — 属于各 feature 独立样式，需设计决策
+
+### 空安全加固 (2026-06-02)
+
+审查业务代码中 11 处 `!` 强制解包，修复最危险的 7 处：
+
+| 文件 | 修复内容 |
+|------|---------|
+| `medicine_ai_card.dart:44` | `result!.text` → `result?.text` + null 合并 |
+| `safety_assist_widgets.dart:363` | 同上 |
+| `app_canvas.dart:137` | `appBarSpacing!.clamp()` → `??` + chain |
+| `login_page.dart:98` | `_formKey.currentState!.validate()` → `?.validate() ?? false` |
+| `register_page.dart:114` | 同上 |
+| `reminder_edit_widgets.dart:326` | `badgeText != null && badgeText!.trim()` → `(badgeText ?? '').trim()` |
+| `mine_page_widgets.dart:356` | `badgeText!.trim()` → 预计算 `trimmedBadge` 局部变量 |
+
+保留的 4 处 `!`：`root_app_widget.dart` 的 `Color.lerp()!`（品牌色 lerp 越界概率极低）；`medicine_scan_labels.dart` 和 `medicine_scan_page.dart` 的 `!` 位于已有多层 guard 之后。
+
+其他审计发现（记录不修复）：
+- API 层：`LucentApiClient` 独立客户端体系（未激活，等待 Lucent 迁移）；`medicine_api.dart` 健康检查裸 Dio（设计意图明确）
+- Provider：4 个 `AsyncNotifier` 返回裸 `List<T>` 无 State wrapper，与其余 12 个 provider 不一致
+- 测试覆盖：`drug/`、`legal/`、`medicine_picker/` 完全无专属测试文件

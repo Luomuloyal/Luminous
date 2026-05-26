@@ -39,9 +39,10 @@ class MedicineAiCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final hasFetched = result != null;
     final scheme = Theme.of(context).colorScheme;
-    final entries = result == null
-        ? const <String>[]
-        : _splitAiEntries(result!.text);
+    final resultText = result?.text;
+    final entries = resultText != null
+        ? _splitAiEntries(resultText)
+        : const <String>[];
     final locale = Localizations.localeOf(context).languageCode.toLowerCase();
     final isZh = locale.startsWith('zh');
     final cachedTime = formatAiTimestamp(context, result?.cachedAt);

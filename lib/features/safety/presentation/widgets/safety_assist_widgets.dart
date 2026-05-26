@@ -358,9 +358,10 @@ class SafetyResultSection extends StatelessWidget {
     final scheme = theme.colorScheme;
     final locale = (l10n?.localeName ?? 'zh').toLowerCase();
     final isZh = locale.startsWith('zh');
-    final entries = result == null
-        ? const <String>[]
-        : _splitResultParagraphs(result!.text);
+    final resultText = result?.text;
+    final entries = resultText != null
+        ? _splitResultParagraphs(resultText)
+        : const <String>[];
     final cachedTime = formatSafetyAiTimestamp(context, result?.cachedAt);
 
     return SafetySectionCard(

@@ -111,7 +111,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   Future<void> _onRegisterPressed() async {
     FocusScope.of(context).unfocus();
-    if (!_formKey.currentState!.validate()) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
     if (!_agreed) {
       ToastUtils.instance.show(context, '请先同意用户协议和隐私政策');
       return;

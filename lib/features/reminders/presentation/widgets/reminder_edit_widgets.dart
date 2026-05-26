@@ -323,7 +323,7 @@ class ReminderEditTile extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  if (badgeText != null && badgeText!.trim().isNotEmpty) ...[
+                  if ((badgeText ?? '').trim().isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Container(
                       padding: const EdgeInsets.symmetric(

@@ -95,7 +95,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Future<void> _onLoginPressed() async {
     FocusScope.of(context).unfocus();
-    if (!_formKey.currentState!.validate()) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final notifier = ref.read(loginNotifierProvider.notifier);
     final identifier = _identifierCtrl.text.trim();
