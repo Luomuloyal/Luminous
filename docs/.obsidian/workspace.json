@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "RefactorPlan.md",
+                "file": "TODO.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "RefactorPlan"
+              "title": "TODO"
             }
           }
         ]
@@ -78,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 200
   },
   "right": {
     "id": "0dd4172b374c163a",
@@ -183,11 +183,11 @@
   "active": "737ec7e0d996b905",
   "lastOpenFiles": [
     "ROADMAP.md",
+    "RefactorPlan.md",
     "TODO.md",
     "MigrationLog.md",
     "ExecutionPlan.md",
     "Promise.md",
-    "RefactorPlan.md",
     "README.md",
     "migration_log.md",
     "knowledge-data-platform-plan.md",
