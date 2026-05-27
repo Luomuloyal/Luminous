@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:luminous/features/medicine_picker/presentation/medicine_picker.dart';
 import 'package:luminous/features/scan/presentation/scan.dart';
 import 'package:luminous/l10n/app_localizations.dart';
@@ -71,10 +72,9 @@ class DrugPage extends ConsumerWidget {
   }
 
   Future<void> _onTapSearch(BuildContext context, WidgetRef ref) async {
-    await Navigator.pushNamed(context, '/search');
+    await context.push('/search');
     if (context.mounted) {
-      final error =
-          await ref.read(drugProvider.notifier).loadMyMedicines();
+      final error = await ref.read(drugProvider.notifier).loadMyMedicines();
       if (error != null && context.mounted) {
         _showError(context, error);
       }
@@ -100,10 +100,9 @@ class DrugPage extends ConsumerWidget {
     DrugQuickEntry entry,
   ) async {
     if (entry.routeName.isNotEmpty) {
-      await Navigator.pushNamed(context, entry.routeName);
+      await context.push(entry.routeName);
       if (context.mounted) {
-        final error =
-            await ref.read(drugProvider.notifier).loadMyMedicines();
+        final error = await ref.read(drugProvider.notifier).loadMyMedicines();
         if (error != null && context.mounted) {
           _showError(context, error);
         }
@@ -113,8 +112,7 @@ class DrugPage extends ConsumerWidget {
     if (entry.entryKey == 'scan') {
       await openMedicineScanFlow(context, mode: ScanEntryMode.actions);
       if (context.mounted) {
-        final error =
-            await ref.read(drugProvider.notifier).loadMyMedicines();
+        final error = await ref.read(drugProvider.notifier).loadMyMedicines();
         if (error != null && context.mounted) {
           _showError(context, error);
         }

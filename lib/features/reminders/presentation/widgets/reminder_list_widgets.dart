@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
 import 'package:luminous/shared/widgets/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
@@ -58,18 +59,21 @@ class ReminderListHeroCard extends StatelessWidget {
             children: [
               TintedStatusChip(
                 icon: Icons.library_books_rounded,
-                text: l10n?.reminderListCountLabel(itemCount) ?? '$itemCount 条提醒',
+                text:
+                    l10n?.reminderListCountLabel(itemCount) ?? '$itemCount 条提醒',
                 color: const Color(0xFF0EA5E9),
               ),
               TintedStatusChip(
                 icon: Icons.notifications_active_rounded,
-                text: l10n?.reminderListEnabledCountLabel(enabledCount) ??
+                text:
+                    l10n?.reminderListEnabledCountLabel(enabledCount) ??
                     '$enabledCount 启用',
                 color: const Color(0xFF10B981),
               ),
               TintedStatusChip(
                 icon: Icons.notifications_off_rounded,
-                text: l10n?.reminderListDisabledCountLabel(disabledCount) ??
+                text:
+                    l10n?.reminderListDisabledCountLabel(disabledCount) ??
                     '$disabledCount 关闭',
                 color: const Color(0xFF64748B),
               ),
@@ -151,7 +155,7 @@ class ReminderNeedLoginCard extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: () => Navigator.pushNamed(context, '/login'),
+                  onPressed: () => context.push('/login'),
                   style: FilledButton.styleFrom(
                     backgroundColor: scheme.primary,
                     foregroundColor: scheme.onPrimary,

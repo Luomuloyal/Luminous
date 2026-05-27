@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:luminous/api/auth_api.dart';
 import 'package:luminous/shared/widgets/auth/auth.dart';
 import 'package:luminous/shared/widgets/soft_banner/soft_banner.dart';
@@ -171,8 +172,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
         AuthAgreementRow(
           agreed: _agreed,
           onChanged: (v) => setState(() => _agreed = v),
-          onTapAgreement: () => Navigator.pushNamed(context, '/user-agreement'),
-          onTapPrivacy: () => Navigator.pushNamed(context, '/privacy-policy'),
+          onTapAgreement: () => context.push('/user-agreement'),
+          onTapPrivacy: () => context.push('/privacy-policy'),
         ),
         const SizedBox(height: 14),
         _buildRegisterButton(formState),

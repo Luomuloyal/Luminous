@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:luminous/shared/widgets/app_canvas.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
 import 'package:luminous/shared/widgets/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
-import 'package:luminous/features/drug/presentation/drug.dart';
 import 'package:luminous/features/auth/providers/user_session_provider.dart';
 import 'package:luminous/features/mine/presentation/models/browse_history.dart';
 
@@ -19,7 +19,9 @@ class BrowseHistoryPage extends ConsumerWidget {
     final entriesAsync = ref.watch(browseHistoryProvider);
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final items = entriesAsync.hasValue ? entriesAsync.value! : const <BrowseHistoryEntry>[];
+    final items = entriesAsync.hasValue
+        ? entriesAsync.value!
+        : const <BrowseHistoryEntry>[];
     final loading = entriesAsync.isLoading;
 
     return AppCanvasPageScaffold(
@@ -31,9 +33,15 @@ class BrowseHistoryPage extends ConsumerWidget {
         foregroundColor: const Color(0xFF0F172A),
         actions: [
           IconButton(
-            onPressed: loading ? null : () => ref.invalidate(browseHistoryProvider),
+            onPressed: loading
+                ? null
+                : () => ref.invalidate(browseHistoryProvider),
             icon: loading
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
                 : const Icon(Icons.refresh_rounded),
           ),
           IconButton(
@@ -69,7 +77,8 @@ class BrowseHistoryPage extends ConsumerWidget {
         return AlertDialog(
           title: Text(l10n?.mineBrowseHistoryClearConfirmTitle ?? '清空浏览记录'),
           content: Text(
-            l10n?.mineBrowseHistoryClearConfirmMessage ?? '清空后将删除当前账号下的本机浏览记录，且无法恢复。',
+            l10n?.mineBrowseHistoryClearConfirmMessage ??
+                '清空后将删除当前账号下的本机浏览记录，且无法恢复。',
           ),
           actions: [
             TextButton(
@@ -90,11 +99,7 @@ class BrowseHistoryPage extends ConsumerWidget {
   }
 
   void _openDetail(BuildContext context, BrowseHistoryEntry entry) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => MedicineDetailPage(initialItem: entry.toMedicineItem()),
-      ),
-    );
+    context.push('/drug', extra: entry.toMedicineItem());
   }
 
   int _historyItemCount(List<BrowseHistoryEntry> items, bool loading) {
@@ -120,23 +125,18 @@ class BrowseHistoryPage extends ConsumerWidget {
     if (index == 1) return const SizedBox(height: 10);
     // remaining: empty state or items
     if (items.isEmpty && !loading) {
-      return _EmptyStateCard(
-        onTapSearch: () => Navigator.pushNamed(context, '/search'),
-      );
+      return _EmptyStateCard(onTapSearch: () => context.push('/search'));
     }
     final itemIndex = index - 2;
     if (itemIndex >= items.length) return const SizedBox.shrink();
     final item = items[itemIndex];
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: itemIndex == items.length - 1 ? 0 : 8,
-      ),
+      padding: EdgeInsets.only(bottom: itemIndex == items.length - 1 ? 0 : 8),
       child: _HistoryItemCard(
         entry: item,
         busy: false,
         onTap: () => _openDetail(context, item),
-        onRemove: () =>
-            ref.read(browseHistoryProvider.notifier).remove(item),
+        onRemove: () => ref.read(browseHistoryProvider.notifier).remove(item),
       ),
     );
   }
@@ -163,12 +163,21 @@ class _HistoryHeroCard extends StatelessWidget {
         children: [
           Text(
             l10n?.mineBrowseHistoryHeroTitle ?? '最近查看',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: scheme.onSurface),
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w800,
+              color: scheme.onSurface,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             l10n?.mineBrowseHistoryHeroSubtitle ?? '进入药品详情后会自动记录，方便稍后继续查看。',
-            style: TextStyle(fontSize: 12.8, height: 1.45, color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: 12.8,
+              height: 1.45,
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -177,12 +186,18 @@ class _HistoryHeroCard extends StatelessWidget {
             children: [
               TintedStatusChip(
                 icon: Icons.history_rounded,
-                text: l10n?.mineBrowseHistoryCountLabel(items.length) ?? '${items.length} 条记录',
+                text:
+                    l10n?.mineBrowseHistoryCountLabel(items.length) ??
+                    '${items.length} 条记录',
                 color: scheme.secondary,
               ),
               TintedStatusChip(
-                icon: isLoggedIn ? Icons.person_rounded : Icons.phone_android_rounded,
-                text: isLoggedIn ? (l10n?.mineBrowseHistoryScopeAccount ?? '当前账号') : (l10n?.mineBrowseHistoryScopeGuest ?? '本机游客记录'),
+                icon: isLoggedIn
+                    ? Icons.person_rounded
+                    : Icons.phone_android_rounded,
+                text: isLoggedIn
+                    ? (l10n?.mineBrowseHistoryScopeAccount ?? '当前账号')
+                    : (l10n?.mineBrowseHistoryScopeGuest ?? '本机游客记录'),
                 color: isLoggedIn ? scheme.primary : scheme.tertiary,
               ),
             ],
@@ -211,17 +226,41 @@ class _EmptyStateCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.history_rounded, size: 42, color: Color(0xFF94A3B8)),
+            const Icon(
+              Icons.history_rounded,
+              size: 42,
+              color: Color(0xFF94A3B8),
+            ),
             const SizedBox(height: 10),
-            Text(l10n?.mineBrowseHistoryEmptyTitle ?? '暂无浏览记录', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: scheme.onSurface)),
+            Text(
+              l10n?.mineBrowseHistoryEmptyTitle ?? '暂无浏览记录',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: scheme.onSurface,
+              ),
+            ),
             const SizedBox(height: 6),
-            Text(l10n?.mineBrowseHistoryEmptySubtitle ?? '查看药品详情后会记录在这里', textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+            Text(
+              l10n?.mineBrowseHistoryEmptySubtitle ?? '查看药品详情后会记录在这里',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 14),
             FilledButton.icon(
               onPressed: onTapSearch,
               icon: const Icon(Icons.search),
               label: const Text('去搜索'),
-              style: FilledButton.styleFrom(minimumSize: const Size(120, 40), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(120, 40),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
             ),
           ],
         ),
@@ -231,7 +270,12 @@ class _EmptyStateCard extends StatelessWidget {
 }
 
 class _HistoryItemCard extends StatelessWidget {
-  const _HistoryItemCard({required this.entry, required this.busy, required this.onTap, required this.onRemove});
+  const _HistoryItemCard({
+    required this.entry,
+    required this.busy,
+    required this.onTap,
+    required this.onRemove,
+  });
   final BrowseHistoryEntry entry;
   final bool busy;
   final VoidCallback onTap;
@@ -258,23 +302,49 @@ class _HistoryItemCard extends StatelessWidget {
                 Container(
                   width: 32,
                   height: 32,
-                  decoration: BoxDecoration(color: scheme.primary.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(10)),
-                  child: Icon(Icons.medication_outlined, color: scheme.primary, size: 18),
+                  decoration: BoxDecoration(
+                    color: scheme.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.medication_outlined,
+                    color: scheme.primary,
+                    size: 18,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(entry.displayTitle, style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w800, color: scheme.onSurface)),
+                      Text(
+                        entry.displayTitle,
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w800,
+                          color: scheme.onSurface,
+                        ),
+                      ),
                       if (entry.displaySubtitle.isNotEmpty) ...[
                         const SizedBox(height: 2),
-                        Text(entry.displaySubtitle, style: TextStyle(fontSize: 12.2, height: 1.4, color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600)),
+                        Text(
+                          entry.displaySubtitle,
+                          style: TextStyle(
+                            fontSize: 12.2,
+                            height: 1.4,
+                            color: scheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ],
                     ],
                   ),
                 ),
-                IconButton(onPressed: busy ? null : onRemove, icon: const Icon(Icons.close_rounded, size: 20), color: scheme.onSurfaceVariant),
+                IconButton(
+                  onPressed: busy ? null : onRemove,
+                  icon: const Icon(Icons.close_rounded, size: 20),
+                  color: scheme.onSurfaceVariant,
+                ),
               ],
             ),
           ),

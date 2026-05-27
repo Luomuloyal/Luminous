@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:luminous/shared/design_tokens/design_tokens.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
 import 'package:luminous/l10n/app_localizations.dart';
@@ -78,7 +79,7 @@ class CheckInNeedLoginCard extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: () => Navigator.pushNamed(context, '/login'),
+                  onPressed: () => context.push('/login'),
                   style: FilledButton.styleFrom(
                     backgroundColor: scheme.primary,
                     foregroundColor: scheme.onPrimary,

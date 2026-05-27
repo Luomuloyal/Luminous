@@ -6,12 +6,12 @@ tags:
 aliases:
   - TODO
   - 待办
-created: 2026-06-03
+created: 2026-05-27
 ---
 
 # Luminous 待办事项
 
-最后更新: 2026-06-03 (2026-06-04 更新 #1)
+最后更新: 2026-05-27
 
 本文档汇总五轮代码审查中已确认但暂不修复的问题，以及测试覆盖缺口。按类别和优先级排序。
 
@@ -21,7 +21,7 @@ created: 2026-06-03
 
 | # | 问题 | 位置 | 影响 | 建议 |
 |---|------|------|------|------|
-| 1 | ~~16 处 `ListView(children: [...])` 未用 `ListView.builder`~~ | ~~多个 feature 页面~~ | ✅ 已修复 3 处动态列表；13 处为固定少量子项（<10），保持 `children:` 更清晰 | 2026-06-04: `reminder_list_page` / `checkin_page` / `browse_history_page` 已改 `ListView.builder`；其余为表单/设置/详情固定段落，保持原样 |
+| 1 | ~~16 处 `ListView(children: [...])` 未用 `ListView.builder`~~ | ~~多个 feature 页面~~ | ✅ 已修复 3 处动态列表；13 处为固定少量子项（<10），保持 `children:` 更清晰 | 2026-05-27: `reminder_list_page` / `checkin_page` / `browse_history_page` 已改 `ListView.builder`；其余为表单/设置/详情固定段落，保持原样 |
 
 ---
 

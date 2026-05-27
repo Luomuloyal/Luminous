@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:luminous/shared/widgets/app_canvas.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/shared/models/medicine.dart';
@@ -44,9 +45,7 @@ class _ReminderEditPageState extends ConsumerState<ReminderEditPage> {
   void _initialize() {
     if (_initialized) return;
     _initialized = true;
-    ref.read(reminderEditProvider.notifier).initialize(
-      initial: widget.initial,
-    );
+    ref.read(reminderEditProvider.notifier).initialize(initial: widget.initial);
   }
 
   @override
@@ -108,8 +107,7 @@ class _ReminderEditPageState extends ConsumerState<ReminderEditPage> {
                   badgeText: state.selectedMedicines.isEmpty
                       ? (l10n?.reminderEditStatusManualInput ?? '待选择')
                       : (state.selectedMedicines.length == 1
-                            ? (l10n?.reminderEditStatusBoundMedicine ??
-                                  '已绑定药品')
+                            ? (l10n?.reminderEditStatusBoundMedicine ?? '已绑定药品')
                             : '已绑定 ${state.selectedMedicines.length} 种'),
                   trailingIcon: Icons.add_circle_outline_rounded,
                   onTap: _pickMedicine,
@@ -118,19 +116,19 @@ class _ReminderEditPageState extends ConsumerState<ReminderEditPage> {
                   const SizedBox(height: 8),
                   ReminderMedicineChips(
                     medicines: state.selectedMedicines,
-                    onDeleted: (index) =>
-                        ref.read(reminderEditProvider.notifier)
-                            .removeSelectedMedicineAt(index),
+                    onDeleted: (index) => ref
+                        .read(reminderEditProvider.notifier)
+                        .removeSelectedMedicineAt(index),
                   ),
                 ],
                 const SizedBox(height: 8),
                 ReminderEditTile(
                   icon: Icons.access_time_rounded,
                   color: const Color(0xFF10B981),
-                  title: l10n?.reminderEditTimeTitle(state.time) ??
+                  title:
+                      l10n?.reminderEditTimeTitle(state.time) ??
                       '提醒时间: ${state.time}',
-                  subtitle: l10n?.reminderEditTimeSubtitle ??
-                      '每天在该时间通过系统通知提醒',
+                  subtitle: l10n?.reminderEditTimeSubtitle ?? '每天在该时间通过系统通知提醒',
                   onTap: _pickTime,
                 ),
               ],
@@ -147,7 +145,8 @@ class _ReminderEditPageState extends ConsumerState<ReminderEditPage> {
                 ReminderEditTile(
                   icon: Icons.event_available_rounded,
                   color: const Color(0xFF14B8A6),
-                  title: l10n?.reminderEditStartDateTitle(
+                  title:
+                      l10n?.reminderEditStartDateTitle(
                         state.startDate.isEmpty
                             ? l10n.reminderDateUnlimited
                             : state.startDate,
@@ -155,8 +154,8 @@ class _ReminderEditPageState extends ConsumerState<ReminderEditPage> {
                       (state.startDate.isEmpty
                           ? '开始日期: 不限制'
                           : '开始日期: ${state.startDate}'),
-                  subtitle: l10n?.reminderEditStartDateSubtitle ??
-                      '留空表示不限制开始日期',
+                  subtitle:
+                      l10n?.reminderEditStartDateSubtitle ?? '留空表示不限制开始日期',
                   badgeText: state.startDate.isEmpty
                       ? (l10n?.reminderEditDateBadgeUnset ?? '未设置')
                       : (l10n?.reminderEditDateBadgeSet ?? '已设置'),
@@ -166,7 +165,8 @@ class _ReminderEditPageState extends ConsumerState<ReminderEditPage> {
                 ReminderEditTile(
                   icon: Icons.event_busy_rounded,
                   color: const Color(0xFF0EA5E9),
-                  title: l10n?.reminderEditEndDateTitle(
+                  title:
+                      l10n?.reminderEditEndDateTitle(
                         state.endDate.isEmpty
                             ? l10n.reminderDateUnlimited
                             : state.endDate,
@@ -174,8 +174,7 @@ class _ReminderEditPageState extends ConsumerState<ReminderEditPage> {
                       (state.endDate.isEmpty
                           ? '结束日期: 不限制'
                           : '结束日期: ${state.endDate}'),
-                  subtitle: l10n?.reminderEditEndDateSubtitle ??
-                      '留空表示不限制结束日期',
+                  subtitle: l10n?.reminderEditEndDateSubtitle ?? '留空表示不限制结束日期',
                   badgeText: state.endDate.isEmpty
                       ? (l10n?.reminderEditDateBadgeUnset ?? '未设置')
                       : (l10n?.reminderEditDateBadgeSet ?? '已设置'),
@@ -187,13 +186,11 @@ class _ReminderEditPageState extends ConsumerState<ReminderEditPage> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton.icon(
-                      onPressed: () =>
-                          ref.read(reminderEditProvider.notifier)
-                              .clearDateRange(),
+                      onPressed: () => ref
+                          .read(reminderEditProvider.notifier)
+                          .clearDateRange(),
                       icon: const Icon(Icons.clear_rounded, size: 16),
-                      label: Text(
-                        l10n?.reminderEditClearDateLimit ?? '清空日期限制',
-                      ),
+                      label: Text(l10n?.reminderEditClearDateLimit ?? '清空日期限制'),
                     ),
                   ),
                 ],
@@ -324,14 +321,17 @@ class _ReminderEditPageState extends ConsumerState<ReminderEditPage> {
   }
 
   String _buildSelectedIdentitySubtitle(
-      AppLocalizations? l10n, ReminderEditState s) {
+    AppLocalizations? l10n,
+    ReminderEditState s,
+  ) {
     if (s.selectedMedicines.isEmpty) {
       return l10n?.reminderEditSelectMedicineHint ?? '可从"我的药品/搜索库"选择';
     }
     if (s.selectedMedicines.length == 1) {
       final selected = s.selectedMedicines.first;
-      final drugCode =
-          selected.drugCode.trim().isEmpty ? '-' : selected.drugCode.trim();
+      final drugCode = selected.drugCode.trim().isEmpty
+          ? '-'
+          : selected.drugCode.trim();
       final approvalNo = selected.approvalNo.trim().isEmpty
           ? '-'
           : selected.approvalNo.trim();
@@ -360,11 +360,9 @@ class _ReminderEditPageState extends ConsumerState<ReminderEditPage> {
     final identity = notifier.medicineIdentityKey(item);
     final state = ref.read(reminderEditProvider);
     if (state.selectedMedicines.any(
-        (e) => notifier.medicineIdentityKey(e) == identity)) {
-      ToastUtils.instance.show(
-        context,
-        '该药品已添加',
-      );
+      (e) => notifier.medicineIdentityKey(e) == identity,
+    )) {
+      ToastUtils.instance.show(context, '该药品已添加');
       return;
     }
     notifier.addSelectedMedicine(item);
@@ -380,9 +378,11 @@ class _ReminderEditPageState extends ConsumerState<ReminderEditPage> {
       initialTime: TimeOfDay(hour: h, minute: m),
     );
     if (!mounted || picked == null) return;
-    ref.read(reminderEditProvider.notifier).setTime(
-      '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}',
-    );
+    ref
+        .read(reminderEditProvider.notifier)
+        .setTime(
+          '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}',
+        );
   }
 
   Future<void> _pickStartDate() async {
@@ -396,9 +396,7 @@ class _ReminderEditPageState extends ConsumerState<ReminderEditPage> {
 
   Future<void> _pickEndDate() async {
     final s = ref.read(reminderEditProvider);
-    final picked = await _pickDate(
-      s.endDate.isEmpty ? s.startDate : s.endDate,
-    );
+    final picked = await _pickDate(s.endDate.isEmpty ? s.startDate : s.endDate);
     if (!mounted || picked == null) return;
     ref.read(reminderEditProvider.notifier).setEndDate(picked);
   }
@@ -425,11 +423,8 @@ class _ReminderEditPageState extends ConsumerState<ReminderEditPage> {
     final l10n = _l10n;
     final userId = ref.read(currentUserProvider)?.id ?? '';
     if (userId.trim().isEmpty) {
-      ToastUtils.instance.show(
-        context,
-        l10n?.reminderEditNeedLogin ?? '请先登录',
-      );
-      Navigator.pushNamed(context, '/login');
+      ToastUtils.instance.show(context, l10n?.reminderEditNeedLogin ?? '请先登录');
+      context.push('/login');
       return;
     }
 
@@ -452,9 +447,9 @@ class _ReminderEditPageState extends ConsumerState<ReminderEditPage> {
       return;
     }
 
-    final plan = await ref.read(reminderEditProvider.notifier).save(
-      scopedUserId: userId,
-    );
+    final plan = await ref
+        .read(reminderEditProvider.notifier)
+        .save(scopedUserId: userId);
     if (!mounted || plan == null) return;
     Navigator.of(context).pop<ReminderPlan>(plan);
   }
@@ -471,7 +466,9 @@ class _ReminderEditPageState extends ConsumerState<ReminderEditPage> {
 
   String _extraContentLabel(AppLocalizations? l10n) {
     final locale = (l10n?.localeName ?? 'zh').toLowerCase();
-    return locale.startsWith('zh') ? '额外提醒内容(可选)' : 'Extra reminder content (optional)';
+    return locale.startsWith('zh')
+        ? '额外提醒内容(可选)'
+        : 'Extra reminder content (optional)';
   }
 
   String _extraContentHint(AppLocalizations? l10n) {

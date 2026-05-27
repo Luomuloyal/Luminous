@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:luminous/shared/widgets/soft_banner/soft_banner.dart';
 import 'package:luminous/features/scan/presentation/scan.dart';
@@ -43,7 +44,7 @@ class AlbumPage extends ConsumerWidget {
       error: errorText,
       entries: entriesAsync.hasValue ? entriesAsync.value! : const [],
       onRefresh: () async => ref.invalidate(albumEntriesProvider),
-      onTapLogin: () => Navigator.pushNamed(context, '/login'),
+      onTapLogin: () => context.push('/login'),
       onTapEntry: (entry) => _openPreview(context, ref, entry),
     );
   }
@@ -147,13 +148,11 @@ class AlbumPage extends ConsumerWidget {
 
   String _thumbnailOnlyToast(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return l10n?.albumRescanThumbnailOnlyToast ??
-        '当前记录仅保存缩略图，无法高质量重识别';
+    return l10n?.albumRescanThumbnailOnlyToast ?? '当前记录仅保存缩略图，无法高质量重识别';
   }
 
   String _readOriginalFailedToast(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return l10n?.albumRescanReadOriginalFailedToast ??
-        '原图读取失败，无法重识别';
+    return l10n?.albumRescanReadOriginalFailedToast ?? '原图读取失败，无法重识别';
   }
 }

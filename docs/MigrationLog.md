@@ -144,47 +144,59 @@ lib/
 ## Phase 2: GetX → Riverpod 顺序迁移 (2026-05-26)
 
 ### Step 0：建立本轮执行快照
+
 - Git 分支 `refactor`，工作区干净。`flutter analyze` 零 issue。
 - 活跃 GetX 引用：32 处；大文件扫描完成；环境变量修复。
 
 ### Step 1：迁移 Home 到 Riverpod
+
 - 新建 `home_provider.dart`（370→320 行）。`HomePage` → `ConsumerStatefulWidget`。
 - 关键修复：`Future.microtask` 延迟初始化；测试 `addPostFrameCallback` → `Future()`。
 
 ### Step 2：迁移 Search 到 Riverpod
+
 - 新建 `search_provider.dart`（568→557 行）。`SearchPage` → `ConsumerStatefulWidget`。
 - 修复：`MedicineSearchExecutor` 歧义；support 文件兼容 getter。
 
 ### Step 3：迁移 Drug 列表
+
 - 新建 `drug_provider.dart`（156 行）。`DrugPage` → `ConsumerWidget`。
 
 ### Step 4：迁移 Medicine Detail
+
 - 新建 `medicine_detail_provider.dart`（233→223 行）。管理 AI 详情 + CancelToken。
 
 ### Step 5：迁移 Reminders 列表
+
 - 新建 `reminder_list_provider.dart`（298→267 行）。load/sync/revision。
 
 ### Step 6：迁移 Reminder Edit
+
 - 新建 `reminder_edit_provider.dart`（232 行）。移除未使用的 `_userId`。
 
 ### Step 7-8：Safety + Scan
+
 - **Safety**：新建 `safety_provider.dart`（152 行）。`SafetyModeSwitcher` 重构为 mode+回调。Widget 移除 controller import。
 - **Scan**：新建 `medicine_scan_provider.dart`（172 行）。5 个 part 文件改为 `ScanState` 参数。barrel 移除 `get` 导入。
 
 ### Step 9：清理活跃 GetX
+
 - `lib/features/**` 零 GetX 引用。清理 5 个测试文件 `Get.testMode`/`Get.reset`。
 - 删除 8 个 controller re-export 壳 + `lib/deprecated/` 目录。
 - `reminder_list_controller_test.dart` 改用 `ReminderListNotifier`。
 - 从 `pubspec.yaml` 删除 `get: ^4.7.3`。**GetX 已完全抹除。**
 
 ### Step 10：大文件拆分
+
 - 所有文件在 600 行内。`safety_assist_page.dart` 546→424 行（提取 `SafetyResultSection` widget）。
 
 ### Step 11：集成 smoke
+
 - `integration_test/app_smoke_test.dart` 扩到 4 tests（启动/导航/tab遍历/登录表单）。
 - 本机缺 C++ 编译器无法执行，测试逻辑就绪。
 
 ### Step 12-13：JSON 生成迁移
+
 - 新增 15 个类的 `@JsonSerializable(createFactory: false)` + `toJson()`：
   - 共享：`MedicineItem`、`MedicineSearchResult`、`MedicineAiDetailResult`、`ReminderItem`、`TodayRemindersResult`
   - Auth：`CodeTicketResult`、`RegisterResult`、`LoginResult`
@@ -194,7 +206,7 @@ lib/
 - `build_runner` 生成 `*.g.dart`。新增 17 个模型 test。
 - `dart analyze`：No issues。`flutter test`：77/77 通过。
 
-### Step 14：JSON 生成迁移回归修复 (2026-06-02)
+### Step 14：JSON 生成迁移回归修复 (2026-05-27)
 
 `build_runner` 重跑后全量 `flutter test` 发现 8 个失败，归为两组：
 
@@ -228,7 +240,7 @@ lib/
 - `flutter test`：**118/118 通过**（原 77 + Step 12-13 新增 41 个模型 test，加上 8 个回归修复 = 全绿）。
 - `integration_test/app_smoke_test.dart`：需要移动设备/模拟器，当前环境无可用设备（Windows 桌面构建因 C++ debug CRT 链接器错误阻塞，Web 不支持 Flutter integration_test 运行器），测试逻辑就绪。
 
-### Step 13（收尾）：JSON 生成迁移第二批 (2026-06-02)
+### Step 13（收尾）：JSON 生成迁移第二批 (2026-05-27)
 
 盘点 `lib/features/` 下 6 个尚未迁移的 model 文件，实际需要 JSON 迁移的仅 2 个（其余为纯 UI 展示模型或 DB row mapper）：
 
@@ -239,12 +251,12 @@ lib/
 
 **实际迁移 2 文件、4 类：**
 
-| 文件 | 类 | 操作 |
-|------|-----|------|
-| `reminder.dart` | `ReminderMedicineRef` | 加 `@JsonSerializable`，替换 `toJson` 为生成 |
-| `reminder.dart` | `ReminderPlan` | 加 `@JsonSerializable`，替换 `toJson` 为生成（保留复杂 `fromJson`） |
-| `reminder.dart` | `ReminderListResult` | 加 `@JsonSerializable`，补手写 `toJson`（嵌套列表需逐元素 `.toJson()`） |
-| `browse_history.dart` | `BrowseHistoryEntry` | 加 `@JsonSerializable`，替换 `toJson` 为生成 |
+| 文件                  | 类                    | 操作                                                                    |
+| --------------------- | --------------------- | ----------------------------------------------------------------------- |
+| `reminder.dart`       | `ReminderMedicineRef` | 加 `@JsonSerializable`，替换 `toJson` 为生成                            |
+| `reminder.dart`       | `ReminderPlan`        | 加 `@JsonSerializable`，替换 `toJson` 为生成（保留复杂 `fromJson`）     |
+| `reminder.dart`       | `ReminderListResult`  | 加 `@JsonSerializable`，补手写 `toJson`（嵌套列表需逐元素 `.toJson()`） |
+| `browse_history.dart` | `BrowseHistoryEntry`  | 加 `@JsonSerializable`，替换 `toJson` 为生成                            |
 
 **build_runner 修复：**
 
@@ -265,7 +277,7 @@ lib/
 - `flutter analyze`：No issues found。
 - `flutter test`：**151/151 通过**（原 118 + 新增 33）。
 
-### Step 14：集合相等与本地比较清理 (2026-06-02)
+### Step 14：集合相等与本地比较清理 (2026-05-27)
 
 验收扫描结果：`lib/` 下 `jsonEncode` 全部用于存储/传输，零处用于相等比较。
 
@@ -279,7 +291,7 @@ lib/
 - `flutter analyze`：No issues found。
 - `flutter test`：**158/158 通过**（151 + 新增 7）。
 
-### Step 15：安全 token 存储与会话过期 (2026-06-02)
+### Step 15：安全 token 存储与会话过期 (2026-05-27)
 
 **架构变更：**
 
@@ -308,7 +320,7 @@ lib/
 - `flutter analyze`：No issues found。
 - `flutter test`：**173/173 通过**（158 + 新增 15）。
 
-### Code Review 修复 (2026-06-02)
+### Code Review 修复 (2026-05-27)
 
 自动化审查发现以下问题并全部修复：
 
@@ -316,13 +328,13 @@ lib/
 
 `json_serializable` 生成的 `_$XxxToJson` 默认将**所有非静态 getter**（包括 computed getter）序列化到 JSON。已在 5 个模型的 11 个 computed getter 上添加 `@JsonKey(includeToJson: false)`：
 
-| 文件 | 类 | 受影响的 getter |
-|------|-----|----------------|
-| `browse_history.dart` | `BrowseHistoryEntry` | `hasIdentity`, `displayTitle`, `displaySubtitle`, `displayTips`, `viewedAt` |
-| `reminder.dart` | `ReminderPlan` | `hasId`, `displayTitle` |
-| `scan.dart` | `ScanCandidate` | `hasIdentity`, `displayName`, `displaySubtitle` |
-| `album.dart` | `IdResult` | `hasId` |
-| `safety.dart` | `MedicineAiSafetyResult` | `hasText`, `isCached` |
+| 文件                  | 类                       | 受影响的 getter                                                             |
+| --------------------- | ------------------------ | --------------------------------------------------------------------------- |
+| `browse_history.dart` | `BrowseHistoryEntry`     | `hasIdentity`, `displayTitle`, `displaySubtitle`, `displayTips`, `viewedAt` |
+| `reminder.dart`       | `ReminderPlan`           | `hasId`, `displayTitle`                                                     |
+| `scan.dart`           | `ScanCandidate`          | `hasIdentity`, `displayName`, `displaySubtitle`                             |
+| `album.dart`          | `IdResult`               | `hasId`                                                                     |
+| `safety.dart`         | `MedicineAiSafetyResult` | `hasText`, `isCached`                                                       |
 
 这些 getter 包含 locale 依赖文本（`displayTitle`→`AppI18nText.pick`）或计算字段（`hasId`/`viewedAt`），序列化到 JSON 会污染存储/API payload。
 
@@ -332,39 +344,40 @@ lib/
 - `dio_request.dart`：401 拦截器增加冷启动兜底——`tokenRefreshService` 为 null 时（warmup 失败场景）直接清空过期 token，避免挂死在 broken credential 状态。
 - `app_startup_warmup.dart`：移除 session 过期回调中的 try-catch，异常不再被静默吞没。
 
-### 遗留代码清理 (2026-06-02)
+### 遗留代码清理 (2026-05-27)
 
 全仓审计（不计旧版本兼容），发现并删除 6 项死代码：
 
-| 文件 | 原因 |
-|------|------|
-| `lib/core/network/network.dart` | 空 barrel，无任何引用 |
+| 文件                                             | 原因                                |
+| ------------------------------------------------ | ----------------------------------- |
+| `lib/core/network/network.dart`                  | 空 barrel，无任何引用               |
 | `lib/core/network/legacy_express_endpoints.dart` | 与 `HttpConstants` 完全重复，无引用 |
-| `lib/core/network/lucent_endpoints.dart` | 仅含 `health` 端点，从未使用 |
-| `lib/core/network/timeout_config.dart` | 从未被 import |
-| `lib/utils/gallery_saver.dart` | 全仓零引用，死代码 |
-| `lib/features/drug/presentation/controllers/` | 空目录 |
+| `lib/core/network/lucent_endpoints.dart`         | 仅含 `health` 端点，从未使用        |
+| `lib/core/network/timeout_config.dart`           | 从未被 import                       |
+| `lib/utils/gallery_saver.dart`                   | 全仓零引用，死代码                  |
+| `lib/features/drug/presentation/controllers/`    | 空目录                              |
 
 确认已清理完毕的项目：
+
 - `lib/deprecated/` — 空目录（之前清理）
 - `lib/components/`, `lib/pages/`, `lib/stores/`, `lib/viewmodels/` — 全部不存在
 - GetX — `pubspec.yaml` 无依赖，`lib/` 和 `test/` 零引用
 - `global_provider_container.dart` — 保留（4 个非 widget 工具类仍在使用，需后续重构）
 
-### 常量与魔数清理 (2026-06-02)
+### 常量与魔数清理 (2026-05-27)
 
 **删除的死常量：**
 
-| 来源 | 常量 | 原因 |
-|------|------|------|
-| `global_constants.dart` | `TOKEN_KEY`, `REFRESH_TOKEN_KEY` | TokenManager 自有一份私有 key，这两个零引用 |
-| `storage_keys.dart` | 整个文件（7 个常量） | 全仓零引用，重构中间产物 |
-| `http_constants.dart` | `LEGACY_API_PREFIX`, `LUCENT_API_V1_PREFIX` | 零引用，计划性常量 |
+| 来源                    | 常量                                        | 原因                                        |
+| ----------------------- | ------------------------------------------- | ------------------------------------------- |
+| `global_constants.dart` | `TOKEN_KEY`, `REFRESH_TOKEN_KEY`            | TokenManager 自有一份私有 key，这两个零引用 |
+| `storage_keys.dart`     | 整个文件（7 个常量）                        | 全仓零引用，重构中间产物                    |
+| `http_constants.dart`   | `LEGACY_API_PREFIX`, `LUCENT_API_V1_PREFIX` | 零引用，计划性常量                          |
 
 **提取的魔数：**
 
-| 文件 | 原值 | 新常量 |
-|------|------|--------|
+| 文件                      | 原值                               | 新常量                         |
+| ------------------------- | ---------------------------------- | ------------------------------ |
 | `medicine_api.dart:55-56` | `Duration(milliseconds: 1600)` × 2 | `_healthCheckTimeoutMs = 1600` |
 
 **保留的项：**
@@ -373,55 +386,58 @@ lib/
 - `backend/` 目录保留 — 仍在 `docker-compose.prod.yml` 中生产运行
 - 散落 `Color(0xFF...)` 字面量暂不统一 — 属于各 feature 独立样式，需设计决策
 
-### 空安全加固 (2026-06-02)
+### 空安全加固 (2026-05-27)
 
 审查业务代码中 11 处 `!` 强制解包，修复最危险的 7 处：
 
-| 文件 | 修复内容 |
-|------|---------|
-| `medicine_ai_card.dart:44` | `result!.text` → `result?.text` + null 合并 |
-| `safety_assist_widgets.dart:363` | 同上 |
-| `app_canvas.dart:137` | `appBarSpacing!.clamp()` → `??` + chain |
-| `login_page.dart:98` | `_formKey.currentState!.validate()` → `?.validate() ?? false` |
-| `register_page.dart:114` | 同上 |
+| 文件                             | 修复内容                                                              |
+| -------------------------------- | --------------------------------------------------------------------- |
+| `medicine_ai_card.dart:44`       | `result!.text` → `result?.text` + null 合并                           |
+| `safety_assist_widgets.dart:363` | 同上                                                                  |
+| `app_canvas.dart:137`            | `appBarSpacing!.clamp()` → `??` + chain                               |
+| `login_page.dart:98`             | `_formKey.currentState!.validate()` → `?.validate() ?? false`         |
+| `register_page.dart:114`         | 同上                                                                  |
 | `reminder_edit_widgets.dart:326` | `badgeText != null && badgeText!.trim()` → `(badgeText ?? '').trim()` |
-| `mine_page_widgets.dart:356` | `badgeText!.trim()` → 预计算 `trimmedBadge` 局部变量 |
+| `mine_page_widgets.dart:356`     | `badgeText!.trim()` → 预计算 `trimmedBadge` 局部变量                  |
 
 保留的 4 处 `!`：`root_app_widget.dart` 的 `Color.lerp()!`（品牌色 lerp 越界概率极低）；`medicine_scan_labels.dart` 和 `medicine_scan_page.dart` 的 `!` 位于已有多层 guard 之后。
 
 其他审计发现（记录不修复）：
+
 - API 层：`LucentApiClient` 独立客户端体系（未激活，等待 Lucent 迁移）；`medicine_api.dart` 健康检查裸 Dio（设计意图明确）
 - Provider：4 个 `AsyncNotifier` 返回裸 `List<T>` 无 State wrapper，与其余 12 个 provider 不一致
 - 测试覆盖：`drug/`、`legal/`、`medicine_picker/` 完全无专属测试文件
 
-### 错误处理加固 (2026-06-02)
+### 错误处理加固 (2026-05-27)
 
 修复 5 处静默吞异常的 `catch (_) {}`，改为带模块标签的 `debugPrint`：
 
-| 文件 | 方法 | 修复 |
-|------|------|------|
-| `reminder_edit_provider.dart:223` | `saveMedicine` | 空 catch → `debugPrint('[reminder_edit] …')` |
-| `medicine_detail_provider.dart:202` | `recordMedicine` | 同上 |
-| `home_provider.dart:198` | `loadTodayReminders` | 增加 `debugPrint`（保留 reset 兜底行为） |
-| `home_provider.dart:240` | `loadCheckInRecords` | 同上 |
-| `search_provider.dart:182` | `_loadAddedKeys` | 空 catch → `debugPrint('[search] …')` |
+| 文件                                | 方法                 | 修复                                         |
+| ----------------------------------- | -------------------- | -------------------------------------------- |
+| `reminder_edit_provider.dart:223`   | `saveMedicine`       | 空 catch → `debugPrint('[reminder_edit] …')` |
+| `medicine_detail_provider.dart:202` | `recordMedicine`     | 同上                                         |
+| `home_provider.dart:198`            | `loadTodayReminders` | 增加 `debugPrint`（保留 reset 兜底行为）     |
+| `home_provider.dart:240`            | `loadCheckInRecords` | 同上                                         |
+| `search_provider.dart:182`          | `_loadAddedKeys`     | 空 catch → `debugPrint('[search] …')`        |
 
 其他审计发现（记录不修复）：
+
 - **性能**：16 处 `ListView(children: [...])` 未使用 `ListView.builder` — 大规模改动，建议在后续专项重构
 - **导航**：多处 `Navigator.push(MaterialPageRoute(...))` 绕过 GoRouter — 影响 URL 同步和认证拦截
 - **路由**：`/profile-settings` 定义但未注册 GoRoute；`LegalDocumentsPage` 死代码（已拆为单独路由）
 - **SQL**：全部参数化查询，零注入风险 ✅
 
-### 国际化 + 安全审查 (2026-06-02)
+### 国际化 + 安全审查 (2026-05-27)
 
 **修复 2 处硬编码 Toast（有现成 l10n key）：**
 
-| 文件 | 原来 | 改为 |
-|------|------|------|
-| `checkin_page.dart:161` | `'已记录到当前设备'` | `l10n?.checkInMarkedDoneToast` |
-| `checkin_page.dart:201` | `'已改为未打卡'` | `l10n?.checkInMarkedUndoneToast` |
+| 文件                    | 原来                 | 改为                             |
+| ----------------------- | -------------------- | -------------------------------- |
+| `checkin_page.dart:161` | `'已记录到当前设备'` | `l10n?.checkInMarkedDoneToast`   |
+| `checkin_page.dart:201` | `'已改为未打卡'`     | `l10n?.checkInMarkedUndoneToast` |
 
 **安全审查通过项：**
+
 - 无硬编码 API key/secret ✅
 - `debugPrint` 全部在 `kDebugMode` 守卫下 ✅
 - 日志不泄露 token/密码/手机号 ✅
@@ -429,43 +445,46 @@ lib/
 - 无深层链接注入风险 ✅
 
 **资源管理审查通过项：**
+
 - 6 个 `TextEditingController` + 1 个 `ScrollController` 全部在 `dispose()` 释放 ✅
 - 2 个 `StreamSubscription` 全部在 `ref.onDispose` 取消 ✅
 - 所有 `Timer` 有关联 cancel ✅
 
 **记录不修复（规模或风险不匹配）：**
+
 - `medicine_ai_card.dart` 多处硬编码中文 section headers / AI 说明 — 属于 AI 解析逻辑层，需设计级改造
 - `BASE_URL` 默认值 `https://devluo.com` 硬编码 — 可通过 `--dart-define` 覆盖
 - `ListView(children:)` 16 处 — 性能专项后续处理
 
-### 技术债归档 (2026-06-02)
+### 技术债归档 (2026-05-27)
 
 将五轮审查中"记录但不修复"的问题整理入 [[ExecutionPlan]] 的"已知技术债"章节：
 
-| 类别 | 数量 | 关键项 |
-|------|------|--------|
-| 性能 | 1 | `ListView.builder` 替换 |
-| 导航 | 2 | `Navigator.push` 绕过 GoRouter |
-| 国际化 | 1 | AI 卡片中文解析逻辑 |
-| 架构 | 3 | `global_provider_container` 移除、State wrapper 统一 |
-| 测试覆盖 | 6 个 feature | drug/legal/medicine_picker 完全无测试 |
+| 类别     | 数量         | 关键项                                               |
+| -------- | ------------ | ---------------------------------------------------- |
+| 性能     | 1            | `ListView.builder` 替换                              |
+| 导航     | 2            | `Navigator.push` 绕过 GoRouter                       |
+| 国际化   | 1            | AI 卡片中文解析逻辑                                  |
+| 架构     | 3            | `global_provider_container` 移除、State wrapper 统一 |
+| 测试覆盖 | 6 个 feature | drug/legal/medicine_picker 完全无测试                |
 
 同时修复了 4 项：
+
 - 删除 dead `legalDocuments` 路由常量
 - 注册 `/profile-settings` GoRoute + 切 `pushNamed`
 - `search_provider` 统一用 `sharedPreferencesProvider`（去重 `SharedPreferences.getInstance()`）
 
-### ListView 性能优化 (2026-06-04)
+### ListView 性能优化 (2026-05-27)
 
 执行 [[TODO]] #1：将动态列表从 `ListView(children: [...])` 迁移到 `ListView.builder`。
 
 **已迁移 3 处（动态列表，itemCount 不可预知）：**
 
-| 文件 | 原来 | 改为 | 新增 helper |
-|------|------|------|-------------|
-| `reminder_list_page.dart` | `ListView(children: [...items.map(...)])` | `ListView.builder(itemCount:, itemBuilder:)` | `_reminderItemCount`, `_buildReminderItem` |
-| `checkin_page.dart` | 同上 | 同上 | `_checkinItemCount`, `_buildCheckinItem` |
-| `browse_history_page.dart` | 同上 | 同上 | `_historyItemCount`, `_buildHistoryItem` |
+| 文件                       | 原来                                      | 改为                                         | 新增 helper                                |
+| -------------------------- | ----------------------------------------- | -------------------------------------------- | ------------------------------------------ |
+| `reminder_list_page.dart`  | `ListView(children: [...items.map(...)])` | `ListView.builder(itemCount:, itemBuilder:)` | `_reminderItemCount`, `_buildReminderItem` |
+| `checkin_page.dart`        | 同上                                      | 同上                                         | `_checkinItemCount`, `_buildCheckinItem`   |
+| `browse_history_page.dart` | 同上                                      | 同上                                         | `_historyItemCount`, `_buildHistoryItem`   |
 
 **保持原样 13 处（固定少量子项，≤10 个 widget，builder 无收益且降低可读性）：**
 
@@ -482,6 +501,26 @@ lib/
 **附带修复：** `browse_history_page.dart` 移除未使用的局部变量 `isLoggedIn`（现由 `_buildHistoryItem` 内通过 `ref.watch` 按需读取）。
 
 **验证结果：**
+
 - `flutter analyze`：No issues found
 - `flutter test`：**173/173 通过**
 - [[TODO]] #1 已标记完成
+
+---
+
+## 全量文档审阅（2026-05-27）
+
+**操作：** 一次性阅读 `docs/` 下全部 6 个文档，确认项目全貌和下一步方向。
+
+**审阅内容：**
+
+| 文档             | 核心要点                                                                    |
+| ---------------- | --------------------------------------------------------------------------- |
+| ROADMAP.md       | 四阶段产品路线图（用药闭环→健康记录→主动健康伙伴→多终端），当前聚焦第一阶段 |
+| Promise.md       | 最终愿景：5 Tab + 10+ 健康维度 + 全终端协同的 AI 健康伙伴                   |
+| RefactorPlan.md  | Phase A-G 重构路线，当前处于 Phase C（Lucent 协议边界）                     |
+| ExecutionPlan.md | 28 步执行计划，Step 0-15 已完成，下一步 Step 16                             |
+| TODO.md          | 13 项技术债和测试覆盖缺口待处理                                             |
+| MigrationLog.md  | 本文件，完整迁移历程                                                        |
+
+**结论：** Flutter 端架构重构（Phase A-B）已完工，下一步是 Lucent 后端协议稳定 + 药品知识平台建设（Phase C-D）。

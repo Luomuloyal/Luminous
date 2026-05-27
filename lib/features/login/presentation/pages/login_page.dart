@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:luminous/api/auth_api.dart';
 import 'package:luminous/features/auth/data/session_sync_service.dart';
 import 'package:luminous/shared/widgets/auth/auth.dart';
@@ -209,8 +210,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         _buildHelperText(),
         const SizedBox(height: 8),
         AuthLegalHint(
-          onTapAgreement: () => Navigator.pushNamed(context, '/user-agreement'),
-          onTapPrivacy: () => Navigator.pushNamed(context, '/privacy-policy'),
+          onTapAgreement: () => context.push('/user-agreement'),
+          onTapPrivacy: () => context.push('/privacy-policy'),
         ),
       ],
     );

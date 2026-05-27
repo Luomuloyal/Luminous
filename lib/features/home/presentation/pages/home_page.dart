@@ -88,11 +88,13 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void _initLocalizedData() {
-    ref.read(homeProvider.notifier).applyLocalizedData(
-      healthTips: _buildHomeHealthTips(_l10n),
-      demoReminders: _buildHomeDemoReminders(_l10n),
-      demoCheckInRecords: _buildHomeDemoCheckInRecords(_l10n),
-    );
+    ref
+        .read(homeProvider.notifier)
+        .applyLocalizedData(
+          healthTips: _buildHomeHealthTips(_l10n),
+          demoReminders: _buildHomeDemoReminders(_l10n),
+          demoCheckInRecords: _buildHomeDemoCheckInRecords(_l10n),
+        );
   }
 
   @override
@@ -111,7 +113,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 next.title,
                 _composeReminderDetail(next),
               ) ??
-            '${next.title} · ${_composeReminderDetail(next)}');
+              '${next.title} · ${_composeReminderDetail(next)}');
 
     Widget content = LayoutBuilder(
       builder: (context, constraints) {
@@ -191,7 +193,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   void _onEntryTap(HomeFeatureItemData item) {
     if (item.id == 'manualSearch') {
-      Navigator.pushNamed(context, '/search');
+      context.push('/search');
       return;
     }
 
@@ -201,21 +203,21 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
 
     if (item.id == 'reminder') {
-      Navigator.pushNamed(context, '/reminders').then((_) {
+      context.push('/reminders').then((_) {
         _loadCheckInRecords();
       });
       return;
     }
 
     if (item.id == 'checkIn') {
-      Navigator.pushNamed(context, '/checkin').then((_) {
+      context.push('/checkin').then((_) {
         _loadCheckInRecords();
       });
       return;
     }
 
     if (item.id == 'safety') {
-      Navigator.pushNamed(context, '/safety');
+      context.push('/safety');
       return;
     }
 

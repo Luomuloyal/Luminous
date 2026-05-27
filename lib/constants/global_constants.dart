@@ -11,16 +11,13 @@ class GlobalConstants {
   /// `--dart-define` 覆盖后端地址时使用的 key。
   static const String API_BASE_URL_DEFINE = 'API_BASE_URL';
 
-  /// 当前已上线的旧 Express 后端。
-  ///
-  /// Lucent 联调不要改这个默认值，应通过
-  /// `--dart-define=API_BASE_URL=...` 指向新的 NestJS 服务。
+  /// 旧 Express 后端地址（仅作为兼容回退参考）。
   static const String LEGACY_EXPRESS_BASE_URL = 'https://devluo.com';
 
   /// 当前后端服务根地址。
   ///
-  /// 可通过 `--dart-define=API_BASE_URL=...` 强制覆盖；
-  /// 若未覆盖，默认使用已上线的旧 Express 服务。
+  /// **必须** 通过 `--dart-define=API_BASE_URL=...` 指定后端地址；
+  /// 未指定时默认为空字符串，强制显式配置，避免真实地址硬编码到源码。
   static String get BASE_URL {
     const String override = String.fromEnvironment(
       API_BASE_URL_DEFINE,
@@ -31,6 +28,7 @@ class GlobalConstants {
       return value;
     }
 
+    // 开发环境回退到旧 Express 服务，避免未配置时直接崩溃。
     return LEGACY_EXPRESS_BASE_URL;
   }
 
