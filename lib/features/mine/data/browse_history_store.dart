@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 import 'package:luminous/features/mine/presentation/models/browse_history.dart';
 import 'package:luminous/shared/models/medicine.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -145,19 +147,27 @@ class BrowseHistoryStore {
   }
 
   bool _sameEntries(List<BrowseHistoryEntry> a, List<BrowseHistoryEntry> b) {
-    if (identical(a, b)) {
-      return true;
-    }
-    if (a.length != b.length) {
-      return false;
-    }
-    for (var i = 0; i < a.length; i++) {
-      if (jsonEncode(a[i].toJson()) != jsonEncode(b[i].toJson())) {
-        return false;
-      }
-    }
-    return true;
+    return sameBrowseHistoryEntries(a, b);
   }
+}
+
+/// Compare two [BrowseHistoryEntry] lists for structural equality.
+///
+/// Uses [ListEquality] + [MapEquality] from `package:collection` instead of
+/// JSON string encoding, which avoids ordering-dependent string diffs and
+/// keeps the comparison type-safe.
+@visibleForTesting
+bool sameBrowseHistoryEntries(
+  List<BrowseHistoryEntry> a,
+  List<BrowseHistoryEntry> b,
+) {
+  if (identical(a, b)) return true;
+  return const ListEquality<Map<String, dynamic>>(
+    MapEquality<String, dynamic>(),
+  ).equals(
+    a.map((e) => e.toJson()).toList(growable: false),
+    b.map((e) => e.toJson()).toList(growable: false),
+  );
 }
 
 final browseHistoryStore = BrowseHistoryStore.instance;

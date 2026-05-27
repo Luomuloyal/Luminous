@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
+import 'package:luminous/shared/design_tokens/design_tokens.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/shared/models/medicine.dart';
 
@@ -73,7 +74,7 @@ class MedicineHeaderCard extends StatelessWidget {
               style: FilledButton.styleFrom(
                 minimumSize: const Size(92, 38),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.chip),
                 ),
               ),
             ),
@@ -176,7 +177,7 @@ class MedicineInfoRow extends StatelessWidget {
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: 12.2,
+                    fontSize: AppTypography.cardMeta,
                     color: scheme.onSurfaceVariant,
                     fontWeight: FontWeight.w700,
                   ),
@@ -185,7 +186,7 @@ class MedicineInfoRow extends StatelessWidget {
                 Text(
                   text,
                   style: TextStyle(
-                    fontSize: 12.5,
+                    fontSize: AppTypography.tab,
                     height: 1.45,
                     color: scheme.onSurface,
                     fontWeight: FontWeight.w600,
@@ -204,7 +205,7 @@ class MedicineInfoRow extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 12.5,
+                  fontSize: AppTypography.tab,
                   color: scheme.onSurfaceVariant,
                   fontWeight: FontWeight.w700,
                 ),
@@ -213,7 +214,7 @@ class MedicineInfoRow extends StatelessWidget {
               Text(
                 text,
                 style: TextStyle(
-                  fontSize: 12.5,
+                  fontSize: AppTypography.tab,
                   height: 1.45,
                   color: scheme.onSurface,
                   fontWeight: FontWeight.w600,

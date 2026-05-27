@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
+import 'package:luminous/shared/design_tokens/design_tokens.dart';
 import 'package:luminous/shared/widgets/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
-
-import '../controllers/safety_assist_controller.dart';
+import 'package:luminous/features/safety/presentation/models/safety.dart';
 
 /// 安全辅助页统一使用的白色 section 卡片。
 class SafetySectionCard extends StatelessWidget {
@@ -191,10 +191,18 @@ class SafetyInfoChip extends StatelessWidget {
 
 /// 查询模式切换器（单选/双药）。
 class SafetyModeSwitcher extends StatelessWidget {
-  const SafetyModeSwitcher({super.key, required this.controller, required this.l10n});
+  const SafetyModeSwitcher({
+    super.key,
+    required this.mode,
+    required this.l10n,
+    required this.onSelectSingle,
+    required this.onSelectPair,
+  });
 
-  final SafetyAssistController controller;
+  final String mode;
   final AppLocalizations? l10n;
+  final VoidCallback onSelectSingle;
+  final VoidCallback onSelectPair;
 
   @override
   Widget build(BuildContext context) {
@@ -209,8 +217,8 @@ class SafetyModeSwitcher extends StatelessWidget {
             label: l10n?.safetyModeSingle ?? 'Single-medicine guidance',
             icon: Icons.medication_rounded,
             color: singleColor,
-            selected: controller.mode == SafetyAssistController.singleMode,
-            onTap: () => controller.setMode(SafetyAssistController.singleMode),
+            selected: mode == 'single',
+            onTap: onSelectSingle,
           ),
         ),
         const SizedBox(width: 8),
@@ -219,8 +227,8 @@ class SafetyModeSwitcher extends StatelessWidget {
             label: l10n?.safetyModePair ?? 'Two-medicine interaction',
             icon: Icons.compare_arrows_rounded,
             color: pairColor,
-            selected: controller.mode == SafetyAssistController.pairMode,
-            onTap: () => controller.setMode(SafetyAssistController.pairMode),
+            selected: mode == 'pair',
+            onTap: onSelectPair,
           ),
         ),
       ],
@@ -320,5 +328,134 @@ class SafetyModeOption extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+String formatSafetyAiTimestamp(BuildContext context, DateTime? value) {
+  if (value == null) return '';
+  final local = value.toLocal();
+  return '${local.year.toString().padLeft(4, '0')}-'
+      '${local.month.toString().padLeft(2, '0')}-'
+      '${local.day.toString().padLeft(2, '0')} '
+      '${local.hour.toString().padLeft(2, '0')}:'
+      '${local.minute.toString().padLeft(2, '0')}';
+}
+
+/// AI 分析结果展示卡片。
+class SafetyResultSection extends StatelessWidget {
+  const SafetyResultSection({
+    super.key,
+    required this.result,
+    required this.l10n,
+  });
+
+  final MedicineAiSafetyResult? result;
+  final AppLocalizations? l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final locale = (l10n?.localeName ?? 'zh').toLowerCase();
+    final isZh = locale.startsWith('zh');
+    final resultText = result?.text;
+    final entries = resultText != null
+        ? _splitResultParagraphs(resultText)
+        : const <String>[];
+    final cachedTime = formatSafetyAiTimestamp(context, result?.cachedAt);
+
+    return SafetySectionCard(
+      title: l10n?.safetyResultCardTitle ?? 'AI Result',
+      accentColor: Color.lerp(scheme.secondary, scheme.primary, 0.5)!,
+      secondaryColor: scheme.tertiary,
+      ornamentKey: 'safety.result',
+      titleFontSize: 20,
+      child: entries.isEmpty
+          ? Text(
+              l10n?.safetyResultPlaceholder ??
+                  'After selecting medicines, tap "Start Query" and the backend '
+                      'will call AI to return medication advice or interaction alerts.',
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.6,
+                color: scheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (result?.isCached == true)
+                  Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                    decoration: BoxDecoration(
+                      color: appTintedSurface(
+                        context,
+                        scheme.primary,
+                        lightAlpha: 0.06,
+                        darkAlpha: 0.12,
+                      ),
+                      borderRadius: BorderRadius.circular(AppRadius.chip),
+                      border: Border.all(
+                        color: appTintedBorder(
+                          context,
+                          scheme.primary,
+                          lightAlpha: 0.12,
+                          darkAlpha: 0.22,
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      cachedTime.isEmpty
+                          ? (isZh
+                              ? '上次 AI 分析结果'
+                              : 'Previous AI analysis result')
+                          : (isZh
+                              ? '上次 AI 分析结果 · $cachedTime'
+                              : 'Previous AI analysis result · $cachedTime'),
+                      style: TextStyle(
+                        fontSize: 12.4,
+                        height: 1.45,
+                        color: Color.lerp(
+                          scheme.onSurfaceVariant,
+                          scheme.onSurface,
+                          0.18,
+                        ),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                for (var i = 0; i < entries.length; i++) ...[
+                  SafetyAiResultEntryCard(index: i + 1, text: entries[i]),
+                  if (i != entries.length - 1) const SizedBox(height: 9),
+                ],
+              ],
+            ),
+    );
+  }
+
+  static List<String> _splitResultParagraphs(String raw) {
+    var text = raw.replaceAll('\r\n', '\n').replaceAll('\r', '\n').trim();
+    if (text.isEmpty) return const <String>[];
+
+    text = text
+        .replaceAllMapped(
+          RegExp(r'(?<!\n)([•●▪◦·])\s*'),
+          (match) => '\n${match.group(1)} ',
+        )
+        .replaceAllMapped(
+          RegExp(r'(?<!\n)((?:\d+|[一二三四五六七八九十]+)[、.．])\s*'),
+          (match) => '\n${match.group(1)} ',
+        );
+
+    final parts = <String>[];
+    for (final line in text.split(RegExp(r'\n+|(?<=[。！？；;])\s*'))) {
+      final normalized =
+          line.replaceFirst(RegExp(r'^[•●▪◦·\-*]+\s*'), '').trim();
+      if (normalized.isNotEmpty) parts.add(normalized);
+    }
+    return parts;
   }
 }

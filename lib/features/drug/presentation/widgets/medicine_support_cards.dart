@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
+import 'package:luminous/shared/design_tokens/design_tokens.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 
 import '../pages/medicine_detail_page.dart';
@@ -26,7 +27,7 @@ class MedicineDisclaimerCard extends StatelessWidget {
               en: 'This app provides health education and supportive lookup only, and does not replace diagnosis or prescriptions. If you feel unwell or are taking medication, follow medical advice and consult professionals.',
             ),
         style: TextStyle(
-          fontSize: 12.5,
+          fontSize: AppTypography.tab,
           height: 1.55,
           color: Theme.of(context).colorScheme.onSurfaceVariant,
           fontWeight: FontWeight.w600,

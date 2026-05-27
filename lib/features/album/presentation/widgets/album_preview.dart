@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/features/album/presentation/models/album.dart';
+import 'package:luminous/shared/design_tokens/design_tokens.dart';
 
 import 'album_page_widgets.dart';
 import 'album_card.dart';
@@ -142,7 +143,7 @@ class AlbumPreviewPage extends StatelessWidget {
                           lightAlpha: 0.06,
                           darkAlpha: 0.12,
                         ),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppRadius.chip),
                         border: Border.all(
                           color: appTintedBorder(
                             context,
@@ -156,7 +157,7 @@ class AlbumPreviewPage extends StatelessWidget {
                         l10n?.albumPreviewLowQualityNotice ??
                             '当前记录仅保存缩略图，无法高质量重识别。',
                         style: TextStyle(
-                          fontSize: 12.5,
+                          fontSize: AppTypography.tab,
                           height: 1.45,
                           color: scheme.onSurfaceVariant,
                         ),
@@ -175,7 +176,7 @@ class AlbumPreviewPage extends StatelessWidget {
                             foregroundColor: Colors.white,
                             minimumSize: const Size(double.infinity, 48),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(AppRadius.small),
                             ),
                           ),
                           child: Text(
@@ -190,7 +191,7 @@ class AlbumPreviewPage extends StatelessWidget {
                         style: FilledButton.styleFrom(
                           minimumSize: const Size(120, 48),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.circular(AppRadius.small),
                           ),
                         ),
                         child: Text(l10n?.albumPreviewRescanAction ?? '再次识别'),

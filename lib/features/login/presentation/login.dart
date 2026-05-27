@@ -1,2 +1,2 @@
 export 'pages/login_page.dart';
-export 'controllers/login_controller.dart';
+export 'providers/login_provider.dart';

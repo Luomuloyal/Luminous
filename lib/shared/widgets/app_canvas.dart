@@ -132,9 +132,9 @@ class AppCanvasPageScaffold extends StatelessWidget {
     final theme = Theme.of(context);
     final background = baseColor ?? theme.scaffoldBackgroundColor;
     final toolbarHeight = appBar?.preferredSize.height ?? 0.0;
-    final resolvedSpacing = appBarSpacing == null
-        ? toolbarHeight
-        : appBarSpacing!.clamp(0.0, double.infinity).toDouble();
+    final resolvedSpacing = (appBarSpacing ?? toolbarHeight)
+        .clamp(0.0, double.infinity)
+        .toDouble();
     final topSpacing = appBar == null || !reserveAppBarSpace
         ? 0.0
         : resolvedSpacing;

@@ -3,10 +3,11 @@ import 'package:luminous/core/local_storage/app_database.dart';
 import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/shared/models/home.dart';
 import 'package:luminous/features/reminders/presentation/models/reminder.dart';
+
 import 'package:sqflite/sqflite.dart';
 
-part 'today_reminder_meta.dart';
-part 'today_reminder_store.dart';
+import 'today_reminder_sql.dart';
+import 'today_reminder_store.dart';
 
 /// 今日提醒快照、本地打卡状态与本地覆盖状态的统一读取/写入入口。
 class TodayReminderLocalStore implements TodayReminderStore {
@@ -239,45 +240,18 @@ class TodayReminderLocalStore implements TodayReminderStore {
     final uid = (userId ?? '').trim();
     if (kIsWeb) {
       final doneSet = _webDoneSets[_todayStateKey(uid)] ?? const <String>{};
-      return items
-          .map(
-            (item) => ReminderItem(
-              id: item.id,
-              time: item.time,
-              title: item.title,
-              dosage: item.dosage,
-              subtitle: item.subtitle,
-              done: resolveDoneState(
-                remoteId: item.id,
-                doneSet: doneSet,
-                overrides: overrides,
-                serverDone: item.done,
-              ),
-            ),
-          )
-          .toList(growable: false);
+      return _applyDoneState(items, doneSet, overrides);
     }
 
-    final doneSet = await _loadDoneSet(userId);
-    return items
-        .map(
-          (item) => ReminderItem(
-            id: item.id,
-            time: item.time,
-            title: item.title.trim().isEmpty
-                ? AppI18nText.pick(zh: '用药提醒', en: 'Medication Reminder')
-                : item.title.trim(),
-            dosage: item.dosage,
-            subtitle: item.subtitle,
-            done: resolveDoneState(
-              remoteId: item.id,
-              doneSet: doneSet,
-              overrides: overrides,
-              serverDone: item.done,
-            ),
-          ),
-        )
-        .toList(growable: false);
+    final db = await AppDatabase.instance.database;
+    final range = todayRange();
+    final doneSet = await loadTodayDoneSet(
+      db: db,
+      userId: uid,
+      startMs: range.start,
+      endMs: range.end,
+    );
+    return _applyDoneState(items, doneSet, overrides);
   }
 
   @override
@@ -325,13 +299,22 @@ class TodayReminderLocalStore implements TodayReminderStore {
     final normalizedDays = maxDays <= 0 ? 7 : maxDays;
     final normalizedItems = maxItems <= 0 ? 120 : maxItems;
     final todayKey = resolveDateKey();
-    final todayRecords = await _loadTodayCheckinRecords(uid, todayKey);
+    final items = await loadTodaySnapshotItems(uid);
+    final db = await AppDatabase.instance.database;
+    final range = todayRange();
+    final todayRecords = await loadTodayCheckinRecordsFromDb(
+      db: db,
+      userId: uid,
+      startMs: range.start,
+      endMs: range.end,
+      todayKey: todayKey,
+      items: items,
+    );
     if (kIsWeb) {
       return todayRecords;
     }
 
-    final db = await AppDatabase.instance.database;
-    final reminderMetaMap = await _loadReminderMetaMap(db, uid);
+    final reminderMetaMap = await loadReminderMetaMap(db, uid);
     final rangeStartDate = DateTime.now().subtract(
       Duration(days: normalizedDays - 1),
     );
@@ -363,7 +346,7 @@ class TodayReminderLocalStore implements TodayReminderStore {
       if (takenAt <= 0) {
         continue;
       }
-      final dateKey = _dateKeyFromTimestamp(takenAt);
+      final dateKey = dateKeyFromTimestamp(takenAt);
       if (dateKey == todayKey) {
         continue;
       }
@@ -399,6 +382,8 @@ class TodayReminderLocalStore implements TodayReminderStore {
     return results;
   }
 
+  // -- 私有辅助方法 --
+
   bool _isPlanActiveOnDate(ReminderPlan plan, String dateKey) {
     final start = plan.startDate.trim();
     final end = plan.endDate.trim();
@@ -430,30 +415,19 @@ class TodayReminderLocalStore implements TodayReminderStore {
           .toList(growable: false);
     }
 
-    final rows = await _loadSnapshotRows(userId, date: date);
+    final db = await AppDatabase.instance.database;
+    final uid = (userId ?? '').trim();
+    final dateKey = resolveDateKey(date);
+    final rows = await loadTodaySnapshotRows(
+      db: db,
+      userId: uid,
+      dateKey: dateKey,
+    );
     if (rows.isEmpty) {
       return const [];
     }
 
-    return rows
-        .map((row) {
-          final remoteId = (row['remoteId'] ?? '').toString().trim();
-          final time = (row['time'] ?? '').toString().trim();
-          final title = (row['title'] ?? '').toString().trim();
-          final dosage = (row['dosage'] ?? '').toString().trim();
-          final subtitle = (row['subtitle'] ?? '').toString().trim();
-          return ReminderItem(
-            id: remoteId,
-            time: time,
-            title: title.isEmpty
-                ? AppI18nText.pick(zh: '用药提醒', en: 'Medication Reminder')
-                : title,
-            dosage: dosage,
-            subtitle: subtitle,
-            done: (row['serverDone'] as int? ?? 0) == 1,
-          );
-        })
-        .toList(growable: false);
+    return mapSnapshotRows(rows);
   }
 
   bool _supportsLocalCheckin(ReminderPlan plan) {
@@ -478,110 +452,6 @@ class TodayReminderLocalStore implements TodayReminderStore {
     return doneSet.contains(trimmedId) || serverDone;
   }
 
-  Future<List<Map<String, dynamic>>> _loadSnapshotRows(
-    String? userId, {
-    String? date,
-  }) async {
-    final uid = (userId ?? '').trim();
-    final db = await AppDatabase.instance.database;
-    return db.query(
-      'today_reminder_snapshots',
-      where: 'userId = ? AND dateKey = ?',
-      whereArgs: [uid, resolveDateKey(date)],
-      orderBy: 'position ASC, id ASC',
-    );
-  }
-
-  Future<Set<String>> _loadDoneSet(String? userId) async {
-    final uid = (userId ?? '').trim();
-    if (uid.isEmpty) {
-      return const {};
-    }
-    final db = await AppDatabase.instance.database;
-    final range = todayRange();
-    final rows = await db.query(
-      'checkins',
-      columns: ['reminderRemoteId'],
-      where: 'userId = ? AND takenAt >= ? AND takenAt < ?',
-      whereArgs: [uid, range.start, range.end],
-    );
-    return rows
-        .map((row) => (row['reminderRemoteId'] ?? '').toString().trim())
-        .where((id) => id.isNotEmpty)
-        .toSet();
-  }
-
-  Future<List<HomeCheckInRecordData>> _loadTodayCheckinRecords(
-    String userId,
-    String todayKey,
-  ) async {
-    final items = await loadTodaySnapshotItems(userId);
-    if (items.isEmpty) {
-      return const [];
-    }
-
-    Map<String, int> takenAtMap = const <String, int>{};
-    if (!kIsWeb) {
-      final db = await AppDatabase.instance.database;
-      final range = todayRange();
-      final rows = await db.query(
-        'checkins',
-        columns: ['reminderRemoteId', 'takenAt'],
-        where: 'userId = ? AND takenAt >= ? AND takenAt < ?',
-        whereArgs: [userId, range.start, range.end],
-        orderBy: 'takenAt DESC, id DESC',
-      );
-      takenAtMap = <String, int>{
-        for (final row in rows)
-          (row['reminderRemoteId'] ?? '').toString().trim():
-              (row['takenAt'] as int?) ?? 0,
-      }..removeWhere((key, value) => key.isEmpty || value <= 0);
-    }
-
-    return items
-        .map(
-          (item) => HomeCheckInRecordData(
-            dateKey: todayKey,
-            reminderId: item.id.trim(),
-            title: item.title.trim().isEmpty
-                ? AppI18nText.pick(zh: '用药提醒', en: 'Medication')
-                : item.title.trim(),
-            reminderTime: item.time.trim(),
-            done: item.done,
-            takenAt: takenAtMap[item.id.trim()],
-          ),
-        )
-        .where((item) => item.reminderId.isNotEmpty)
-        .toList(growable: false);
-  }
-
-  Future<Map<String, _ReminderMeta>> _loadReminderMetaMap(
-    Database db,
-    String userId,
-  ) async {
-    final rows = await db.query(
-      'reminders',
-      columns: ['remoteId', 'time', 'productName'],
-      where: 'userId = ?',
-      whereArgs: [userId],
-      orderBy: 'time ASC, id ASC',
-    );
-    return <String, _ReminderMeta>{
-      for (final row in rows)
-        (row['remoteId'] ?? '').toString().trim(): _ReminderMeta(
-          time: (row['time'] ?? '').toString().trim(),
-          title: (row['productName'] ?? '').toString().trim(),
-        ),
-    }..removeWhere((key, value) => key.isEmpty);
-  }
-
-  String _dateKeyFromTimestamp(int millis) {
-    final date = DateTime.fromMillisecondsSinceEpoch(millis);
-    return '${date.year.toString().padLeft(4, '0')}-'
-        '${date.month.toString().padLeft(2, '0')}-'
-        '${date.day.toString().padLeft(2, '0')}';
-  }
-
   String _snapshotKey(String? userId, {String? date}) {
     final uid = (userId ?? '').trim();
     return '$uid|${resolveDateKey(date)}';
@@ -589,6 +459,32 @@ class TodayReminderLocalStore implements TodayReminderStore {
 
   String _todayStateKey(String userId) {
     return '$userId|${todayRange().dateKey}';
+  }
+
+  List<ReminderItem> _applyDoneState(
+    List<ReminderItem> items,
+    Set<String> doneSet,
+    Map<String, bool>? overrides,
+  ) {
+    return items
+        .map(
+          (item) => ReminderItem(
+            id: item.id,
+            time: item.time,
+            title: item.title.trim().isEmpty
+                ? AppI18nText.pick(zh: '用药提醒', en: 'Medication Reminder')
+                : item.title.trim(),
+            dosage: item.dosage,
+            subtitle: item.subtitle,
+            done: resolveDoneState(
+              remoteId: item.id,
+              doneSet: doneSet,
+              overrides: overrides,
+              serverDone: item.done,
+            ),
+          ),
+        )
+        .toList(growable: false);
   }
 }
 

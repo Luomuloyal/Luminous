@@ -10,16 +10,16 @@ extension _MedicineScanLabels on _MedicineScanPageState {
 
   String _headerSubtitle(
     AppLocalizations? l10n,
-    MedicineScanController controller,
+    ScanState state,
   ) {
-    if (controller.scanning) {
+    if (state.scanning) {
       return l10n?.scanHeaderSubtitleScanning ?? 'Scanning, please wait...';
     }
-    if (controller.scanResult == null) {
+    if (state.scanResult == null) {
       return l10n?.scanHeaderSubtitleNoResult ??
           'Upload an image and the vision model will identify medicine information';
     }
-    final count = controller.scanResult!.candidates.length;
+    final count = state.scanResult!.candidates.length;
     return l10n?.scanHeaderSubtitleResultCount(count) ??
         '$count candidates identified';
   }

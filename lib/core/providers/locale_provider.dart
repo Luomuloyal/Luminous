@@ -20,6 +20,17 @@ class LocaleState {
   final AppLocalePreference preference;
 
   const LocaleState(this.preference);
+
+  Locale? get locale {
+    switch (preference) {
+      case AppLocalePreference.system:
+        return null;
+      case AppLocalePreference.zh:
+        return const Locale('zh');
+      case AppLocalePreference.en:
+        return const Locale('en');
+    }
+  }
 }
 
 class LocaleNotifier extends Notifier<LocaleState> {
@@ -31,14 +42,7 @@ class LocaleNotifier extends Notifier<LocaleState> {
   }
 
   Locale? get locale {
-    switch (state.preference) {
-      case AppLocalePreference.system:
-        return null;
-      case AppLocalePreference.zh:
-        return const Locale('zh');
-      case AppLocalePreference.en:
-        return const Locale('en');
-    }
+    return state.locale;
   }
 
   Future<void> setLocalePreference(AppLocalePreference preference) async {

@@ -233,6 +233,12 @@ class FakeSqfliteDatabase implements Database, Transaction {
     if (normalizedWhere == 'userId = ?') {
       return row['userId'] == args[0];
     }
+    if (normalizedWhere == 'userId = ? AND takenAt >= ? AND takenAt < ?') {
+      final takenAt = (row['takenAt'] as int?) ?? 0;
+      return row['userId'] == args[0] &&
+          takenAt >= (args[1] as int? ?? 0) &&
+          takenAt < (args[2] as int? ?? 0);
+    }
     if (normalizedWhere == 'userId = ? OR userId = ?') {
       return row['userId'] == args[0] || row['userId'] == args[1];
     }
@@ -305,6 +311,26 @@ class FakeSqfliteDatabase implements Database, Transaction {
           (b['createdAt'] as int?) ?? 0,
         ),
       );
+      return;
+    }
+
+    if (normalizedOrderBy == 'time ASC, id ASC') {
+      rows.sort((a, b) {
+        final timeCompare = (a['time'] as String? ?? '')
+            .compareTo(b['time'] as String? ?? '');
+        if (timeCompare != 0) return timeCompare;
+        return ((a['id'] as int?) ?? 0).compareTo((b['id'] as int?) ?? 0);
+      });
+      return;
+    }
+
+    if (normalizedOrderBy == 'takenAt DESC, id DESC') {
+      rows.sort((a, b) {
+        final takenAtCompare = ((b['takenAt'] as int?) ?? 0)
+            .compareTo((a['takenAt'] as int?) ?? 0);
+        if (takenAtCompare != 0) return takenAtCompare;
+        return ((b['id'] as int?) ?? 0).compareTo((a['id'] as int?) ?? 0);
+      });
       return;
     }
 

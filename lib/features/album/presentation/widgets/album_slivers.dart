@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
 import 'package:luminous/shared/widgets/soft_banner/soft_banner.dart';
 import 'package:luminous/l10n/app_localizations.dart';
+import 'package:luminous/shared/design_tokens/design_tokens.dart';
 
 import 'album_page_widgets.dart';
 
@@ -170,7 +171,7 @@ class AlbumErrorBannerSliver extends StatelessWidget {
                 height: 38,
                 decoration: BoxDecoration(
                   color: scheme.error.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppRadius.chip),
                 ),
                 child: Icon(Icons.warning_amber_rounded, color: scheme.error),
               ),
@@ -191,7 +192,7 @@ class AlbumErrorBannerSliver extends StatelessWidget {
                     Text(
                       text,
                       style: TextStyle(
-                        fontSize: 12.5,
+                        fontSize: AppTypography.tab,
                         height: 1.45,
                         color: scheme.onSurfaceVariant,
                         fontWeight: FontWeight.w700,
@@ -383,7 +384,7 @@ class AlbumLoginBannerSliver extends StatelessWidget {
                           height: 40,
                           decoration: BoxDecoration(
                             color: accent.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppRadius.chip),
                           ),
                           child: Icon(
                             Icons.lock_outline_rounded,
@@ -402,7 +403,7 @@ class AlbumLoginBannerSliver extends StatelessWidget {
                         foregroundColor: Colors.white,
                         minimumSize: const Size(double.infinity, 44),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(AppRadius.small),
                         ),
                       ),
                       child: Text(
@@ -420,7 +421,7 @@ class AlbumLoginBannerSliver extends StatelessWidget {
                     height: 40,
                     decoration: BoxDecoration(
                       color: accent.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppRadius.chip),
                     ),
                     child: Icon(Icons.lock_outline_rounded, color: accent),
                   ),
@@ -434,7 +435,7 @@ class AlbumLoginBannerSliver extends StatelessWidget {
                       foregroundColor: Colors.white,
                       minimumSize: const Size(96, 44),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(AppRadius.small),
                       ),
                     ),
                     child: Text(l10n?.albumLoginActionLogin ?? '登录'),

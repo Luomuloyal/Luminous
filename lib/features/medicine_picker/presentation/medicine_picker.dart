@@ -1,2 +1,2 @@
-export 'controllers/medicine_picker_controller.dart';
 export 'pages/medicine_picker_page.dart';
+export 'providers/medicine_picker_provider.dart';

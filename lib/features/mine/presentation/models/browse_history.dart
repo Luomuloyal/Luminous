@@ -1,9 +1,14 @@
+import 'package:json_annotation/json_annotation.dart';
+
 import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/shared/models/medicine.dart';
+
+part 'browse_history.g.dart';
 
 /// 本地浏览记录条目。
 ///
 /// 记录最近查看过的药品详情，用于“我的 > 浏览记录”页面展示与再次打开。
+@JsonSerializable(createFactory: false)
 class BrowseHistoryEntry {
   const BrowseHistoryEntry({
     required this.identityKey,
@@ -62,26 +67,17 @@ class BrowseHistoryEntry {
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'identityKey': identityKey,
-      'productName': productName,
-      'dosageForm': dosageForm,
-      'specification': specification,
-      'manufacturer': manufacturer,
-      'marketingAuthorizationHolder': marketingAuthorizationHolder,
-      'drugCode': drugCode,
-      'approvalNo': approvalNo,
-      'viewedAtMillis': viewedAtMillis,
-    };
-  }
+  Map<String, dynamic> toJson() => _$BrowseHistoryEntryToJson(this);
 
+  @JsonKey(includeToJson: false)
   bool get hasIdentity => identityKey.isNotEmpty;
 
+  @JsonKey(includeToJson: false)
   String get displayTitle => productName.isEmpty
       ? AppI18nText.pick(zh: '未知药品', en: 'Unknown medicine')
       : productName;
 
+  @JsonKey(includeToJson: false)
   String get displaySubtitle {
     final parts = <String>[
       if (dosageForm.isNotEmpty) dosageForm,
@@ -92,6 +88,7 @@ class BrowseHistoryEntry {
         : parts.join(' · ');
   }
 
+  @JsonKey(includeToJson: false)
   String get displayTips {
     if (manufacturer.isNotEmpty) {
       return manufacturer;
@@ -105,6 +102,7 @@ class BrowseHistoryEntry {
     return '';
   }
 
+  @JsonKey(includeToJson: false)
   DateTime get viewedAt => viewedAtMillis > 0
       ? DateTime.fromMillisecondsSinceEpoch(viewedAtMillis)
       : DateTime.fromMillisecondsSinceEpoch(0);

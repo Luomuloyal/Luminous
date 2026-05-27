@@ -48,12 +48,17 @@ class MedicineApi {
   /// 兼容两种健康检查响应：
   /// - 标准 `{code,msg,result}` 包装；
   /// - 纯 HTTP 200 + 任意 JSON。
+  /// 健康检查超时（毫秒）。
+  ///
+  /// `/health` 是轻量探测接口，应快速失败，不宜使用通用请求超时（15s）。
+  static const int _healthCheckTimeoutMs = 1600;
+
   static Future<bool> isBackendReachable() async {
     final dio = Dio(
       BaseOptions(
         baseUrl: GlobalConstants.BASE_URL,
-        connectTimeout: const Duration(milliseconds: 1600),
-        receiveTimeout: const Duration(milliseconds: 1600),
+        connectTimeout: const Duration(milliseconds: _healthCheckTimeoutMs),
+        receiveTimeout: const Duration(milliseconds: _healthCheckTimeoutMs),
       ),
     );
     try {

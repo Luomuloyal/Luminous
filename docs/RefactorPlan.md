@@ -1,418 +1,248 @@
-# Luminous Optimization and Nest Migration Plan
+---
+title: "Luminous 重构路线总控"
+tags:
+  - strategy
+  - refactor
+aliases:
+  - 重构路线
+  - 重构计划
+created: 2026-05-26
+---
 
-Last updated: 2026-05-24
+# Luminous 重构路线总控
 
-## Goal
+Last updated: 2026-06-02
 
-Luminous is already functional, and the current checks pass. The next work should focus on turning it from a demo-friendly app into a durable product:
+## 文档定位
 
-1. Remove demo behavior from real user flows.
-2. Make user data ownership and auth boundaries explicit.
-3. Reduce heavy client-side work, especially the offline medicine database.
-4. Prepare the backend for a NestJS + PostgreSQL migration without breaking the current Flutter app.
+本文只负责把控大方向，避免重构路线走偏。具体执行清单放在 [[ExecutionPlan]]，历史流水记录放在 [[MigrationLog]]。
 
-This plan is intentionally incremental. Each phase should leave the app runnable and covered by targeted checks.
+相关文档边界：
 
-## Migration Guardrails
+- [[Promise]]：产品愿景和长期边界。
+- [[ROADMAP]]：产品功能路线图与优先级。
+- [[ExecutionPlan]]：从当前仓库状态开始的可执行步骤。
+- [[MigrationLog]]：迁移历史记录。
+- [[TODO]]：已知待修复问题。
+- `Lucent/docs/*`：Lucent 内部 API、环境、数据源和后端实现约定。
 
-- Keep each migration slice small and reversible. Finish one state or structure adjustment, verify it, then move on.
-- Start moving new Flutter code toward the target structure instead of extending the old layer-based layout indefinitely:
+## 北极星
 
-```text
-lib/
-  core/
-  shared/
-  features/
+Luminous 的最终形态不是单纯的药品查询或提醒工具，而是跨平台、全终端、按终端能力分工的个人与家庭健康管家：
+
+- 手机端：快速采集、扫码、提醒、打卡、日常记录。
+- Web 端：家庭照护、共享面板、医生临时访问、就诊前摘要。
+- 桌面端：大屏长期健康数据银行、报告导入、多年时间线和对比分析。
+
+近期不得跳过“用药闭环”。先把药品知识、药品详情、提醒、打卡、用药反应记录、安全提示做扎实，再扩展到报告、症状、生命体征、家庭协作。
+
+## 当前基线
+
+截至 2026-06-02，项目已完成 Phase 0-2 主体工作：
+
+- Flutter 主体目录已迁向 `lib/core`、`lib/shared`、`lib/features`。
+- `lib/components`、`lib/pages`、`lib/stores`、`lib/viewmodels` 已全部退为兼容导出壳或归入 `lib/deprecated/*`。
+- **GetX 已完全抹除**：`pubspec.yaml` 不含 `get` 依赖，所有 feature 零 GetX 引用，测试中 `Get.testMode` / `Get.reset` 已清理。
+- 全部 13 个 feature 切片（Settings/MainShell/Home/Search/Scan/Drug/Reminders/Safety/Mine/Album/CheckIn/Login/Register）均已迁入 `lib/features/` 并切到 Riverpod。
+- `lib/core/network/` 已建立，legacy Express client 与 Lucent client 已拆开。
+- JSON 生成迁移已完成：15 个共享模型使用 `@JsonSerializable(createFactory: false)` + `_$XxxToJson` 生成 + 手写 `fromJson`；已修复嵌套容器 `toJson` 回归和 `done` 字段解析。
+- 所有文件 ≤600 行，`safety_assist_page.dart` 已拆分到 424 行。
+- 测试：`flutter test` **118/118 通过**，含 17 个模型 round-trip/fromJson 测试；`flutter analyze` 零 issue。
+- `integration_test/app_smoke_test.dart` 含 5 项 smoke 测试（启动/导航/tab 遍历/登录入口/未认证跳转），当前环境无移动设备无法执行。
+- `test/support/fake_sqflite_database.dart` 覆盖生产路径用到的 WHERE / ORDER BY 模式，可扩展。
+
+当前后端边界：
+
+- `backend/` 是旧 Express 服务，只作为低优先级参考和当前 `https://devluo.com` 旧接口基线。
+- `Lucent/` 是目标后端，技术栈明确为 NestJS + PostgreSQL + Prisma + Redis + Passport JWT。
+- 新接口：全局 prefix `/api` + NestJS URI versioning（Flutter 端 baseURL = `domain/api`，请求路径 = `/v1/xxx`）。不需要兼容旧 Express 路由。
+- 旧 Express envelope 是 `{ code, msg, result }`。
+- Lucent envelope 是 `{ code, message, data }`，只有分页等真实响应级信息才附加 `meta`。
+- `requestId` 通过 `X-Request-Id` 返回；`timestamp` 默认留在服务端日志中。
+
+## 总体原则
+
+1. 每次只推进一个 feature 或一个基础层切片。
+2. 每个切片必须能独立验证，不能把结构迁移、协议迁移、UI 改版、后端切换混在一起。
+3. 新 Flutter 代码只能进入 `core`、`shared`、`features`，不得扩张旧目录或 deprecated 目录。
+4. 活跃业务状态优先迁 Riverpod `Notifier` / `AsyncNotifier`，页面用 `ConsumerWidget` / `ConsumerStatefulWidget`。
+5. GetX 只允许留在 `lib/deprecated/` 和尚未迁移 feature；新功能不得引入 GetX。
+6. Flutter 不打包完整药品知识库，不提交 `DrugDataBase` 原始数据，不把大 xlsx / DrugBank 文件放入 assets。
+7. 药品事实来自 Lucent/PostgreSQL 知识表，AI 只做解释、总结、对比、提示和个人化组织。
+8. 用户授权边界必须收口到 JWT，Lucent 保护路由不得信任 body/query 中的 `userId`。
+9. Markdown 是长文本默认展示路径，复杂正则分段不再继续扩张。
+10. 文件体积继续按规则控制：优先低于 300 行，300-600 行可接受，超过 600 行先拆再加逻辑。
+
+## 阶段顺序
+
+### Phase A：当前 Flutter 基座收口
+
+目标：让 Flutter 主线从“结构已迁移”进入“活跃状态管理统一、测试可托底”的状态。
+
+必须完成：
+
+- 迁移剩余活跃 GetX feature：Home、Search、Drug、Reminders、Scan、Safety。
+- 移除活跃 `lib/` 中的 `package:get/get.dart`、`GetBuilder` 和 `GetxController`。
+- 把直接依赖 GetX 的测试改为 Riverpod/GoRouter/MaterialApp 测试夹具。
+- 拆分仍在增长的大文件，优先拆页面中的状态区、列表区、弹窗、文案、仓储映射。
+- 扩展 integration smoke，至少覆盖启动、主导航、登录/注册入口、提醒创建或本地打卡主路径。
+
+验收门槛：
+
+- `flutter analyze` 通过。
+- `flutter test` 通过。
+- 有设备时 `flutter test integration_test/app_smoke_test.dart` 可运行。
+- 活跃 `lib/` 中不再命中 GetX；`get` 依赖可以进入待删除状态。
+
+### Phase B：类型安全与本地数据基础
+
+目标：降低模型、JSON、SQLite 映射和本地缓存的维护风险。
+
+必须完成：
+
+- 从稳定共享模型和 API DTO 开始引入 `json_serializable`。
+- 先迁 `shared/models`、auth、reminder、medicine、scan、safety 等稳定模型，不做全仓一次性替换。
+- 用 `collection` 替换 JSON 字符串比较和手写复杂集合比较。
+- 在新增更多本地表前评估 Drift；只有收益明确时再引入 `drift` / `drift_dev`。
+
+验收门槛：
+
+- `dart run build_runner build --delete-conflicting-outputs` 通过。
+- `flutter analyze` 和模型相关 focused tests 通过。
+- 不为尚未稳定的 Lucent DTO 过早生成大量代码。
+
+### Phase C：Lucent 协议与 JWT 边界
+
+目标：让新后端成为唯一新功能落点，并建立前后端共同遵守的协议边界。
+
+必须完成：
+
+- Lucent API v1 协议、错误码、JWT 身份规则、分页 `meta`、`X-Request-Id` 文档稳定。
+- Nest 全局 validation pipe、exception filter、envelope interceptor、request id middleware 成为默认基线。
+- Auth、用户资料、验证码、refresh、Passport JWT guard 成为第一批稳定模块。
+- Flutter 新 Lucent client 不发送 body/query `userId` 作为授权边界。
+
+验收门槛：
+
+- Lucent 单元测试/e2e 覆盖 missing token、invalid token、跨用户访问、refresh 失败。
+- Flutter Lucent client 覆盖 success、business error、network error、分页 meta。
+- 旧 Express 仍可作为参考运行，但不影响 Lucent contract。
+
+### Phase D：药品知识平台和 Markdown 详情
+
+目标：把药品事实从旧小样例和 AI 生成迁到 Lucent/PostgreSQL。
+
+必须完成：
+
+- 为 `D:\25080\Documents\VSCodeProject\Lumos\DrugDataBase\FullDrugDetail.xlsx` 建 staging、导入、校验和 source metadata。
+- 为 DrugBank 建分层 staging；大 XML 必须流式处理，不一次性读入内存。
+- 建立中文产品详情、说明书章节、批准文号、条码、本位码、厂家、分类、搜索文档、DrugBank enrichment 的目标表。
+- Lucent medicine search/detail 返回结构化 sections 和 `detailMarkdown`。
+- Flutter medicine detail 和 AI/copilot 输出接入 Markdown renderer。
+
+验收门槛：
+
+- 数据源行数、staging 行数、normalized 行数可解释。
+- 药品搜索支持名称、厂家、批准文号、条码、本位码等主路径。
+- Flutter 不再把完整知识库放 assets。
+- AI 药品详情不再编造药品事实，只基于检索到的结构化数据解释。
+
+### Phase E：用药闭环切到 Lucent
+
+目标：把 Stage 1 用药闭环变成真实后端驱动的稳定产品能力。
+
+必须完成：
+
+- Flutter 按 feature 切到 Lucent：auth、medicine search/detail、my medicines、reminders、scan records、check-in。
+- 本地缓存只做离线/同步辅助，远端真实数据以 Lucent/PostgreSQL 为准。
+- 提醒、打卡、用药反应记录形成同一用户时间线的基础数据。
+- 旧 Express API 在 Flutter 中标记 deprecated，后续只保留必要回退开关。
+
+验收门槛：
+
+- 新注册用户可登录、搜索药品、查看详情、加入我的药品、创建提醒、打卡、查看记录。
+- 保护路由全部从 JWT 派生用户身份。
+- 旧 Express 与 Lucent 不在同一个 client 中混用。
+
+### Phase F：AI 副驾驶重定位
+
+目标：把 AI 从“生成药品事实”改成“基于权威数据和用户上下文解释、总结和提示”。
+
+必须完成：
+
+- 建立 grounded copilot 服务：输入必须包含检索到的药品 sections、用户已记录上下文和明确的安全边界。
+- AI 输出默认 Markdown，带来源边界和不确定性说明。
+- 药品安全提示先用确定性规则和结构化字段兜底，再用 AI 做解释层。
+- 加入缓存、审计和失败降级，不让 AI 失败阻断基础药品详情。
+
+验收门槛：
+
+- AI 不能生成数据库已有字段的替代事实。
+- AI 输出可追溯到 medicine sections / user records。
+- Flutter 能清楚区分“事实字段”和“AI 解释”。
+
+### Phase G：全终端健康管家扩展
+
+目标：在用药闭环稳定后，扩展到个人/家庭健康管理。
+
+顺序：
+
+1. 报告导入、OCR、结构化指标和 Markdown 解读。
+2. 症状、生命体征、用药反应记录。
+3. 个人健康时间线。
+4. 家庭成员与照护面板。
+5. 医生临时分享链接、访问审计和撤销。
+6. 桌面端长期数据银行与大屏分析。
+
+验收门槛：
+
+- 每个新健康领域都有数据模型、隐私边界、导入/编辑/删除能力。
+- 共享默认给摘要，不默认暴露原始隐私数据。
+- 移动、Web、桌面各自体现终端优势，而不是简单拉伸同一个页面。
+
+## 默认验证门
+
+Flutter 切片默认：
+
+```bash
+flutter analyze
+flutter test
 ```
 
-- Control file size during migration: target under 300 lines per file, 300-600 lines is acceptable, and anything above 600 lines should be split before more logic is added.
-- Prefer migrating single-responsibility UI/session state first, then move to larger auth or business state after the smaller slice is stable.
+涉及代码生成：
 
-## Current Baseline
-
-Verified before this plan:
-
-- `flutter analyze`: pass
-- `flutter test`: pass
-- `backend npm test`: pass
-- `backend npm run build`: pass
-
-Important current architecture notes:
-
-- Flutter uses GetX controllers at page level and `DioRequest` as the unified HTTP entry.
-- Backend is Express + TypeScript with route handlers under `backend/src/handlers`.
-- The current backend data stores are MongoDB + MySQL + Redis.
-- AI calls are already centralized under `backend/src/ai`, with LangChain-compatible helper contracts.
-- The API envelope is unified as `{ code, msg, result }`.
-- The frontend still sends `userId` in several user-scoped requests.
-
-Target backend end-state for this plan:
-
-- Framework: NestJS.
-- Primary data store: PostgreSQL.
-- Optional Redis: keep only where short-lived cache, verification code storage, or AI/text cache materially helps.
-- MongoDB and MySQL are migration sources to retire, not long-term dependencies to preserve.
-
-## Phase 0: Structure Baseline and File Decomposition
-
-Phase 0 comes before any new product-facing migration slice. The current priority is to make the codebase structurally safe to keep evolving:
-
-1. Move new code into the target directory structure instead of extending legacy folders.
-2. Split oversized files before adding more behavior.
-3. Keep all structural changes low-risk, reversible, and behavior-preserving.
-
-Phase 0 is scoped to the Flutter project base. Backend restructuring stays documented in later phases, but Express auth splitting, NestJS scaffolding, and PostgreSQL work should not start until the Flutter directory structure and shared UI foundation are healthy.
-
-### 0.1 Directory contract
-
-Frontend target direction:
-
-```text
-lib/
-  core/
-    providers/
-    router/
-    startup/
-    theme/
-  shared/
-    widgets/
-    layout/
-  features/
-    settings/
-      presentation/
-      providers/
-      data/
-    home/
-    search/
-    scan/
-    reminders/
-    auth/
+```bash
+dart run build_runner build --delete-conflicting-outputs
+flutter analyze
+flutter test
 ```
 
-Rules:
+涉及 integration smoke：
 
-- `core` is for global runtime capabilities only.
-- `shared` is for cross-feature reusable UI or helpers used by at least two features.
-- `features` owns business-specific presentation/state/data code.
-- Legacy folders may keep thin compatibility wrappers during migration, but new logic should not keep accumulating there.
-
-### 0.2 File decomposition rules
-
-Tasks:
-
-- Split files larger than 600 lines before adding new logic to them.
-- Prefer semantic splits such as `page`, `section`, `card`, `dialog`, `controller_support`, and `labels`, not arbitrary `part1/part2` buckets.
-- Land the split first, then move files into the target directory structure in the same slice when the move is low-risk.
-- Allow temporary export wrappers from old paths when they reduce migration blast radius.
-- Do not combine structure migration with behavior changes unless the behavior fix is required to keep the app compiling or tested.
-
-Acceptance:
-
-- The app still builds and runs after each slice.
-- `flutter analyze` stays green after each frontend slice.
-- Relevant focused tests pass after each slice, and full regression gates run regularly.
-- Large files shrink, and the new target directories become the canonical home for migrated code.
-
-### 0.3 Structural slice status
-
-Completed on 2026-05-24:
-
-1. `Settings`: split `settings.dart`, move the page stack into `lib/features/settings/`, and keep old imports as compatibility exports.
-2. `Main shell`: split `MainPage`, controller, bottom bar, ornament support, and wide navigation rail into `lib/features/main_shell/presentation/`.
-3. `Home`: separate page composition, controller, support data, and widgets under `lib/features/home/presentation/`; `HomePage` is the canonical feature entry.
-4. `Search`: split page, controller, prompt/result slivers, cards, and tip widgets under `lib/features/search/presentation/`; `SearchPage` is the canonical feature entry.
-5. `Scan`: split page orchestration, controller, image-flow support, labels, selected-image model, sheet, photo area, actions, and result section under `lib/features/scan/presentation/`.
-6. `Shared UI base`: move cross-feature surfaces, auth UI primitives, soft banner primitives, status chips, quick-entry styles/cards, responsive quick-grid primitives, ornament layouts, and app canvas scaffolds into `lib/shared/widgets/`; split `AppSurface`, auth UI, soft banner, and ornament layout definitions into smaller shared files.
-7. `Responsive shell base`: add `lib/shared/layout/`, global breakpoint/window-class definitions, `AppAdaptiveScaffold`, and compact bottom navigation versus wide rail/sidebar behavior for `MainPage`.
-8. `Drug`: split drug list, medicine detail, controllers, presentation widgets, and presentation models under `lib/features/drug/presentation/`; route-level naming is now `DrugPage`.
-9. `Reminders`: split list/edit pages, controllers, reminder card, list widgets, and edit widgets under `lib/features/reminders/presentation/`.
-10. `Safety`: split safety assist page, controller, and widgets under `lib/features/safety/presentation/`.
-11. `Mine`: split mine page, browse history page, controllers, profile card, and page widgets under `lib/features/mine/presentation/`; route-level naming is now `MinePage`.
-12. `Album`: split album page, controller, preview, card, page widgets, and slivers under `lib/features/album/presentation/`; route-level naming is now `AlbumPage`.
-13. `CheckIn`: move check-in page and controller under `lib/features/checkin/presentation/`.
-14. `Login` and `Register`: move login/register pages and controllers under `lib/features/login/presentation/` and `lib/features/register/presentation/`; route-level naming is now `RegisterPage`.
-15. `MedicinePicker`: move the cross-feature medicine picker page and controller under `lib/features/medicine_picker/presentation/`, and keep old `lib/pages/Picker/*` paths as compatibility exports.
-16. `Legal` and `Profile settings`: move legal document pages under `lib/features/legal/presentation/`, move profile settings page/controller under `lib/features/settings/presentation/`, and keep old paths as compatibility exports.
-17. `Legacy directory cleanup`: retire active `lib/components/`, `lib/pages/`, `lib/stores/`, and `lib/viewmodels/` usage; old compatibility and deprecated code now lives under `lib/deprecated/`.
-18. `Root and constants cleanup`: move `RootAppWidget` out of `lib/routes/` into `lib/core/startup/`, split constants by responsibility, and keep `constants.dart` as a barrel export.
-
-Remaining Phase 0 cleanup:
-
-1. Continue the responsive base with shared content lanes, max-width constraints, optional side panels, and one feature-level compact/expanded reference implementation beyond Home.
-2. Replace hand-written API JSON model serialization with generated model code in a dedicated slice, preferably using `json_serializable` plus `build_runner` after model ownership has stabilized.
-3. Add a minimal integration/e2e smoke suite after the Phase 0 routing and startup structure is stable, focused on app launch, auth navigation, and one primary medicine/reminder flow.
-4. Decide when to retire `lib/deprecated/` files from the repository entirely after one stable checkpoint confirms no rollback path is needed.
-
-### 0.4 Exit criteria
-
-Phase 0 is considered healthy enough to move faster only when:
-
-- the main oversized frontend files have been split into readable units;
-- at least the first active UI modules have a real `features/*` home;
-- old paths are reduced to compatibility shells or removed where safe;
-- shared UI that is used across multiple features has a canonical home under `lib/shared`;
-- responsive layout primitives exist under `lib/shared/layout` or `lib/shared/widgets` so phone, tablet, desktop, and web variants can be added without rewriting feature pages;
-- the repo remains green on the default validation gates.
-
-### 0.5 Responsive readiness checkpoint
-
-Current status on 2026-05-24:
-
-- The refactor has preserved useful responsive seams at the feature and widget level. Migrated pages now have feature-owned entry points such as `HomePage`, `SearchPage`, `MedicineScanPage`, `DrugPage`, `AlbumPage`, and `MinePage`, which makes it possible to add compact, medium, and expanded variants inside each feature later.
-- `lib/shared/layout/` now defines the global breakpoint taxonomy through `AppWindowClass`: compact `<600`, medium `600-839`, expanded `840-1199`, and web-expanded `>=1200`.
-- `AppAdaptiveScaffold` is the first shared adaptive shell. `MainPage` keeps the compact bottom tab bar on phone widths and switches to `NavigationRail` / extended rail on wider widths.
-- `lib/shared/widgets/responsive_quick_grid.dart` already centralizes one compact breakpoint at `600dp`, text-scale-aware quick-entry metrics, and `ResponsiveQuickWrap`.
-- Home, Drug, and Mine quick-entry sections already consume the shared responsive quick-grid primitives instead of hardcoding fixed card widths.
-- Settings theme style selection already uses local `500dp` and `720dp` breakpoints to change column count.
-- Several migrated feature pages still use `LayoutBuilder` or `Wrap` for local compact handling, including Album, Drug detail, Reminders, CheckIn, Safety, and Mine.
-- `test/responsive_layout_test.dart` covers narrow mobile widths for the shared quick-entry sections and one long-email Mine profile layout.
-- `test/adaptive_layout_test.dart` covers breakpoint mapping and compact/wide adaptive shell switching.
-
-Known gaps:
-
-- `AppCanvasPageScaffold` now has a canonical home under `lib/shared/widgets/`, but it is still a visual scaffold, not an adaptive layout scaffold. It does not provide max-width content lanes, side panels, master-detail slots, or desktop content density rules.
-- The app currently changes spacing, wrapping, and card sizing, but it does not yet change feature content between phone, tablet, desktop, and web.
-- Feature-level responsive tests still focus on narrow mobile overflow; tablet, desktop, and web-width feature regression tests are still missing.
-
-Next responsive foundation tasks before product-facing responsive work:
-
-1. Add page content constraints such as max readable width, centered content lanes, and optional side panels.
-2. Convert one migrated feature first, preferably Home, to compact and expanded page variants as the reference pattern.
-3. Expand widget tests to cover at least 393, 768, and 1280 logical-pixel widths.
-4. Gradually replace local ad hoc width rules with `AppWindowClass` where doing so reduces duplication.
-
-Started on 2026-05-24:
-
-- Added `lib/shared/layout/` with `AppWindowClass` and global breakpoints: compact `<600`, medium `600-839`, expanded `840-1199`, and web-expanded `>=1200`.
-- Added `AppAdaptiveScaffold` as the first shared adaptive shell for compact bottom navigation versus wide navigation pane.
-- Updated `MainPage` to keep the existing bottom tab bar on compact widths and switch to `NavigationRail` on medium and wider widths. Expanded and web-expanded widths use an extended rail/sidebar presentation.
-- Added `test/adaptive_layout_test.dart` to lock the breakpoint mapping and compact/wide shell switching behavior.
-
-## Phase 1: Product Trust and Real Data
-
-### 1.1 Remove real-flow demo data
-
-Problem:
-
-- Reminder and home flows still contain demo fallback behavior.
-- Empty reminder lists can currently trigger seeded default reminders.
-- A real user should not see or receive data they did not create.
-
-Tasks:
-
-- Stop auto-creating default reminder plans in `ReminderListController`.
-- Keep demo content only for explicit guest/dev/demo states.
-- For logged-in users with no data, show empty states and clear calls to action.
-- Update tests for empty reminder lists and non-seeding behavior.
-
-Acceptance:
-
-- A newly registered user with no reminders sees an empty reminder state.
-- No backend reminder is created unless the user explicitly creates one.
-- `flutter test` continues to pass.
-
-### 1.2 Session expiration and token storage
-
-Problem:
-
-- Tokens are stored in `SharedPreferences`.
-- Refresh failure clears tokens but does not consistently clear the in-memory user session.
-
-Tasks:
-
-- Introduce secure token storage with `flutter_secure_storage`.
-- Add a single session-expired path in `DioRequest` or a small session service.
-- On refresh failure, clear tokens, clear `UserController`, and notify the UI once.
-- Avoid repeated session-expired toasts from concurrent requests.
-
-Acceptance:
-
-- Expired refresh token returns the app to a clean logged-out state.
-- User-scoped pages do not continue showing stale logged-in state.
-- Existing login tests still pass, with new token/session tests added.
-
-## Phase 2: Auth Boundary and API Ownership
-
-### 2.1 Protect user-scoped backend routes
-
-Problem:
-
-- `authMiddleware` exists but is not used on most user-scoped routes.
-- User ownership is currently inferred from request body `userId`.
-
-Tasks:
-
-- Apply `authMiddleware` to user profile, my medicines, reminders, and scan-record routes.
-- Derive `userId` from JWT for protected handlers.
-- Temporarily accept body `userId` only where compatibility is needed, and assert it matches the JWT user.
-- Return consistent `401/403` envelopes for missing or mismatched identity.
-
-Acceptance:
-
-- A user cannot read or modify another user's reminders or medicines by changing body `userId`.
-- Existing Flutter calls continue to work after adding Authorization headers.
-- Backend tests cover mismatched user identity.
-
-### 2.2 Frontend contract cleanup
-
-Tasks:
-
-- Stop sending `userId` from Flutter for protected endpoints after backend compatibility is in place.
-- Keep public endpoints public: medicine search/detail, AI detail/safety if product direction allows anonymous use.
-- Update `docs/lib-docs/frontend-backend-alignment-checklist.md`.
-
-Acceptance:
-
-- Frontend user-scoped APIs no longer depend on locally supplied `userId`.
-- Contract docs match route behavior.
-
-## Phase 3: Offline Medicine Search Performance
-
-Problem:
-
-- The full medicine source data has been moved out of the app repository and backed up externally.
-- `lib/assets/data.json` is now a tiny two-row development sample so local search can keep working without bundling the full source dataset.
-- `LocalMedicineStore` still loads and decodes the JSON asset, then scans it linearly, so this is only acceptable for the temporary sample dataset.
-
-Preferred direction:
-
-- Replace the JSON fallback search with a prebuilt local SQLite database using FTS.
-
-Tasks:
-
-- Add a build/import script that converts the medicine source data into a compact SQLite asset.
-- Move local search to SQLite queries instead of full JSON decode.
-- Keep the same `MedicineSearchResult` contract.
-- Load the local database lazily and off the startup path.
-
-Acceptance:
-
-- The app no longer bundles the full medicine JSON source.
-- Offline search still supports product name, approval number, manufacturer, holder, drug code, and serial number.
-- Add tests for local search query behavior.
-
-## Phase 4: Backend Migration to NestJS + PostgreSQL
-
-The backend migration should be a controlled architecture migration, not a product rewrite.
-
-Detailed execution steps are tracked in `docs/backend-nestjs-pgsql-migration-plan.md`.
-
-### 4.1 Migration strategy
-
-Move toward a single NestJS backend with PostgreSQL as the primary store.
-
-If parity verification requires it, a temporary parallel Nest runtime is acceptable during the cutover window, but it is not the desired steady state.
-
-Recommended structure:
-
-```text
-backend/
-  src/
-    main.ts
-    app.module.ts
-    common/
-      filters/
-      interceptors/
-      guards/
-      dto/
-    config/
-    auth/
-    medicines/
-    reminders/
-    my-medicines/
-    scan-records/
-    ai/
-    db/
+```bash
+flutter test integration_test/app_smoke_test.dart
 ```
 
-Key compatibility rules:
+Lucent 切片默认：
 
-- Preserve the current route paths under `/api/*`.
-- Preserve the response envelope `{ code, msg, result }`.
-- Preserve existing JWT token semantics until Flutter no longer depends on them.
-- Reuse the current AI helper contracts where possible.
-- Replace MongoDB + MySQL data ownership with PostgreSQL-backed modules instead of reintroducing dual persistence in the new architecture.
+```bash
+pnpm test
+pnpm test:e2e
+pnpm build
+```
 
-### 4.2 Suggested Nest module mapping
+跨端或 UI 适配切片至少覆盖 393、768、1280 逻辑宽度的 widget test 或截图检查。
 
-- `auth`: login, register, refresh, user profile, verification code delivery.
-- `medicines`: search, detail, AI detail, AI safety, scan recognition.
-- `my-medicines`: user medicine collection.
-- `reminders`: reminder plans and today reminders.
-- `scan-records`: scan history create/list.
-- `ai`: LangChain gateway, prompt builders, text cache.
-- `db`: PostgreSQL access layer and optional Redis providers.
-- `common`: response envelope, error mapping, auth guard, validation pipes.
+## 明确禁止
 
-### 4.3 Migration phases
+- 不要在 `backend/` 继续实现新业务主线。
+- 不要为兼容旧 Express 牺牲 Lucent 新协议。
+- 不要把 `DrugDataBase` 或大型 xlsx/DrugBank 文件提交进 Git 或 Flutter assets。
+- 不要把 AI 当作药品事实来源。
+- 不要在新页面、新 provider、新 repository 中新增 GetX。
+- 不要一次性全仓迁移 JSON、Drift、Lucent API 或 UI 重构。
+- 不要在未建立验收测试前做大面积行为修改。
 
-1. Define the target PostgreSQL schema that replaces current MongoDB user data and MySQL medicine tables.
-2. Scaffold the NestJS application entry and move shared config/env parsing into Nest config providers.
-3. Add PostgreSQL data access, migration scripts, and seed/import tooling; wire Redis only for clearly justified short-lived cache flows.
-4. Move the AI module first because it is already centralized and testable.
-5. Move medicine public routes and decide whether medicine data lands fully in PostgreSQL or is refreshed into PostgreSQL from an external upstream source.
-6. Move auth, verification-code delivery, and JWT guard.
-7. Move user-scoped routes after Phase 2 auth rules are already tested.
-8. Run Express and Nest parity tests before switching deployment, then retire MongoDB/MySQL runtime dependencies.
+## 近期唯一推荐路线
 
-Acceptance:
-
-- Flutter does not need route changes during the migration.
-- Express tests have equivalent Nest tests before a route is switched.
-- PostgreSQL becomes the primary persisted source for migrated modules.
-- Redis remains optional and limited to cache/code scenarios rather than becoming a second primary database.
-- Docker and deployment docs clearly state which backend entrypoint is active during the cutover window.
-
-## Phase 5: Testing and Performance Baseline
-
-Tasks:
-
-- Add `integration_test` flows for login, scan-to-detail, reminder-create-to-checkin.
-- Add a profile-mode performance baseline for cold start and local search.
-- Keep `flutter analyze`, `flutter test`, `backend npm test`, and backend build as the default gate.
-
-## Working Rules
-
-- Make one product-visible change at a time.
-- Update tests and docs in the same phase when behavior changes.
-- Avoid broad refactors unless they unlock the current phase.
-- Keep the app shippable after each completed slice.
-
-## Progress Log
-
-### 2026-05-23
-
-- Added this optimization and Nest migration plan.
-- Phase 1.1 started: `ReminderListController` no longer seeds default reminder plans when the logged-in user's local reminder list is empty.
-- Added a controller test to keep empty reminder lists empty after local load and remote sync.
-- Moved ornament session/UI state from `OrnamentController` to a Riverpod notifier under `lib/core/theme/ornaments/`, keeping this migration slice small and aligned with the target directory structure.
-- Started `UserController` migration by moving session restore and persisted user reads/writes into `lib/features/auth/`, while keeping the old controller API as the compatibility layer for existing pages.
-- Replaced the runtime `UserController` bridge with a temporary global `ProviderContainer` bridge for legacy GetX controllers that cannot yet receive `WidgetRef`.
-- Expanded read-side adoption across Home, reminders, check-in, album, search, scan, settings/profile, and Mine controllers so session reads come from `currentUserProvider` / `userSessionReadyProvider`.
-- Marked the deprecated `SplashPage` as unused and verified it is not connected to the active GoRouter route table.
-
-### 2026-05-24
-
-- Added `Phase 0` to prioritize directory structure cleanup and oversized file decomposition before resuming faster product-facing migration.
-- Set the recommended structure-first execution order to `Settings -> Main shell -> Home -> Search -> Scan`, then frontend shared UI and remaining active page shells before backend work.
-- Started the first structural slice by moving the Settings presentation code toward `lib/features/settings/` while keeping compatibility with existing imports.
-- Completed the second structural slice by moving the main shell presentation and controller code into `lib/features/main_shell/`, splitting the old oversized `main.dart` into page, bottom-bar, and ornament support files while keeping legacy export wrappers.
-- Completed the fifth structural slice by moving scan presentation code into `lib/features/scan/presentation/`, splitting the old scan page into page, image-flow support, labels, preview, sheet, result, and action files while keeping legacy export wrappers.
-- Re-scoped `Phase 0` as Flutter project-base work only; backend auth splitting and NestJS/PostgreSQL implementation are deferred to later backend phases.
-- Started the shared UI base slice by moving app surface, tinted status chip, responsive quick grid, quick entry style, and shared quick entry card primitives into `lib/shared/widgets/`, with old component paths kept as compatibility exports.
-- Split the shared ornament definitions into `lib/shared/widgets/ornaments/`, separating models, banner layouts, section layouts, and layout sets while keeping `lib/components/app_ornaments.dart` as a compatibility export.
-- Recorded the responsive readiness checkpoint: current responsive support is component-level and mobile-overflow focused, while global breakpoints, adaptive app shell, desktop/web content variants, and wider viewport tests still need to be added.
-- Started the responsive foundation by adding shared layout breakpoints, `AppAdaptiveScaffold`, and a medium/expanded `NavigationRail` path for `MainPage` while preserving the compact bottom bar behavior.
-- Completed the sixth structural slice (`Drug`): split `lib/components/drug.dart` (697→3 files) and `lib/pages/Drug/medicine_detail.dart` (763→4 files), moved data models into `lib/features/drug/presentation/models/`, and collapsed 7 old paths into compatibility re-exports while updating 7 cross-repo imports. All new files ≤600 lines; `flutter analyze` clean.
-- Added `.flutter` and `.flutter_tool_state` to `.gitignore` as Flutter SDK local tool state.
-- Completed the seventh structural slice (`Reminders`): split `lib/pages/Reminders/reminder_list.dart` (730→3 files: page + list widgets + card) and `reminder_edit.dart` (687→2 files: page + edit widgets), copied controllers, and collapsed 4 old paths into compatibility re-exports while updating 3 cross-repo imports. All new files ≤600 lines; `flutter analyze` clean with 1 pre-existing info lint.
-- Completed the eighth structural slice (`Safety`): split `lib/pages/Safety/safety_assist.dart` (956→2 files: page + widgets), copied controller, collapsed 2 old paths into compatibility re-exports, updated 3 cross-repo imports. `flutter analyze` clean (1 pre-existing info).
-- Completed the ninth structural slice (`Mine`): split `lib/components/mine.dart` (658→2 files: profile card 221 + page widgets 397), migrated `mine.dart`, `browse_history.dart`, and 2 controllers, collapsed 6 old paths, updated 4 cross-repo imports. `flutter analyze` clean.
-- Completed the tenth structural slice (`Album`): split `lib/components/album.dart` (1075→4 files: page_widgets 181 + slivers 450 + card 224 + preview 210), migrated page and controller, collapsed 3 old paths, updated 2 cross-repo imports. `flutter analyze` clean.
-- Completed the eleventh structural slice (`CheckIn`): migrated page and controller to `lib/features/checkin/presentation/`, collapsed 2 old paths, updated router import. `flutter analyze` clean.
-- Normalized naming: renamed `DrugView`→`DrugPage`, `AlbumView`→`AlbumPage`, `MineView`→`MinePage` (route-level pages), layout widgets renamed to `XxxLayout`. Fixed `use_build_context_synchronously` info lint in reminder_edit_page.
-- Completed the twelfth and thirteenth structural slices (`Login` + `Register`): migrated both pages and controllers to `lib/features/login/presentation/` and `lib/features/register/presentation/`, renamed `RegisterView`→`RegisterPage`, updated `login_controller` to reference `RegisterPage` via barrel, collapsed 4 old paths, updated router and test imports. `flutter analyze` clean; all 19 `flutter test` passing.
-- Updated the Phase 0 status checkpoint: most active presentation modules now have canonical homes under `lib/features/`, shared UI and adaptive shell primitives live under `lib/shared/`, and remaining cleanup is limited to smaller page islands, data/model ownership decisions, compatibility wrapper retirement, and responsive content-lane work.
-- Moved `AppCanvas` and `AppCanvasPageScaffold` into `lib/shared/widgets/app_canvas.dart`, kept `lib/components/app_canvas.dart` as a compatibility export, and updated active imports to the shared path.
-- Split `SoftBanner` into `lib/shared/widgets/soft_banner/` with separate palette, card, and ornament files, kept `lib/components/soft_banner.dart` as a compatibility export, and updated active imports to the shared path.
-- Split authentication UI primitives into `lib/shared/widgets/auth/` with separate scaffold, card, method switcher, legal, and model files, kept `lib/components/auth.dart` as a compatibility export, and updated active login/register imports to the shared path.
+按 [[ExecutionPlan]] 执行。

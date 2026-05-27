@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
 import 'package:luminous/shared/widgets/responsive_quick_grid.dart';
 import 'package:luminous/shared/widgets/shared_quick_entry_card.dart';
@@ -12,6 +12,7 @@ import 'package:luminous/features/medicine_picker/presentation/medicine_picker.d
 import 'package:luminous/features/scan/presentation/scan.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/features/drug/presentation/drug.dart';
+import 'package:luminous/features/auth/providers/user_session_provider.dart';
 import 'package:luminous/features/reminders/data/reminder_local_gateway.dart';
 import 'package:luminous/utils/app_i18n_text.dart';
 import 'package:luminous/utils/toast_utils.dart';
@@ -19,9 +20,9 @@ import 'package:luminous/shared/models/home.dart';
 import 'package:luminous/shared/models/medicine.dart';
 import 'package:luminous/shared/layout/adaptive_layout.dart';
 
-import 'controllers/home_controller.dart';
+import 'providers/home_provider.dart';
 
-export 'controllers/home_controller.dart';
+export 'providers/home_provider.dart';
 
 part 'pages/home_page.dart';
 part 'support/home_demo_data.dart';

@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+
 import 'package:luminous/shared/widgets/app_canvas.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
 import 'package:luminous/features/search/presentation/search.dart';
 import 'package:luminous/shared/widgets/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
-import 'package:luminous/features/medicine_picker/presentation/controllers/medicine_picker_controller.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/medicine_picker_provider.dart';
 import 'package:luminous/shared/models/medicine.dart';
 
 /// 药品选择器页面。
 ///
 /// 统一承接“从我的药品选择”与“跳转搜索库选择”两种入口，并把结果返回给上层页面。
-class MedicinePickerPage extends StatelessWidget {
+class MedicinePickerPage extends ConsumerWidget {
   /// 创建药品选择器页面。
   const MedicinePickerPage({super.key, this.title});
 
@@ -19,39 +20,35 @@ class MedicinePickerPage extends StatelessWidget {
   final String? title;
 
   @override
-  Widget build(BuildContext context) {
-    return GetBuilder<MedicinePickerController>(
-      init: MedicinePickerController(),
-      global: false,
-      builder: (controller) {
-        final l10n = AppLocalizations.of(context);
-        final scheme = Theme.of(context).colorScheme;
-        return AppCanvasPageScaffold(
-          appBar: AppBar(
-            title: Text(title ?? l10n?.drugPickerTitle ?? '选择药品'),
-            centerTitle: true,
-            foregroundColor: const Color(0xFF0F172A),
-          ),
-          appBarSpacing: 32,
-          accentColor: scheme.primary,
-          secondaryAccentColor: Color.lerp(
-            scheme.secondary,
-            scheme.tertiary,
-            0.5,
-          )!,
-          child: RefreshIndicator(
-            onRefresh: controller.load,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-              children: [
-                _buildSearchEntry(context),
-                const SizedBox(height: 12),
-                _buildMyMedicinesCard(context, controller),
-              ],
-            ),
-          ),
-        );
-      },
+  Widget build(BuildContext context, WidgetRef ref) {
+    final itemsAsync = ref.watch(medicinePickerProvider);
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final items = itemsAsync.hasValue ? itemsAsync.value! : const <MedicineItem>[];
+    return AppCanvasPageScaffold(
+      appBar: AppBar(
+        title: Text(title ?? l10n?.drugPickerTitle ?? '选择药品'),
+        centerTitle: true,
+        foregroundColor: const Color(0xFF0F172A),
+      ),
+      appBarSpacing: 32,
+      accentColor: scheme.primary,
+      secondaryAccentColor: Color.lerp(
+        scheme.secondary,
+        scheme.tertiary,
+        0.5,
+      )!,
+      child: RefreshIndicator(
+        onRefresh: () async => ref.invalidate(medicinePickerProvider),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+          children: [
+            _buildSearchEntry(context),
+            const SizedBox(height: 12),
+            _buildMyMedicinesCard(context, items, itemsAsync.isLoading),
+          ],
+        ),
+      ),
     );
   }
 
@@ -157,7 +154,8 @@ class MedicinePickerPage extends StatelessWidget {
   /// 用户可以直接从本地已添加的药品里点选，也可以跳到搜索页重新选择。
   Widget _buildMyMedicinesCard(
     BuildContext context,
-    MedicinePickerController controller,
+    List<MedicineItem> items,
+    bool loading,
   ) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
@@ -182,11 +180,11 @@ class MedicinePickerPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              if (controller.items.isNotEmpty)
+              if (items.isNotEmpty)
                 TintedStatusChip(
                   text:
-                      l10n?.pickerCount(controller.items.length) ??
-                      '共 ${controller.items.length} 项',
+                      l10n?.pickerCount(items.length) ??
+                      '共 ${items.length} 项',
                   color: scheme.tertiary,
                   showBorder: false,
                   surfaceLightAlpha: 0.08,
@@ -199,7 +197,7 @@ class MedicinePickerPage extends StatelessWidget {
                   ),
                 ),
               const Spacer(),
-              if (controller.loading) ...[
+              if (loading) ...[
                 const SizedBox(
                   width: 16,
                   height: 16,
@@ -218,7 +216,7 @@ class MedicinePickerPage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          if (controller.items.isEmpty)
+          if (items.isEmpty)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
               decoration: BoxDecoration(
@@ -281,12 +279,12 @@ class MedicinePickerPage extends StatelessWidget {
               ),
             )
           else
-            ...controller.items.asMap().entries.map((entry) {
+            ...items.asMap().entries.map((entry) {
               final index = entry.key;
               final item = entry.value;
               return Padding(
                 padding: EdgeInsets.only(
-                  bottom: index == controller.items.length - 1 ? 0 : 10,
+                  bottom: index == items.length - 1 ? 0 : 10,
                 ),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(14),

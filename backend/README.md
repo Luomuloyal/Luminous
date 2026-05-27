@@ -1,6 +1,6 @@
-# Luminous App Backend
+# Luminous Legacy Express Backend
 
-App 后端服务，提供认证与药品能力接口。
+旧 App 后端服务，提供当前线上 `https://devluo.com` 所用的 Express 认证、药品能力接口与临时联调基线。该目录已经不是新后端功能的落点；目标后端为 `../Lucent` submodule 中的 NestJS + PostgreSQL + Prisma + Redis + Passport JWT 项目。
 
 ## Stack
 
@@ -11,6 +11,22 @@ App 后端服务，提供认证与药品能力接口。
 - Redis（验证码存储，5 分钟过期）
 - MySQL (药品库)
 - LangChain AI 网关（OpenAI-compatible endpoint，兼容豆包/方舟）
+
+Target stack lives in Lucent:
+
+- NestJS
+- PostgreSQL
+- Prisma
+- Redis
+- Passport JWT strategy
+- Markdown-oriented medicine detail and AI/copilot responses
+
+Target external knowledge sources:
+
+- `D:\25080\Documents\VSCodeProject\Lumos\DrugDataBase\FullDrugDetail.xlsx`
+- `D:\25080\Documents\VSCodeProject\Lumos\DrugDataBase`
+
+这些数据只作为 Lucent/PostgreSQL 的本地/部署导入源，不进入 Git，不打包进 Flutter。
 
 ## Directory Layout
 
@@ -47,7 +63,7 @@ npm install
 
 ### Configure Environment
 
-Create `backend/.env`:
+Create `backend/.env.development` for local legacy Express runs, or `backend/.env.production` for production legacy Express runs:
 
 ```env
 PORT=8787
@@ -126,7 +142,7 @@ docker run --rm -p 8787:8787 --env-file backend/.env.development luminous-backen
 docker compose up -d --build
 ```
 
-`docker-compose.yml` 会同时启动 backend、mongodb、redis、mysql。
+`docker-compose.yml` 当前会同时启动 legacy backend、mongodb、redis、mysql。目标迁移完成后，Lucent 的部署配置应只保留 Lucent、PostgreSQL、Redis 和必要网关。
 
 ## API Summary
 
@@ -152,7 +168,9 @@ docker compose up -d --build
 - `POST /api/medicines/scan-record-create`
 - `POST /api/medicines/scan-record-list`
 
-Full schema and examples: [../.md/lib-docs/backend-api.md](../.md/lib-docs/backend-api.md)
+Full schema and examples: [../docs/lib-docs/backend-api.md](../docs/lib-docs/backend-api.md)
+
+Knowledge platform plan: [../docs/knowledge-data-platform-plan.md](../docs/knowledge-data-platform-plan.md)
 
 ## Response Envelope
 
@@ -167,7 +185,7 @@ Full schema and examples: [../.md/lib-docs/backend-api.md](../.md/lib-docs/backe
 ## Integration Notes
 
 - Flutter base URL config: `lib/constants/constants.dart`
-- Flutter network parser: `lib/utils/DioRequest.dart`
+- Flutter network parser: `lib/utils/dio_request.dart`
 
 请确保 Flutter 的 `GlobalConstants.BASE_URL` 指向本服务地址。
 
@@ -175,7 +193,7 @@ Full schema and examples: [../.md/lib-docs/backend-api.md](../.md/lib-docs/backe
 
 ### MySQL connection failed
 
-检查 `.env` 中 `MYSQL_*` 与网络白名单。
+检查 `.env.development` / `.env.production` 中 `MYSQL_*` 与网络白名单。
 
 ### MongoDB connection failed
 
@@ -216,4 +234,5 @@ Stop-Process -Id <PID> -Force
 ## Related Docs
 
 - Project README: [../README.md](../README.md)
-- Deployment Config: [../.md/lib-docs/deployment-config.md](../.md/lib-docs/deployment-config.md)
+- Backend migration plan: [../docs/backend-nestjs-pgsql-migration-plan.md](../docs/backend-nestjs-pgsql-migration-plan.md)
+- Knowledge data platform plan: [../docs/knowledge-data-platform-plan.md](../docs/knowledge-data-platform-plan.md)

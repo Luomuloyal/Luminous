@@ -1,6 +1,3 @@
-import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform, kIsWeb;
-
 // ignore_for_file: constant_identifier_names, non_constant_identifier_names
 
 /// 全局运行时常量集合。
@@ -11,26 +8,30 @@ import 'package:flutter/foundation.dart'
 /// - 成功响应码；
 /// - 本地持久化使用的 key。
 class GlobalConstants {
+  /// `--dart-define` 覆盖后端地址时使用的 key。
+  static const String API_BASE_URL_DEFINE = 'API_BASE_URL';
+
+  /// 当前已上线的旧 Express 后端。
+  ///
+  /// Lucent 联调不要改这个默认值，应通过
+  /// `--dart-define=API_BASE_URL=...` 指向新的 NestJS 服务。
+  static const String LEGACY_EXPRESS_BASE_URL = 'https://devluo.com';
+
   /// 当前后端服务根地址。
   ///
   /// 可通过 `--dart-define=API_BASE_URL=...` 强制覆盖；
-  /// 若未覆盖，默认按平台选择本地联调地址。
+  /// 若未覆盖，默认使用已上线的旧 Express 服务。
   static String get BASE_URL {
     const String override = String.fromEnvironment(
-      'API_BASE_URL',
+      API_BASE_URL_DEFINE,
       defaultValue: '',
     );
-    if (override.isNotEmpty) {
-      return override;
+    final value = override.trim();
+    if (value.isNotEmpty) {
+      return value;
     }
 
-    if (kIsWeb) {
-      return 'https://devluo.com';
-    }
-
-    return defaultTargetPlatform == TargetPlatform.android
-        ? 'https://devluo.com'
-        : 'https://devluo.com';
+    return LEGACY_EXPRESS_BASE_URL;
   }
 
   /// 网络请求默认超时时间，单位是秒。
@@ -48,20 +49,21 @@ class GlobalConstants {
   /// 图像识别通常包含上传和推理，耗时高于文本接口。
   static const int AI_SCAN_RECEIVE_TIMEOUT = 120;
 
-  /// 后端约定的“请求成功”业务码。
+  /// 旧 Express 后端约定的“请求成功”业务码。
+  static const String LEGACY_SUCCESS_CODE = '1';
+
+  /// Lucent 后端约定的“请求成功”业务码。
+  static const int LUCENT_SUCCESS_CODE = 0;
+
+  /// 当前默认网络层仍指向旧 Express 协议。
   ///
-  /// 当前项目约定 `code == "1"` 时表示业务成功。
-  static const String SUCCESS_CODE = '1';
-
-  /// 本地存储 AT 时使用的 key。
-  static const String TOKEN_KEY = 'luminous_access_token';
-
-  /// 本地存储 RT 时使用的 key。
-  static const String REFRESH_TOKEN_KEY = 'luminous_refresh_token';
+  /// 迁到 Lucent 时应新建 `/api/v1` client 或协议适配层，不要把旧
+  /// `DioRequest` 静默改成双协议混用。
+  static const String SUCCESS_CODE = LEGACY_SUCCESS_CODE;
 
   /// 本地存储用户信息时使用的 key。
   ///
-  /// `UserController` 会使用这个 key 持久化登录用户信息。
+  /// 用户会话持久化层会使用这个 key 保存登录用户信息。
   static const String USER_KEY = 'luminous_user';
 
   /// 本地存储主题模式偏好时使用的 key。

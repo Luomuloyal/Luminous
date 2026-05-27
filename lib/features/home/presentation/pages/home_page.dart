@@ -3,21 +3,32 @@ part of '../home.dart';
 /// 首页。
 ///
 /// 作为应用一级入口，负责把高频功能、今日提醒和健康提示组合在同一屏展示。
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   /// 创建首页组件。
-  const HomePage({super.key, this.reminderGateway, this.controller});
+  ///
+  /// [reminderGateway] 仅用于测试注入，新代码应通过 ProviderScope override。
+  const HomePage({super.key, this.reminderGateway});
 
+  /// 测试用 gateway 注入，新代码应使用 ProviderScope override
+  /// `homeReminderGatewayProvider.overrideWithValue(gateway)`。
   final ReminderLocalGateway? reminderGateway;
-  final HomeController? controller;
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
-  late final HomeController _controller =
-      widget.controller ??
-      HomeController(reminderGateway: widget.reminderGateway);
+class _HomePageState extends ConsumerState<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    // 使用 Future 延迟：在 build 完成后（而非期间）修改 provider。
+    Future(() {
+      if (mounted) {
+        _initLocalizedData();
+        ref.read(homeProvider.notifier).start();
+      }
+    });
+  }
 
   AppLocalizations? get _l10n => AppLocalizations.of(context);
 
@@ -69,14 +80,15 @@ class _HomePageState extends State<HomePage> {
     ];
   }
 
-  ValueNotifier<String> get _todayTipNotifier => _controller.todayTipNotifier;
-  List<HomeReminderItemData> get _reminders => _controller.reminders;
-  List<HomeCheckInRecordData> get _checkInRecords => _controller.checkInRecords;
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _controller.applyLocalizedData(
+    // applyLocalizedData 在 initState 的 post-frame callback 中调用，
+    // 以避免在 widget 构建期间修改 provider。
+  }
+
+  void _initLocalizedData() {
+    ref.read(homeProvider.notifier).applyLocalizedData(
       healthTips: _buildHomeHealthTips(_l10n),
       demoReminders: _buildHomeDemoReminders(_l10n),
       demoCheckInRecords: _buildHomeDemoCheckInRecords(_l10n),
@@ -85,77 +97,96 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<HomeController>(
-      init: _controller,
-      global: false,
-      builder: (_) {
-        final l10n = _l10n;
-        final next = _reminders.cast<HomeReminderItemData?>().firstWhere(
-          (item) => item != null && item.done == false,
-          orElse: () => null,
-        );
-        final nextText = next == null
-            ? (l10n?.homeNoReminder ?? '暂无提醒')
-            : (l10n?.homeNextReminderPrefix(
-                    next.title,
-                    _composeReminderDetail(next),
-                  ) ??
-                  '${next.title} · ${_composeReminderDetail(next)}');
+    final homeState = ref.watch(homeProvider);
 
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            final windowClass = AppWindowClass.fromWidth(constraints.maxWidth);
-            final maxWidth = AppContentWidths.fromWindowClass(windowClass);
+    final l10n = _l10n;
+    final reminders = homeState.reminders;
+    final next = reminders.cast<HomeReminderItemData?>().firstWhere(
+      (item) => item != null && item.done == false,
+      orElse: () => null,
+    );
+    final nextText = next == null
+        ? (l10n?.homeNoReminder ?? '暂无提醒')
+        : (l10n?.homeNextReminderPrefix(
+                next.title,
+                _composeReminderDetail(next),
+              ) ??
+            '${next.title} · ${_composeReminderDetail(next)}');
 
-            Widget content = SafeArea(
-              child: RefreshIndicator(
-                onRefresh: _refreshHomeData,
-                child: CustomScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: HomeTopSection(
-                        palette: SoftBannerPalettes.homeOf(context),
-                        todayTipListenable: _todayTipNotifier,
-                        nextText: nextText,
-                        loadingReminders: _controller.loadingReminders,
-                        reminderCount: _reminders.length,
-                        onTapTip: _cycleHealthTip,
-                        onLongPressTip: _showAllHealthTips,
-                      ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: HomeFeatureSection(
-                        items: _entries,
-                        onTap: _onEntryTap,
-                      ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: HomeReminderSection(items: _reminders),
-                    ),
-                    SliverToBoxAdapter(
-                      child: HomeCheckInRecordSection(items: _checkInRecords),
-                    ),
-                    const SliverToBoxAdapter(child: SizedBox(height: 24)),
-                  ],
+    Widget content = LayoutBuilder(
+      builder: (context, constraints) {
+        final windowClass = AppWindowClass.fromWidth(constraints.maxWidth);
+        final maxWidth = AppContentWidths.fromWindowClass(windowClass);
+
+        Widget inner = SafeArea(
+          child: RefreshIndicator(
+            onRefresh: _refreshHomeData,
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: HomeTopSection(
+                    palette: SoftBannerPalettes.homeOf(context),
+                    todayTipListenable: _todayTipListenable(homeState.todayTip),
+                    nextText: nextText,
+                    loadingReminders: homeState.loadingReminders,
+                    reminderCount: reminders.length,
+                    onTapTip: _cycleHealthTip,
+                    onLongPressTip: _showAllHealthTips,
+                  ),
                 ),
-              ),
-            );
-
-            if (maxWidth != null) {
-              content = Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: maxWidth),
-                  child: content,
+                SliverToBoxAdapter(
+                  child: HomeFeatureSection(
+                    items: _entries,
+                    onTap: _onEntryTap,
+                  ),
                 ),
-              );
-            }
-
-            return content;
-          },
+                SliverToBoxAdapter(
+                  child: HomeReminderSection(items: reminders),
+                ),
+                SliverToBoxAdapter(
+                  child: HomeCheckInRecordSection(
+                    items: homeState.checkInRecords,
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              ],
+            ),
+          ),
         );
+
+        if (maxWidth != null) {
+          inner = Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              child: inner,
+            ),
+          );
+        }
+
+        return inner;
       },
     );
+
+    // If a test gateway was injected, override the provider for this subtree.
+    if (widget.reminderGateway != null) {
+      content = ProviderScope(
+        overrides: [
+          homeReminderGatewayProvider.overrideWithValue(
+            widget.reminderGateway!,
+          ),
+        ],
+        child: content,
+      );
+    }
+
+    return content;
+  }
+
+  /// 返回健康提示 Notifier 适配器，兼容 `HomeTopSection` 的 `ValueListenable` 接口。
+  ValueNotifier<String> _todayTipListenable(String tip) {
+    // 使用 _HomeTipNotifier 作为适配桥接。
+    return _HomeTipNotifier(tip);
   }
 
   void _onEntryTap(HomeFeatureItemData item) {
@@ -218,12 +249,30 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadCheckInRecords() async {
-    await _controller.loadReminders();
-    await _controller.loadCheckInRecords();
+    await ref.read(homeProvider.notifier).loadReminders();
+    await ref.read(homeProvider.notifier).loadCheckInRecords();
   }
 
   Future<void> _refreshHomeData() async {
-    await _controller.refreshHomeData(context);
+    final notifier = ref.read(homeProvider.notifier);
+    final userId = (ref.read(currentUserProvider)?.id ?? '').trim();
+    if (userId.isEmpty) {
+      notifier.refreshIfReady(force: true);
+      return;
+    }
+
+    try {
+      await ref.read(homeReminderGatewayProvider).syncRemoteToLocal(userId);
+      if (!mounted ||
+          userId != (ref.read(currentUserProvider)?.id ?? '').trim()) {
+        return;
+      }
+      unawaited(notifier.loadReminders());
+      unawaited(notifier.loadCheckInRecords());
+    } catch (error) {
+      if (!mounted) return;
+      ToastUtils.instance.showError(context, error);
+    }
   }
 
   String _composeReminderDetail(HomeReminderItemData item) {
@@ -239,26 +288,39 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _cycleHealthTip() {
-    _controller.cycleHealthTip();
+    ref.read(homeProvider.notifier).cycleHealthTip();
   }
 
   void _updateTodayTip(String nextTip) {
-    _controller.updateTodayTip(nextTip);
+    ref.read(homeProvider.notifier).updateTodayTip(nextTip);
   }
 
   Future<void> _showAllHealthTips() async {
     final l10n = _l10n;
+    final homeState = ref.read(homeProvider);
+
     final selectedTip = await showHomeHealthTipsSheet(
       context: context,
       l10n: l10n,
-      tips: _controller.healthTips.isEmpty
+      tips: homeState.healthTips.isEmpty
           ? _buildHomeHealthTips(l10n)
-          : _controller.healthTips,
-      currentTip: _todayTipNotifier.value,
+          : homeState.healthTips,
+      currentTip: homeState.todayTip,
     );
 
     if (selectedTip != null) {
       _updateTodayTip(selectedTip);
     }
   }
+}
+
+/// 将 String 值适配为 `ValueNotifier<String>`，供 `HomeTopSection` 的
+/// `todayTipListenable` 参数使用。
+///
+/// 旧实现依赖 `HomeController.todayTipNotifier` (ValueNotifier)，
+/// 新实现改用 `todayTipProvider` (StateProvider)。此适配器在每次
+/// build 时创建新实例，使 `HomeTopSection` 能通过 `ValueListenableBuilder`
+/// 感知健康提示变化。
+class _HomeTipNotifier extends ValueNotifier<String> {
+  _HomeTipNotifier(super.value);
 }

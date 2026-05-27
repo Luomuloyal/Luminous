@@ -1,6 +1,11 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'safety.g.dart';
+
 /// 安全辅助（AI 风险提示）相关的数据模型。
 ///
 /// 当前接口返回的是纯文本，后续如果升级为结构化 JSON，可以在这里扩展字段。
+@JsonSerializable(createFactory: false)
 class MedicineAiSafetyResult {
   /// AI 返回的风险提示/用药建议文本。
   final String text;
@@ -33,9 +38,13 @@ class MedicineAiSafetyResult {
   }
 
   /// 是否包含有效文本内容。
+  @JsonKey(includeToJson: false)
   bool get hasText => text.trim().isNotEmpty;
 
+  @JsonKey(includeToJson: false)
   bool get isCached => source.trim().toLowerCase() == 'cache';
+
+  Map<String, dynamic> toJson() => _$MedicineAiSafetyResultToJson(this);
 }
 
 DateTime? _parseAiTimestamp(dynamic value) {

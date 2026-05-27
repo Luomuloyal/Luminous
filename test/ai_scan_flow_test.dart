@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get/get.dart';
 import 'package:luminous/features/scan/presentation/scan.dart';
 import 'package:luminous/features/search/presentation/search.dart';
+import 'package:luminous/core/providers/shared_preferences_provider.dart';
 import 'package:luminous/utils/toast_utils.dart';
 import 'package:luminous/shared/models/medicine.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,9 +14,6 @@ void main() {
   setUp(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues(<String, Object>{});
-    Get.testMode = true;
-    Get.reset();
-    await createTestProviderContainer();
   });
 
   tearDown(() {
@@ -25,16 +23,22 @@ void main() {
   testWidgets('scan entry shows source picker sheet before scanning', (
     tester,
   ) async {
+    final container = await createTestProviderContainer();
+    addTearDown(container.dispose);
+
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Builder(
-            builder: (context) {
-              return FilledButton(
-                onPressed: () => showMedicineScanSourceSheet(context),
-                child: const Text('open'),
-              );
-            },
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) {
+                return FilledButton(
+                  onPressed: () => showMedicineScanSourceSheet(context),
+                  child: const Text('open'),
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -51,33 +55,46 @@ void main() {
   testWidgets('search view auto searches with initial keyword', (tester) async {
     final calls = <String>[];
 
+    // 用 ProviderScope override 注入 fake executor
+    final prefs = await SharedPreferences.getInstance();
+    final container = ProviderContainer(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        searchExecutorProvider.overrideWithValue(
+          ({required keyword, required page, required pageSize}) async {
+            calls.add(keyword);
+            return const MedicineSearchResult(
+              items: [
+                MedicineItem(
+                  serialNo: '1',
+                  approvalNo: '国药准字H20000001',
+                  productName: '阿莫西林胶囊',
+                  dosageForm: '胶囊剂',
+                  specification: '0.5g*24粒',
+                  marketingAuthorizationHolder: '示例药业',
+                  manufacturer: '示例制药',
+                  drugCode: '86900000000001',
+                  drugCodeRemark: '',
+                ),
+              ],
+              total: 1,
+              page: 1,
+              pageSize: 20,
+            );
+          },
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
     await tester.pumpWidget(
-      MaterialApp(
-        home: SearchPage(
-          initialKeyword: '阿莫西林',
-          autoSearchOnInit: true,
-          searchExecutor:
-              ({required keyword, required page, required pageSize}) async {
-                calls.add(keyword);
-                return const MedicineSearchResult(
-                  items: [
-                    MedicineItem(
-                      serialNo: '1',
-                      approvalNo: '国药准字H20000001',
-                      productName: '阿莫西林胶囊',
-                      dosageForm: '胶囊剂',
-                      specification: '0.5g*24粒',
-                      marketingAuthorizationHolder: '示例药业',
-                      manufacturer: '示例制药',
-                      drugCode: '86900000000001',
-                      drugCodeRemark: '',
-                    ),
-                  ],
-                  total: 1,
-                  page: 1,
-                  pageSize: 20,
-                );
-              },
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(
+          home: SearchPage(
+            initialKeyword: '阿莫西林',
+            autoSearchOnInit: true,
+          ),
         ),
       ),
     );
