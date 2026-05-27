@@ -63,47 +63,68 @@ class ReminderListPage extends ConsumerWidget {
           ? const ReminderNeedLoginCard()
           : RefreshIndicator(
               onRefresh: () => _sync(ref, context),
-              child: ListView(
+              child: ListView.builder(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(14, 0, 14, 20),
-                children: [
-                  ReminderListHeroCard(
-                    itemCount: state.items.length,
-                    enabledCount:
-                        state.items.where((i) => i.enabled).length,
-                    disabledCount:
-                        state.items.length -
-                        state.items.where((i) => i.enabled).length,
-                  ),
-                  const SizedBox(height: 10),
-                  if (state.error != null)
-                    ReminderErrorBanner(text: state.error!),
-                  if (state.items.isEmpty && !state.loading)
-                    const ReminderEmptyCard(),
-                  ...state.items.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final item = entry.value;
-                    return Padding(
-                      padding: EdgeInsets.only(
-                        bottom:
-                            index == state.items.length - 1 ? 0 : 8,
-                      ),
-                      child: ReminderCard(
-                        item: item,
-                        busy: ref
-                            .read(reminderListProvider.notifier)
-                            .isBusy(item.id),
-                        onTap: () => _openEdit(context, ref, item),
-                        onToggle: (value) =>
-                            _toggleEnabled(ref, context, item, value),
-                        onDelete: () =>
-                            _confirmAndDelete(context, ref, item),
-                      ),
-                    );
-                  }),
-                ],
+                itemCount: _reminderItemCount(state),
+                itemBuilder: (context, index) =>
+                    _buildReminderItem(context, ref, state, index),
               ),
             ),
+    );
+  }
+
+  int _reminderItemCount(ReminderListState state) {
+    int count = 2; // hero + spacer
+    if (state.error != null) count++;
+    if (state.items.isEmpty && !state.loading) {
+      count++; // empty card
+    } else {
+      count += state.items.length;
+    }
+    return count;
+  }
+
+  Widget _buildReminderItem(
+    BuildContext context,
+    WidgetRef ref,
+    ReminderListState state,
+    int index,
+  ) {
+    if (index == 0) {
+      return ReminderListHeroCard(
+        itemCount: state.items.length,
+        enabledCount: state.items.where((i) => i.enabled).length,
+        disabledCount:
+            state.items.length -
+            state.items.where((i) => i.enabled).length,
+      );
+    }
+    if (index == 1) return const SizedBox(height: 10);
+    int offset = 2;
+    if (state.error != null) {
+      if (index == offset) return ReminderErrorBanner(text: state.error!);
+      offset++;
+    }
+    if (state.items.isEmpty && !state.loading) {
+      if (index == offset) return const ReminderEmptyCard();
+      return const SizedBox.shrink();
+    }
+    final itemIndex = index - offset;
+    if (itemIndex >= state.items.length) return const SizedBox.shrink();
+    final item = state.items[itemIndex];
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: itemIndex == state.items.length - 1 ? 0 : 8,
+      ),
+      child: ReminderCard(
+        item: item,
+        busy: ref.read(reminderListProvider.notifier).isBusy(item.id),
+        onTap: () => _openEdit(context, ref, item),
+        onToggle: (value) =>
+            _toggleEnabled(ref, context, item, value),
+        onDelete: () => _confirmAndDelete(context, ref, item),
+      ),
     );
   }
 

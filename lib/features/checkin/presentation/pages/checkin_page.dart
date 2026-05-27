@@ -86,31 +86,15 @@ class _CheckInContent extends ConsumerWidget {
             ? const CheckInNeedLoginCard()
             : RefreshIndicator(
                 onRefresh: () async => ref.invalidate(checkinItemsProvider),
-                child: ListView(
+                child: ListView.builder(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(10, 10, 10, 14),
-                  children: [
-                    CheckInHeroCard(items: items),
-                    const SizedBox(height: 8),
-                    if (errorText != null) _buildErrorBanner(errorText),
-                    if (items.isEmpty &&
-                        !itemsAsync.isLoading &&
-                        errorText == null)
-                      const CheckInEmptyCard(),
-                    ...items.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final item = entry.value;
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          bottom: index == items.length - 1 ? 0 : 6,
-                        ),
-                        child: CheckInItemCard(
-                          item: item,
-                          onCheckIn: () => _toggleCheckIn(context, ref, item),
-                        ),
-                      );
-                    }),
-                  ],
+                  itemCount: _checkinItemCount(
+                    items, itemsAsync, errorText,
+                  ),
+                  itemBuilder: (context, index) => _buildCheckinItem(
+                    context, ref, items, itemsAsync, errorText, index,
+                  ),
                 ),
               ),
       ),
@@ -142,6 +126,54 @@ class _CheckInContent extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  int _checkinItemCount(
+    List<ReminderItem> items,
+    AsyncValue<List<ReminderItem>> itemsAsync,
+    String? errorText,
+  ) {
+    int count = 2; // hero + spacer
+    if (errorText != null) count++;
+    if (items.isEmpty && !itemsAsync.isLoading && errorText == null) {
+      count++; // empty card
+    } else {
+      count += items.length;
+    }
+    return count;
+  }
+
+  Widget _buildCheckinItem(
+    BuildContext context,
+    WidgetRef ref,
+    List<ReminderItem> items,
+    AsyncValue<List<ReminderItem>> itemsAsync,
+    String? errorText,
+    int index,
+  ) {
+    if (index == 0) return CheckInHeroCard(items: items);
+    if (index == 1) return const SizedBox(height: 8);
+    int offset = 2;
+    if (errorText != null) {
+      if (index == offset) return _buildErrorBanner(errorText);
+      offset++;
+    }
+    if (items.isEmpty && !itemsAsync.isLoading && errorText == null) {
+      if (index == offset) return const CheckInEmptyCard();
+      return const SizedBox.shrink();
+    }
+    final itemIndex = index - offset;
+    if (itemIndex >= items.length) return const SizedBox.shrink();
+    final item = items[itemIndex];
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: itemIndex == items.length - 1 ? 0 : 6,
+      ),
+      child: CheckInItemCard(
+        item: item,
+        onCheckIn: () => _toggleCheckIn(context, ref, item),
       ),
     );
   }

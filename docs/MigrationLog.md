@@ -454,3 +454,34 @@ lib/
 - 删除 dead `legalDocuments` 路由常量
 - 注册 `/profile-settings` GoRoute + 切 `pushNamed`
 - `search_provider` 统一用 `sharedPreferencesProvider`（去重 `SharedPreferences.getInstance()`）
+
+### ListView 性能优化 (2026-06-04)
+
+执行 [[TODO]] #1：将动态列表从 `ListView(children: [...])` 迁移到 `ListView.builder`。
+
+**已迁移 3 处（动态列表，itemCount 不可预知）：**
+
+| 文件 | 原来 | 改为 | 新增 helper |
+|------|------|------|-------------|
+| `reminder_list_page.dart` | `ListView(children: [...items.map(...)])` | `ListView.builder(itemCount:, itemBuilder:)` | `_reminderItemCount`, `_buildReminderItem` |
+| `checkin_page.dart` | 同上 | 同上 | `_checkinItemCount`, `_buildCheckinItem` |
+| `browse_history_page.dart` | 同上 | 同上 | `_historyItemCount`, `_buildHistoryItem` |
+
+**保持原样 13 处（固定少量子项，≤10 个 widget，builder 无收益且降低可读性）：**
+
+- `medicine_detail_page.dart` — 5 个固定详情段落
+- `legal_documents_page.dart` — 5 段法律文本
+- `medicine_picker_page.dart` — 2 个入口卡片
+- `mine_page_widgets.dart` — 5 个 profile 卡片
+- `reminder_edit_page.dart` — 6 个表单字段
+- `safety_assist_page.dart` — 7 个固定卡片
+- `medicine_scan_sheet.dart` — 拖拽柄 + header + result + actions
+- `profile_settings_page.dart` — 设置表单字段
+- `settings_pages.dart` ×3 — 固定设置项列表
+
+**附带修复：** `browse_history_page.dart` 移除未使用的局部变量 `isLoggedIn`（现由 `_buildHistoryItem` 内通过 `ref.watch` 按需读取）。
+
+**验证结果：**
+- `flutter analyze`：No issues found
+- `flutter test`：**173/173 通过**
+- [[TODO]] #1 已标记完成

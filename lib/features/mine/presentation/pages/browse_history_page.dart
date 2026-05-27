@@ -17,9 +17,6 @@ class BrowseHistoryPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final entriesAsync = ref.watch(browseHistoryProvider);
-    final isLoggedIn = ref.watch(
-      currentUserProvider.select((u) => u?.hasData ?? false),
-    );
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final items = entriesAsync.hasValue ? entriesAsync.value! : const <BrowseHistoryEntry>[];
@@ -53,31 +50,12 @@ class BrowseHistoryPage extends ConsumerWidget {
       secondaryAccentColor: Color.lerp(scheme.primary, scheme.tertiary, 0.48)!,
       child: RefreshIndicator(
         onRefresh: () async => ref.invalidate(browseHistoryProvider),
-        child: ListView(
+        child: ListView.builder(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(14, 0, 14, 24),
-          children: [
-            _HistoryHeroCard(items: items, isLoggedIn: isLoggedIn),
-            const SizedBox(height: 10),
-            if (items.isEmpty && !loading)
-              _EmptyStateCard(
-                onTapSearch: () => Navigator.pushNamed(context, '/search'),
-              )
-            else
-              ...items.asMap().entries.map((entry) {
-                final index = entry.key;
-                final item = entry.value;
-                return Padding(
-                  padding: EdgeInsets.only(bottom: index == items.length - 1 ? 0 : 8),
-                  child: _HistoryItemCard(
-                    entry: item,
-                    busy: false,
-                    onTap: () => _openDetail(context, item),
-                    onRemove: () => ref.read(browseHistoryProvider.notifier).remove(item),
-                  ),
-                );
-              }),
-          ],
+          itemCount: _historyItemCount(items, loading),
+          itemBuilder: (context, index) =>
+              _buildHistoryItem(context, ref, items, loading, index),
         ),
       ),
     );
@@ -115,6 +93,50 @@ class BrowseHistoryPage extends ConsumerWidget {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => MedicineDetailPage(initialItem: entry.toMedicineItem()),
+      ),
+    );
+  }
+
+  int _historyItemCount(List<BrowseHistoryEntry> items, bool loading) {
+    if (items.isEmpty && !loading) return 3; // hero + spacer + empty
+    return 2 + items.length; // hero + spacer + items
+  }
+
+  Widget _buildHistoryItem(
+    BuildContext context,
+    WidgetRef ref,
+    List<BrowseHistoryEntry> items,
+    bool loading,
+    int index,
+  ) {
+    // index 0: hero card
+    if (index == 0) {
+      final isLoggedIn = ref.watch(
+        currentUserProvider.select((u) => u?.hasData ?? false),
+      );
+      return _HistoryHeroCard(items: items, isLoggedIn: isLoggedIn);
+    }
+    // index 1: spacer
+    if (index == 1) return const SizedBox(height: 10);
+    // remaining: empty state or items
+    if (items.isEmpty && !loading) {
+      return _EmptyStateCard(
+        onTapSearch: () => Navigator.pushNamed(context, '/search'),
+      );
+    }
+    final itemIndex = index - 2;
+    if (itemIndex >= items.length) return const SizedBox.shrink();
+    final item = items[itemIndex];
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: itemIndex == items.length - 1 ? 0 : 8,
+      ),
+      child: _HistoryItemCard(
+        entry: item,
+        busy: false,
+        onTap: () => _openDetail(context, item),
+        onRemove: () =>
+            ref.read(browseHistoryProvider.notifier).remove(item),
       ),
     );
   }
