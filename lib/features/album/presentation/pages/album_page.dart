@@ -101,19 +101,19 @@ class AlbumPage extends ConsumerWidget {
       return;
     }
 
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => MedicineScanPage(
-          mode: ScanEntryMode.result,
-          initialImage: SelectedScanImage(
-            bytes: bytes,
-            mimeType: entry.imageMimeType.trim().isNotEmpty
-                ? entry.imageMimeType.trim()
-                : 'image/jpeg',
-            source: ImageSource.gallery,
-          ),
+    await context.push(
+      '/scan',
+      extra: <String, dynamic>{
+        'mode': ScanEntryMode.result,
+        'initialImage': SelectedScanImage(
+          bytes: bytes,
+          mimeType: entry.imageMimeType.trim().isNotEmpty
+              ? entry.imageMimeType.trim()
+              : 'image/jpeg',
+          source: ImageSource.gallery,
         ),
-      ),
+        'promptSourceOnStart': false,
+      },
     );
   }
 

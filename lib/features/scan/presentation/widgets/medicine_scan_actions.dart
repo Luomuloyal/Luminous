@@ -1,10 +1,7 @@
 part of '../scan.dart';
 
 extension _MedicineScanActions on _MedicineScanPageState {
-  Widget _buildActionsSection(
-    ScanState state,
-    AppLocalizations? l10n,
-  ) {
+  Widget _buildActionsSection(ScanState state, AppLocalizations? l10n) {
     final selected = state.selectedCandidate;
     final hasResult = selected != null;
     final searchKeyword = state.searchKeyword;
@@ -19,10 +16,12 @@ extension _MedicineScanActions on _MedicineScanPageState {
           onTap: state.scanning
               ? null
               : () {
-                  ref.read(scanProvider.notifier).applyImageAndScan(
-                    bytes: state.photoBytes!,
-                    mimeType: 'image/jpeg',
-                  );
+                  ref
+                      .read(scanProvider.notifier)
+                      .applyImageAndScan(
+                        bytes: state.photoBytes!,
+                        mimeType: 'image/jpeg',
+                      );
                 },
         ),
         const SizedBox(height: 10),
@@ -51,7 +50,7 @@ extension _MedicineScanActions on _MedicineScanPageState {
           color: const Color(0xFF94A3B8),
           label: _actionCancelLabel(l10n),
           subtitle: _actionCancelSubtitle(l10n),
-          onTap: state.scanning ? null : () => Navigator.maybePop(context),
+          onTap: state.scanning ? null : () => context.pop(),
         ),
       ],
     );
@@ -65,11 +64,12 @@ extension _MedicineScanActions on _MedicineScanPageState {
       return;
     }
 
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) =>
-            SearchPage(initialKeyword: keyword, autoSearchOnInit: true),
-      ),
+    await context.push(
+      '/search',
+      extra: <String, dynamic>{
+        'initialKeyword': keyword,
+        'autoSearchOnInit': true,
+      },
     );
   }
 }

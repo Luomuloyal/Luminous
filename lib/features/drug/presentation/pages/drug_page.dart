@@ -146,12 +146,11 @@ class DrugPage extends ConsumerWidget {
   }
 
   Future<void> _pickAndOpenDetail(BuildContext context) async {
-    final item = await Navigator.of(context).push<MedicineItem>(
-      MaterialPageRoute<MedicineItem>(
-        builder: (_) => MedicinePickerPage(
-          title: AppLocalizations.of(context)?.drugPickerTitle ?? '选择药品',
-        ),
-      ),
+    final item = await context.push<MedicineItem>(
+      '/medicine-picker',
+      extra: <String, dynamic>{
+        'title': AppLocalizations.of(context)?.drugPickerTitle ?? '选择药品',
+      },
     );
     if (item == null || !context.mounted) return;
     await context.push('/medicine-detail', extra: item);

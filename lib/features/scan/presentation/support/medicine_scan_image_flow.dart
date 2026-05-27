@@ -71,10 +71,13 @@ Future<void> openMedicineScanFlow(
   if (selected == null || !context.mounted) {
     return;
   }
-  await Navigator.of(context).push(
-    MaterialPageRoute<void>(
-      builder: (_) => MedicineScanPage(mode: mode, initialImage: selected),
-    ),
+  await context.push(
+    '/scan',
+    extra: <String, dynamic>{
+      'mode': mode,
+      'initialImage': selected,
+      'promptSourceOnStart': false,
+    },
   );
 }
 

@@ -554,3 +554,49 @@ lib/
 - `flutter analyze`：2 info（`prefer_initializing_formals`，私有字段无法用 initializing formal，安全忽略）
 - `flutter test`：**173/173 通过**
 - `global_provider_container.dart` 文件已删除，全仓零引用
+
+### 导航统一：Navigator.push → GoRouter (2026-05-27)
+
+执行 [[TODO]] #2 和 #3：将业务页面的 `Navigator.push(MaterialPageRoute(...))` 统一为 GoRouter 路由导航，并为设置子页注册独立 GoRoute。
+
+**#2 Navigator → GoRouter 迁移：**
+
+| 文件                         | 原来                                         | 改为                                     |
+| ---------------------------- | -------------------------------------------- | ---------------------------------------- |
+| `home_page.dart`             | `Navigator.push(MaterialPageRoute(...))`     | `context.pushNamed(AppRoute.drug.name)`  |
+| `drug_page.dart`             | `Navigator.push(...)` × 4 处                 | `context.push()` + 路由参数              |
+| `medicine_picker_page.dart`  | `Navigator.push(...)` × 2 处                 | `context.push()` + 路由参数              |
+| `medicine_scan_actions.dart` | `Navigator.push(context, MaterialPageRoute)` | `context.push()` + GoRouter              |
+| `reminder_list_page.dart`    | `Navigator.of(context).push(...)` × 2 处     | `context.push()` / `context.pushNamed()` |
+| `reminder_edit_page.dart`    | `Navigator.of(context).pop(result)` × 3 处   | `context.pop(result)`                    |
+| `safety_assist_page.dart`    | `Navigator.push(context, MaterialPageRoute)` | `context.push()` + GoRouter              |
+| `album_page.dart`            | `Navigator.push(MaterialPageRoute(...))`     | `context.push()` + GoRouter（rescan）    |
+
+**保留 1 处 Navigator（合理）：**
+
+| 文件              | 原因                                                                     |
+| ----------------- | ------------------------------------------------------------------------ |
+| `album_page.dart` | `AlbumPreviewPage` 使用回调函数 `onRetake`，无法通过 GoRouter 序列化传参 |
+
+**路由注册增强：**
+
+- `/search` GoRoute 新增 `initialKeyword` / `autoSearchOnInit` 查询参数，支持从药品详情页跳转搜索时传入关键词并自动执行
+- `/search` builder 支持从 `extra` Map 读取参数
+
+**#3 设置子页 GoRoute 注册：**
+
+| 路由路径             | 页面                   | 参数传递方式   |
+| -------------------- | ---------------------- | -------------- |
+| `/profile-settings`  | `ProfileSettingsPage`  | —              |
+| `/theme-settings`    | `ThemeSettingsPage`    | GoRouter extra |
+| `/language-settings` | `LanguageSettingsPage` | GoRouter extra |
+
+- `SettingsPage` 中 3 个子页入口全部改为 `context.push()`
+- `ProfileSettingsPage` / `ThemeSettingsPage` / `LanguageSettingsPage` 移除 `Set<XxxData>?` 参数，改为从 GoRouter extra 读取并转为 `StateNotifier`
+
+**验证结果：**
+
+- `flutter analyze`：No issues found
+- `flutter test`：**173/173 通过**
+- [[TODO]] #2 和 #3 已标记完成
+- 全仓仅剩 `album_page.dart` 1 处 `MaterialPageRoute`（合理保留）

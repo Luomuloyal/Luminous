@@ -233,11 +233,11 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> _pickAndOpenMedicineDetail() async {
-    final item = await Navigator.of(context).push<MedicineItem>(
-      MaterialPageRoute<MedicineItem>(
-        builder: (_) =>
-            MedicinePickerPage(title: _l10n?.homeMedicinePickerTitle ?? '选择药品'),
-      ),
+    final item = await context.push<MedicineItem>(
+      '/medicine-picker',
+      extra: <String, dynamic>{
+        'title': _l10n?.homeMedicinePickerTitle ?? '选择药品',
+      },
     );
     if (!mounted || item == null) {
       return;

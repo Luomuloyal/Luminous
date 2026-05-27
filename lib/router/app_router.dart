@@ -48,13 +48,34 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
-      GoRoute(path: '/search', builder: (context, state) => const SearchPage()),
+      GoRoute(
+        path: '/search',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final pickerMode = extra?['pickerMode'] as bool? ?? false;
+          final initialKeyword = extra?['initialKeyword'] as String? ?? '';
+          final autoSearchOnInit = extra?['autoSearchOnInit'] as bool? ?? false;
+          return SearchPage(
+            pickerMode: pickerMode,
+            initialKeyword: initialKeyword,
+            autoSearchOnInit: autoSearchOnInit,
+          );
+        },
+      ),
       GoRoute(
         path: '/scan',
-        builder: (context, state) => const MedicineScanPage(
-          mode: ScanEntryMode.result,
-          promptSourceOnStart: true,
-        ),
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final mode = extra?['mode'] as ScanEntryMode? ?? ScanEntryMode.result;
+          final initialImage = extra?['initialImage'] as SelectedScanImage?;
+          final promptSourceOnStart =
+              extra?['promptSourceOnStart'] as bool? ?? initialImage == null;
+          return MedicineScanPage(
+            mode: mode,
+            initialImage: initialImage,
+            promptSourceOnStart: promptSourceOnStart,
+          );
+        },
       ),
       GoRoute(
         path: '/reminders',

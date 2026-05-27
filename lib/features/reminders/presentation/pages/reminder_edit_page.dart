@@ -348,12 +348,11 @@ class _ReminderEditPageState extends ConsumerState<ReminderEditPage> {
 
   Future<void> _pickMedicine() async {
     final l10n = _l10n;
-    final item = await Navigator.of(context).push<MedicineItem>(
-      MaterialPageRoute<MedicineItem>(
-        builder: (_) => MedicinePickerPage(
-          title: l10n?.reminderEditSelectMedicine ?? '选择药品',
-        ),
-      ),
+    final item = await context.push<MedicineItem>(
+      '/medicine-picker',
+      extra: <String, dynamic>{
+        'title': l10n?.reminderEditSelectMedicine ?? '选择药品',
+      },
     );
     if (!mounted || item == null) return;
     final notifier = ref.read(reminderEditProvider.notifier);
@@ -451,7 +450,7 @@ class _ReminderEditPageState extends ConsumerState<ReminderEditPage> {
         .read(reminderEditProvider.notifier)
         .save(scopedUserId: userId);
     if (!mounted || plan == null) return;
-    Navigator.of(context).pop<ReminderPlan>(plan);
+    context.pop<ReminderPlan>(plan);
   }
 
   String _doseLabel(AppLocalizations? l10n) {

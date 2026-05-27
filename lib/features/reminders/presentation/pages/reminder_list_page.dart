@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:luminous/shared/widgets/app_canvas.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
 import 'package:luminous/l10n/app_localizations.dart';
@@ -10,7 +11,6 @@ import 'package:luminous/utils/toast_utils.dart';
 import '../providers/reminder_list_provider.dart';
 import '../widgets/reminder_list_widgets.dart';
 import '../widgets/reminder_card_widget.dart';
-import 'reminder_edit_page.dart';
 
 /// 用药提醒列表页。
 class ReminderListPage extends ConsumerWidget {
@@ -20,7 +20,8 @@ class ReminderListPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(reminderListProvider);
     final l10n = AppLocalizations.of(context);
-    final isLoggedIn = ref.read(currentUserProvider)?.hasData == true &&
+    final isLoggedIn =
+        ref.read(currentUserProvider)?.hasData == true &&
         (ref.read(currentUserProvider)?.id ?? '').trim().isNotEmpty;
 
     return AppCanvasPageScaffold(
@@ -32,10 +33,9 @@ class ReminderListPage extends ConsumerWidget {
         foregroundColor: const Color(0xFF0F172A),
         actions: [
           IconButton(
-            onPressed:
-                isLoggedIn && !state.isLoading
-                    ? () => _sync(ref, context)
-                    : null,
+            onPressed: isLoggedIn && !state.isLoading
+                ? () => _sync(ref, context)
+                : null,
             icon: state.isLoading
                 ? const SizedBox(
                     width: 18,
@@ -51,8 +51,9 @@ class ReminderListPage extends ConsumerWidget {
       secondaryAccentColor: const Color(0xFF0EA5E9),
       floatingActionButton: isLoggedIn
           ? FloatingActionButton.extended(
-              onPressed:
-                  state.isLoading ? null : () => _openCreate(context, ref),
+              onPressed: state.isLoading
+                  ? null
+                  : () => _openCreate(context, ref),
               backgroundColor: const Color(0xFF10B981),
               foregroundColor: Colors.white,
               icon: const Icon(Icons.add_rounded),
@@ -96,8 +97,7 @@ class ReminderListPage extends ConsumerWidget {
         itemCount: state.items.length,
         enabledCount: state.items.where((i) => i.enabled).length,
         disabledCount:
-            state.items.length -
-            state.items.where((i) => i.enabled).length,
+            state.items.length - state.items.where((i) => i.enabled).length,
       );
     }
     if (index == 1) return const SizedBox(height: 10);
@@ -121,27 +121,21 @@ class ReminderListPage extends ConsumerWidget {
         item: item,
         busy: ref.read(reminderListProvider.notifier).isBusy(item.id),
         onTap: () => _openEdit(context, ref, item),
-        onToggle: (value) =>
-            _toggleEnabled(ref, context, item, value),
+        onToggle: (value) => _toggleEnabled(ref, context, item, value),
         onDelete: () => _confirmAndDelete(context, ref, item),
       ),
     );
   }
 
   Future<void> _sync(WidgetRef ref, BuildContext context) async {
-    final error =
-        await ref.read(reminderListProvider.notifier).sync();
+    final error = await ref.read(reminderListProvider.notifier).sync();
     if (error != null && context.mounted) {
       ToastUtils.instance.showError(context, error);
     }
   }
 
   Future<void> _openCreate(BuildContext context, WidgetRef ref) async {
-    final plan = await Navigator.of(context).push<ReminderPlan>(
-      MaterialPageRoute<ReminderPlan>(
-        builder: (_) => const ReminderEditPage(),
-      ),
-    );
+    final plan = await context.push<ReminderPlan>('/reminder-edit');
     if (!context.mounted || plan == null) return;
     await ref.read(reminderListProvider.notifier).applySavedPlan(plan);
   }
@@ -151,10 +145,9 @@ class ReminderListPage extends ConsumerWidget {
     WidgetRef ref,
     ReminderPlan plan,
   ) async {
-    final next = await Navigator.of(context).push<ReminderPlan>(
-      MaterialPageRoute<ReminderPlan>(
-        builder: (_) => ReminderEditPage(initial: plan),
-      ),
+    final next = await context.push<ReminderPlan>(
+      '/reminder-edit',
+      extra: plan,
     );
     if (!context.mounted || next == null) return;
     await ref.read(reminderListProvider.notifier).applySavedPlan(next);
@@ -181,8 +174,9 @@ class ReminderListPage extends ConsumerWidget {
   ) async {
     final confirmed = await _confirmDeletePlan(context, plan);
     if (!context.mounted || !confirmed) return;
-    final error =
-        await ref.read(reminderListProvider.notifier).deletePlan(plan);
+    final error = await ref
+        .read(reminderListProvider.notifier)
+        .deletePlan(plan);
     if (error != null && context.mounted) {
       ToastUtils.instance.showError(context, error);
     } else if (context.mounted) {
@@ -266,9 +260,7 @@ class ReminderListPage extends ConsumerWidget {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(dialogContext, false),
-                      child: Text(
-                        l10n?.reminderDeleteCancel ?? '取消',
-                      ),
+                      child: Text(l10n?.reminderDeleteCancel ?? '取消'),
                     ),
                     const SizedBox(width: 8),
                     FilledButton(
@@ -276,9 +268,7 @@ class ReminderListPage extends ConsumerWidget {
                       style: FilledButton.styleFrom(
                         backgroundColor: scheme.error,
                       ),
-                      child: Text(
-                        l10n?.reminderDeleteConfirm ?? '删除',
-                      ),
+                      child: Text(l10n?.reminderDeleteConfirm ?? '删除'),
                     ),
                   ],
                 ),

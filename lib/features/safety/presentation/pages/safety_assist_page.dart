@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:luminous/shared/widgets/app_canvas.dart';
-import 'package:luminous/features/medicine_picker/presentation/medicine_picker.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/shared/models/medicine.dart';
 
@@ -74,10 +74,9 @@ class SafetyAssistPage extends ConsumerWidget {
     required int slot,
   }) async {
     final l10n = AppLocalizations.of(context);
-    final item = await Navigator.of(context).push<MedicineItem>(
-      MaterialPageRoute<MedicineItem>(
-        builder: (_) => MedicinePickerPage(title: pickerTitleText(l10n, slot)),
-      ),
+    final item = await context.push<MedicineItem>(
+      '/medicine-picker',
+      extra: <String, dynamic>{'title': pickerTitleText(l10n, slot)},
     );
     if (item == null || !context.mounted) {
       return;

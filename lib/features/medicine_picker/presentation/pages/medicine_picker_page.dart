@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:luminous/shared/widgets/app_canvas.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
-import 'package:luminous/features/search/presentation/search.dart';
 import 'package:luminous/shared/widgets/tinted_status_chip.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,7 +24,9 @@ class MedicinePickerPage extends ConsumerWidget {
     final itemsAsync = ref.watch(medicinePickerProvider);
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final items = itemsAsync.hasValue ? itemsAsync.value! : const <MedicineItem>[];
+    final items = itemsAsync.hasValue
+        ? itemsAsync.value!
+        : const <MedicineItem>[];
     return AppCanvasPageScaffold(
       appBar: AppBar(
         title: Text(title ?? l10n?.drugPickerTitle ?? '选择药品'),
@@ -33,11 +35,7 @@ class MedicinePickerPage extends ConsumerWidget {
       ),
       appBarSpacing: 32,
       accentColor: scheme.primary,
-      secondaryAccentColor: Color.lerp(
-        scheme.secondary,
-        scheme.tertiary,
-        0.5,
-      )!,
+      secondaryAccentColor: Color.lerp(scheme.secondary, scheme.tertiary, 0.5)!,
       child: RefreshIndicator(
         onRefresh: () async => ref.invalidate(medicinePickerProvider),
         child: ListView(
@@ -183,8 +181,7 @@ class MedicinePickerPage extends ConsumerWidget {
               if (items.isNotEmpty)
                 TintedStatusChip(
                   text:
-                      l10n?.pickerCount(items.length) ??
-                      '共 ${items.length} 项',
+                      l10n?.pickerCount(items.length) ?? '共 ${items.length} 项',
                   color: scheme.tertiary,
                   showBorder: false,
                   surfaceLightAlpha: 0.08,
@@ -288,7 +285,7 @@ class MedicinePickerPage extends ConsumerWidget {
                 ),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(14),
-                  onTap: () => Navigator.pop(context, item),
+                  onTap: () => context.pop(item),
                   child: Ink(
                     padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
                     decoration: BoxDecoration(
@@ -411,12 +408,11 @@ class MedicinePickerPage extends ConsumerWidget {
   /// 搜索页会以 `pickerMode=true` 打开，选中后直接返回 `MedicineItem`。
   Future<void> _openSearchPicker(BuildContext context) async {
     /// 从搜索页返回的药品对象。
-    final result = await Navigator.of(context).push<MedicineItem>(
-      MaterialPageRoute<MedicineItem>(
-        builder: (_) => const SearchPage(pickerMode: true),
-      ),
+    final result = await context.push<MedicineItem>(
+      '/search',
+      extra: <String, dynamic>{'pickerMode': true},
     );
     if (result == null || !context.mounted) return;
-    Navigator.pop(context, result);
+    context.pop(result);
   }
 }
