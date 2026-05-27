@@ -11,10 +11,14 @@
             "id": "737ec7e0d996b905",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "RefactorPlan.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "新标签页"
+              "title": "RefactorPlan"
             }
           }
         ]
@@ -178,16 +182,21 @@
   },
   "active": "737ec7e0d996b905",
   "lastOpenFiles": [
-    "knowledge-data-platform-plan.md",
-    "flutter-followup-improvement-plan.md",
-    "backend-api.md",
-    "backend-nestjs-pgsql-migration-plan.md",
-    "current-sequential-execution-plan.md",
-    "migration_log.md",
+    "ROADMAP.md",
+    "TODO.md",
+    "MigrationLog.md",
+    "ExecutionPlan.md",
     "Promise.md",
+    "RefactorPlan.md",
+    "README.md",
+    "migration_log.md",
+    "knowledge-data-platform-plan.md",
+    "current-sequential-execution-plan.md",
+    "flutter-followup-improvement-plan.md",
+    "backend-nestjs-pgsql-migration-plan.md",
+    "backend-api.md",
     "lib-docs/backend-api.md",
     "Roadshow/Luminous_PPT_初步修缮_页图/slide_09_updated_from_ppt.png",
-    "Roadshow/LuminousCapture/Details.jpg",
-    "README.md"
+    "Roadshow/LuminousCapture/Details.jpg"
   ]
 }
