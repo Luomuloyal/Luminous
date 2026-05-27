@@ -483,11 +483,7 @@ extension _SearchPromptSlivers on _SearchPageState {
                 if (widget.pickerMode) {
                   Navigator.pop(context, item);
                 } else {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => MedicineDetailPage(initialItem: item),
-                    ),
-                  );
+                  context.push('/medicine-detail', extra: item);
                 }
               },
               onAdd: isAdded ? null : () => _addToMyMedicines(item),

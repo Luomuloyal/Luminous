@@ -87,11 +87,7 @@ class DrugPage extends ConsumerWidget {
     Map<String, dynamic> row,
   ) {
     final item = ref.read(drugProvider.notifier).toMedicineItem(row);
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => MedicineDetailPage(initialItem: item),
-      ),
-    );
+    context.push('/medicine-detail', extra: item);
   }
 
   Future<void> _onTapQuick(
@@ -158,11 +154,7 @@ class DrugPage extends ConsumerWidget {
       ),
     );
     if (item == null || !context.mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => MedicineDetailPage(initialItem: item),
-      ),
-    );
+    await context.push('/medicine-detail', extra: item);
   }
 
   void _showError(BuildContext context, String error) {

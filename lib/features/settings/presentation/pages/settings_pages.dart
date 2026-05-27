@@ -44,7 +44,7 @@ class SettingsPage extends ConsumerWidget {
                     l10n?.settingsProfileSubtitle ?? '完善头像、昵称、性别、生日和职业等个人资料',
                 enabled: true,
                 onTap: () {
-                  Navigator.of(context).pushNamed('/profile-settings');
+                  context.push('/profile-settings');
                 },
               ),
               const SizedBox(height: 10),
@@ -56,11 +56,7 @@ class SettingsPage extends ConsumerWidget {
                     l10n?.settingsThemeSubtitle ?? '调整主题模式与主题风格，影响全局页面与组件视觉',
                 enabled: true,
                 onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const ThemeSettingsPage(),
-                    ),
-                  );
+                  context.push('/theme-settings');
                 },
               ),
               const SizedBox(height: 10),
@@ -72,11 +68,7 @@ class SettingsPage extends ConsumerWidget {
                     l10n?.settingsLanguageSubtitle ?? '可自动跟随系统语言，也可手动固定应用语言',
                 enabled: true,
                 onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const LanguageSettingsPage(),
-                    ),
-                  );
+                  context.push('/language-settings');
                 },
               ),
             ],

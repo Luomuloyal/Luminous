@@ -81,11 +81,7 @@ class AlbumPage extends ConsumerWidget {
       _showToast(context, _missingIdentityToast(context));
       return;
     }
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => MedicineDetailPage(initialItem: item),
-      ),
-    );
+    await context.push('/medicine-detail', extra: item);
   }
 
   Future<void> _rescanEntry(

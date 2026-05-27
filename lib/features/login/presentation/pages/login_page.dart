@@ -8,7 +8,6 @@ import 'package:luminous/features/auth/data/session_sync_service.dart';
 import 'package:luminous/shared/widgets/auth/auth.dart';
 import 'package:luminous/shared/widgets/soft_banner/soft_banner.dart';
 import 'package:luminous/l10n/app_localizations.dart';
-import 'package:luminous/features/register/presentation/register.dart';
 import 'package:luminous/features/auth/providers/auth_service_provider.dart';
 import 'package:luminous/features/auth/presentation/models/auth.dart';
 import 'package:luminous/utils/dio_request.dart';
@@ -124,15 +123,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       if (_loginMode == AuthLoginMode.code && e.code == 'NOT_REGISTERED') {
         final confirmed = await _showAutoRegisterDialog(e.message);
         if (!mounted || confirmed != true) return;
-        await Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => RegisterPage(
-              authApi: _authApi,
-              initialIdentifierType: _identifierType,
-              initialIdentifier: identifier,
-              initialCode: _codeCtrl.text.trim(),
-            ),
-          ),
+        await context.push(
+          '/register',
+          extra: <String, dynamic>{
+            'authApi': _authApi,
+            'initialIdentifierType': _identifierType,
+            'initialIdentifier': identifier,
+            'initialCode': _codeCtrl.text.trim(),
+          },
         );
         return;
       }
@@ -244,13 +242,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ),
         const Spacer(),
         TextButton(
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => RegisterPage(
-                authApi: _authApi,
-                initialIdentifierType: AuthIdentifierType.email,
-              ),
-            ),
+          onPressed: () => context.push(
+            '/register',
+            extra: <String, dynamic>{
+              'authApi': _authApi,
+              'initialIdentifierType': AuthIdentifierType.email,
+            },
           ),
           style: TextButton.styleFrom(
             minimumSize: const Size(52, 32),
@@ -433,13 +430,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ),
         ),
         TextButton(
-          onPressed: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => RegisterPage(
-                authApi: _authApi,
-                initialIdentifierType: AuthIdentifierType.email,
-              ),
-            ),
+          onPressed: () => context.push(
+            '/register',
+            extra: <String, dynamic>{
+              'authApi': _authApi,
+              'initialIdentifierType': AuthIdentifierType.email,
+            },
           ),
           child: Text(_l10n.loginRegisterAction),
         ),

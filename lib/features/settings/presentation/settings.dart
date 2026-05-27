@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:luminous/shared/widgets/app_canvas.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
 import 'package:luminous/shared/widgets/soft_banner/soft_banner.dart';
