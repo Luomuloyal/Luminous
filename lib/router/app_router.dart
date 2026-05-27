@@ -12,7 +12,6 @@ import 'package:luminous/features/settings/presentation/settings.dart'
         LanguageSettingsPage;
 import 'package:luminous/shared/models/medicine.dart';
 import 'package:luminous/features/medicine_picker/presentation/medicine_picker.dart';
-import 'dart:typed_data';
 
 import 'package:luminous/features/checkin/presentation/checkin.dart';
 import 'package:luminous/features/legal/presentation/legal.dart';

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:luminous/features/medicine_picker/presentation/medicine_picker.dart';
 import 'package:luminous/features/scan/presentation/scan.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/shared/models/medicine.dart';
@@ -10,7 +9,6 @@ import 'package:luminous/utils/toast_utils.dart';
 import '../models/drug_models.dart';
 import '../providers/drug_provider.dart';
 import '../widgets/drug_page_widgets.dart';
-import 'medicine_detail_page.dart';
 
 /// 药品页。
 ///

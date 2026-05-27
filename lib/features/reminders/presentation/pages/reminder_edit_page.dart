@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:luminous/shared/widgets/app_canvas.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/shared/models/medicine.dart';
-import 'package:luminous/features/medicine_picker/presentation/medicine_picker.dart';
 import 'package:luminous/features/reminders/presentation/models/reminder.dart';
 import 'package:luminous/features/auth/providers/user_session_provider.dart';
 import 'package:luminous/utils/toast_utils.dart';

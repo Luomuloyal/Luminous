@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:luminous/shared/widgets/soft_banner/soft_banner.dart';
 import 'package:luminous/features/scan/presentation/scan.dart';
-import 'package:luminous/features/drug/presentation/drug.dart';
 import 'package:luminous/features/album/data/album_local_store.dart';
 import 'package:luminous/features/album/presentation/models/album.dart';
 import 'package:luminous/features/auth/providers/user_session_provider.dart';

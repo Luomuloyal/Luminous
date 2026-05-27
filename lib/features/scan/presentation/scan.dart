@@ -7,7 +7,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:luminous/shared/widgets/app_surface.dart';
 import 'package:luminous/features/scan/presentation/providers/medicine_scan_provider.dart';
 import 'package:luminous/features/scan/presentation/models/selected_scan_image.dart';
-import 'package:luminous/features/search/presentation/search.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/utils/media_access_error_text.dart';
 import 'package:luminous/utils/toast_utils.dart';
