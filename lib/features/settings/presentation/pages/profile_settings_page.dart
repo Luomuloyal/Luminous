@@ -26,10 +26,18 @@ class _ProfileSettingsPageState extends ConsumerState<ProfileSettingsPage> {
   final _birthdayCtrl = TextEditingController();
   final _professionCtrl = TextEditingController();
 
+  bool _profileLoaded = false;
+
   @override
-  void initState() {
-    super.initState();
-    _loadProfile();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_profileLoaded) {
+      _profileLoaded = true;
+      // 使用 addPostFrameCallback 确保 build 完成后再加载数据
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadProfile();
+      });
+    }
   }
 
   @override

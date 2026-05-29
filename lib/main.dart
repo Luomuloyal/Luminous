@@ -39,11 +39,14 @@ class LuminousApp extends ConsumerStatefulWidget {
 }
 
 class _LuminousAppState extends ConsumerState<LuminousApp> {
-  late final AppStartupWarmup _startupWarmup;
+  AppStartupWarmup? _startupWarmup;
+  bool _started = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
     final container = ProviderScope.containerOf(context);
     _startupWarmup = AppStartupWarmup(
       restoreUserSession: ref.read(userSessionProvider.notifier).restore,
@@ -57,7 +60,7 @@ class _LuminousAppState extends ConsumerState<LuminousApp> {
       readCurrentUserId: () => container.read(currentUserProvider)?.id,
       sessionSyncService: container.read(sessionSyncServiceProvider),
     );
-    _startupWarmup.start();
+    _startupWarmup!.start();
   }
 
   @override

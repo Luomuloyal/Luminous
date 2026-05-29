@@ -90,6 +90,7 @@ class MainPage extends ConsumerWidget {
       Color.lerp(scheme.secondary, scheme.primary, 0.34)!,
       Color.lerp(scheme.tertiary, scheme.secondary, 0.26)!,
       Color.lerp(scheme.secondary, scheme.tertiary, 0.58)!,
+      Color.lerp(scheme.primary, scheme.tertiary, 0.5)!,
     ];
 
     return colors
