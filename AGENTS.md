@@ -64,15 +64,15 @@ pnpm --prefix ../Lucent start:dev   # Lucent 开发模式
 
 ### 永远不要提交到 Git
 
-| 类别 | 路径 / 模式 |
-|------|------------|
-| 大型外部数据集 | `DrugDataBase/` — 包含 zip/xml/sdf/fasta/xlsx，仅本地使用 |
-| 构建产物 | `build/`、`android/build/`、`backend/dist/` |
-| 本地依赖 | `backend/node_modules/` |
-| 演示输出 | `outputs/`、`Roadshow/`、`*.pptx` |
-| IDE 个人配置 | `.idea/`、`.vscode/*`（除 `extensions.json` 和 `settings.json` 外） |
-| 真实环境变量 | `backend/.env.development`、`backend/.env.production` |
-| Flutter SDK 状态 | `.flutter`、`.flutter_tool_state` |
+| 类别             | 路径 / 模式                                                         |
+| ---------------- | ------------------------------------------------------------------- |
+| 大型外部数据集   | `DrugDataBase/` — 包含 zip/xml/sdf/fasta/xlsx，仅本地使用           |
+| 构建产物         | `build/`、`android/build/`、`backend/dist/`                         |
+| 本地依赖         | `backend/node_modules/`                                             |
+| 演示输出         | `outputs/`、`Roadshow/`、`*.pptx`                                   |
+| IDE 个人配置     | `.idea/`、`.vscode/*`（除 `extensions.json` 和 `settings.json` 外） |
+| 真实环境变量     | `backend/.env.development`、`backend/.env.production`               |
+| Flutter SDK 状态 | `.flutter`、`.flutter_tool_state`                                   |
 
 ### 代码约束
 
@@ -88,6 +88,56 @@ pnpm --prefix ../Lucent start:dev   # Lucent 开发模式
 - API 契约文档位于 `../Lucent/docs/`，以 `api-contract.md` 和 `auth-api-mock.md` 为准。
 - 响应格式统一为 `{ code, message, data }`。
 - 认证方式：`Authorization: Bearer <accessToken>`，token 管理由 `lib/core/network/` 下的 `TokenManager` 和 `TokenRefreshService` 负责。
+
+### 自动生成的 API 客户端（2026-05-29）
+
+> **不要手写网络请求代码**，使用自动生成的 OpenAPI 客户端。
+
+- 生成工具：`openapi-generator-cli`（`dart-dio` 生成器）
+- 生成代码路径：`lib/api/generated/`
+- OpenAPI spec 路径：`Lucent/docs/openapi.json`
+- 重新生成命令：
+
+```bash
+# 1. 从 Lucent 后端导出最新 openapi.json
+cd ../Lucent && pnpm export:openapi
+
+# 2. 重新生成 Flutter 客户端
+cd ../Luminous
+openapi-generator-cli generate -g dart-dio -i ../Lucent/docs/openapi.json -o lib/api/generated --additional-properties=pubName=luminous_api,pubAuthor=Lumos
+
+# 3. 生成序列化代码
+cd lib/api/generated && dart pub get && dart run build_runner build --delete-conflicting-outputs
+
+# 4. 回到主项目更新依赖
+cd ../../.. && flutter pub get
+```
+
+- 使用方式：
+
+```dart
+import 'package:luminous_api/luminous_api.dart';
+
+final api = LuminousApi(basePathOverride: 'http://your-server:3000');
+api.setBearerAuth('default', jwtToken);
+
+// 登录
+final authApi = api.getAuthApi();
+final loginResp = await authApi.authLogin(body: LoginDto((b) => b
+  ..loginType = LoginTypeEnum.password
+  ..account = 'user@example.com'
+  ..password = 'password123'
+  ..deviceId = 'device-123'
+));
+
+// 获取用户信息
+final appApi = api.getAppApi();
+final meResp = await appApi.usersGetMe();
+```
+
+- API 客户端内置了 BearerAuthInterceptor，自动处理 JWT token 注入
+- 已生成的 API：`AuthApi`（登录/注册/验证码等）、`AppApi`（用户信息/修改密码等）
+- 已生成的 Model DTO：29 个（LoginDto, RegisterDto, UserBriefDto, UserFullDto, TokensDto 等）
 
 ---
 

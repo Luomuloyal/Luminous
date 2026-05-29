@@ -57,6 +57,10 @@ dependencies:
   collection: ^1.19.1
   json_annotation: ^4.9.0
 
+  # OpenAPI generated client (Dio)
+  luminous_api:
+    path: lib/api/generated
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

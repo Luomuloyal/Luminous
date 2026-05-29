@@ -600,3 +600,109 @@ lib/
 - `flutter test`：**173/173 通过**
 - [[TODO]] #2 和 #3 已标记完成
 - 全仓仅剩 `album_page.dart` 1 处 `MaterialPageRoute`（合理保留）
+
+---
+
+## Phase 3: OpenAPI 客户端代码生成 (2026-05-29)
+
+### Step 1：修复 Lucent 后端循环依赖
+
+- **问题**：`AuthController` 通过 `@ApiResponse({ type: UserFullDto })` 引用 `src/users/dto/` 中的 DTO，导致 `UsersModule` ↔ `AuthModule` 循环依赖，`openapi.json` 仅导出 4 paths / 20 schemas。
+- **修复**：将 `UserFullDto` 内联到 `src/auth/dto/responses/common.dto.ts`，断开对 `UsersModule` 的直接依赖。
+- **验证**：`pnpm export:openapi` 导出 **12 paths / 29 schemas**，覆盖全部 Auth 和 App 端点。
+
+### Step 2：使用 openapi-generator-cli 生成 Flutter Dio 客户端
+
+- **生成命令**：
+
+```bash
+openapi-generator-cli generate \
+  -g dart-dio \
+  -i ../Lucent/docs/openapi.json \
+  -o lib/api/generated \
+  --additional-properties=pubName=luminous_api,pubAuthor=Lumos
+```
+
+- **生成内容**：
+  - 包名：`luminous_api`，路径：`lib/api/generated/`
+  - API 客户端：`AuthApi`（13 个端点）、`AppApi`（6 个端点）
+  - Model DTO：29 个（`LoginDto`, `RegisterDto`, `UserBriefDto`, `UserFullDto`, `TokensDto`, `ChangePasswordDto`, `ChangeEmailDto` 等）
+  - 拦截器：`BearerAuthInterceptor`（JWT token 自动注入）
+  - 序列化层：`built_value` + `built_collection`
+
+### Step 3：生成 built_value 序列化代码
+
+- **命令**：
+
+```bash
+cd lib/api/generated && dart pub get && dart run build_runner build --delete-conflicting-outputs
+```
+
+- **结果**：60 个输出文件（`.g.dart` 序列化代码 + `.chopper.dart` 等）
+
+### Step 4：集成到 Luminous 主项目
+
+- **`pubspec.yaml`** — 添加路径依赖：
+
+```yaml
+dependencies:
+  luminous_api:
+    path: lib/api/generated
+```
+
+- **`flutter pub get`** — 依赖解析成功
+
+### Step 5：验证编译
+
+- `flutter analyze`：仅 3 个 warning（2 个 unused_import + 1 个 unused_field，均为自动生成代码的正常情况），**无错误**。
+- `flutter test`：**173/173 通过**（未受影响）。
+
+### 使用方式
+
+```dart
+import 'package:luminous_api/luminous_api.dart';
+
+// 初始化客户端
+final api = LuminousApi(basePathOverride: 'http://your-server:3000');
+api.setBearerAuth('default', jwtToken);
+
+// 登录
+final authApi = api.getAuthApi();
+final loginResp = await authApi.authLogin(body: LoginDto((b) => b
+  ..loginType = LoginTypeEnum.password
+  ..account = 'user@example.com'
+  ..password = 'password123'
+  ..deviceId = 'device-123'
+));
+
+// 获取用户信息
+final appApi = api.getAppApi();
+final meResp = await appApi.usersGetMe();
+```
+
+### 重新生成流程
+
+当后端 API 变更时，按以下步骤重新生成：
+
+```bash
+# 1. 导出最新 openapi.json
+cd ../Lucent && pnpm export:openapi
+
+# 2. 重新生成客户端
+cd ../Luminous
+openapi-generator-cli generate -g dart-dio -i ../Lucent/docs/openapi.json -o lib/api/generated --additional-properties=pubName=luminous_api,pubAuthor=Lumos
+
+# 3. 生成序列化代码
+cd lib/api/generated && dart pub get && dart run build_runner build --delete-conflicting-outputs
+
+# 4. 回到主项目更新依赖
+cd ../../.. && flutter pub get
+```
+
+### 架构影响
+
+- **Phase A-B（Flutter 架构重构）**：已完工 ✅
+- **Phase C（Lucent 协议边界）**：OpenAPI 客户端生成已完成 ✅
+  - 下一步：将现有 `lib/core/network/` 下的手写 Dio 请求逐步迁移到自动生成的 API 客户端
+  - 下一步：引入 `freezed` 替代 `json_serializable`（手写 model → 注解生成）
+- **Phase D（药品知识平台）**：待启动

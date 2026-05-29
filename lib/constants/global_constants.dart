@@ -50,8 +50,14 @@ class GlobalConstants {
   /// 旧 Express 后端约定的“请求成功”业务码。
   static const String LEGACY_SUCCESS_CODE = '1';
 
-  /// Lucent 后端约定的“请求成功”业务码。
+  /// Lucent 后端约定的"请求成功"业务码。
   static const int LUCENT_SUCCESS_CODE = 0;
+
+  /// Lucent 后端 API 根地址（含 `/api` 前缀）。
+  ///
+  /// OpenAPI 生成的 Dio client 及 [LucentApiClient] 均以此为 baseUrl，
+  /// 具体路径写 `/v1/xxx`。
+  static String get LUCENT_BASE_URL => '$BASE_URL/api';
 
   /// 当前默认网络层仍指向旧 Express 协议。
   ///

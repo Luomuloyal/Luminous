@@ -82,10 +82,13 @@ class LucentApiResult<T> {
 /// 只解析 Lucent `{ code, message, data, meta? }` envelope，
 /// 不与旧 Express `{ code, msg, result }` 协议混用。
 ///
+/// baseUrl 为 `domain/api`（[GlobalConstants.LUCENT_BASE_URL]），
+/// 具体路径写 `/v1/xxx`。
+///
 /// 用法：
 /// ```dart
 /// final result = await lucentClient.get<Map<String, dynamic>>(
-///   LucentEndpoints.health,
+///   '/v1/health',
 ///   decoder: (json) => json as Map<String, dynamic>,
 /// );
 /// ```
@@ -93,7 +96,7 @@ class LucentApiClient {
   LucentApiClient._internal() {
     _dio = Dio(
       BaseOptions(
-        baseUrl: GlobalConstants.BASE_URL,
+        baseUrl: GlobalConstants.LUCENT_BASE_URL,
         connectTimeout: const Duration(seconds: GlobalConstants.TIME_OUT),
         receiveTimeout: const Duration(seconds: GlobalConstants.TIME_OUT),
         sendTimeout: const Duration(seconds: GlobalConstants.TIME_OUT),
@@ -349,9 +352,7 @@ LucentApiResult<T> parseLucentResponse<T>({
     message: message,
     data: decoder(rawData['data']),
     meta: rawData['meta'] != null
-        ? LucentResponseMeta.fromJson(
-            rawData['meta'] as Map<String, dynamic>,
-          )
+        ? LucentResponseMeta.fromJson(rawData['meta'] as Map<String, dynamic>)
         : null,
   );
 }
