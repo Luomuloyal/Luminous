@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:luminous/api/auth_api.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 import 'package:luminous/features/login/presentation/login.dart';
@@ -26,13 +27,37 @@ void main() {
   });
 
   Widget createLoginWidget({AuthApi? authApi}) {
+    final api = authApi ?? FakeAuthApi();
+    final router = GoRouter(
+      initialLocation: '/login',
+      routes: [
+        GoRoute(
+          path: '/login',
+          builder: (context, state) => LoginPage(authApi: api),
+        ),
+        GoRoute(
+          path: '/register',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            return RegisterPage(
+              authApi: extra?['authApi'] as AuthApi? ?? api,
+              initialIdentifierType:
+                  extra?['initialIdentifierType'] as AuthIdentifierType? ??
+                  AuthIdentifierType.email,
+              initialIdentifier: extra?['initialIdentifier'] as String? ?? '',
+              initialCode: extra?['initialCode'] as String? ?? '',
+            );
+          },
+        ),
+      ],
+    );
     return ProviderScope(
       overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-      child: MaterialApp(
+      child: MaterialApp.router(
         locale: const Locale('zh'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: LoginPage(authApi: authApi ?? FakeAuthApi()),
+        routerConfig: router,
       ),
     );
   }

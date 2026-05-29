@@ -25,6 +25,7 @@ class SessionSyncService {
   ///
   /// [getCurrentUserId] 返回当前登录用户的 id，用于判断同步是否仍需继续。
   SessionSyncService({required String Function() getCurrentUserId})
+    // ignore: prefer_initializing_formals
     : _getCurrentUserId = getCurrentUserId;
 
   final String Function() _getCurrentUserId;

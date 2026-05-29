@@ -21,6 +21,7 @@ class AppStartupWarmup {
     Future<void> Function(String userId)? syncSession,
   }) : _restoreUserSessionTask = restoreUserSession,
        _warmOrnamentsTask = warmOrnaments,
+       // ignore: prefer_initializing_formals
        _readCurrentUserId = readCurrentUserId,
        _syncSession = syncSession ?? sessionSyncService.syncForUser,
        _reminderGateway = reminderGateway ?? reminderLocalGateway;

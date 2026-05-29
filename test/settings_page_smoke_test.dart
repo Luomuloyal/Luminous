@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:luminous/features/settings/presentation/settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,9 +17,30 @@ void main() {
   });
 
   Widget createSettingsWidget() {
+    final router = GoRouter(
+      initialLocation: '/settings',
+      routes: [
+        GoRoute(
+          path: '/settings',
+          builder: (context, state) => const SettingsPage(),
+        ),
+        GoRoute(
+          path: '/theme-settings',
+          builder: (context, state) => const ThemeSettingsPage(),
+        ),
+        GoRoute(
+          path: '/language-settings',
+          builder: (context, state) => const LanguageSettingsPage(),
+        ),
+        GoRoute(
+          path: '/profile-settings',
+          builder: (context, state) => const ProfileSettingsPage(),
+        ),
+      ],
+    );
     return UncontrolledProviderScope(
       container: container,
-      child: const MaterialApp(home: SettingsPage()),
+      child: MaterialApp.router(routerConfig: router),
     );
   }
 

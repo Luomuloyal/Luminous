@@ -34,6 +34,7 @@ flutter test
 | [ROADMAP](docs/ROADMAP.md) | 功能路线图与优先级 |
 | [RefactorPlan](docs/RefactorPlan.md) | 架构重构方向与红线 |
 | [ExecutionPlan](docs/ExecutionPlan.md) | 当前顺序执行步骤 |
+| [CurrentFocusPlan](docs/CurrentFocusPlan.md) | 当前阶段聚焦执行版 |
 | [MigrationLog](docs/MigrationLog.md) | 迁移历史记录 |
 | [TODO](docs/TODO.md) | 已知待修复问题 |
 
