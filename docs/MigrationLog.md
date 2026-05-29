@@ -4,15 +4,21 @@ tags:
   - execution
   - migration
   - log
+  - refactor
 aliases:
   - 迁移日志
   - 迁移记录
+  - 重构路线
+  - 执行计划
 created: 2026-05-23
 ---
 
 # Luminous 架构重构及迁移记录
 
 该文档记录 Luminous 从基于 GetX/Layer-based 迁移向 Riverpod/GoRouter/Feature-first 架构的历程，用以为长期项目维护提供清晰的追踪。
+
+> **合并说明**：原 `ExecutionPlan.md`（28 步执行计划）和 `RefactorPlan.md`（重构路线总控）已合并入本文档。
+> 产品愿景见 `Lucent/docs/public/Promise.md`，产品路线图见 `Lucent/docs/public/ROADMAP.md`。
 
 ## 执行约束
 
@@ -745,3 +751,31 @@ cd ../../.. && flutter pub get
   - 下一步：将现有 `lib/core/network/` 下的手写 Dio 请求逐步迁移到自动生成的 API 客户端
   - 下一步：引入 `freezed` 替代 `json_serializable`（手写 model → 注解生成）
 - **Phase D（药品知识平台）**：待启动
+
+---
+
+## Phase 4: UI 依赖补充 (2026-05-29)
+
+### 新增 8 个 UI 依赖
+
+基于 `docs/UI_Implementation_Plan.md` 三个阶段的 UI 需求，引入以下社区包：
+
+| 包                     | 版本  | 用途                                   | 对应阶段                         |
+| ---------------------- | ----- | -------------------------------------- | -------------------------------- |
+| `fluttertoast`         | 9.1.0 | 替换自研 `ToastUtils`，原生风格 Toast  | 全局                             |
+| `fl_chart`             | 1.2.0 | 折线图/柱状图/饼图，纯 Dart 无原生依赖 | 1.2 记录页、1.3 用药页、2.1 周报 |
+| `table_calendar`       | 3.2.0 | 日历组件，月/周视图切换、日期选择      | 1.2 记录页日历                   |
+| `timeline_tile`        | 2.0.0 | 时间线组件，按时间展示当日记录         | 1.2 记录页时间线                 |
+| `cached_network_image` | 3.4.1 | 网络图片缓存 + 占位图 + 错误图         | 2.2 AI 食物识别、相册            |
+| `shimmer`              | 3.0.0 | 骨架屏加载动画                         | 全局 loading 状态                |
+| `flutter_animate`      | 4.5.2 | 声明式动画（淡入、滑入、缩放）         | 全局页面转场                     |
+| `lottie`               | 3.3.3 | Lottie 动画（空状态、引导页）          | 空状态页、引导                   |
+
+### 附带引入的传递依赖
+
+`cached_network_image` 带入 `flutter_cache_manager`、`octo_image`；`fl_chart` 带入 `equatable`；`table_calendar` 带入 `simple_gesture_detector`；`flutter_animate` 带入 `flutter_shaders`。
+
+### 验证结果
+
+- `flutter pub get`：依赖解析成功
+- `flutter analyze`：No issues found

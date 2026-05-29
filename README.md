@@ -29,17 +29,27 @@ flutter test
 
 ## 文档
 
-| 文档                                         | 说明               |
-| -------------------------------------------- | ------------------ |
-| [Promise](docs/Promise.md)                   | 产品最终愿景       |
-| [ROADMAP](docs/ROADMAP.md)                   | 功能路线图与优先级 |
-| [RefactorPlan](docs/RefactorPlan.md)         | 架构重构方向与红线 |
-| [ExecutionPlan](docs/ExecutionPlan.md)       | 当前顺序执行步骤   |
-| [CurrentFocusPlan](docs/CurrentFocusPlan.md) | 当前阶段聚焦执行版 |
-| [MigrationLog](docs/MigrationLog.md)         | 迁移历史记录       |
-| [TODO](docs/TODO.md)                         | 已知待修复问题     |
+### 共享文档（`Lucent/docs/public/`）
 
-后端相关文档在 `Lucent/` 和 `backend/` 各自的 README 中。
+| 文档                                                    | 说明                 |
+| ------------------------------------------------------- | -------------------- |
+| [Promise](../Lucent/docs/public/Promise.md)             | 产品最终愿景         |
+| [ROADMAP](../Lucent/docs/public/ROADMAP.md)             | 产品路线图与当前聚焦 |
+| [design-system](../Lucent/docs/public/design-system.md) | 设计 token 规范      |
+| [DESIGN](../Lucent/docs/public/DESIGN.md)               | Airbnb 设计语言分析  |
+| [api-contract](../Lucent/docs/public/api-contract.md)   | API 规范与信封约定   |
+| [data-sources](../Lucent/docs/public/data-sources.md)   | 外部数据源与导入规则 |
+
+### Luminous 专属文档（`docs/`）
+
+| 文档                                                     | 说明                     |
+| -------------------------------------------------------- | ------------------------ |
+| [UI_Implementation_Plan](docs/UI_Implementation_Plan.md) | UI 实现计划与进度        |
+| [multi-platform-plan](docs/multi-platform-plan.md)       | 多端适配计划             |
+| [MigrationLog](docs/MigrationLog.md)                     | 架构迁移历史记录         |
+| [TODO](docs/TODO.md)                                     | 已知技术债与测试覆盖缺口 |
+
+后端文档在 `Lucent/README.md` 和 `Lucent/docs/` 中。
 
 ## License
 

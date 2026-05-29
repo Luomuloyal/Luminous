@@ -278,7 +278,7 @@ lib/shared/widgets/
 
 ## 参考文档
 
-- [ROADMAP.md](ROADMAP.md) - 产品路线图
-- [Promise.md](Promise.md) - 产品愿景
-- [ExecutionPlan.md](ExecutionPlan.md) - 执行计划
-- [design-system.md](design-system.md) - 设计系统
+- [Promise](../../../Lucent/docs/public/Promise.md) - 产品愿景
+- [ROADMAP](../../../Lucent/docs/public/ROADMAP.md) - 产品路线图
+- [design-system](../../../Lucent/docs/public/design-system.md) - 设计系统
+- [MigrationLog](MigrationLog.md) - 迁移历史记录
