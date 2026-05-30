@@ -57,6 +57,8 @@ dependencies:
   cached_network_image: ^3.4.1
   shimmer: ^3.0.0
   flutter_animate: ^4.5.2
+  lucent_openapi:
+    path: packages/lucent_openapi
 
 dev_dependencies:
   flutter_test:

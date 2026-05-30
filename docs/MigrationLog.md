@@ -764,3 +764,233 @@ cd ../../.. && flutter pub get
 
 - `flutter pub get`：依赖解析成功
 - `flutter analyze`：No issues found
+
+---
+
+## Phase 5: Tab 导航重构与品牌升级 (2026-05-29)
+
+### Step 1：更换 Tab 图标与文字 (8eef79b)
+
+- 删除旧 tab 图标（`home.png`/`home-full.png`、`drug.png`/`drug-full.png`、`mine.png`/`mine-full.png`、`picture.png`/`picture-full.png`）。
+- 新增 `lib/assets/tab-icons/` 目录，含 5 组 active/inactive 图标：`today`、`record`、`medicine`、`more`、`profile`。
+- 重构 `MainShell` 与 `MainPage` 适配新 tab 配置（5 tab：今日、记录、用药、更多、我的）。
+- 新增 `MorePage` 与 `RecordPage` 占位页面。
+- 新增 5 个 l10n 键（中英文）覆盖 tab 名称。
+- 更新 `pubspec.yaml` assets 声明。
+
+### Step 2：修复 Tab 栏越界问题 (4621973)
+
+- `main_page.dart` 增加 `SafeArea` 保护，修复底部 tab 栏在部分设备上越界。
+- `profile_settings_page.dart` 增加安全区域适配。
+- `main.dart` 调整 `MediaQuery` 初始化顺序。
+
+### Step 3：自定义 Tab 简化为 Flutter 内置 BottomNavigationBar (61c666a)
+
+- **删除 584 行自定义代码**：
+  - `main_bottom_bar.dart`（284 行）— 自定义底部导航栏 widget
+  - `main_bottom_bar_ornaments.dart`（191 行）— 底栏装饰层
+  - `main_tab_item.dart` — 自定义 tab 项模型
+- `main_page.dart` 从 ~200 行精简至 ~70 行，改用 `BottomNavigationBar` + `BottomNavigationBarItem`。
+- `main_navigation_rail.dart` 同步简化。
+
+### Step 4：添加 Git 钩子 (77d9b56)
+
+- 新增 `.gitmessage` 模板文件（47 行），规范提交信息格式。
+- 更新 `.vscode/settings.json`，配置 commitlint 规则。
+- 扩展 `AGENTS.md`，新增 32 行 Agent 工作流指引。
+
+### Step 5：更新 App Logo 与多平台启动资源 (e2a33ee)
+
+- 新增多分辨率 App 图标：Android（mdpi ~ xxxhdpi）启动画面 + 自适应图标、iOS 启动图（1x/2x/3x + Dark）、Web favicon + PWA 图标 + splash、Windows 应用图标。
+- 更新 `flutter_launcher_icons.yaml` 配置。
+- 移动 `app_icon.png` 到 `lib/assets/` 根目录，删除 `app_icon_source.svg`。
+- 删除刚引入的 `tab-icons/` 目录（图标改为由 launcher_icons 生成或内联）。
+- 优化 `app_theme_spec.dart`（68 行变更）、`main_page.dart`（104 行变更）、`main_navigation_rail.dart`（107 行变更）。
+- 更新 `web/index.html`（93 行变更），完善 PWA 配置。
+- 更新 `analysis_options.yaml`，新增 lint 规则。
+
+---
+
+## Phase 6: 设计系统常量优化 (2026-05-29)
+
+### Step 1：优化全局数字常量 (403c826)
+
+- `app_ui_constants.dart` 扩充 71 行，新增设计常量。
+- `main_navigation_rail.dart` 大幅重构（233 行变更），适配新常量。
+- 设计 token 全面扩充：
+  - `app_radius.dart` +56 行
+  - `app_shadow.dart` +50 行
+  - `app_spacing.dart` +92 行
+  - `app_typography.dart` +59 行
+- 新增 `docs/design-system.md`（179 行），记录设计 token 规范。
+
+### Step 2：重新按照 Design 设计稿校准常量值 (48d82dc)
+
+- 根据 `docs/DESIGN.md`（新增 545 行 Airbnb 设计语言分析）重新校准所有设计 token 数值。
+- `app_radius.dart`、`app_shadow.dart`、`app_spacing.dart`、`app_typography.dart` 全部微调。
+- `app_ui_constants.dart` 调整 55 行。
+- 新增 `commitlint.config.js`（27 行），正式启用提交信息校验。
+- 更新 `.vscode/settings.json` 关联 commitlint。
+
+---
+
+## Phase 7: 全局装饰器清理 (2026-05-30)
+
+### 删除 OrnamentProvider 及全部装饰器体系 (c93fb46)
+
+**动机**：全局装饰器（OrnamentProvider + banner/section/soft_banner ornaments）增加了 2400+ 行代码和大量 widget 依赖，但装饰效果与核心业务无关，属于过度设计。为降低维护成本和后续重构复杂度，一次性移除。
+
+**删除的核心文件：**
+
+| 文件                                                                    | 行数       | 说明                         |
+| ----------------------------------------------------------------------- | ---------- | ---------------------------- |
+| `lib/core/theme/ornaments/ornament_provider.dart`                       | 236        | 全局装饰器 Riverpod provider |
+| `lib/shared/widgets/ornaments/app_ornament_models.dart`                 | 148        | 装饰器数据模型               |
+| `lib/shared/widgets/ornaments/banner_ornament_layouts_primary.dart`     | 222        | Banner 主装饰布局            |
+| `lib/shared/widgets/ornaments/banner_ornament_layouts_secondary.dart`   | 133        | Banner 副装饰布局            |
+| `lib/shared/widgets/ornaments/section_ornament_layouts_primary.dart`    | 222        | Section 主装饰布局           |
+| `lib/shared/widgets/ornaments/section_ornament_layouts_secondary.dart`  | 214        | Section 副装饰布局           |
+| `lib/shared/widgets/ornaments/ornament_layout_sets.dart`                | 41         | 装饰布局集合                 |
+| `lib/shared/widgets/soft_banner/soft_banner_card.dart`                  | 69         | 软横幅卡片                   |
+| `lib/shared/widgets/soft_banner/soft_banner_ornaments.dart`             | 212        | 软横幅装饰层                 |
+| `lib/features/settings/presentation/widgets/ornament_preview_card.dart` | 107        | 装饰预览设置卡片             |
+| `lib/features/settings/presentation/support/settings_labels.dart`       | 18（部分） | 移除装饰相关标签             |
+| `test/ornament_provider_test.dart`                                      | 46         | 装饰器测试                   |
+
+**受影响的 40+ 个 widget 文件**：移除了所有 `import ornament_provider` 和 `ref.watch(ornamentProvider)` 调用，涉及 album、checkin、drug、home、main_shell、mine、register、reminders、safety、search、settings、auth、app_surface、app_canvas、soft_banner 等模块。
+
+**净减**：2,412 行删除，71 行修改。
+
+---
+
+## Phase 8: 全量重置 — 清空二级页面与后端 (2026-05-30)
+
+### Step 1：删除全部二级页面 (6463e74)
+
+**动机**：为从零开始重建应用骨架，删除除 Today 和 Shell 之外的所有业务页面及相关代码。
+
+**删除的 Feature 模块（含页面、Provider、数据层、Widget、测试）：**
+
+| 模块               | 删除文件数 | 关键删除内容                                                                             |
+| ------------------ | ---------- | ---------------------------------------------------------------------------------------- |
+| `album`            | 10         | 页面、Provider、数据存储（asset_store + local_store）、6 个 widget                       |
+| `auth`             | 7          | SessionSyncService、TokenRefreshService、UserSessionStore、auth models                   |
+| `checkin`          | 6          | 页面、Provider、4 个 widget（empty/hero/item/need_login）                                |
+| `drug`             | 10         | 页面、Provider、models、6 个 widget（my_medicines/quick_entry/ai_card/header/support）   |
+| `home`             | 7          | 页面、Provider、demo_data、health_tips_sheet、5 个 widget                                |
+| `legal`            | 1          | LegalDocumentsPage                                                                       |
+| `login`            | 3          | LoginPage（445 行）、LoginProvider（179 行）                                             |
+| `mine`             | 9          | 页面、Provider、models、browse_history_store、4 个 widget                                |
+| `medicine_picker`  | 3          | MedicinePickerPage（416 行）、Provider                                                   |
+| `medicine_detail`  | 1          | MedicineDetailPage                                                                       |
+| `profile_settings` | 1          | ProfileSettingsPage（341 行）                                                            |
+| `register`         | 3          | RegisterPage（411 行）、RegisterProvider（178 行）                                       |
+| `reminders`        | 12         | 2 页面（list + edit）、2 Provider、data 层（5 个 gateway/store）、models、5 个 widget    |
+| `safety`           | 1          | SafetyAssistPage                                                                         |
+| `scan`             | 9          | 页面、Provider、models、5 个 widget（image_flow/labels/actions/photo_area/result/sheet） |
+| `search`           | 8          | 页面、Provider、models、4 个 widget（cards/tip_row/prompt_slivers/state_slivers）        |
+| `settings`         | 9          | 2 页面（settings + profile）、Provider、6 个 widget                                      |
+| `main_shell`       | 5          | MainPage、MainShell、Provider、NavigationRail、tab_item                                  |
+
+**删除的共享层：**
+
+| 目录/文件                               | 说明                                                                                                                                        |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lib/api/`（6 个文件）                  | auth_api、home_api、medicine_api、my_medicine_api、safety_api、user_api                                                                     |
+| `lib/constants/`（5 个文件）            | app_release_info、app_ui_constants、constants、global_constants、http_constants、today_constants                                            |
+| `lib/core/local_storage/`（6 个文件）   | app_database、token_manager、secure_token_store、flutter_secure_token_store、shared_prefs_token_store、token_store_factory                  |
+| `lib/core/network/`（2 个文件）         | api_exception、lucent_client                                                                                                                |
+| `lib/core/providers/`（3 个文件）       | locale_provider、shared_preferences_provider、theme_provider                                                                                |
+| `lib/core/startup/root_app_widget.dart` | 307 行，应用根 widget                                                                                                                       |
+| `lib/core/theme/app_theme_spec.dart`    | 181 行，主题规格                                                                                                                            |
+| `lib/l10n/`（5 个文件）                 | 全部国际化文件（~8,700 行）                                                                                                                 |
+| `lib/shared/design_tokens/`（5 个文件） | 全部设计 token                                                                                                                              |
+| `lib/shared/layout/`（4 个文件）        | 自适应布局系统                                                                                                                              |
+| `lib/shared/models/`（4 个文件）        | home、medicine 数据模型                                                                                                                     |
+| `lib/shared/widgets/`（18 个文件）      | app_canvas、app_surface、auth、quick_entry、responsive、soft_banner、tinted_status_chip、today                                              |
+| `lib/utils/`（8 个文件）                | dio_request、loading_utils、message_utils、notification_service、scan_image_processing、toast_utils、app_i18n_text、media_access_error_text |
+| `lib/startup/app_startup_warmup.dart`   | 121 行，启动预热                                                                                                                            |
+| `lib/router/`（2 个文件）               | app_router、app_routes                                                                                                                      |
+
+**删除的测试：** 22 个测试文件 + 6 个 test support 文件。
+
+**删除的 API 生成代码：** 整个 `lib/api/generated/` 目录（OpenAPI Dio 客户端，~50 个文件）。
+
+**净减**：14,446 行删除，3 行新增。
+
+### Step 2：全量重置 (f7d4a8a)
+
+**动机**：在 Step 1 清空业务页面后，进一步清理后端、工具链和残余基础设施，将项目重置为最小可运行骨架。
+
+**删除的后端目录：** 整个 `backend/`（Express + MongoDB/MySQL/Redis，含 auth、AI、medicine、reminder 等全部 handler）。
+
+**删除的文档：** `docs/` 下全部文件（MigrationLog、TODO、UI_Implementation_Plan、multi-platform-plan、.obsidian 配置）。`AGENTS.md` 删除。
+
+**删除的配置与工具：**
+
+| 文件/目录                     | 说明           |
+| ----------------------------- | -------------- |
+| `flutter_launcher_icons.yaml` | 图标生成配置   |
+| `devtools_options.yaml`       | DevTools 配置  |
+| `l10n.yaml`                   | 国际化配置     |
+| `integration_test/`           | 集成测试       |
+| `backend/` 全部               | 后端代码与配置 |
+
+**新增的骨架结构：**
+
+| 文件                                                    | 说明                               |
+| ------------------------------------------------------- | ---------------------------------- |
+| `lib/app/app.dart`                                      | 应用入口（19 行）                  |
+| `lib/app/router.dart`                                   | 路由配置（7 行）                   |
+| `lib/core/constants/app_colors.dart`                    | 基础颜色常量                       |
+| `lib/core/theme/app_theme.dart`                         | 基础主题                           |
+| `lib/core/widgets/placeholder_page.dart`                | 占位页面                           |
+| `lib/features/shell/`（3 个文件）                       | Shell 页面 + tab 定义 + Provider   |
+| `lib/features/today/presentation/pages/today_page.dart` | 今日页（保留，101 行调整）         |
+| `lib/features/medicine/presentation/medicine_page.dart` | 药品占位页                         |
+| `lib/features/mine/presentation/mine_page.dart`         | 我的占位页                         |
+| `lib/features/more/presentation/more_page.dart`         | 更多页（保留，37 行调整）          |
+| `lib/features/record/presentation/record_page.dart`     | 记录页（保留，37 行调整）          |
+| 各 feature 目录下的 `.gitkeep` 占位文件                 | 预留 data/domain/presentation 结构 |
+
+**简化的配置：**
+
+- `README.md`：从 72 行精简为项目结构 + 技术栈简介
+- `CONTRIBUTING.md`：从英文 Git Workflow 改为中文贡献指南
+- `CHANGELOG.md`：新增 10 行变更记录
+- `pubspec.yaml`：从 86 行依赖精简为最小集
+- `commitlint.config.js`：从 66 行精简为 27 行
+- `analysis_options.yaml`：精简 lint 规则
+
+**净减**：51,733 行删除，361 行新增。项目从 ~200+ 文件精简为骨架结构。
+
+---
+
+## 当前状态 (2026-05-30)
+
+项目已完成全量重置，当前处于**最小可运行骨架**状态：
+
+**保留的功能模块：**
+
+- `shell` — 底部导航壳（BottomNavigationBar）
+- `today` — 今日页（UI 框架，Mock 数据）
+- `medicine` — 药品占位页
+- `mine` — 我的占位页
+- `more` — 更多页
+- `record` — 记录页
+
+**已清除的内容：**
+
+- 全部业务逻辑页面（auth、drug、reminders、scan、safety、search、settings、album、checkin、login、register 等）
+- 全部后端代码（backend/ Express 服务）
+- 全部工具类（网络层、本地存储、国际化、设计 token、共享 widget）
+- 全部测试文件
+- 全部 API 生成代码（OpenAPI Dio 客户端）
+- 全部装饰器体系
+
+**下一步方向：**
+
+- 基于骨架结构重新构建业务模块
+- 后端迁移到 Lucent（NestJS + Prisma）
+- 重新引入必要的基础设施（网络层、本地存储、国际化）
+- 按 feature-first 结构逐模块重建

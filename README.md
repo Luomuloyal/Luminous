@@ -45,6 +45,7 @@ flutter test
 | 文档                                                     | 说明                     |
 | -------------------------------------------------------- | ------------------------ |
 | [UI_Implementation_Plan](docs/UI_Implementation_Plan.md) | UI 实现计划与进度        |
+| [RestartPlan](docs/RestartPlan.md)                      | 当前重置版的二次开工清单 |
 | [multi-platform-plan](docs/multi-platform-plan.md)       | 多端适配计划             |
 | [MigrationLog](docs/MigrationLog.md)                     | 架构迁移历史记录         |
 | [TODO](docs/TODO.md)                                     | 已知技术债与测试覆盖缺口 |
