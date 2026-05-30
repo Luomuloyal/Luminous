@@ -33,10 +33,9 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  flutter_riverpod: ^3.3.1
+  go_router: ^17.2.3
   shared_preferences: ^2.5.4
   dio: ^5.9.2
   sqflite: ^2.4.2
@@ -48,103 +47,24 @@ dependencies:
   permission_handler: ^12.0.0
   path_provider: ^2.1.5
   path: ^1.9.1
-  image: ^4.3.0
-  flutter_riverpod: ^3.3.1
-  go_router: ^17.2.3
   flutter_secure_storage: ^9.2.4
-
-  # Phase 0.6 type-safety baseline
   collection: ^1.19.1
   json_annotation: ^4.12.0
-
-  # OpenAPI generated client (Dio)
-  luminous_api:
-    path: lib/api/generated
   freezed_annotation: ^3.1.0
   fluttertoast: ^9.1.0
   fl_chart: ^1.2.0
   table_calendar: ^3.2.0
-  timeline_tile: ^2.0.0
   cached_network_image: ^3.4.1
   shimmer: ^3.0.0
   flutter_animate: ^4.5.2
-  lottie: ^3.3.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
-  flutter_lints: ^6.0.0
-  flutter_launcher_icons: ^0.14.4
-  integration_test:
-    sdk: flutter
-
-  # Phase 0.6 code generation
+  flutter_lints: ^5.0.0
   build_runner: ^2.15.0
   json_serializable: ^6.9.5
   freezed: ^3.2.5
-  flutter_native_splash: ^2.4.7
 
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
-
-# The following section is specific to Flutter packages.
 flutter:
-  generate: true
-
-  # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
   uses-material-design: true
-
-  # To add assets to your application, add an assets section, like this:
-  assets:
-    - lib/assets/data.json
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
-
-  # An image asset can refer to one or more resolution-specific "variants", see
-  # https://flutter.dev/to/resolution-aware-images
-
-  # For details regarding adding assets from package dependencies, see
-  # https://flutter.dev/to/asset-from-package
-
-  # To add custom fonts to your application, add a fonts section here,
-  # in this "flutter" section. Each entry in this list should have a
-  # "family" key with the font family name, and a "fonts" key with a
-  # list giving the asset and other descriptors for the font. For
-  # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
-  #
-  # For details regarding fonts from package dependencies,
-  # see https://flutter.dev/to/font-from-package
-
-# Flutter Native Splash Configuration
-flutter_native_splash:
-  color: "#F5FAF5"
-  image: "lib/assets/app_icon.png"
-  color_dark: "#0B1A0E"
-  image_dark: "lib/assets/app_icon.png"
-  android: true
-  ios: true
-  web: true
-  android_12:
-    color: "#66BB6A"
-    image: "lib/assets/app_icon.png"
-    color_dark: "#14231A"
-    image_dark: "lib/assets/app_icon.png"

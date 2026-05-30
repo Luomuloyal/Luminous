@@ -1,19 +1,6 @@
 # Luminous
 
-[![Backend](https://img.shields.io/badge/Backend-Lucent-3b82f6)](https://github.com/LuoMuLoyal/Lucent)
-
-个人健康管理副驾驶（Personal Health Copilot）—— 从智慧用药起步，逐步走向全人全程健康管理。
-
-当前提供药品识别与查询、用药提醒、打卡记录、AI 安全辅助，下一阶段重点为权威药品知识库驱动、Markdown 详情展示、AI 健康副驾驶。
-
-## 功能
-
-- 今日页：喝水追踪、用药提醒、健康快照、饮食建议、环境提醒、Lumi AI 建议
-- 药品搜索、扫码识别、药品详情
-- 用药提醒、打卡记录、服药反应记录
-- AI 用药安全辅助
-- 识别相册与浏览历史
-- 多主题与深浅色模式
+健康助手 Flutter 应用。
 
 ## 快速开始
 
@@ -22,35 +9,42 @@ flutter pub get
 flutter run
 ```
 
-```bash
-flutter analyze
-flutter test
+## 项目结构
+
+```
+lib/
+├── main.dart              # 入口
+├── app/                   # 应用级配置（路由、主题入口）
+├── core/                  # 跨 feature 共享（常量、主题、通用 widget）
+├── features/              # 业务模块（feature-first）
+│   ├── shell/             # 底部导航壳
+│   ├── today/             # 今日
+│   ├── record/            # 记录
+│   ├── medicine/          # 用药
+│   ├── mine/              # 我的
+│   └── more/              # 更多
+└── l10n/                  # 国际化
 ```
 
-## 文档
+## 技术栈
 
-### 共享文档（`Lucent/docs/public/`）
+- **框架**: Flutter 3.x
+- **状态管理**: Riverpod
+- **路由**: GoRouter
+- **网络**: Dio
+- **本地存储**: SharedPreferences + sqflite + flutter_secure_storage
+- **代码生成**: freezed + json_serializable
 
-| 文档                                                    | 说明                 |
-| ------------------------------------------------------- | -------------------- |
-| [Promise](../Lucent/docs/public/Promise.md)             | 产品最终愿景         |
-| [ROADMAP](../Lucent/docs/public/ROADMAP.md)             | 产品路线图与当前聚焦 |
-| [design-system](../Lucent/docs/public/design-system.md) | 设计 token 规范      |
-| [DESIGN](../Lucent/docs/public/DESIGN.md)               | Airbnb 设计语言分析  |
-| [api-contract](../Lucent/docs/public/api-contract.md)   | API 规范与信封约定   |
-| [data-sources](../Lucent/docs/public/data-sources.md)   | 外部数据源与导入规则 |
+## 开发
 
-### Luminous 专属文档（`docs/`）
+```bash
+# 代码生成
+dart run build_runner build --delete-conflicting-outputs
 
-| 文档                                                     | 说明                     |
-| -------------------------------------------------------- | ------------------------ |
-| [UI_Implementation_Plan](docs/UI_Implementation_Plan.md) | UI 实现计划与进度        |
-| [multi-platform-plan](docs/multi-platform-plan.md)       | 多端适配计划             |
-| [MigrationLog](docs/MigrationLog.md)                     | 架构迁移历史记录         |
-| [TODO](docs/TODO.md)                                     | 已知技术债与测试覆盖缺口 |
+# 运行测试
+flutter test
 
-后端文档在 `Lucent/README.md` 和 `Lucent/docs/` 中。
-
-## License
-
-[Apache License 2.0](LICENSE)
+# 构建
+flutter build apk
+flutter build ios
+```
