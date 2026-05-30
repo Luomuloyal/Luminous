@@ -27,6 +27,97 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tabMore => '更多';
 
   @override
+  String get authLoginBadge => '认证 / 登录';
+
+  @override
+  String get authRegisterBadge => '认证 / 注册';
+
+  @override
+  String get authLoginTitle => '用更克制的方式登录。';
+
+  @override
+  String get authLoginDescription =>
+      '使用 Lucent 账号进入新的用药主线，后续再逐步解锁提醒、快照和多语言健康流程。';
+
+  @override
+  String get authRegisterTitle => '先把干净版本搭起来。';
+
+  @override
+  String get authRegisterDescription =>
+      '先完成注册，再在 Lucent 之上逐步生长用药计划、提醒和多语言健康能力。';
+
+  @override
+  String get authWelcomeBack => '欢迎回来';
+
+  @override
+  String get authCreateAccount => '创建账号';
+
+  @override
+  String get authLoginLead => '先输入邮箱，再选择密码登录或验证码登录。';
+
+  @override
+  String get authRegisterLead => '先用邮箱和密码完成账号创建，昵称可选。';
+
+  @override
+  String get authModePassword => '密码';
+
+  @override
+  String get authModeCode => '验证码';
+
+  @override
+  String get authEmailLabel => '邮箱';
+
+  @override
+  String get authEmailHint => 'name@example.com';
+
+  @override
+  String get authPasswordLabel => '密码';
+
+  @override
+  String get authPasswordHint => '至少 8 位，建议包含大小写和数字';
+
+  @override
+  String get authCodeLabel => '验证码';
+
+  @override
+  String get authNicknameLabel => '昵称';
+
+  @override
+  String get authNicknameHint => '可选';
+
+  @override
+  String get authSendCode => '发送验证码';
+
+  @override
+  String get authSignIn => '登录';
+
+  @override
+  String get authCreateAccountAction => '创建账号';
+
+  @override
+  String authSignedInAs(String email) {
+    return '当前已登录：$email';
+  }
+
+  @override
+  String get authCheckingSession => '正在检查登录状态...';
+
+  @override
+  String get authNotSignedIn => '尚未登录。';
+
+  @override
+  String get authGoLogin => '去登录';
+
+  @override
+  String get authGoRegister => '去注册';
+
+  @override
+  String get authSignOut => '退出登录';
+
+  @override
+  String get authInfraHint => '安全 token 存储、Lucent 多语言响应与会话恢复能力已经接到这层表单之下。';
+
+  @override
   String get todayHeroTitle => '今日';
 
   @override

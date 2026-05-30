@@ -5,6 +5,7 @@ import 'package:luminous/core/design/app_design.dart';
 import 'package:luminous/core/theme/app_theme_extensions.dart';
 import 'package:luminous/features/auth/presentation/providers/login_form_provider.dart';
 import 'package:luminous/features/auth/presentation/widgets/auth_shell.dart';
+import 'package:luminous/l10n/app_localizations.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -40,55 +41,79 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final notifier = ref.read(loginFormProvider.notifier);
     final theme = Theme.of(context);
     final surface = theme.extension<AppThemeSurface>()!;
+    final l10n = AppLocalizations.of(context);
     final width = MediaQuery.sizeOf(context).width;
     final typography = width < AppBreakpoints.mobile
         ? AppTypographyTokens.mobile(theme.colorScheme.onSurface)
         : AppTypographyTokens.desktop(theme.colorScheme.onSurface);
 
     return AuthShell(
-      badge: 'AUTH / LOGIN',
-      title: 'Sign in with calm, not clutter.',
+      badge: l10n?.authLoginBadge ?? 'AUTH / LOGIN',
+      title: l10n?.authLoginTitle ?? 'Sign in with calm, not clutter.',
       description:
-          'Use your Lucent account to unlock the rebuilt medication flow, multilingual responses, and secure session restore.',
+          l10n?.authLoginDescription ??
+          'Use your Lucent account to enter the rebuilt medication flow, then layer in reminders, snapshots, and multilingual health routines.',
       form: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Welcome back', style: typography.displayMd),
+          Text(
+            l10n?.authWelcomeBack ?? 'Welcome back',
+            style: typography.displayMd,
+          ),
           const SizedBox(height: AppSpacingTokens.sm),
           Text(
-            'Start with email, then choose password or verification code.',
+            l10n?.authLoginLead ??
+                'Start with email, then choose password or verification code.',
             style: typography.bodySm.copyWith(color: surface.body),
           ),
           const SizedBox(height: AppSpacingTokens.xl),
-          SegmentedButton<AuthLoginMode>(
-            segments: const <ButtonSegment<AuthLoginMode>>[
-              ButtonSegment<AuthLoginMode>(
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<AuthLoginMode>(
+              segments: <ButtonSegment<AuthLoginMode>>[
+                ButtonSegment<AuthLoginMode>(
                 value: AuthLoginMode.password,
-                label: Text('Password'),
-              ),
-              ButtonSegment<AuthLoginMode>(
+                  label: SizedBox(
+                    width: 96,
+                    child: Text(
+                      l10n?.authModePassword ?? 'Password',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                ButtonSegment<AuthLoginMode>(
                 value: AuthLoginMode.code,
-                label: Text('Code'),
-              ),
-            ],
-            selected: <AuthLoginMode>{state.mode},
-            onSelectionChanged: (next) {
-              notifier.updateMode(next.first);
-            },
+                  label: SizedBox(
+                    width: 96,
+                    child: Text(
+                      l10n?.authModeCode ?? 'Code',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ],
+              selected: <AuthLoginMode>{state.mode},
+              onSelectionChanged: (next) {
+                notifier.updateMode(next.first);
+              },
+            ),
           ),
           const SizedBox(height: AppSpacingTokens.lg),
           AuthTextField(
             controller: _emailController,
-            label: 'Email',
-            hint: 'name@example.com',
+            label: l10n?.authEmailLabel ?? 'Email',
+            hint: l10n?.authEmailHint ?? 'name@example.com',
             keyboardType: TextInputType.emailAddress,
           ),
           const SizedBox(height: AppSpacingTokens.md),
           if (state.mode == AuthLoginMode.password)
             AuthTextField(
               controller: _passwordController,
-              label: 'Password',
+              label: l10n?.authPasswordLabel ?? 'Password',
+              helperText:
+                  l10n?.authPasswordHint ??
+                  'At least 8 characters, ideally with mixed case and numbers',
               obscureText: true,
             )
           else
@@ -97,7 +122,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 Expanded(
                   child: AuthTextField(
                     controller: _codeController,
-                    label: 'Verification code',
+                    label: l10n?.authCodeLabel ?? 'Verification code',
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -107,7 +132,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     notifier.updateEmail(_emailController.text);
                     await notifier.sendCode();
                   },
-                  child: const Text('Send code'),
+                  child: Text(l10n?.authSendCode ?? 'Send code'),
                 ),
               ],
             ),
@@ -120,7 +145,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ],
           const SizedBox(height: AppSpacingTokens.xl),
           AuthPrimaryButton(
-            label: 'Sign in',
+            label: l10n?.authSignIn ?? 'Sign in',
             isLoading: state.isSubmitting,
             onPressed: () async {
               notifier.updateEmail(_emailController.text);

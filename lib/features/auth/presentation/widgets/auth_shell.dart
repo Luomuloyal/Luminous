@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:luminous/core/constants/app_breakpoints.dart';
 import 'package:luminous/core/design/app_design.dart';
 import 'package:luminous/core/theme/app_theme_extensions.dart';
+import 'package:luminous/l10n/app_localizations.dart';
 
 class AuthShell extends StatelessWidget {
   const AuthShell({
@@ -121,6 +122,7 @@ class _AuthNarrativePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppRadiusTokens.xl),
@@ -168,7 +170,8 @@ class _AuthNarrativePanel extends StatelessWidget {
             if (!compact) ...[
               const SizedBox(height: AppSpacingTokens.xl),
               Text(
-                'Secure session storage, localized API responses, and Lucent-backed auth are already wired beneath this surface.',
+                l10n?.authInfraHint ??
+                    'Secure session storage, Lucent-backed localized responses, and session restore are already wired beneath this form layer.',
                 style: typography.bodySm.copyWith(color: surface.mute),
               ),
             ],
@@ -211,6 +214,7 @@ class AuthTextField extends StatelessWidget {
     this.keyboardType,
     this.obscureText = false,
     this.suffix,
+    this.helperText,
   });
 
   final TextEditingController controller;
@@ -219,6 +223,7 @@ class AuthTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final bool obscureText;
   final Widget? suffix;
+  final String? helperText;
 
   @override
   Widget build(BuildContext context) {
@@ -240,6 +245,8 @@ class AuthTextField extends StatelessWidget {
         filled: true,
         fillColor: surface.canvas,
         suffixIcon: suffix,
+        helperText: helperText,
+        helperStyle: typography.caption.copyWith(color: surface.mute),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadiusTokens.sm),
           borderSide: BorderSide(color: surface.hairline),

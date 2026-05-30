@@ -134,6 +134,180 @@ abstract class AppLocalizations {
   /// **'更多'**
   String get tabMore;
 
+  /// No description provided for @authLoginBadge.
+  ///
+  /// In zh, this message translates to:
+  /// **'认证 / 登录'**
+  String get authLoginBadge;
+
+  /// No description provided for @authRegisterBadge.
+  ///
+  /// In zh, this message translates to:
+  /// **'认证 / 注册'**
+  String get authRegisterBadge;
+
+  /// No description provided for @authLoginTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'用更克制的方式登录。'**
+  String get authLoginTitle;
+
+  /// No description provided for @authLoginDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'使用 Lucent 账号进入新的用药主线，后续再逐步解锁提醒、快照和多语言健康流程。'**
+  String get authLoginDescription;
+
+  /// No description provided for @authRegisterTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'先把干净版本搭起来。'**
+  String get authRegisterTitle;
+
+  /// No description provided for @authRegisterDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'先完成注册，再在 Lucent 之上逐步生长用药计划、提醒和多语言健康能力。'**
+  String get authRegisterDescription;
+
+  /// No description provided for @authWelcomeBack.
+  ///
+  /// In zh, this message translates to:
+  /// **'欢迎回来'**
+  String get authWelcomeBack;
+
+  /// No description provided for @authCreateAccount.
+  ///
+  /// In zh, this message translates to:
+  /// **'创建账号'**
+  String get authCreateAccount;
+
+  /// No description provided for @authLoginLead.
+  ///
+  /// In zh, this message translates to:
+  /// **'先输入邮箱，再选择密码登录或验证码登录。'**
+  String get authLoginLead;
+
+  /// No description provided for @authRegisterLead.
+  ///
+  /// In zh, this message translates to:
+  /// **'先用邮箱和密码完成账号创建，昵称可选。'**
+  String get authRegisterLead;
+
+  /// No description provided for @authModePassword.
+  ///
+  /// In zh, this message translates to:
+  /// **'密码'**
+  String get authModePassword;
+
+  /// No description provided for @authModeCode.
+  ///
+  /// In zh, this message translates to:
+  /// **'验证码'**
+  String get authModeCode;
+
+  /// No description provided for @authEmailLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'邮箱'**
+  String get authEmailLabel;
+
+  /// No description provided for @authEmailHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'name@example.com'**
+  String get authEmailHint;
+
+  /// No description provided for @authPasswordLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'密码'**
+  String get authPasswordLabel;
+
+  /// No description provided for @authPasswordHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'至少 8 位，建议包含大小写和数字'**
+  String get authPasswordHint;
+
+  /// No description provided for @authCodeLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'验证码'**
+  String get authCodeLabel;
+
+  /// No description provided for @authNicknameLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'昵称'**
+  String get authNicknameLabel;
+
+  /// No description provided for @authNicknameHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'可选'**
+  String get authNicknameHint;
+
+  /// No description provided for @authSendCode.
+  ///
+  /// In zh, this message translates to:
+  /// **'发送验证码'**
+  String get authSendCode;
+
+  /// No description provided for @authSignIn.
+  ///
+  /// In zh, this message translates to:
+  /// **'登录'**
+  String get authSignIn;
+
+  /// No description provided for @authCreateAccountAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'创建账号'**
+  String get authCreateAccountAction;
+
+  /// No description provided for @authSignedInAs.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前已登录：{email}'**
+  String authSignedInAs(String email);
+
+  /// No description provided for @authCheckingSession.
+  ///
+  /// In zh, this message translates to:
+  /// **'正在检查登录状态...'**
+  String get authCheckingSession;
+
+  /// No description provided for @authNotSignedIn.
+  ///
+  /// In zh, this message translates to:
+  /// **'尚未登录。'**
+  String get authNotSignedIn;
+
+  /// No description provided for @authGoLogin.
+  ///
+  /// In zh, this message translates to:
+  /// **'去登录'**
+  String get authGoLogin;
+
+  /// No description provided for @authGoRegister.
+  ///
+  /// In zh, this message translates to:
+  /// **'去注册'**
+  String get authGoRegister;
+
+  /// No description provided for @authSignOut.
+  ///
+  /// In zh, this message translates to:
+  /// **'退出登录'**
+  String get authSignOut;
+
+  /// No description provided for @authInfraHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'安全 token 存储、Lucent 多语言响应与会话恢复能力已经接到这层表单之下。'**
+  String get authInfraHint;
+
   /// No description provided for @todayHeroTitle.
   ///
   /// In zh, this message translates to:

@@ -401,6 +401,13 @@ flutter test
 2. 写 auth / medicine / reminder / scan 的新数据边界草图
 3. 开始准备 Lucent 对接方案
 
+### 当前进展补充
+
+- Auth 页面最小版本已落地：`/login`、`/register`
+- Auth provider 已具备：session restore、login、register、logout
+- Shell 已开始支持手机 / 桌面两种导航形态
+- OpenAPI client、i18n、session store、Accept-Language 已接到基础设施层
+
 ---
 
 ## 每周检查问题

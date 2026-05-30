@@ -18,6 +18,7 @@
 - `supportedLocales` 已接入
 - Tab 文案已切到 `AppLocalizations`
 - `TodayPage` 和 `PlaceholderPage` 的可见文案已切到 `AppLocalizations`
+- `LoginPage` / `RegisterPage` / `AuthShell` 已切到 `AppLocalizations`
 - 前端 network 层会通过 `Accept-Language` 请求头把当前语言传给 Lucent
 - 当前默认请求语言为英文，后续可由用户设置切换
 

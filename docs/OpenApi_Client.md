@@ -16,6 +16,8 @@
 - 业务层不要直接依赖生成器目录结构，统一通过 `LucentDioClient`
 - session token 存储默认走安全存储，Web / Windows / Linux 回退到 `SharedPreferences`
 - client 会自动附带 `Accept-Language` 请求头，当前默认语言为英文
+- `401002 TOKEN_EXPIRED` 会自动触发 refresh 并重试原请求
+- 已接入 auth remote datasource、session provider、login/register provider
 
 ## 重新生成
 
@@ -63,3 +65,7 @@ final appApi = client.appApi;
 - 当前 OpenAPI 只覆盖 `health` 和 `auth`
 - 随着 Lucent API 扩展，重新导出 `openapi.json` 后再重生成
 - 生成代码允许保留生成器风格，不手改；需要自定义行为时放在主工程封装层
+- 业务层当前优先通过：
+  - `lucentDioClientProvider`
+  - `lucentAuthApiProvider`
+  - `authRemoteDataSourceProvider`

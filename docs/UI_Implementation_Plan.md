@@ -17,10 +17,13 @@
 - Lucent OpenAPI 客户端接入
 - Flutter 原生国际化基础设施
 - Today 占位版首页已接进 shell
+- 安全 token 存储 + `Accept-Language` 请求头注入
+- Auth remote datasource / session provider / login form provider / register form provider
+- LoginPage / RegisterPage 最小可用页面
+- Shell 已具备手机底部导航 + 桌面侧边导航的响应式切换
 
 当前还没有恢复的内容：
 
-- 认证页面
 - 用药闭环页面
 - 提醒与打卡页面
 - 扫描与上传链路
@@ -111,6 +114,18 @@
 
 - 四个一级页面先从“占位提示”升级为“结构骨架”
 
+当前已完成的基础壳层：
+
+- `Shell` 在桌面 / Web 宽屏下切到 `NavigationRail`
+- 新增统一内容容器 `ResponsiveContentFrame`
+- Login / Register 已经跑在同一套响应式 auth 壳层上
+
+下一步优先项：
+
+1. 让 `TodayPage` 用统一内容容器组织内部 section
+2. 让 `record / medicine / mine / more` 也切到同一套内容宽度约束
+3. 补共享 `PageHeader / PageSection` 之类的页面级基础组件
+
 顺序建议：
 
 1. `record`
@@ -145,10 +160,12 @@
 - 不把协议层逻辑放进 `utils`
 - 国际化统一走 Flutter 原生 `gen-l10n`
 - 页面只读本地化文案，不自己管理语言文案映射
+- token 存储优先走 `flutter_secure_storage`，桌面 / Web 回退
+- 前端默认请求语言为英文，通过 `Accept-Language` 传给 Lucent
 
 后续 UI 会优先接入：
 
-1. `auth`
+1. `auth` 页面交互与错误态细化
 2. `medicine search / detail`
 3. `reminder`
 4. `today check-in`
@@ -187,7 +204,9 @@ flutter test
 
 如果继续沿 UI 主线推进，建议顺序是：
 
-1. 拆 Today 卡片组件
-2. 给 Today 建 mock provider
-3. 把 record / medicine / mine / more 从 placeholder 升级为空骨架页
-4. 再开始 auth / medicine / reminder 的业务页面重建
+1. 把 auth 页面上的硬编码文案全部压进 `l10n`
+2. 继续补 Shell 与内容容器的响应式基础
+3. 拆 Today 卡片组件
+4. 给 Today 建 mock provider
+5. 把 record / medicine / mine / more 从 placeholder 升级为空骨架页
+6. 再开始 medicine / reminder 的业务页面重建

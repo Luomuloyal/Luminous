@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:luminous/core/constants/app_breakpoints.dart';
 import 'package:luminous/core/design/app_design.dart';
 import 'package:luminous/core/theme/app_theme_extensions.dart';
+import 'package:luminous/core/widgets/responsive_content_frame.dart';
 import 'package:luminous/core/widgets/placeholder_page.dart';
 import 'package:luminous/features/shell/presentation/shell_tab.dart';
 import 'package:luminous/features/shell/providers/shell_provider.dart';
@@ -23,31 +25,81 @@ class ShellPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = ref.watch(shellProvider).currentIndex;
     final notifier = ref.read(shellProvider.notifier);
+    final scheme = Theme.of(context).colorScheme;
     final surface = Theme.of(context).extension<AppThemeSurface>()!;
     final width = MediaQuery.sizeOf(context).width;
     final l10n = AppLocalizations.of(context);
     final typography = width < 600
-        ? AppTypographyTokens.mobile(Theme.of(context).colorScheme.onSurface)
-        : AppTypographyTokens.desktop(Theme.of(context).colorScheme.onSurface);
+        ? AppTypographyTokens.mobile(scheme.onSurface)
+        : AppTypographyTokens.desktop(scheme.onSurface);
+    final isDesktop = width >= AppBreakpoints.desktop;
+
+    final destinations = ShellTab.values
+        .map(
+          (tab) => NavigationDestination(
+            icon: Icon(tab.icon),
+            selectedIcon: Icon(tab.activeIcon),
+            label: tab.label(l10n),
+          ),
+        )
+        .toList(growable: false);
 
     return Scaffold(
-      body: IndexedStack(index: currentIndex, children: _pages),
-      bottomNavigationBar: NavigationBar(
-        backgroundColor: surface.canvas.withValues(alpha: 0.96),
-        surfaceTintColor: Colors.transparent,
-        indicatorColor: surface.canvasSoft2,
-        height: width < 600 ? 70 : 76,
-        labelTextStyle: WidgetStatePropertyAll<TextStyle>(typography.caption),
-        selectedIndex: currentIndex,
-        onDestinationSelected: notifier.selectTab,
-        destinations: ShellTab.values.map((tab) {
-          final selected = tab.index == currentIndex;
-          return NavigationDestination(
-            icon: Icon(selected ? tab.activeIcon : tab.icon),
-            label: tab.label(l10n),
-          );
-        }).toList(),
-      ),
+      backgroundColor: surface.canvasSoft,
+      body: isDesktop
+          ? SafeArea(
+              child: ResponsiveContentFrame(
+                expand: true,
+                child: Row(
+                  children: [
+                    NavigationRail(
+                      backgroundColor: surface.canvas,
+                      selectedIndex: currentIndex,
+                      onDestinationSelected: notifier.selectTab,
+                      labelType: NavigationRailLabelType.all,
+                      indicatorColor: surface.canvasSoft2,
+                      groupAlignment: -0.8,
+                      destinations: destinations
+                          .map(
+                            (item) => NavigationRailDestination(
+                              icon: item.icon,
+                              selectedIcon: item.selectedIcon,
+                              label: Text(item.label),
+                            ),
+                          )
+                          .toList(growable: false),
+                    ),
+                    VerticalDivider(color: surface.hairline, width: 1),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacingTokens.lg,
+                        ),
+                        child: IndexedStack(
+                          index: currentIndex,
+                          children: _pages,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : IndexedStack(index: currentIndex, children: _pages),
+      bottomNavigationBar: isDesktop
+          ? null
+          : NavigationBar(
+              backgroundColor: surface.canvas.withValues(alpha: 0.96),
+              surfaceTintColor: Colors.transparent,
+              indicatorColor: surface.canvasSoft2,
+              height: width < 600 ? 70 : 76,
+              labelTextStyle: WidgetStatePropertyAll<TextStyle>(
+                typography.caption,
+              ),
+              selectedIndex: currentIndex,
+              onDestinationSelected: notifier.selectTab,
+              destinations: destinations,
+            ),
     );
   }
 }

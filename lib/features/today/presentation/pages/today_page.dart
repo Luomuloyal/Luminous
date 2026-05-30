@@ -120,10 +120,15 @@ class _TodayPageState extends ConsumerState<TodayPage> {
                             const SizedBox(height: AppSpacingTokens.md),
                             Text(
                               session.isAuthenticated
-                                  ? 'Signed in as ${session.user?.email ?? ''}'
+                                  ? (l10n?.authSignedInAs(
+                                        session.user?.email ?? '',
+                                      ) ??
+                                      'Signed in as ${session.user?.email ?? ''}')
                                   : session.isLoading
-                                  ? 'Checking session...'
-                                  : 'Not signed in yet.',
+                                  ? (l10n?.authCheckingSession ??
+                                      'Checking session...')
+                                  : (l10n?.authNotSignedIn ??
+                                      'Not signed in yet.'),
                               style: typography.bodySm.copyWith(
                                 color: surface.mute,
                               ),
@@ -136,12 +141,17 @@ class _TodayPageState extends ConsumerState<TodayPage> {
                                 if (!session.isAuthenticated)
                                   OutlinedButton(
                                     onPressed: () => context.push('/login'),
-                                    child: const Text('Sign in'),
+                                    child: Text(
+                                      l10n?.authGoLogin ?? 'Sign in',
+                                    ),
                                   ),
                                 if (!session.isAuthenticated)
                                   FilledButton(
                                     onPressed: () => context.push('/register'),
-                                    child: const Text('Create account'),
+                                    child: Text(
+                                      l10n?.authGoRegister ??
+                                          'Create account',
+                                    ),
                                   ),
                                 if (session.isAuthenticated)
                                   FilledButton(
@@ -150,7 +160,9 @@ class _TodayPageState extends ConsumerState<TodayPage> {
                                           .read(authSessionProvider.notifier)
                                           .logout();
                                     },
-                                    child: const Text('Sign out'),
+                                    child: Text(
+                                      l10n?.authSignOut ?? 'Sign out',
+                                    ),
                                   ),
                               ],
                             ),
