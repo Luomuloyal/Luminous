@@ -1,0 +1,26 @@
+{
+  "@@locale": "zh",
+  "appTitle": "Luminous",
+  "tabToday": "今日",
+  "tabRecord": "记录",
+  "tabMedicine": "用药",
+  "tabMine": "我的",
+  "tabMore": "更多",
+  "todayHeroTitle": "今日",
+  "todayHeroDescription": "新的首页将从这里开始重建：先完成响应式视觉系统，再逐步接入喝水、提醒、健康快照和 Lumi 建议。",
+  "todayChipWater": "喝水追踪",
+  "todayChipMedication": "用药提醒",
+  "todayChipSnapshot": "健康快照",
+  "todayChipDiet": "饮食建议",
+  "todayChipEnvironment": "环境提醒",
+  "todayChipLumi": "Lumi 建议",
+  "placeholderSoon": "{label} · 即将上线",
+  "@placeholderSoon": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "placeholderDescription": "这一栏的结构已经预留完成，下一步会按新的多端设计系统重建。"
+}

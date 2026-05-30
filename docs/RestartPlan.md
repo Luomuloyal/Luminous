@@ -206,6 +206,7 @@ flutter test
 - 更新 `README.md`
 - 更新 `docs/UI_Implementation_Plan.md`
 - 标明哪些能力已经删除，哪些是计划重建
+- 标明当前已完成的基础设施：OpenAPI 客户端、响应式 design token、Flutter 原生国际化
 
 验收标准：
 
@@ -220,6 +221,8 @@ flutter test
 - 保留当前 `AppTheme` 的简单结构
 - 新建基础 token：颜色、圆角、间距、字体层级
 - 暂不恢复旧的复杂 `shared/design_tokens`
+- 国际化走 Flutter 原生 `l10n`
+- 网络基础设施统一留在 `core/network/`，不要下沉到 `utils/`
 
 参考提交：
 

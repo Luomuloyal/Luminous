@@ -6,6 +6,7 @@ import 'package:luminous/core/widgets/placeholder_page.dart';
 import 'package:luminous/features/shell/presentation/shell_tab.dart';
 import 'package:luminous/features/shell/providers/shell_provider.dart';
 import 'package:luminous/features/today/presentation/pages/today_page.dart';
+import 'package:luminous/l10n/app_localizations.dart';
 
 class ShellPage extends ConsumerWidget {
   const ShellPage({super.key});
@@ -24,6 +25,7 @@ class ShellPage extends ConsumerWidget {
     final notifier = ref.read(shellProvider.notifier);
     final surface = Theme.of(context).extension<AppThemeSurface>()!;
     final width = MediaQuery.sizeOf(context).width;
+    final l10n = AppLocalizations.of(context);
     final typography = width < 600
         ? AppTypographyTokens.mobile(Theme.of(context).colorScheme.onSurface)
         : AppTypographyTokens.desktop(Theme.of(context).colorScheme.onSurface);
@@ -42,7 +44,7 @@ class ShellPage extends ConsumerWidget {
           final selected = tab.index == currentIndex;
           return NavigationDestination(
             icon: Icon(selected ? tab.activeIcon : tab.icon),
-            label: tab.label,
+            label: tab.label(l10n),
           );
         }).toList(),
       ),

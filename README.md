@@ -4,16 +4,15 @@
 
 个人健康管理副驾驶（Personal Health Copilot）—— 从智慧用药起步，逐步走向全人全程健康管理。
 
-当前提供药品识别与查询、用药提醒、打卡记录、AI 安全辅助，下一阶段重点为权威药品知识库驱动、Markdown 详情展示、AI 健康副驾驶。
+当前处于二次开工阶段：主线保留新的五栏骨架、响应式 design token、Lucent OpenAPI 客户端与 Flutter 原生国际化基础设施，后续逐步重建认证、用药、提醒、扫描与更多业务能力。
 
-## 功能
+## 当前基线
 
-- 今日页：喝水追踪、用药提醒、健康快照、饮食建议、环境提醒、Lumi AI 建议
-- 药品搜索、扫码识别、药品详情
-- 用药提醒、打卡记录、服药反应记录
-- AI 用药安全辅助
-- 识别相册与浏览历史
-- 多主题与深浅色模式
+- 五栏骨架：`today / record / medicine / mine / more`
+- 响应式 design token：颜色、字号、间距、圆角、阴影、断点
+- Lucent OpenAPI 客户端：`packages/lucent_openapi`
+- 统一网络入口：`lib/core/network/`
+- Flutter 原生国际化基础设施：中/英双语最小集已接入
 
 ## 快速开始
 
@@ -44,6 +43,8 @@ flutter test
 
 | 文档                                                     | 说明                     |
 | -------------------------------------------------------- | ------------------------ |
+| [Localization](docs/Localization.md)                     | Flutter 原生国际化方案   |
+| [OpenApi_Client](docs/OpenApi_Client.md)                 | Lucent OpenAPI 客户端接入 |
 | [UI_Implementation_Plan](docs/UI_Implementation_Plan.md) | UI 实现计划与进度        |
 | [RestartPlan](docs/RestartPlan.md)                      | 当前重置版的二次开工清单 |
 | [multi-platform-plan](docs/multi-platform-plan.md)       | 多端适配计划             |

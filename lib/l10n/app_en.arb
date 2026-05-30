@@ -1,0 +1,26 @@
+{
+  "@@locale": "en",
+  "appTitle": "Luminous",
+  "tabToday": "Today",
+  "tabRecord": "Record",
+  "tabMedicine": "Medicine",
+  "tabMine": "Mine",
+  "tabMore": "More",
+  "todayHeroTitle": "Today",
+  "todayHeroDescription": "The new home starts here: we are rebuilding the responsive visual system first, then layering in water tracking, reminders, health snapshots, and Lumi guidance.",
+  "todayChipWater": "Water Tracking",
+  "todayChipMedication": "Medication Reminders",
+  "todayChipSnapshot": "Health Snapshot",
+  "todayChipDiet": "Diet Suggestions",
+  "todayChipEnvironment": "Environment Alerts",
+  "todayChipLumi": "Lumi Guidance",
+  "placeholderSoon": "{label} · Coming Soon",
+  "@placeholderSoon": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "placeholderDescription": "This area is reserved structurally and will be rebuilt with the new multi-platform design system."
+}

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:luminous/core/design/app_design.dart';
 import 'package:luminous/core/theme/app_theme_extensions.dart';
+import 'package:luminous/l10n/app_localizations.dart';
 
 class PlaceholderPage extends StatelessWidget {
   const PlaceholderPage({super.key, required this.label});
@@ -11,6 +12,7 @@ class PlaceholderPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final surface = Theme.of(context).extension<AppThemeSurface>()!;
+    final l10n = AppLocalizations.of(context);
     final width = MediaQuery.sizeOf(context).width;
     final typography = width < 600
         ? AppTypographyTokens.mobile(scheme.onSurface)
@@ -39,13 +41,14 @@ class PlaceholderPage extends StatelessWidget {
               ),
               SizedBox(height: layout.componentGap),
               Text(
-                '$label · 即将上线',
+                l10n?.placeholderSoon(label) ?? '$label · Coming Soon',
                 style: typography.displaySm.copyWith(color: scheme.onSurface),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacingTokens.xs),
               Text(
-                '这一栏的结构已经预留完成，下一步会按新的多端设计系统重建。',
+                l10n?.placeholderDescription ??
+                    'This area is reserved structurally and will be rebuilt with the new multi-platform design system.',
                 style: typography.bodySm.copyWith(color: surface.body),
                 textAlign: TextAlign.center,
               ),

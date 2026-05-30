@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:luminous/core/design/app_design.dart';
 import 'package:luminous/core/theme/app_theme_extensions.dart';
+import 'package:luminous/l10n/app_localizations.dart';
 
 /// 今日页。
 class TodayPage extends StatelessWidget {
@@ -10,6 +11,7 @@ class TodayPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final surface = Theme.of(context).extension<AppThemeSurface>()!;
+    final l10n = AppLocalizations.of(context);
     final width = MediaQuery.sizeOf(context).width;
     final typography = width < 600
         ? AppTypographyTokens.mobile(scheme.onSurface)
@@ -87,14 +89,15 @@ class TodayPage extends StatelessWidget {
                             ),
                             SizedBox(height: layout.componentGap),
                             Text(
-                              '今日',
+                              l10n?.todayHeroTitle ?? 'Today',
                               style: typography.displayLg.copyWith(
                                 color: scheme.onSurface,
                               ),
                             ),
                             const SizedBox(height: AppSpacingTokens.xs),
                             Text(
-                              '新的首页将从这里开始重建：先完成响应式视觉系统，再逐步接入喝水、提醒、健康快照和 Lumi 建议。',
+                              l10n?.todayHeroDescription ??
+                                  'The new home starts here: we are rebuilding the responsive visual system first, then layering in water tracking, reminders, health snapshots, and Lumi guidance.',
                               style: typography.bodyMd.copyWith(
                                 color: surface.body,
                               ),
@@ -103,13 +106,31 @@ class TodayPage extends StatelessWidget {
                             Wrap(
                               spacing: AppSpacingTokens.sm,
                               runSpacing: AppSpacingTokens.sm,
-                              children: const <Widget>[
-                                _TodayPreviewChip(label: '喝水追踪'),
-                                _TodayPreviewChip(label: '用药提醒'),
-                                _TodayPreviewChip(label: '健康快照'),
-                                _TodayPreviewChip(label: '饮食建议'),
-                                _TodayPreviewChip(label: '环境提醒'),
-                                _TodayPreviewChip(label: 'Lumi 建议'),
+                              children: <Widget>[
+                                _TodayPreviewChip(
+                                  label: l10n?.todayChipWater ??
+                                      'Water Tracking',
+                                ),
+                                _TodayPreviewChip(
+                                  label: l10n?.todayChipMedication ??
+                                      'Medication Reminders',
+                                ),
+                                _TodayPreviewChip(
+                                  label: l10n?.todayChipSnapshot ??
+                                      'Health Snapshot',
+                                ),
+                                _TodayPreviewChip(
+                                  label: l10n?.todayChipDiet ??
+                                      'Diet Suggestions',
+                                ),
+                                _TodayPreviewChip(
+                                  label: l10n?.todayChipEnvironment ??
+                                      'Environment Alerts',
+                                ),
+                                _TodayPreviewChip(
+                                  label: l10n?.todayChipLumi ??
+                                      'Lumi Guidance',
+                                ),
                               ],
                             ),
                           ],
