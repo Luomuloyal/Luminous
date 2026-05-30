@@ -22,7 +22,8 @@ class LucentDioClient {
     Dio? dio,
     Iterable<Interceptor> interceptors = const [],
   }) : _openapi = LucentOpenapi(
-         dio: dio ??
+         dio:
+             dio ??
              Dio(
                BaseOptions(
                  baseUrl: baseUrl,
@@ -74,14 +75,11 @@ class LucentDioClient {
           }
 
           final skipAuthorization = options.extra['skipAuthorization'] == true;
-          final hasSecureRequirement =
-              (options.extra['secure'] as List?)?.isNotEmpty ?? false;
-          final alreadyHasAuthorization =
-              options.headers.containsKey('Authorization');
+          final alreadyHasAuthorization = options.headers.containsKey(
+            'Authorization',
+          );
 
-          if (!skipAuthorization &&
-              hasSecureRequirement &&
-              !alreadyHasAuthorization) {
+          if (!skipAuthorization && !alreadyHasAuthorization) {
             final token = await _sessionStore.readAccessToken();
             if (token != null && token.isNotEmpty) {
               options.headers['Authorization'] = 'Bearer $token';
@@ -94,7 +92,10 @@ class LucentDioClient {
           if (await _shouldRefresh(error)) {
             final refreshedTokens = await _refreshTokens();
             if (refreshedTokens != null && refreshedTokens.hasAccessToken) {
-              final retryResponse = await _retry(error.requestOptions, refreshedTokens);
+              final retryResponse = await _retry(
+                error.requestOptions,
+                refreshedTokens,
+              );
               handler.resolve(retryResponse);
               return;
             }
@@ -193,9 +194,7 @@ class LucentDioClient {
         options: Options(
           headers: _localeResolver == null
               ? null
-              : <String, String>{
-                  'Accept-Language': _localeResolver.call(),
-                },
+              : <String, String>{'Accept-Language': _localeResolver.call()},
           extra: const <String, Object?>{
             'skipAuthorization': true,
             'skipAuthRefresh': true,
@@ -252,10 +251,7 @@ class LucentDioClient {
     nextExtra['hasRetriedAfterRefresh'] = true;
 
     return _openapi.dio.fetch<dynamic>(
-      requestOptions.copyWith(
-        headers: nextHeaders,
-        extra: nextExtra,
-      ),
+      requestOptions.copyWith(headers: nextHeaders, extra: nextExtra),
     );
   }
 

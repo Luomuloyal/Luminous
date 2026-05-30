@@ -74,6 +74,19 @@ class AuthSessionNotifier extends Notifier<AuthSessionState> {
     );
   }
 
+  void applyUser(AuthUser user) {
+    state = state.copyWith(
+      user: user,
+      isAuthenticated: true,
+      isLoading: false,
+      clearErrorMessage: true,
+    );
+  }
+
+  void clearLocalSession() {
+    state = const AuthSessionState();
+  }
+
   Future<void> logout() async {
     state = state.copyWith(isLoading: true, clearErrorMessage: true);
     try {

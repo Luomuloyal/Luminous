@@ -16,6 +16,26 @@ class AuthUser {
   final bool emailVerified;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  AuthUser copyWith({
+    String? id,
+    String? email,
+    String? nickname,
+    String? avatar,
+    bool? emailVerified,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return AuthUser(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      nickname: nickname ?? this.nickname,
+      avatar: avatar ?? this.avatar,
+      emailVerified: emailVerified ?? this.emailVerified,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 }
 
 class AuthSession {

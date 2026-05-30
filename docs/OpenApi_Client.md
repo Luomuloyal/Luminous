@@ -14,6 +14,7 @@ Last updated: 2026-05-30
 - Business code uses `LucentDioClient`, not generated internals
 - Token storage prefers secure storage, with platform fallback
 - `Accept-Language` is injected by the network layer
+- Authorization is injected when an access token exists; generated `secure` metadata is not trusted because the current generator emits empty lists
 - `401002` triggers refresh and retry
 - Dio errors are unwrapped through `LucentErrorMapper`
 - `ChangeEmailDto` follows Lucent contract: `newEmail` + `code`
