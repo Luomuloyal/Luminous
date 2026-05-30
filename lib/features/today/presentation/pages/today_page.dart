@@ -1,14 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:luminous/core/design/app_design.dart';
 import 'package:luminous/core/theme/app_theme_extensions.dart';
+import 'package:luminous/features/auth/presentation/providers/auth_session_provider.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 
 /// 今日页。
-class TodayPage extends StatelessWidget {
+class TodayPage extends ConsumerStatefulWidget {
   const TodayPage({super.key});
 
   @override
+  ConsumerState<TodayPage> createState() => _TodayPageState();
+}
+
+class _TodayPageState extends ConsumerState<TodayPage> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => ref.read(authSessionProvider.notifier).restore());
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final session = ref.watch(authSessionProvider);
     final scheme = Theme.of(context).colorScheme;
     final surface = Theme.of(context).extension<AppThemeSurface>()!;
     final l10n = AppLocalizations.of(context);
@@ -100,6 +114,17 @@ class TodayPage extends StatelessWidget {
                                   'The new home starts here: we are rebuilding the responsive visual system first, then layering in water tracking, reminders, health snapshots, and Lumi guidance.',
                               style: typography.bodyMd.copyWith(
                                 color: surface.body,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacingTokens.md),
+                            Text(
+                              session.isAuthenticated
+                                  ? 'Signed in as ${session.user?.email ?? ''}'
+                                  : session.isLoading
+                                  ? 'Checking session...'
+                                  : 'Not signed in yet.',
+                              style: typography.bodySm.copyWith(
+                                color: surface.mute,
                               ),
                             ),
                             const SizedBox(height: AppSpacingTokens.lg),
