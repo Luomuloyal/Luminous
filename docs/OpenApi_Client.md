@@ -14,6 +14,8 @@
 - 使用 OpenAPI Generator 的 `dart-dio` 生成器
 - 生成代码作为 `path package` 放在 `Luminous/packages/`
 - 业务层不要直接依赖生成器目录结构，统一通过 `LucentDioClient`
+- session token 存储默认走安全存储，Web / Windows / Linux 回退到 `SharedPreferences`
+- client 会自动附带 `Accept-Language` 请求头，当前默认语言为英文
 
 ## 重新生成
 

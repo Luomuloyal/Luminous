@@ -17,6 +17,7 @@ class LucentDioClient {
   LucentDioClient({
     required String baseUrl,
     required LucentSessionStore sessionStore,
+    String Function()? localeResolver,
     Future<void> Function()? onSessionExpired,
     Dio? dio,
     Iterable<Interceptor> interceptors = const [],
@@ -36,6 +37,7 @@ class LucentDioClient {
        ),
        _sessionStore = sessionStore,
        _baseUrl = baseUrl,
+       _localeResolver = localeResolver,
        _onSessionExpired = onSessionExpired {
     _openapi.dio.interceptors.addAll(<Interceptor>[
       ...interceptors,
@@ -46,6 +48,7 @@ class LucentDioClient {
   final LucentOpenapi _openapi;
   final LucentSessionStore _sessionStore;
   final String _baseUrl;
+  final String Function()? _localeResolver;
   final Future<void> Function()? _onSessionExpired;
   late final Dio _refreshDio = Dio(
     BaseOptions(
@@ -65,6 +68,10 @@ class LucentDioClient {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           options.headers.putIfAbsent('Accept', () => 'application/json');
+          final acceptLanguage = _localeResolver?.call().trim() ?? '';
+          if (acceptLanguage.isNotEmpty) {
+            options.headers['Accept-Language'] = acceptLanguage;
+          }
 
           final skipAuthorization = options.extra['skipAuthorization'] == true;
           final hasSecureRequirement =
@@ -112,6 +119,14 @@ class LucentDioClient {
 
   Future<void> writeSession(LucentSessionTokens tokens) {
     return _sessionStore.write(tokens);
+  }
+
+  Future<String?> readAccessToken() {
+    return _sessionStore.readAccessToken();
+  }
+
+  Future<String?> readRefreshToken() {
+    return _sessionStore.readRefreshToken();
   }
 
   Future<void> clearSession() {
@@ -176,6 +191,11 @@ class LucentDioClient {
         '/api/v1/auth/refresh',
         data: <String, String>{'refreshToken': refreshToken},
         options: Options(
+          headers: _localeResolver == null
+              ? null
+              : <String, String>{
+                  'Accept-Language': _localeResolver.call(),
+                },
           extra: const <String, Object?>{
             'skipAuthorization': true,
             'skipAuthRefresh': true,
