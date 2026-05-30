@@ -1,15 +1,3 @@
----
-title: "Luminous 二次开工清单"
-tags:
-  - execution
-  - restart
-  - strategy
-aliases:
-  - 二次开工
-  - RestartPlan
-created: 2026-05-30
----
-
 # Luminous 二次开工清单
 
 最后更新: 2026-05-30
