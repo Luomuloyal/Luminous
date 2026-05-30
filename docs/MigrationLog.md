@@ -31,6 +31,14 @@ Records changes after the full reset only. Pre-reset history: `MigrationLog_Arch
 - Rebuilt auth text fields and code-send buttons on one shared fixed-height control frame so height, border, and radius stay aligned.
 - Added auth widget regression tests for code-row height and independent loading indicators.
 
+### Theme Foundation
+
+- Added a Riverpod-backed app theme preference controller for `system / light / dark`.
+- Persisted the selected theme mode in `SharedPreferences` under `theme.mode`.
+- Wired `LuminousApp` to consume the persisted theme preference instead of hardcoding `ThemeMode.system`.
+- Added theme preference tests for default fallback, restore, and persistence.
+- Reworked shared toast feedback into a custom rounded Flutter overlay with lower-saturation theme-aware colors.
+
 ### Reset Baseline
 
 - Kept five-tab shell: `today / record / medicine / mine / more`.
@@ -95,6 +103,7 @@ Records changes after the full reset only. Pre-reset history: `MigrationLog_Arch
 flutter gen-l10n
 flutter analyze
 flutter test
+flutter test test/app_theme_controller_test.dart test/widget_test.dart test/auth_widgets_test.dart
 
 cd ../Lucent
 pnpm build
@@ -108,3 +117,4 @@ pnpm test:e2e
 2. Add a Today mock provider.
 3. Upgrade `record / medicine / mine / more` skeletons.
 4. Rebuild medicine / reminder flows.
+5. Add theme selection UI under Mine/settings and later expand palette variants.
