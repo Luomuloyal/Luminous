@@ -1,0 +1,40 @@
+import 'package:flutter/material.dart';
+
+abstract final class AppColorTokens {
+  static const Color primary = Color(0xFF171717);
+  static const Color onPrimary = Color(0xFFFFFFFF);
+  static const Color ink = Color(0xFF171717);
+  static const Color body = Color(0xFF4D4D4D);
+  static const Color mute = Color(0xFF888888);
+  static const Color hairline = Color(0xFFEBEBEB);
+  static const Color hairlineStrong = Color(0xFFA1A1A1);
+  static const Color canvas = Color(0xFFFFFFFF);
+  static const Color canvasSoft = Color(0xFFFAFAFA);
+  static const Color canvasSoft2 = Color(0xFFF5F5F5);
+  static const Color link = Color(0xFF0070F3);
+  static const Color linkDeep = Color(0xFF0761D1);
+  static const Color linkSoft = Color(0xFFD3E5FF);
+  static const Color success = Color(0xFF0070F3);
+  static const Color error = Color(0xFFEE0000);
+  static const Color errorSoft = Color(0xFFF7D4D6);
+  static const Color errorDeep = Color(0xFFC50000);
+  static const Color warning = Color(0xFFF5A623);
+  static const Color warningSoft = Color(0xFFFFEFCF);
+  static const Color warningDeep = Color(0xFFAB570A);
+  static const Color violet = Color(0xFF7928CA);
+  static const Color violetSoft = Color(0xFFD8CCF1);
+  static const Color violetDeep = Color(0xFF4C2889);
+  static const Color cyan = Color(0xFF50E3C2);
+  static const Color cyanSoft = Color(0xFFAAFFEC);
+  static const Color cyanDeep = Color(0xFF29BC9B);
+  static const Color highlightPink = Color(0xFFFF0080);
+  static const Color highlightMagenta = Color(0xFFEB367F);
+  static const Color gradientDevelopStart = Color(0xFF007CF0);
+  static const Color gradientDevelopEnd = Color(0xFF00DFD8);
+  static const Color gradientPreviewStart = Color(0xFF7928CA);
+  static const Color gradientPreviewEnd = Color(0xFFFF0080);
+  static const Color gradientShipStart = Color(0xFFFF4D4D);
+  static const Color gradientShipEnd = Color(0xFFF9CB28);
+  static const Color selectionBackground = Color(0xFF171717);
+  static const Color selectionForeground = Color(0xFFF2F2F2);
+}
