@@ -282,6 +282,130 @@ class AppLocalizationsZh extends AppLocalizations {
   String get todayChipLumi => 'Lumi 建议';
 
   @override
+  String get todayNotificationsTooltip => '通知';
+
+  @override
+  String get todayGreetingTitleMorning => '早上好，阳光正好';
+
+  @override
+  String get todayGreetingTitleAfternoon => '下午好，继续稳稳推进';
+
+  @override
+  String get todayGreetingTitleEvening => '晚上好，准备轻松收尾';
+
+  @override
+  String get todayGreetingSubtitleMorning => '你昨晚睡得还不错，喝神净满满！';
+
+  @override
+  String get todayGreetingSubtitleAfternoon => '午后先补水，再把提醒和状态慢慢对齐。';
+
+  @override
+  String get todayGreetingSubtitleEvening => '把今天的状态收拢一下，给明天留出节奏。';
+
+  @override
+  String get todayWaterCardTitle => '今日喝水';
+
+  @override
+  String todayWaterCount(int count) {
+    return '$count 次';
+  }
+
+  @override
+  String todayWaterGoalCount(int count) {
+    return '目标 $count 次';
+  }
+
+  @override
+  String todayWaterRemainingCount(int count) {
+    return '还差 $count 次';
+  }
+
+  @override
+  String get todayMedicationCardTitle => '用药提醒';
+
+  @override
+  String get todayMedicationAction => '查看';
+
+  @override
+  String todayMedicationSummary(int medicineCount, int pendingCount) {
+    return '$medicineCount 种药品 · $pendingCount 个待服用';
+  }
+
+  @override
+  String todayMedicationNextDose(String time, String medicineName) {
+    return '下一次 $time · $medicineName';
+  }
+
+  @override
+  String get todayMedicationNameAtorvastatin => '阿托伐他汀';
+
+  @override
+  String get todayHealthSummaryCardTitle => '健康摘要';
+
+  @override
+  String get todayVitalHeartRateLabel => '心率';
+
+  @override
+  String get todayVitalHeartRateUnit => '次/分';
+
+  @override
+  String get todayVitalBloodPressureLabel => '血压';
+
+  @override
+  String get todayVitalSleepLabel => '睡眠';
+
+  @override
+  String get todayVitalSleepUnit => '小时';
+
+  @override
+  String get todayMealCardTitle => '今日饮食建议';
+
+  @override
+  String get todayMealHighProteinBalancedTitle => '高蛋白均衡餐';
+
+  @override
+  String get todayMealHighProteinBalancedDescription => '鸡胸肉、藜麦、时蔬沙拉';
+
+  @override
+  String get todayMealRefreshAction => '换一换';
+
+  @override
+  String get todayEnvironmentCardTitle => '环境提醒';
+
+  @override
+  String get todayEnvironmentPollenLabel => '花粉';
+
+  @override
+  String get todayEnvironmentUvLabel => '紫外线';
+
+  @override
+  String get todayEnvironmentLevelLow => '较低';
+
+  @override
+  String get todayEnvironmentLevelMedium => '中等';
+
+  @override
+  String get todayEnvironmentLevelHigh => '较高';
+
+  @override
+  String get todayLumiCardTitle => 'Lumi 建议';
+
+  @override
+  String get todayLumiPollenProtectionBody => '今天空气中花粉较多，建议外出佩戴口罩，注意防护呼吸敏感。';
+
+  @override
+  String get todayLumiAction => '查看详情';
+
+  @override
+  String get todayErrorTitle => '今日页暂时没有加载出来';
+
+  @override
+  String get todayErrorDescription => 'Mock provider 和页面结构已经接好，可以重新拉取一次看看。';
+
+  @override
+  String get todayRetryAction => '重试';
+
+  @override
   String placeholderSoon(String label) {
     return '$label · 即将上线';
   }

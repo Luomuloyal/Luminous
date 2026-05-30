@@ -109,6 +109,85 @@
   "todayChipDiet": "Diet Suggestions",
   "todayChipEnvironment": "Environment Alerts",
   "todayChipLumi": "Lumi Guidance",
+  "todayNotificationsTooltip": "Notifications",
+  "todayGreetingTitleMorning": "Good morning, the light is perfect",
+  "todayGreetingTitleAfternoon": "Good afternoon, keep the rhythm steady",
+  "todayGreetingTitleEvening": "Good evening, let's close gently",
+  "todayGreetingSubtitleMorning": "You slept fairly well last night. Time to refill with calm energy.",
+  "todayGreetingSubtitleAfternoon": "Start with water, then bring reminders and status back into sync.",
+  "todayGreetingSubtitleEvening": "Gather today's signals gently and leave room for tomorrow.",
+  "todayWaterCardTitle": "Today's water",
+  "todayWaterCount": "{count} times",
+  "@todayWaterCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "todayWaterGoalCount": "Goal {count} times",
+  "@todayWaterGoalCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "todayWaterRemainingCount": "{count} more to go",
+  "@todayWaterRemainingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "todayMedicationCardTitle": "Medication reminder",
+  "todayMedicationAction": "View",
+  "todayMedicationSummary": "{medicineCount} medicines · {pendingCount} pending",
+  "@todayMedicationSummary": {
+    "placeholders": {
+      "medicineCount": {
+        "type": "int"
+      },
+      "pendingCount": {
+        "type": "int"
+      }
+    }
+  },
+  "todayMedicationNextDose": "Next at {time} · {medicineName}",
+  "@todayMedicationNextDose": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "medicineName": {
+        "type": "String"
+      }
+    }
+  },
+  "todayMedicationNameAtorvastatin": "Atorvastatin",
+  "todayHealthSummaryCardTitle": "Health summary",
+  "todayVitalHeartRateLabel": "Heart rate",
+  "todayVitalHeartRateUnit": "bpm",
+  "todayVitalBloodPressureLabel": "Blood pressure",
+  "todayVitalSleepLabel": "Sleep",
+  "todayVitalSleepUnit": "h",
+  "todayMealCardTitle": "Today's meal suggestion",
+  "todayMealHighProteinBalancedTitle": "High-protein balanced bowl",
+  "todayMealHighProteinBalancedDescription": "Chicken breast, quinoa, and seasonal salad",
+  "todayMealRefreshAction": "Refresh",
+  "todayEnvironmentCardTitle": "Environment signals",
+  "todayEnvironmentPollenLabel": "Pollen",
+  "todayEnvironmentUvLabel": "UV",
+  "todayEnvironmentLevelLow": "Low",
+  "todayEnvironmentLevelMedium": "Medium",
+  "todayEnvironmentLevelHigh": "High",
+  "todayLumiCardTitle": "Lumi note",
+  "todayLumiPollenProtectionBody": "Pollen is elevated today. Consider a mask outdoors and reduce respiratory irritation where possible.",
+  "todayLumiAction": "View details",
+  "todayErrorTitle": "Today did not load this time",
+  "todayErrorDescription": "The mock provider and page structure are wired up, so try fetching it again.",
+  "todayRetryAction": "Retry",
   "placeholderSoon": "{label} · Coming Soon",
   "@placeholderSoon": {
     "placeholders": {

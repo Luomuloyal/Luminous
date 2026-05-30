@@ -14,17 +14,17 @@ Current timeline: `MigrationLog.md`. Product stage: `../Lucent/docs/public/ROADM
 - Login / Register pages
 - Persisted `system / light / dark` theme preference foundation
 - Mobile bottom nav + desktop rail
+- Today mobile-first mock dashboard UI with repository/provider boundary
 
 Not restored yet: medicine loop, reminders, scan/upload, settings, theme selection UI, real feature data.
 
 ## UI Priority
 
-1. Split Today into section components.
-2. Add Today mock provider.
-3. Upgrade `record / medicine / mine / more` from placeholders to usable skeletons.
-4. Add a Mine/settings theme selector for `system / light / dark`.
-5. Rebuild medicine / reminder flows.
-6. Add palette variants after the fixed-token surfaces have been reduced.
+1. Connect Today mock data to API-ready datasource/repository implementations.
+2. Upgrade `record / medicine / mine / more` from placeholders to usable skeletons.
+3. Add a Mine/settings theme selector for `system / light / dark`.
+4. Rebuild medicine / reminder flows.
+5. Add palette variants after the fixed-token surfaces have been reduced.
 
 ## Rules
 

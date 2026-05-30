@@ -1,162 +1,129 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:luminous/core/design/app_design.dart';
+import 'package:luminous/core/constants/app_breakpoints.dart';
 import 'package:luminous/core/theme/app_theme_extensions.dart';
-import 'package:luminous/core/widgets/page_scaffold_shell.dart';
-import 'package:luminous/features/auth/presentation/providers/auth_session_provider.dart';
-import 'package:luminous/l10n/app_localizations.dart';
+import 'package:luminous/features/today/presentation/providers/today_dashboard_provider.dart';
+import 'package:luminous/features/today/presentation/widgets/today_dashboard_view.dart';
 
 /// 今日页。
-class TodayPage extends ConsumerStatefulWidget {
+class TodayPage extends ConsumerWidget {
   const TodayPage({super.key});
 
   @override
-  ConsumerState<TodayPage> createState() => _TodayPageState();
-}
-
-class _TodayPageState extends ConsumerState<TodayPage> {
-  @override
-  void initState() {
-    super.initState();
-    Future.microtask(() => ref.read(authSessionProvider.notifier).restore());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final session = ref.watch(authSessionProvider);
-    final scheme = Theme.of(context).colorScheme;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dashboardAsync = ref.watch(todayDashboardProvider);
     final surface = Theme.of(context).extension<AppThemeSurface>()!;
-    final l10n = AppLocalizations.of(context);
-    final width = MediaQuery.sizeOf(context).width;
-    final typography = width < 600
-        ? AppTypographyTokens.mobile(scheme.onSurface)
-        : AppTypographyTokens.desktop(scheme.onSurface);
+    final brightness = Theme.of(context).brightness;
 
-    return PageScaffoldShell(
-      title: l10n?.todayHeroTitle ?? 'Today',
-      description:
-          l10n?.todayHeroDescription ??
-          'The new home starts here: we are rebuilding the responsive visual system first, then layering in water tracking, reminders, health snapshots, and Lumi guidance.',
-      actions: [
-        if (!session.isAuthenticated)
-          OutlinedButton(
-            onPressed: () => context.push('/login'),
-            child: Text(l10n?.authGoLogin ?? 'Sign in'),
-          ),
-        if (!session.isAuthenticated)
-          FilledButton(
-            onPressed: () => context.push('/register'),
-            child: Text(l10n?.authGoRegister ?? 'Create account'),
-          ),
-        if (session.isAuthenticated)
-          FilledButton(
-            onPressed: () async {
-              await ref.read(authSessionProvider.notifier).logout();
-            },
-            child: Text(l10n?.authSignOut ?? 'Sign out'),
-          ),
-      ],
-      children: [
-        PageSectionCard(
-          title: l10n?.todaySectionTitle ?? 'Today workspace',
-          subtitle:
-              l10n?.todaySectionSubtitle ??
-              'The new home will gradually attach reminders, snapshots, water tracking, and Lumi guidance here.',
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: width < 600 ? 72 : 84,
-                height: width < 600 ? 72 : 84,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: <Color>[
-                      AppColorTokens.gradientDevelopStart,
-                      AppColorTokens.gradientDevelopEnd,
-                    ],
-                  ),
-                ),
-                child: Icon(
-                  Icons.wb_sunny_rounded,
-                  size: width < 600 ? 34 : 38,
-                  color: AppColorTokens.onPrimary,
-                ),
-              ),
-              const SizedBox(height: AppSpacingTokens.lg),
-              Text(
-                session.isAuthenticated
-                    ? (l10n?.authSignedInAs(session.user?.email ?? '') ??
-                        'Signed in as ${session.user?.email ?? ''}')
-                    : session.isLoading
-                    ? (l10n?.authCheckingSession ?? 'Checking session...')
-                    : (l10n?.authNotSignedIn ?? 'Not signed in yet.'),
-                style: typography.bodySm.copyWith(color: surface.mute),
-              ),
-              const SizedBox(height: AppSpacingTokens.lg),
-              Wrap(
-                spacing: AppSpacingTokens.sm,
-                runSpacing: AppSpacingTokens.sm,
-                children: <Widget>[
-                  _TodayPreviewChip(
-                    label: l10n?.todayChipWater ?? 'Water Tracking',
-                  ),
-                  _TodayPreviewChip(
-                    label:
-                        l10n?.todayChipMedication ?? 'Medication Reminders',
-                  ),
-                  _TodayPreviewChip(
-                    label: l10n?.todayChipSnapshot ?? 'Health Snapshot',
-                  ),
-                  _TodayPreviewChip(
-                    label: l10n?.todayChipDiet ?? 'Diet Suggestions',
-                  ),
-                  _TodayPreviewChip(
-                    label:
-                        l10n?.todayChipEnvironment ?? 'Environment Alerts',
-                  ),
-                  _TodayPreviewChip(
-                    label: l10n?.todayChipLumi ?? 'Lumi Guidance',
-                  ),
-                ],
-              ),
-            ],
-          ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            brightness == Brightness.dark
+                ? const Color(0xFF101312)
+                : const Color(0xFFF8FDFB),
+            surface.canvasSoft,
+            surface.canvasSoft,
+          ],
         ),
-      ],
+      ),
+      child: Stack(
+        children: [
+          const _TodayBackdrop(),
+          SafeArea(
+            bottom: false,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final maxWidth = constraints.maxWidth < AppBreakpoints.mobile
+                    ? constraints.maxWidth
+                    : math.min(constraints.maxWidth, 460.0);
+
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: maxWidth),
+                    child: dashboardAsync.when(
+                      data: (dashboard) =>
+                          TodayDashboardView(dashboard: dashboard),
+                      loading: () => const TodayLoadingView(),
+                      error: (_, __) => TodayErrorView(
+                        onRetry: () => ref.invalidate(todayDashboardProvider),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _TodayPreviewChip extends StatelessWidget {
-  const _TodayPreviewChip({required this.label});
-
-  final String label;
+class _TodayBackdrop extends StatelessWidget {
+  const _TodayBackdrop();
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final surface = Theme.of(context).extension<AppThemeSurface>()!;
-    final typography = MediaQuery.sizeOf(context).width < 600
-        ? AppTypographyTokens.mobile(scheme.onSurface)
-        : AppTypographyTokens.desktop(scheme.onSurface);
+    final brightness = Theme.of(context).brightness;
 
+    return IgnorePointer(
+      child: Stack(
+        children: [
+          Positioned(
+            left: -48,
+            top: 52,
+            child: _GlowOrb(
+              size: 148,
+              color: brightness == Brightness.dark
+                  ? const Color(0x2215BA9B)
+                  : const Color(0x3315BA9B),
+            ),
+          ),
+          Positioned(
+            right: -36,
+            top: 132,
+            child: _GlowOrb(
+              size: 132,
+              color: brightness == Brightness.dark
+                  ? const Color(0x18FFD59E)
+                  : const Color(0x28FFD59E),
+            ),
+          ),
+          Positioned(
+            right: 28,
+            top: 360,
+            child: _GlowOrb(
+              size: 96,
+              color: brightness == Brightness.dark
+                  ? const Color(0x167D8CFF)
+                  : const Color(0x227D8CFF),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GlowOrb extends StatelessWidget {
+  const _GlowOrb({required this.size, required this.color});
+
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacingTokens.sm,
-        vertical: AppSpacingTokens.xs,
-      ),
+      width: size,
+      height: size,
       decoration: BoxDecoration(
-        color: surface.canvasSoft,
-        borderRadius: BorderRadius.circular(AppRadiusTokens.pillSm),
-        border: Border.all(color: surface.hairline),
-      ),
-      child: Text(
-        label,
-        style: typography.bodySm.copyWith(color: scheme.onSurface),
+        shape: BoxShape.circle,
+        gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
       ),
     );
   }

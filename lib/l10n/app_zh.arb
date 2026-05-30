@@ -109,6 +109,85 @@
   "todayChipDiet": "饮食建议",
   "todayChipEnvironment": "环境提醒",
   "todayChipLumi": "Lumi 建议",
+  "todayNotificationsTooltip": "通知",
+  "todayGreetingTitleMorning": "早上好，阳光正好",
+  "todayGreetingTitleAfternoon": "下午好，继续稳稳推进",
+  "todayGreetingTitleEvening": "晚上好，准备轻松收尾",
+  "todayGreetingSubtitleMorning": "你昨晚睡得还不错，喝神净满满！",
+  "todayGreetingSubtitleAfternoon": "午后先补水，再把提醒和状态慢慢对齐。",
+  "todayGreetingSubtitleEvening": "把今天的状态收拢一下，给明天留出节奏。",
+  "todayWaterCardTitle": "今日喝水",
+  "todayWaterCount": "{count} 次",
+  "@todayWaterCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "todayWaterGoalCount": "目标 {count} 次",
+  "@todayWaterGoalCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "todayWaterRemainingCount": "还差 {count} 次",
+  "@todayWaterRemainingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "todayMedicationCardTitle": "用药提醒",
+  "todayMedicationAction": "查看",
+  "todayMedicationSummary": "{medicineCount} 种药品 · {pendingCount} 个待服用",
+  "@todayMedicationSummary": {
+    "placeholders": {
+      "medicineCount": {
+        "type": "int"
+      },
+      "pendingCount": {
+        "type": "int"
+      }
+    }
+  },
+  "todayMedicationNextDose": "下一次 {time} · {medicineName}",
+  "@todayMedicationNextDose": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "medicineName": {
+        "type": "String"
+      }
+    }
+  },
+  "todayMedicationNameAtorvastatin": "阿托伐他汀",
+  "todayHealthSummaryCardTitle": "健康摘要",
+  "todayVitalHeartRateLabel": "心率",
+  "todayVitalHeartRateUnit": "次/分",
+  "todayVitalBloodPressureLabel": "血压",
+  "todayVitalSleepLabel": "睡眠",
+  "todayVitalSleepUnit": "小时",
+  "todayMealCardTitle": "今日饮食建议",
+  "todayMealHighProteinBalancedTitle": "高蛋白均衡餐",
+  "todayMealHighProteinBalancedDescription": "鸡胸肉、藜麦、时蔬沙拉",
+  "todayMealRefreshAction": "换一换",
+  "todayEnvironmentCardTitle": "环境提醒",
+  "todayEnvironmentPollenLabel": "花粉",
+  "todayEnvironmentUvLabel": "紫外线",
+  "todayEnvironmentLevelLow": "较低",
+  "todayEnvironmentLevelMedium": "中等",
+  "todayEnvironmentLevelHigh": "较高",
+  "todayLumiCardTitle": "Lumi 建议",
+  "todayLumiPollenProtectionBody": "今天空气中花粉较多，建议外出佩戴口罩，注意防护呼吸敏感。",
+  "todayLumiAction": "查看详情",
+  "todayErrorTitle": "今日页暂时没有加载出来",
+  "todayErrorDescription": "Mock provider 和页面结构已经接好，可以重新拉取一次看看。",
+  "todayRetryAction": "重试",
   "placeholderSoon": "{label} · 即将上线",
   "@placeholderSoon": {
     "placeholders": {

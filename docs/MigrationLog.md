@@ -6,6 +6,14 @@ Records changes after the full reset only. Pre-reset history: `MigrationLog_Arch
 
 ## 2026-05-30
 
+### Today Mock UI Foundation
+
+- Rebuilt `Today` into a mobile-first dashboard that visually tracks the design concept: greeting hero, water count card, medication reminder, health summary, meal suggestion, environment signals, and Lumi advice.
+- Added `today` feature-first domain entities plus a `TodayRepository` interface so the page now depends on a repository boundary instead of embedding page-local mock state.
+- Added `MockTodayRepository` and a Riverpod `todayDashboardProvider`; later API integration can replace the repository implementation without rewriting the page structure.
+- Split Today UI into dedicated widgets under `lib/features/today/presentation/widgets/` and replaced the old shell-card placeholder content.
+- Added zh/en localization strings for the full Today dashboard and a widget test covering the core Today sections.
+
 ### Auth Contract Sync
 
 - Regenerated `packages/lucent_openapi` after Lucent removed `currentEmail` from `ChangeEmailDto`.
@@ -104,6 +112,7 @@ flutter gen-l10n
 flutter analyze
 flutter test
 flutter test test/app_theme_controller_test.dart test/widget_test.dart test/auth_widgets_test.dart
+flutter test test/today_page_test.dart
 
 cd ../Lucent
 pnpm build
@@ -113,8 +122,7 @@ pnpm test:e2e
 
 ## Next
 
-1. Split Today into section components.
-2. Add a Today mock provider.
-3. Upgrade `record / medicine / mine / more` skeletons.
-4. Rebuild medicine / reminder flows.
-5. Add theme selection UI under Mine/settings and later expand palette variants.
+1. Replace Today mock repository data with Lucent-backed sources when the API contract is ready.
+2. Upgrade `record / medicine / mine / more` skeletons.
+3. Rebuild medicine / reminder flows.
+4. Add theme selection UI under Mine/settings and later expand palette variants.

@@ -626,6 +626,234 @@ abstract class AppLocalizations {
   /// **'Lumi 建议'**
   String get todayChipLumi;
 
+  /// No description provided for @todayNotificationsTooltip.
+  ///
+  /// In zh, this message translates to:
+  /// **'通知'**
+  String get todayNotificationsTooltip;
+
+  /// No description provided for @todayGreetingTitleMorning.
+  ///
+  /// In zh, this message translates to:
+  /// **'早上好，阳光正好'**
+  String get todayGreetingTitleMorning;
+
+  /// No description provided for @todayGreetingTitleAfternoon.
+  ///
+  /// In zh, this message translates to:
+  /// **'下午好，继续稳稳推进'**
+  String get todayGreetingTitleAfternoon;
+
+  /// No description provided for @todayGreetingTitleEvening.
+  ///
+  /// In zh, this message translates to:
+  /// **'晚上好，准备轻松收尾'**
+  String get todayGreetingTitleEvening;
+
+  /// No description provided for @todayGreetingSubtitleMorning.
+  ///
+  /// In zh, this message translates to:
+  /// **'你昨晚睡得还不错，喝神净满满！'**
+  String get todayGreetingSubtitleMorning;
+
+  /// No description provided for @todayGreetingSubtitleAfternoon.
+  ///
+  /// In zh, this message translates to:
+  /// **'午后先补水，再把提醒和状态慢慢对齐。'**
+  String get todayGreetingSubtitleAfternoon;
+
+  /// No description provided for @todayGreetingSubtitleEvening.
+  ///
+  /// In zh, this message translates to:
+  /// **'把今天的状态收拢一下，给明天留出节奏。'**
+  String get todayGreetingSubtitleEvening;
+
+  /// No description provided for @todayWaterCardTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'今日喝水'**
+  String get todayWaterCardTitle;
+
+  /// No description provided for @todayWaterCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 次'**
+  String todayWaterCount(int count);
+
+  /// No description provided for @todayWaterGoalCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标 {count} 次'**
+  String todayWaterGoalCount(int count);
+
+  /// No description provided for @todayWaterRemainingCount.
+  ///
+  /// In zh, this message translates to:
+  /// **'还差 {count} 次'**
+  String todayWaterRemainingCount(int count);
+
+  /// No description provided for @todayMedicationCardTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'用药提醒'**
+  String get todayMedicationCardTitle;
+
+  /// No description provided for @todayMedicationAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看'**
+  String get todayMedicationAction;
+
+  /// No description provided for @todayMedicationSummary.
+  ///
+  /// In zh, this message translates to:
+  /// **'{medicineCount} 种药品 · {pendingCount} 个待服用'**
+  String todayMedicationSummary(int medicineCount, int pendingCount);
+
+  /// No description provided for @todayMedicationNextDose.
+  ///
+  /// In zh, this message translates to:
+  /// **'下一次 {time} · {medicineName}'**
+  String todayMedicationNextDose(String time, String medicineName);
+
+  /// No description provided for @todayMedicationNameAtorvastatin.
+  ///
+  /// In zh, this message translates to:
+  /// **'阿托伐他汀'**
+  String get todayMedicationNameAtorvastatin;
+
+  /// No description provided for @todayHealthSummaryCardTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'健康摘要'**
+  String get todayHealthSummaryCardTitle;
+
+  /// No description provided for @todayVitalHeartRateLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'心率'**
+  String get todayVitalHeartRateLabel;
+
+  /// No description provided for @todayVitalHeartRateUnit.
+  ///
+  /// In zh, this message translates to:
+  /// **'次/分'**
+  String get todayVitalHeartRateUnit;
+
+  /// No description provided for @todayVitalBloodPressureLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'血压'**
+  String get todayVitalBloodPressureLabel;
+
+  /// No description provided for @todayVitalSleepLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'睡眠'**
+  String get todayVitalSleepLabel;
+
+  /// No description provided for @todayVitalSleepUnit.
+  ///
+  /// In zh, this message translates to:
+  /// **'小时'**
+  String get todayVitalSleepUnit;
+
+  /// No description provided for @todayMealCardTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'今日饮食建议'**
+  String get todayMealCardTitle;
+
+  /// No description provided for @todayMealHighProteinBalancedTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'高蛋白均衡餐'**
+  String get todayMealHighProteinBalancedTitle;
+
+  /// No description provided for @todayMealHighProteinBalancedDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'鸡胸肉、藜麦、时蔬沙拉'**
+  String get todayMealHighProteinBalancedDescription;
+
+  /// No description provided for @todayMealRefreshAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'换一换'**
+  String get todayMealRefreshAction;
+
+  /// No description provided for @todayEnvironmentCardTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'环境提醒'**
+  String get todayEnvironmentCardTitle;
+
+  /// No description provided for @todayEnvironmentPollenLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'花粉'**
+  String get todayEnvironmentPollenLabel;
+
+  /// No description provided for @todayEnvironmentUvLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'紫外线'**
+  String get todayEnvironmentUvLabel;
+
+  /// No description provided for @todayEnvironmentLevelLow.
+  ///
+  /// In zh, this message translates to:
+  /// **'较低'**
+  String get todayEnvironmentLevelLow;
+
+  /// No description provided for @todayEnvironmentLevelMedium.
+  ///
+  /// In zh, this message translates to:
+  /// **'中等'**
+  String get todayEnvironmentLevelMedium;
+
+  /// No description provided for @todayEnvironmentLevelHigh.
+  ///
+  /// In zh, this message translates to:
+  /// **'较高'**
+  String get todayEnvironmentLevelHigh;
+
+  /// No description provided for @todayLumiCardTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'Lumi 建议'**
+  String get todayLumiCardTitle;
+
+  /// No description provided for @todayLumiPollenProtectionBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'今天空气中花粉较多，建议外出佩戴口罩，注意防护呼吸敏感。'**
+  String get todayLumiPollenProtectionBody;
+
+  /// No description provided for @todayLumiAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看详情'**
+  String get todayLumiAction;
+
+  /// No description provided for @todayErrorTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'今日页暂时没有加载出来'**
+  String get todayErrorTitle;
+
+  /// No description provided for @todayErrorDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'Mock provider 和页面结构已经接好，可以重新拉取一次看看。'**
+  String get todayErrorDescription;
+
+  /// No description provided for @todayRetryAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'重试'**
+  String get todayRetryAction;
+
   /// No description provided for @placeholderSoon.
   ///
   /// In zh, this message translates to:

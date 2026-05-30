@@ -301,6 +301,137 @@ class AppLocalizationsEn extends AppLocalizations {
   String get todayChipLumi => 'Lumi Guidance';
 
   @override
+  String get todayNotificationsTooltip => 'Notifications';
+
+  @override
+  String get todayGreetingTitleMorning => 'Good morning, the light is perfect';
+
+  @override
+  String get todayGreetingTitleAfternoon =>
+      'Good afternoon, keep the rhythm steady';
+
+  @override
+  String get todayGreetingTitleEvening => 'Good evening, let\'s close gently';
+
+  @override
+  String get todayGreetingSubtitleMorning =>
+      'You slept fairly well last night. Time to refill with calm energy.';
+
+  @override
+  String get todayGreetingSubtitleAfternoon =>
+      'Start with water, then bring reminders and status back into sync.';
+
+  @override
+  String get todayGreetingSubtitleEvening =>
+      'Gather today\'s signals gently and leave room for tomorrow.';
+
+  @override
+  String get todayWaterCardTitle => 'Today\'s water';
+
+  @override
+  String todayWaterCount(int count) {
+    return '$count times';
+  }
+
+  @override
+  String todayWaterGoalCount(int count) {
+    return 'Goal $count times';
+  }
+
+  @override
+  String todayWaterRemainingCount(int count) {
+    return '$count more to go';
+  }
+
+  @override
+  String get todayMedicationCardTitle => 'Medication reminder';
+
+  @override
+  String get todayMedicationAction => 'View';
+
+  @override
+  String todayMedicationSummary(int medicineCount, int pendingCount) {
+    return '$medicineCount medicines · $pendingCount pending';
+  }
+
+  @override
+  String todayMedicationNextDose(String time, String medicineName) {
+    return 'Next at $time · $medicineName';
+  }
+
+  @override
+  String get todayMedicationNameAtorvastatin => 'Atorvastatin';
+
+  @override
+  String get todayHealthSummaryCardTitle => 'Health summary';
+
+  @override
+  String get todayVitalHeartRateLabel => 'Heart rate';
+
+  @override
+  String get todayVitalHeartRateUnit => 'bpm';
+
+  @override
+  String get todayVitalBloodPressureLabel => 'Blood pressure';
+
+  @override
+  String get todayVitalSleepLabel => 'Sleep';
+
+  @override
+  String get todayVitalSleepUnit => 'h';
+
+  @override
+  String get todayMealCardTitle => 'Today\'s meal suggestion';
+
+  @override
+  String get todayMealHighProteinBalancedTitle => 'High-protein balanced bowl';
+
+  @override
+  String get todayMealHighProteinBalancedDescription =>
+      'Chicken breast, quinoa, and seasonal salad';
+
+  @override
+  String get todayMealRefreshAction => 'Refresh';
+
+  @override
+  String get todayEnvironmentCardTitle => 'Environment signals';
+
+  @override
+  String get todayEnvironmentPollenLabel => 'Pollen';
+
+  @override
+  String get todayEnvironmentUvLabel => 'UV';
+
+  @override
+  String get todayEnvironmentLevelLow => 'Low';
+
+  @override
+  String get todayEnvironmentLevelMedium => 'Medium';
+
+  @override
+  String get todayEnvironmentLevelHigh => 'High';
+
+  @override
+  String get todayLumiCardTitle => 'Lumi note';
+
+  @override
+  String get todayLumiPollenProtectionBody =>
+      'Pollen is elevated today. Consider a mask outdoors and reduce respiratory irritation where possible.';
+
+  @override
+  String get todayLumiAction => 'View details';
+
+  @override
+  String get todayErrorTitle => 'Today did not load this time';
+
+  @override
+  String get todayErrorDescription =>
+      'The mock provider and page structure are wired up, so try fetching it again.';
+
+  @override
+  String get todayRetryAction => 'Retry';
+
+  @override
   String placeholderSoon(String label) {
     return '$label · Coming Soon';
   }
