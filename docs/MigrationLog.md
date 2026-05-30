@@ -192,15 +192,19 @@
 已新增：
 
 - `lib/core/widgets/responsive_content_frame.dart`
+- `lib/core/widgets/page_scaffold_shell.dart`
 
 已完成：
 
 - `Shell` 手机端使用底部 `NavigationBar`
 - `Shell` 桌面 / Web 宽屏使用 `NavigationRail`
+- `TodayPage` 切到 `PageScaffoldShell`
+- `record / medicine / mine / more` 切到 `PageScaffoldShell`
 
 结果：
 
-- 多端布局基础开始成型
+- 五栏页面开始共享统一页面壳层
+- 多端布局基础从 token / shell 进一步推进到页面级结构
 
 ---
 
@@ -240,7 +244,7 @@ pnpm test
 
 推荐顺序：
 
-1. 将 `ResponsiveContentFrame` 扩到五栏页面
+1. 细化 `Today` 的 section 组件
 2. 给 `Today` 建 mock provider
-3. 重建 `record / medicine / mine / more` 的页面骨架
+3. 提升 `record / medicine / mine / more` 的空骨架质量
 4. 再继续 medicine / reminder 业务重建

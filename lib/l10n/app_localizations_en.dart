@@ -27,6 +27,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tabMore => 'More';
 
   @override
+  String get recordPageDescription =>
+      'Calendar, timeline, and multi-type daily records will grow here.';
+
+  @override
+  String get recordSectionTitle => 'Daily timeline';
+
+  @override
+  String get recordSectionSubtitle =>
+      'The first rebuild step for Record is structure, not logic.';
+
+  @override
+  String get medicinePageDescription =>
+      'Today plans, adherence, refill status, and safety will anchor this tab.';
+
+  @override
+  String get medicineSectionTitle => 'Medication workspace';
+
+  @override
+  String get medicineSectionSubtitle =>
+      'This section will host the rebuilt medication flow on top of Lucent.';
+
+  @override
+  String get minePageDescription =>
+      'Profile, goals, privacy, and account settings will be rebuilt here.';
+
+  @override
+  String get mineSectionTitle => 'Personal workspace';
+
+  @override
+  String get mineSectionSubtitle =>
+      'Identity, goals, and privacy controls will share one calm surface here.';
+
+  @override
+  String get morePageDescription =>
+      'Utility tools, emergency help, device management, and lower-frequency features belong here.';
+
+  @override
+  String get moreSectionTitle => 'Utility hub';
+
+  @override
+  String get moreSectionSubtitle =>
+      'This tab will gather the lower-frequency but still important workflows.';
+
+  @override
+  String get todaySectionTitle => 'Today workspace';
+
+  @override
+  String get todaySectionSubtitle =>
+      'The new home will gradually attach reminders, snapshots, water tracking, and Lumi guidance here.';
+
+  @override
   String get authLoginBadge => 'AUTH / LOGIN';
 
   @override

@@ -214,7 +214,6 @@ class AuthTextField extends StatelessWidget {
     this.keyboardType,
     this.obscureText = false,
     this.suffix,
-    this.helperText,
   });
 
   final TextEditingController controller;
@@ -223,7 +222,6 @@ class AuthTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final bool obscureText;
   final Widget? suffix;
-  final String? helperText;
 
   @override
   Widget build(BuildContext context) {
@@ -245,8 +243,6 @@ class AuthTextField extends StatelessWidget {
         filled: true,
         fillColor: surface.canvas,
         suffixIcon: suffix,
-        helperText: helperText,
-        helperStyle: typography.caption.copyWith(color: surface.mute),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadiusTokens.sm),
           borderSide: BorderSide(color: surface.hairline),

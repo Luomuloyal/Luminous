@@ -134,6 +134,90 @@ abstract class AppLocalizations {
   /// **'更多'**
   String get tabMore;
 
+  /// No description provided for @recordPageDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'日历、时间线与多类型每日记录会从这里生长出来。'**
+  String get recordPageDescription;
+
+  /// No description provided for @recordSectionTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'每日时间线'**
+  String get recordSectionTitle;
+
+  /// No description provided for @recordSectionSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'记录页的第一步先搭结构，不急着恢复旧逻辑。'**
+  String get recordSectionSubtitle;
+
+  /// No description provided for @medicinePageDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'今日用药计划、依从性、补药状态与安全提醒会在这一栏汇合。'**
+  String get medicinePageDescription;
+
+  /// No description provided for @medicineSectionTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'用药工作区'**
+  String get medicineSectionTitle;
+
+  /// No description provided for @medicineSectionSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'这里会承接基于 Lucent 重建后的完整用药闭环。'**
+  String get medicineSectionSubtitle;
+
+  /// No description provided for @minePageDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'档案、目标、隐私与账号设置会在这里重建。'**
+  String get minePageDescription;
+
+  /// No description provided for @mineSectionTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'个人工作区'**
+  String get mineSectionTitle;
+
+  /// No description provided for @mineSectionSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'身份、目标与隐私控制会共享在这一块安静的界面里。'**
+  String get mineSectionSubtitle;
+
+  /// No description provided for @morePageDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'工具箱、紧急帮助、设备管理和低频但重要的能力归在这里。'**
+  String get morePageDescription;
+
+  /// No description provided for @moreSectionTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'功能枢纽'**
+  String get moreSectionTitle;
+
+  /// No description provided for @moreSectionSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'这一栏会收纳低频但依然重要的工作流。'**
+  String get moreSectionSubtitle;
+
+  /// No description provided for @todaySectionTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'今日工作区'**
+  String get todaySectionTitle;
+
+  /// No description provided for @todaySectionSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'新的首页会从这里逐步接入提醒、快照、喝水与 Lumi 建议。'**
+  String get todaySectionSubtitle;
+
   /// No description provided for @authLoginBadge.
   ///
   /// In zh, this message translates to:

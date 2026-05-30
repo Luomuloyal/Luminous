@@ -73,7 +73,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             child: SegmentedButton<AuthLoginMode>(
               segments: <ButtonSegment<AuthLoginMode>>[
                 ButtonSegment<AuthLoginMode>(
-                value: AuthLoginMode.password,
+                  value: AuthLoginMode.password,
                   label: SizedBox(
                     width: 96,
                     child: Text(
@@ -83,7 +83,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                 ),
                 ButtonSegment<AuthLoginMode>(
-                value: AuthLoginMode.code,
+                  value: AuthLoginMode.code,
                   label: SizedBox(
                     width: 96,
                     child: Text(
@@ -111,7 +111,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             AuthTextField(
               controller: _passwordController,
               label: l10n?.authPasswordLabel ?? 'Password',
-              helperText:
+              hint:
                   l10n?.authPasswordHint ??
                   'At least 8 characters, ideally with mixed case and numbers',
               obscureText: true,

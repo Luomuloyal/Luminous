@@ -118,13 +118,16 @@
 
 - `Shell` 在桌面 / Web 宽屏下切到 `NavigationRail`
 - 新增统一内容容器 `ResponsiveContentFrame`
+- 新增页面级骨架组件 `PageScaffoldShell`
 - Login / Register 已经跑在同一套响应式 auth 壳层上
+- `TodayPage` 已切到 `PageScaffoldShell`
+- `record / medicine / mine / more` 已切到统一页面壳层
 
 下一步优先项：
 
-1. 让 `TodayPage` 用统一内容容器组织内部 section
-2. 让 `record / medicine / mine / more` 也切到同一套内容宽度约束
-3. 补共享 `PageHeader / PageSection` 之类的页面级基础组件
+1. 细化 `TodayPage` 的 section 级基础组件
+2. 继续提升 `record / medicine / mine / more` 的空骨架完成度
+3. 抽共享 `PageHeader / PageSection` 之上的更细粒度业务组件
 
 顺序建议：
 
@@ -204,9 +207,7 @@ flutter test
 
 如果继续沿 UI 主线推进，建议顺序是：
 
-1. 把 auth 页面上的硬编码文案全部压进 `l10n`
-2. 继续补 Shell 与内容容器的响应式基础
-3. 拆 Today 卡片组件
-4. 给 Today 建 mock provider
-5. 把 record / medicine / mine / more 从 placeholder 升级为空骨架页
-6. 再开始 medicine / reminder 的业务页面重建
+1. 拆 Today 卡片组件
+2. 给 Today 建 mock provider
+3. 把 record / medicine / mine / more 从占位 section 提升为更像真实产品的空骨架
+4. 再开始 medicine / reminder 的业务页面重建

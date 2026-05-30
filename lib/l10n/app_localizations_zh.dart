@@ -27,6 +27,48 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tabMore => '更多';
 
   @override
+  String get recordPageDescription => '日历、时间线与多类型每日记录会从这里生长出来。';
+
+  @override
+  String get recordSectionTitle => '每日时间线';
+
+  @override
+  String get recordSectionSubtitle => '记录页的第一步先搭结构，不急着恢复旧逻辑。';
+
+  @override
+  String get medicinePageDescription => '今日用药计划、依从性、补药状态与安全提醒会在这一栏汇合。';
+
+  @override
+  String get medicineSectionTitle => '用药工作区';
+
+  @override
+  String get medicineSectionSubtitle => '这里会承接基于 Lucent 重建后的完整用药闭环。';
+
+  @override
+  String get minePageDescription => '档案、目标、隐私与账号设置会在这里重建。';
+
+  @override
+  String get mineSectionTitle => '个人工作区';
+
+  @override
+  String get mineSectionSubtitle => '身份、目标与隐私控制会共享在这一块安静的界面里。';
+
+  @override
+  String get morePageDescription => '工具箱、紧急帮助、设备管理和低频但重要的能力归在这里。';
+
+  @override
+  String get moreSectionTitle => '功能枢纽';
+
+  @override
+  String get moreSectionSubtitle => '这一栏会收纳低频但依然重要的工作流。';
+
+  @override
+  String get todaySectionTitle => '今日工作区';
+
+  @override
+  String get todaySectionSubtitle => '新的首页会从这里逐步接入提醒、快照、喝水与 Lumi 建议。';
+
+  @override
   String get authLoginBadge => '认证 / 登录';
 
   @override

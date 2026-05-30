@@ -79,7 +79,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           AuthTextField(
             controller: _passwordController,
             label: l10n?.authPasswordLabel ?? 'Password',
-            helperText:
+            hint:
                 l10n?.authPasswordHint ??
                 'At least 8 characters, ideally with mixed case and numbers',
             obscureText: true,
