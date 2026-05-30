@@ -11,6 +11,7 @@ part 'auth_account_provider.freezed.dart';
 abstract class AuthAccountState with _$AuthAccountState {
   const factory AuthAccountState({
     @Default(false) bool isSubmitting,
+    @Default(false) bool isSendingCode,
     String? errorMessage,
     String? successMessage,
     int? lastCooldownSeconds,
@@ -26,7 +27,7 @@ class AuthAccountNotifier extends Notifier<AuthAccountState> {
     required AuthVerificationScene scene,
   }) async {
     state = state.copyWith(
-      isSubmitting: true,
+      isSendingCode: true,
       errorMessage: null,
       successMessage: null,
       lastCooldownSeconds: null,
@@ -36,7 +37,7 @@ class AuthAccountNotifier extends Notifier<AuthAccountState> {
           .read(authRemoteDataSourceProvider)
           .sendVerificationCode(email: email, scene: scene);
       state = state.copyWith(
-        isSubmitting: false,
+        isSendingCode: false,
         successMessage: result.message,
         lastCooldownSeconds: result.cooldown.toInt(),
       );
@@ -138,6 +139,7 @@ class AuthAccountNotifier extends Notifier<AuthAccountState> {
     final apiError = LucentErrorMapper.fromObject(error);
     state = state.copyWith(
       isSubmitting: false,
+      isSendingCode: false,
       errorMessage: apiError.message,
       successMessage: null,
     );

@@ -11,7 +11,8 @@ Last updated: 2026-05-30
 ## Current Scope
 
 - App title, tabs, Today, placeholders
-- Login / Register / AuthShell
+- Login / Register / Forgot Password / Change Email / AuthShell
+- Auth empty-field toast prompts
 - Network `Accept-Language`
 
 ## Add Text

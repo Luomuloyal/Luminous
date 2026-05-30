@@ -9,7 +9,6 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'register_data_dto.g.dart';
 
-
 @JsonSerializable(
   checked: true,
   createToJson: true,
@@ -18,50 +17,24 @@ part 'register_data_dto.g.dart';
 )
 class RegisterDataDto {
   /// Returns a new [RegisterDataDto] instance.
-  RegisterDataDto({
+  RegisterDataDto({required this.user, required this.tokens});
 
-    required  this.user,
-
-    required  this.tokens,
-  });
-
-  @JsonKey(
-    
-    name: r'user',
-    required: true,
-    includeIfNull: false,
-  )
-
-
+  @JsonKey(name: r'user', required: true, includeIfNull: false)
   final UserBriefDto user;
 
-
-
-  @JsonKey(
-    
-    name: r'tokens',
-    required: true,
-    includeIfNull: false,
-  )
-
-
+  @JsonKey(name: r'tokens', required: true, includeIfNull: false)
   final TokensDto tokens;
 
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RegisterDataDto && other.user == user && other.tokens == tokens;
 
+  @override
+  int get hashCode => user.hashCode + tokens.hashCode;
 
-
-
-    @override
-    bool operator ==(Object other) => identical(this, other) || other is RegisterDataDto &&
-      other.user == user &&
-      other.tokens == tokens;
-
-    @override
-    int get hashCode =>
-        user.hashCode +
-        tokens.hashCode;
-
-  factory RegisterDataDto.fromJson(Map<String, dynamic> json) => _$RegisterDataDtoFromJson(json);
+  factory RegisterDataDto.fromJson(Map<String, dynamic> json) =>
+      _$RegisterDataDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$RegisterDataDtoToJson(this);
 
@@ -69,6 +42,4 @@ class RegisterDataDto {
   String toString() {
     return toJson().toString();
   }
-
 }
-

@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$RegisterFormState {
 
- String get email; String get password; String get nickname; bool get isSubmitting; String? get errorMessage;
+ String get email; String get password; String get code; String get nickname; bool get isSubmitting; bool get isSendingCode; int? get cooldownSeconds; String? get errorMessage; String? get successMessage;
 /// Create a copy of RegisterFormState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $RegisterFormStateCopyWith<RegisterFormState> get copyWith => _$RegisterFormStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RegisterFormState&&(identical(other.email, email) || other.email == email)&&(identical(other.password, password) || other.password == password)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RegisterFormState&&(identical(other.email, email) || other.email == email)&&(identical(other.password, password) || other.password == password)&&(identical(other.code, code) || other.code == code)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.isSendingCode, isSendingCode) || other.isSendingCode == isSendingCode)&&(identical(other.cooldownSeconds, cooldownSeconds) || other.cooldownSeconds == cooldownSeconds)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.successMessage, successMessage) || other.successMessage == successMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,email,password,nickname,isSubmitting,errorMessage);
+int get hashCode => Object.hash(runtimeType,email,password,code,nickname,isSubmitting,isSendingCode,cooldownSeconds,errorMessage,successMessage);
 
 @override
 String toString() {
-  return 'RegisterFormState(email: $email, password: $password, nickname: $nickname, isSubmitting: $isSubmitting, errorMessage: $errorMessage)';
+  return 'RegisterFormState(email: $email, password: $password, code: $code, nickname: $nickname, isSubmitting: $isSubmitting, isSendingCode: $isSendingCode, cooldownSeconds: $cooldownSeconds, errorMessage: $errorMessage, successMessage: $successMessage)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $RegisterFormStateCopyWith<$Res>  {
   factory $RegisterFormStateCopyWith(RegisterFormState value, $Res Function(RegisterFormState) _then) = _$RegisterFormStateCopyWithImpl;
 @useResult
 $Res call({
- String email, String password, String nickname, bool isSubmitting, String? errorMessage
+ String email, String password, String code, String nickname, bool isSubmitting, bool isSendingCode, int? cooldownSeconds, String? errorMessage, String? successMessage
 });
 
 
@@ -62,13 +62,17 @@ class _$RegisterFormStateCopyWithImpl<$Res>
 
 /// Create a copy of RegisterFormState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? email = null,Object? password = null,Object? nickname = null,Object? isSubmitting = null,Object? errorMessage = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? email = null,Object? password = null,Object? code = null,Object? nickname = null,Object? isSubmitting = null,Object? isSendingCode = null,Object? cooldownSeconds = freezed,Object? errorMessage = freezed,Object? successMessage = freezed,}) {
   return _then(_self.copyWith(
 email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,password: null == password ? _self.password : password // ignore: cast_nullable_to_non_nullable
+as String,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String,nickname: null == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
-as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as bool,isSendingCode: null == isSendingCode ? _self.isSendingCode : isSendingCode // ignore: cast_nullable_to_non_nullable
+as bool,cooldownSeconds: freezed == cooldownSeconds ? _self.cooldownSeconds : cooldownSeconds // ignore: cast_nullable_to_non_nullable
+as int?,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,successMessage: freezed == successMessage ? _self.successMessage : successMessage // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -154,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String email,  String password,  String nickname,  bool isSubmitting,  String? errorMessage)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String email,  String password,  String code,  String nickname,  bool isSubmitting,  bool isSendingCode,  int? cooldownSeconds,  String? errorMessage,  String? successMessage)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RegisterFormState() when $default != null:
-return $default(_that.email,_that.password,_that.nickname,_that.isSubmitting,_that.errorMessage);case _:
+return $default(_that.email,_that.password,_that.code,_that.nickname,_that.isSubmitting,_that.isSendingCode,_that.cooldownSeconds,_that.errorMessage,_that.successMessage);case _:
   return orElse();
 
 }
@@ -175,10 +179,10 @@ return $default(_that.email,_that.password,_that.nickname,_that.isSubmitting,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String email,  String password,  String nickname,  bool isSubmitting,  String? errorMessage)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String email,  String password,  String code,  String nickname,  bool isSubmitting,  bool isSendingCode,  int? cooldownSeconds,  String? errorMessage,  String? successMessage)  $default,) {final _that = this;
 switch (_that) {
 case _RegisterFormState():
-return $default(_that.email,_that.password,_that.nickname,_that.isSubmitting,_that.errorMessage);case _:
+return $default(_that.email,_that.password,_that.code,_that.nickname,_that.isSubmitting,_that.isSendingCode,_that.cooldownSeconds,_that.errorMessage,_that.successMessage);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -195,10 +199,10 @@ return $default(_that.email,_that.password,_that.nickname,_that.isSubmitting,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String email,  String password,  String nickname,  bool isSubmitting,  String? errorMessage)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String email,  String password,  String code,  String nickname,  bool isSubmitting,  bool isSendingCode,  int? cooldownSeconds,  String? errorMessage,  String? successMessage)?  $default,) {final _that = this;
 switch (_that) {
 case _RegisterFormState() when $default != null:
-return $default(_that.email,_that.password,_that.nickname,_that.isSubmitting,_that.errorMessage);case _:
+return $default(_that.email,_that.password,_that.code,_that.nickname,_that.isSubmitting,_that.isSendingCode,_that.cooldownSeconds,_that.errorMessage,_that.successMessage);case _:
   return null;
 
 }
@@ -210,14 +214,18 @@ return $default(_that.email,_that.password,_that.nickname,_that.isSubmitting,_th
 
 
 class _RegisterFormState implements RegisterFormState {
-  const _RegisterFormState({this.email = '', this.password = '', this.nickname = '', this.isSubmitting = false, this.errorMessage});
+  const _RegisterFormState({this.email = '', this.password = '', this.code = '', this.nickname = '', this.isSubmitting = false, this.isSendingCode = false, this.cooldownSeconds, this.errorMessage, this.successMessage});
   
 
 @override@JsonKey() final  String email;
 @override@JsonKey() final  String password;
+@override@JsonKey() final  String code;
 @override@JsonKey() final  String nickname;
 @override@JsonKey() final  bool isSubmitting;
+@override@JsonKey() final  bool isSendingCode;
+@override final  int? cooldownSeconds;
 @override final  String? errorMessage;
+@override final  String? successMessage;
 
 /// Create a copy of RegisterFormState
 /// with the given fields replaced by the non-null parameter values.
@@ -229,16 +237,16 @@ _$RegisterFormStateCopyWith<_RegisterFormState> get copyWith => __$RegisterFormS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RegisterFormState&&(identical(other.email, email) || other.email == email)&&(identical(other.password, password) || other.password == password)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RegisterFormState&&(identical(other.email, email) || other.email == email)&&(identical(other.password, password) || other.password == password)&&(identical(other.code, code) || other.code == code)&&(identical(other.nickname, nickname) || other.nickname == nickname)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.isSendingCode, isSendingCode) || other.isSendingCode == isSendingCode)&&(identical(other.cooldownSeconds, cooldownSeconds) || other.cooldownSeconds == cooldownSeconds)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.successMessage, successMessage) || other.successMessage == successMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,email,password,nickname,isSubmitting,errorMessage);
+int get hashCode => Object.hash(runtimeType,email,password,code,nickname,isSubmitting,isSendingCode,cooldownSeconds,errorMessage,successMessage);
 
 @override
 String toString() {
-  return 'RegisterFormState(email: $email, password: $password, nickname: $nickname, isSubmitting: $isSubmitting, errorMessage: $errorMessage)';
+  return 'RegisterFormState(email: $email, password: $password, code: $code, nickname: $nickname, isSubmitting: $isSubmitting, isSendingCode: $isSendingCode, cooldownSeconds: $cooldownSeconds, errorMessage: $errorMessage, successMessage: $successMessage)';
 }
 
 
@@ -249,7 +257,7 @@ abstract mixin class _$RegisterFormStateCopyWith<$Res> implements $RegisterFormS
   factory _$RegisterFormStateCopyWith(_RegisterFormState value, $Res Function(_RegisterFormState) _then) = __$RegisterFormStateCopyWithImpl;
 @override @useResult
 $Res call({
- String email, String password, String nickname, bool isSubmitting, String? errorMessage
+ String email, String password, String code, String nickname, bool isSubmitting, bool isSendingCode, int? cooldownSeconds, String? errorMessage, String? successMessage
 });
 
 
@@ -266,13 +274,17 @@ class __$RegisterFormStateCopyWithImpl<$Res>
 
 /// Create a copy of RegisterFormState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? email = null,Object? password = null,Object? nickname = null,Object? isSubmitting = null,Object? errorMessage = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? email = null,Object? password = null,Object? code = null,Object? nickname = null,Object? isSubmitting = null,Object? isSendingCode = null,Object? cooldownSeconds = freezed,Object? errorMessage = freezed,Object? successMessage = freezed,}) {
   return _then(_RegisterFormState(
 email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,password: null == password ? _self.password : password // ignore: cast_nullable_to_non_nullable
+as String,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String,nickname: null == nickname ? _self.nickname : nickname // ignore: cast_nullable_to_non_nullable
 as String,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
-as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as bool,isSendingCode: null == isSendingCode ? _self.isSendingCode : isSendingCode // ignore: cast_nullable_to_non_nullable
+as bool,cooldownSeconds: freezed == cooldownSeconds ? _self.cooldownSeconds : cooldownSeconds // ignore: cast_nullable_to_non_nullable
+as int?,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,successMessage: freezed == successMessage ? _self.successMessage : successMessage // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

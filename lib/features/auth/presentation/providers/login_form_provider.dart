@@ -18,6 +18,7 @@ abstract class LoginFormState with _$LoginFormState {
     @Default('') String code,
     @Default(AuthLoginMode.password) AuthLoginMode mode,
     @Default(false) bool isSubmitting,
+    @Default(false) bool isSendingCode,
     String? errorMessage,
   }) = _LoginFormState;
 }
@@ -68,16 +69,22 @@ class LoginFormNotifier extends Notifier<LoginFormState> {
   }
 
   Future<CooldownMessageDto?> sendCode() async {
+    state = state.copyWith(isSendingCode: true, errorMessage: null);
     try {
-      return await ref
+      final result = await ref
           .read(authRemoteDataSourceProvider)
           .sendVerificationCode(
             email: state.email,
             scene: AuthVerificationScene.login,
           );
+      state = state.copyWith(isSendingCode: false);
+      return result;
     } catch (error) {
       final apiError = LucentErrorMapper.fromObject(error);
-      state = state.copyWith(errorMessage: apiError.message);
+      state = state.copyWith(
+        isSendingCode: false,
+        errorMessage: apiError.message,
+      );
       return null;
     }
   }

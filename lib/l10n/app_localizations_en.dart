@@ -109,7 +109,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authRegisterLead =>
-      'Email and password are enough to start. Nickname is optional.';
+      'Verify your email, then set a password. Nickname is optional.';
 
   @override
   String get authModePassword => 'Password';
@@ -140,13 +140,116 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authNicknameHint => 'Optional';
 
   @override
+  String get authEmailRequiredToast => 'Please enter your email.';
+
+  @override
+  String get authCodeRequiredToast => 'Please enter the verification code.';
+
+  @override
+  String get authPasswordRequiredToast => 'Please enter your password.';
+
+  @override
+  String get authConfirmPasswordRequiredToast =>
+      'Please confirm your password.';
+
+  @override
   String get authSendCode => 'Send code';
+
+  @override
+  String authSendCodeAgain(int seconds) {
+    return 'Send again (${seconds}s)';
+  }
 
   @override
   String get authSignIn => 'Sign in';
 
   @override
   String get authCreateAccountAction => 'Create account';
+
+  @override
+  String get authForgotPasswordPrompt => 'Forgot your password?';
+
+  @override
+  String get authResetPasswordAction => 'Reset password';
+
+  @override
+  String get authNeedAccountPrompt => 'Need an account?';
+
+  @override
+  String get authRegisterNowAction => 'Register now';
+
+  @override
+  String get authHaveAccountPrompt => 'Already have an account?';
+
+  @override
+  String get authRememberPasswordPrompt => 'Remember your password?';
+
+  @override
+  String get authForgotPasswordBadge => 'AUTH / RESET';
+
+  @override
+  String get authForgotPasswordTitle => 'Reset password from your email.';
+
+  @override
+  String get authForgotPasswordDescription =>
+      'Send a verification code, set a new password, then return to sign in.';
+
+  @override
+  String get authResetPasswordTitle => 'Reset password';
+
+  @override
+  String get authResetPasswordLead =>
+      'Use the email attached to your account to receive a reset code.';
+
+  @override
+  String get authNewPasswordLabel => 'New password';
+
+  @override
+  String get authConfirmPasswordLabel => 'Confirm password';
+
+  @override
+  String get authPasswordsDoNotMatch => 'Passwords do not match.';
+
+  @override
+  String get authResetPasswordSubmit => 'Reset password';
+
+  @override
+  String get authResetPasswordSuccess =>
+      'Password updated. Please sign in again.';
+
+  @override
+  String get authChangeEmailBadge => 'AUTH / EMAIL';
+
+  @override
+  String get authChangeEmailTitle => 'Move account email carefully.';
+
+  @override
+  String get authChangeEmailDescription =>
+      'Verify the new address before it becomes the account login email.';
+
+  @override
+  String get authChangeEmailFormTitle => 'Change email';
+
+  @override
+  String authChangeEmailLead(String email) {
+    return 'Current email: $email';
+  }
+
+  @override
+  String get authChangeEmailSignedOutLead =>
+      'Sign in before changing the account email.';
+
+  @override
+  String get authNewEmailLabel => 'New email';
+
+  @override
+  String get authChangeEmailSubmit => 'Update email';
+
+  @override
+  String get authChangeEmailSuccess => 'Email updated.';
+
+  @override
+  String get authBackHomePrompt => 'Back to home?';
 
   @override
   String authSignedInAs(String email) {

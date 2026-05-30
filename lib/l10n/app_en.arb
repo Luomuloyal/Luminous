@@ -29,7 +29,7 @@
   "authWelcomeBack": "Welcome back",
   "authCreateAccount": "Create account",
   "authLoginLead": "Start with email, then choose password or verification code.",
-  "authRegisterLead": "Email and password are enough to start. Nickname is optional.",
+  "authRegisterLead": "Verify your email, then set a password. Nickname is optional.",
   "authModePassword": "Password",
   "authModeCode": "Code",
   "authEmailLabel": "Email",
@@ -39,9 +39,54 @@
   "authCodeLabel": "Verification code",
   "authNicknameLabel": "Nickname",
   "authNicknameHint": "Optional",
+  "authEmailRequiredToast": "Please enter your email.",
+  "authCodeRequiredToast": "Please enter the verification code.",
+  "authPasswordRequiredToast": "Please enter your password.",
+  "authConfirmPasswordRequiredToast": "Please confirm your password.",
   "authSendCode": "Send code",
+  "authSendCodeAgain": "Send again ({seconds}s)",
+  "@authSendCodeAgain": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "authSignIn": "Sign in",
   "authCreateAccountAction": "Create account",
+  "authForgotPasswordPrompt": "Forgot your password?",
+  "authResetPasswordAction": "Reset password",
+  "authNeedAccountPrompt": "Need an account?",
+  "authRegisterNowAction": "Register now",
+  "authHaveAccountPrompt": "Already have an account?",
+  "authRememberPasswordPrompt": "Remember your password?",
+  "authForgotPasswordBadge": "AUTH / RESET",
+  "authForgotPasswordTitle": "Reset password from your email.",
+  "authForgotPasswordDescription": "Send a verification code, set a new password, then return to sign in.",
+  "authResetPasswordTitle": "Reset password",
+  "authResetPasswordLead": "Use the email attached to your account to receive a reset code.",
+  "authNewPasswordLabel": "New password",
+  "authConfirmPasswordLabel": "Confirm password",
+  "authPasswordsDoNotMatch": "Passwords do not match.",
+  "authResetPasswordSubmit": "Reset password",
+  "authResetPasswordSuccess": "Password updated. Please sign in again.",
+  "authChangeEmailBadge": "AUTH / EMAIL",
+  "authChangeEmailTitle": "Move account email carefully.",
+  "authChangeEmailDescription": "Verify the new address before it becomes the account login email.",
+  "authChangeEmailFormTitle": "Change email",
+  "authChangeEmailLead": "Current email: {email}",
+  "@authChangeEmailLead": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authChangeEmailSignedOutLead": "Sign in before changing the account email.",
+  "authNewEmailLabel": "New email",
+  "authChangeEmailSubmit": "Update email",
+  "authChangeEmailSuccess": "Email updated.",
+  "authBackHomePrompt": "Back to home?",
   "authSignedInAs": "Signed in as {email}",
   "@authSignedInAs": {
     "placeholders": {

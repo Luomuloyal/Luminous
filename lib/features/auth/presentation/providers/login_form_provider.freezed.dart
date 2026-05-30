@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$LoginFormState {
 
- String get email; String get password; String get code; AuthLoginMode get mode; bool get isSubmitting; String? get errorMessage;
+ String get email; String get password; String get code; AuthLoginMode get mode; bool get isSubmitting; bool get isSendingCode; String? get errorMessage;
 /// Create a copy of LoginFormState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $LoginFormStateCopyWith<LoginFormState> get copyWith => _$LoginFormStateCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginFormState&&(identical(other.email, email) || other.email == email)&&(identical(other.password, password) || other.password == password)&&(identical(other.code, code) || other.code == code)&&(identical(other.mode, mode) || other.mode == mode)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LoginFormState&&(identical(other.email, email) || other.email == email)&&(identical(other.password, password) || other.password == password)&&(identical(other.code, code) || other.code == code)&&(identical(other.mode, mode) || other.mode == mode)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.isSendingCode, isSendingCode) || other.isSendingCode == isSendingCode)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,email,password,code,mode,isSubmitting,errorMessage);
+int get hashCode => Object.hash(runtimeType,email,password,code,mode,isSubmitting,isSendingCode,errorMessage);
 
 @override
 String toString() {
-  return 'LoginFormState(email: $email, password: $password, code: $code, mode: $mode, isSubmitting: $isSubmitting, errorMessage: $errorMessage)';
+  return 'LoginFormState(email: $email, password: $password, code: $code, mode: $mode, isSubmitting: $isSubmitting, isSendingCode: $isSendingCode, errorMessage: $errorMessage)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $LoginFormStateCopyWith<$Res>  {
   factory $LoginFormStateCopyWith(LoginFormState value, $Res Function(LoginFormState) _then) = _$LoginFormStateCopyWithImpl;
 @useResult
 $Res call({
- String email, String password, String code, AuthLoginMode mode, bool isSubmitting, String? errorMessage
+ String email, String password, String code, AuthLoginMode mode, bool isSubmitting, bool isSendingCode, String? errorMessage
 });
 
 
@@ -62,13 +62,14 @@ class _$LoginFormStateCopyWithImpl<$Res>
 
 /// Create a copy of LoginFormState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? email = null,Object? password = null,Object? code = null,Object? mode = null,Object? isSubmitting = null,Object? errorMessage = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? email = null,Object? password = null,Object? code = null,Object? mode = null,Object? isSubmitting = null,Object? isSendingCode = null,Object? errorMessage = freezed,}) {
   return _then(_self.copyWith(
 email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,password: null == password ? _self.password : password // ignore: cast_nullable_to_non_nullable
 as String,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String,mode: null == mode ? _self.mode : mode // ignore: cast_nullable_to_non_nullable
 as AuthLoginMode,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
+as bool,isSendingCode: null == isSendingCode ? _self.isSendingCode : isSendingCode // ignore: cast_nullable_to_non_nullable
 as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
@@ -155,10 +156,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String email,  String password,  String code,  AuthLoginMode mode,  bool isSubmitting,  String? errorMessage)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String email,  String password,  String code,  AuthLoginMode mode,  bool isSubmitting,  bool isSendingCode,  String? errorMessage)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LoginFormState() when $default != null:
-return $default(_that.email,_that.password,_that.code,_that.mode,_that.isSubmitting,_that.errorMessage);case _:
+return $default(_that.email,_that.password,_that.code,_that.mode,_that.isSubmitting,_that.isSendingCode,_that.errorMessage);case _:
   return orElse();
 
 }
@@ -176,10 +177,10 @@ return $default(_that.email,_that.password,_that.code,_that.mode,_that.isSubmitt
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String email,  String password,  String code,  AuthLoginMode mode,  bool isSubmitting,  String? errorMessage)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String email,  String password,  String code,  AuthLoginMode mode,  bool isSubmitting,  bool isSendingCode,  String? errorMessage)  $default,) {final _that = this;
 switch (_that) {
 case _LoginFormState():
-return $default(_that.email,_that.password,_that.code,_that.mode,_that.isSubmitting,_that.errorMessage);case _:
+return $default(_that.email,_that.password,_that.code,_that.mode,_that.isSubmitting,_that.isSendingCode,_that.errorMessage);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -196,10 +197,10 @@ return $default(_that.email,_that.password,_that.code,_that.mode,_that.isSubmitt
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String email,  String password,  String code,  AuthLoginMode mode,  bool isSubmitting,  String? errorMessage)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String email,  String password,  String code,  AuthLoginMode mode,  bool isSubmitting,  bool isSendingCode,  String? errorMessage)?  $default,) {final _that = this;
 switch (_that) {
 case _LoginFormState() when $default != null:
-return $default(_that.email,_that.password,_that.code,_that.mode,_that.isSubmitting,_that.errorMessage);case _:
+return $default(_that.email,_that.password,_that.code,_that.mode,_that.isSubmitting,_that.isSendingCode,_that.errorMessage);case _:
   return null;
 
 }
@@ -211,7 +212,7 @@ return $default(_that.email,_that.password,_that.code,_that.mode,_that.isSubmitt
 
 
 class _LoginFormState implements LoginFormState {
-  const _LoginFormState({this.email = '', this.password = '', this.code = '', this.mode = AuthLoginMode.password, this.isSubmitting = false, this.errorMessage});
+  const _LoginFormState({this.email = '', this.password = '', this.code = '', this.mode = AuthLoginMode.password, this.isSubmitting = false, this.isSendingCode = false, this.errorMessage});
   
 
 @override@JsonKey() final  String email;
@@ -219,6 +220,7 @@ class _LoginFormState implements LoginFormState {
 @override@JsonKey() final  String code;
 @override@JsonKey() final  AuthLoginMode mode;
 @override@JsonKey() final  bool isSubmitting;
+@override@JsonKey() final  bool isSendingCode;
 @override final  String? errorMessage;
 
 /// Create a copy of LoginFormState
@@ -231,16 +233,16 @@ _$LoginFormStateCopyWith<_LoginFormState> get copyWith => __$LoginFormStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LoginFormState&&(identical(other.email, email) || other.email == email)&&(identical(other.password, password) || other.password == password)&&(identical(other.code, code) || other.code == code)&&(identical(other.mode, mode) || other.mode == mode)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LoginFormState&&(identical(other.email, email) || other.email == email)&&(identical(other.password, password) || other.password == password)&&(identical(other.code, code) || other.code == code)&&(identical(other.mode, mode) || other.mode == mode)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.isSendingCode, isSendingCode) || other.isSendingCode == isSendingCode)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,email,password,code,mode,isSubmitting,errorMessage);
+int get hashCode => Object.hash(runtimeType,email,password,code,mode,isSubmitting,isSendingCode,errorMessage);
 
 @override
 String toString() {
-  return 'LoginFormState(email: $email, password: $password, code: $code, mode: $mode, isSubmitting: $isSubmitting, errorMessage: $errorMessage)';
+  return 'LoginFormState(email: $email, password: $password, code: $code, mode: $mode, isSubmitting: $isSubmitting, isSendingCode: $isSendingCode, errorMessage: $errorMessage)';
 }
 
 
@@ -251,7 +253,7 @@ abstract mixin class _$LoginFormStateCopyWith<$Res> implements $LoginFormStateCo
   factory _$LoginFormStateCopyWith(_LoginFormState value, $Res Function(_LoginFormState) _then) = __$LoginFormStateCopyWithImpl;
 @override @useResult
 $Res call({
- String email, String password, String code, AuthLoginMode mode, bool isSubmitting, String? errorMessage
+ String email, String password, String code, AuthLoginMode mode, bool isSubmitting, bool isSendingCode, String? errorMessage
 });
 
 
@@ -268,13 +270,14 @@ class __$LoginFormStateCopyWithImpl<$Res>
 
 /// Create a copy of LoginFormState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? email = null,Object? password = null,Object? code = null,Object? mode = null,Object? isSubmitting = null,Object? errorMessage = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? email = null,Object? password = null,Object? code = null,Object? mode = null,Object? isSubmitting = null,Object? isSendingCode = null,Object? errorMessage = freezed,}) {
   return _then(_LoginFormState(
 email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,password: null == password ? _self.password : password // ignore: cast_nullable_to_non_nullable
 as String,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String,mode: null == mode ? _self.mode : mode // ignore: cast_nullable_to_non_nullable
 as AuthLoginMode,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
+as bool,isSendingCode: null == isSendingCode ? _self.isSendingCode : isSendingCode // ignore: cast_nullable_to_non_nullable
 as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String?,
   ));

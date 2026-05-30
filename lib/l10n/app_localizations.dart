@@ -275,7 +275,7 @@ abstract class AppLocalizations {
   /// No description provided for @authRegisterLead.
   ///
   /// In zh, this message translates to:
-  /// **'先用邮箱和密码完成账号创建，昵称可选。'**
+  /// **'先验证邮箱，再设置密码。昵称可选。'**
   String get authRegisterLead;
 
   /// No description provided for @authModePassword.
@@ -332,11 +332,41 @@ abstract class AppLocalizations {
   /// **'可选'**
   String get authNicknameHint;
 
+  /// No description provided for @authEmailRequiredToast.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先填写邮箱。'**
+  String get authEmailRequiredToast;
+
+  /// No description provided for @authCodeRequiredToast.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先填写验证码。'**
+  String get authCodeRequiredToast;
+
+  /// No description provided for @authPasswordRequiredToast.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先填写密码。'**
+  String get authPasswordRequiredToast;
+
+  /// No description provided for @authConfirmPasswordRequiredToast.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先确认密码。'**
+  String get authConfirmPasswordRequiredToast;
+
   /// No description provided for @authSendCode.
   ///
   /// In zh, this message translates to:
   /// **'发送验证码'**
   String get authSendCode;
+
+  /// No description provided for @authSendCodeAgain.
+  ///
+  /// In zh, this message translates to:
+  /// **'{seconds} 秒后重发'**
+  String authSendCodeAgain(int seconds);
 
   /// No description provided for @authSignIn.
   ///
@@ -349,6 +379,162 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'创建账号'**
   String get authCreateAccountAction;
+
+  /// No description provided for @authForgotPasswordPrompt.
+  ///
+  /// In zh, this message translates to:
+  /// **'忘记密码？'**
+  String get authForgotPasswordPrompt;
+
+  /// No description provided for @authResetPasswordAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'重置密码'**
+  String get authResetPasswordAction;
+
+  /// No description provided for @authNeedAccountPrompt.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有账号？'**
+  String get authNeedAccountPrompt;
+
+  /// No description provided for @authRegisterNowAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'立即注册'**
+  String get authRegisterNowAction;
+
+  /// No description provided for @authHaveAccountPrompt.
+  ///
+  /// In zh, this message translates to:
+  /// **'已经有账号？'**
+  String get authHaveAccountPrompt;
+
+  /// No description provided for @authRememberPasswordPrompt.
+  ///
+  /// In zh, this message translates to:
+  /// **'想起密码了？'**
+  String get authRememberPasswordPrompt;
+
+  /// No description provided for @authForgotPasswordBadge.
+  ///
+  /// In zh, this message translates to:
+  /// **'认证 / 重置'**
+  String get authForgotPasswordBadge;
+
+  /// No description provided for @authForgotPasswordTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'通过邮箱重置密码。'**
+  String get authForgotPasswordTitle;
+
+  /// No description provided for @authForgotPasswordDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'发送验证码，设置新密码，然后回到登录页重新登录。'**
+  String get authForgotPasswordDescription;
+
+  /// No description provided for @authResetPasswordTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'重置密码'**
+  String get authResetPasswordTitle;
+
+  /// No description provided for @authResetPasswordLead.
+  ///
+  /// In zh, this message translates to:
+  /// **'使用账号绑定的邮箱接收重置验证码。'**
+  String get authResetPasswordLead;
+
+  /// No description provided for @authNewPasswordLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'新密码'**
+  String get authNewPasswordLabel;
+
+  /// No description provided for @authConfirmPasswordLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认密码'**
+  String get authConfirmPasswordLabel;
+
+  /// No description provided for @authPasswordsDoNotMatch.
+  ///
+  /// In zh, this message translates to:
+  /// **'两次输入的密码不一致。'**
+  String get authPasswordsDoNotMatch;
+
+  /// No description provided for @authResetPasswordSubmit.
+  ///
+  /// In zh, this message translates to:
+  /// **'重置密码'**
+  String get authResetPasswordSubmit;
+
+  /// No description provided for @authResetPasswordSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'密码已更新，请重新登录。'**
+  String get authResetPasswordSuccess;
+
+  /// No description provided for @authChangeEmailBadge.
+  ///
+  /// In zh, this message translates to:
+  /// **'认证 / 邮箱'**
+  String get authChangeEmailBadge;
+
+  /// No description provided for @authChangeEmailTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'谨慎更换账号邮箱。'**
+  String get authChangeEmailTitle;
+
+  /// No description provided for @authChangeEmailDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'先验证新邮箱，再把它设为账号登录邮箱。'**
+  String get authChangeEmailDescription;
+
+  /// No description provided for @authChangeEmailFormTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'更换邮箱'**
+  String get authChangeEmailFormTitle;
+
+  /// No description provided for @authChangeEmailLead.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前邮箱：{email}'**
+  String authChangeEmailLead(String email);
+
+  /// No description provided for @authChangeEmailSignedOutLead.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先登录，再更换账号邮箱。'**
+  String get authChangeEmailSignedOutLead;
+
+  /// No description provided for @authNewEmailLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'新邮箱'**
+  String get authNewEmailLabel;
+
+  /// No description provided for @authChangeEmailSubmit.
+  ///
+  /// In zh, this message translates to:
+  /// **'更新邮箱'**
+  String get authChangeEmailSubmit;
+
+  /// No description provided for @authChangeEmailSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'邮箱已更新。'**
+  String get authChangeEmailSuccess;
+
+  /// No description provided for @authBackHomePrompt.
+  ///
+  /// In zh, this message translates to:
+  /// **'返回首页？'**
+  String get authBackHomePrompt;
 
   /// No description provided for @authSignedInAs.
   ///

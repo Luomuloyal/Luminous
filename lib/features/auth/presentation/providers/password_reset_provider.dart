@@ -11,7 +11,9 @@ abstract class PasswordResetState with _$PasswordResetState {
     @Default('') String email,
     @Default('') String code,
     @Default('') String password,
+    @Default('') String confirmPassword,
     @Default(false) bool isSubmitting,
+    @Default(false) bool isSendingCode,
     int? cooldownSeconds,
     String? errorMessage,
     String? successMessage,
@@ -34,9 +36,25 @@ class PasswordResetNotifier extends Notifier<PasswordResetState> {
     state = state.copyWith(password: value, errorMessage: null);
   }
 
+  void updateConfirmPassword(String value) {
+    state = state.copyWith(confirmPassword: value, errorMessage: null);
+  }
+
+  bool validatePasswordMatch({required String message}) {
+    if (state.password == state.confirmPassword) {
+      return true;
+    }
+    state = state.copyWith(
+      isSubmitting: false,
+      errorMessage: message,
+      successMessage: null,
+    );
+    return false;
+  }
+
   Future<bool> sendResetCode() async {
     state = state.copyWith(
-      isSubmitting: true,
+      isSendingCode: true,
       cooldownSeconds: null,
       errorMessage: null,
       successMessage: null,
@@ -46,7 +64,7 @@ class PasswordResetNotifier extends Notifier<PasswordResetState> {
           .read(authRemoteDataSourceProvider)
           .forgotPassword(email: state.email);
       state = state.copyWith(
-        isSubmitting: false,
+        isSendingCode: false,
         cooldownSeconds: result.cooldown.toInt(),
         successMessage: result.message,
       );
@@ -81,6 +99,7 @@ class PasswordResetNotifier extends Notifier<PasswordResetState> {
     final apiError = LucentErrorMapper.fromObject(error);
     state = state.copyWith(
       isSubmitting: false,
+      isSendingCode: false,
       errorMessage: apiError.message,
       successMessage: null,
     );

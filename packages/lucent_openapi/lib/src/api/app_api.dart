@@ -6,18 +6,15 @@ import 'dart:async';
 
 // ignore: unused_import
 import 'dart:convert';
-import 'package:lucent_openapi/src/deserialize.dart';
 import 'package:dio/dio.dart';
 
-
 class AppApi {
-
   final Dio _dio;
 
   const AppApi(this._dio);
 
   /// appControllerGetHealthV1
-  /// 
+  ///
   ///
   /// Parameters:
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
@@ -29,7 +26,7 @@ class AppApi {
   ///
   /// Returns a [Future]
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<void>> appControllerGetHealthV1({ 
+  Future<Response<void>> appControllerGetHealthV1({
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -40,13 +37,8 @@ class AppApi {
     final _path = r'/api/v1/health';
     final _options = Options(
       method: r'GET',
-      headers: <String, dynamic>{
-        ...?headers,
-      },
-      extra: <String, dynamic>{
-        'secure': <Map<String, String>>[],
-        ...?extra,
-      },
+      headers: <String, dynamic>{...?headers},
+      extra: <String, dynamic>{'secure': <Map<String, String>>[], ...?extra},
       validateStatus: validateStatus,
     );
 
@@ -60,5 +52,4 @@ class AppApi {
 
     return _response;
   }
-
 }

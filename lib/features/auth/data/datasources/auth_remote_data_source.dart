@@ -55,12 +55,14 @@ class AuthRemoteDataSource {
   Future<AuthSession> register({
     required String email,
     required String password,
+    required String code,
     String? nickname,
   }) async {
     final response = await _client.authApi.authControllerRegisterV1(
       registerDto: RegisterDto(
         email: email.trim(),
         password: password.trim(),
+        code: code.trim(),
         nickname: nickname?.trim().isEmpty ?? true ? null : nickname!.trim(),
       ),
     );

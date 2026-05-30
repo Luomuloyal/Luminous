@@ -7,7 +7,6 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'user_brief_dto.g.dart';
 
-
 @JsonSerializable(
   checked: true,
   createToJson: true,
@@ -17,102 +16,57 @@ part 'user_brief_dto.g.dart';
 class UserBriefDto {
   /// Returns a new [UserBriefDto] instance.
   UserBriefDto({
+    required this.id,
 
-    required  this.id,
+    required this.email,
 
-    required  this.email,
+    required this.nickname,
 
-    required  this.nickname,
+    required this.emailVerified,
 
-    required  this.emailVerified,
-
-    required  this.createdAt,
+    required this.createdAt,
   });
 
-      /// 用户 ID
-  @JsonKey(
-    
-    name: r'id',
-    required: true,
-    includeIfNull: false,
-  )
-
-
+  /// 用户 ID
+  @JsonKey(name: r'id', required: true, includeIfNull: false)
   final String id;
 
-
-
-      /// 邮箱地址
-  @JsonKey(
-    
-    name: r'email',
-    required: true,
-    includeIfNull: false,
-  )
-
-
+  /// 邮箱地址
+  @JsonKey(name: r'email', required: true, includeIfNull: false)
   final String email;
 
-
-
-      /// 昵称
-  @JsonKey(
-    
-    name: r'nickname',
-    required: true,
-    includeIfNull: true,
-  )
-
-
+  /// 昵称
+  @JsonKey(name: r'nickname', required: true, includeIfNull: true)
   final Object? nickname;
 
-
-
-      /// 邮箱是否已验证
-  @JsonKey(
-    
-    name: r'emailVerified',
-    required: true,
-    includeIfNull: false,
-  )
-
-
+  /// 邮箱是否已验证
+  @JsonKey(name: r'emailVerified', required: true, includeIfNull: false)
   final bool emailVerified;
 
-
-
-      /// 创建时间 (ISO 8601)
-  @JsonKey(
-    
-    name: r'createdAt',
-    required: true,
-    includeIfNull: false,
-  )
-
-
+  /// 创建时间 (ISO 8601)
+  @JsonKey(name: r'createdAt', required: true, includeIfNull: false)
   final String createdAt;
 
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is UserBriefDto &&
+          other.id == id &&
+          other.email == email &&
+          other.nickname == nickname &&
+          other.emailVerified == emailVerified &&
+          other.createdAt == createdAt;
 
+  @override
+  int get hashCode =>
+      id.hashCode +
+      email.hashCode +
+      (nickname == null ? 0 : nickname.hashCode) +
+      emailVerified.hashCode +
+      createdAt.hashCode;
 
-
-
-    @override
-    bool operator ==(Object other) => identical(this, other) || other is UserBriefDto &&
-      other.id == id &&
-      other.email == email &&
-      other.nickname == nickname &&
-      other.emailVerified == emailVerified &&
-      other.createdAt == createdAt;
-
-    @override
-    int get hashCode =>
-        id.hashCode +
-        email.hashCode +
-        (nickname == null ? 0 : nickname.hashCode) +
-        emailVerified.hashCode +
-        createdAt.hashCode;
-
-  factory UserBriefDto.fromJson(Map<String, dynamic> json) => _$UserBriefDtoFromJson(json);
+  factory UserBriefDto.fromJson(Map<String, dynamic> json) =>
+      _$UserBriefDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$UserBriefDtoToJson(this);
 
@@ -120,6 +74,4 @@ class UserBriefDto {
   String toString() {
     return toJson().toString();
   }
-
 }
-

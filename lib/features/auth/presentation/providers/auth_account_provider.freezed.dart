@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AuthAccountState {
 
- bool get isSubmitting; String? get errorMessage; String? get successMessage; int? get lastCooldownSeconds;
+ bool get isSubmitting; bool get isSendingCode; String? get errorMessage; String? get successMessage; int? get lastCooldownSeconds;
 /// Create a copy of AuthAccountState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $AuthAccountStateCopyWith<AuthAccountState> get copyWith => _$AuthAccountStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthAccountState&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.successMessage, successMessage) || other.successMessage == successMessage)&&(identical(other.lastCooldownSeconds, lastCooldownSeconds) || other.lastCooldownSeconds == lastCooldownSeconds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthAccountState&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.isSendingCode, isSendingCode) || other.isSendingCode == isSendingCode)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.successMessage, successMessage) || other.successMessage == successMessage)&&(identical(other.lastCooldownSeconds, lastCooldownSeconds) || other.lastCooldownSeconds == lastCooldownSeconds));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isSubmitting,errorMessage,successMessage,lastCooldownSeconds);
+int get hashCode => Object.hash(runtimeType,isSubmitting,isSendingCode,errorMessage,successMessage,lastCooldownSeconds);
 
 @override
 String toString() {
-  return 'AuthAccountState(isSubmitting: $isSubmitting, errorMessage: $errorMessage, successMessage: $successMessage, lastCooldownSeconds: $lastCooldownSeconds)';
+  return 'AuthAccountState(isSubmitting: $isSubmitting, isSendingCode: $isSendingCode, errorMessage: $errorMessage, successMessage: $successMessage, lastCooldownSeconds: $lastCooldownSeconds)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $AuthAccountStateCopyWith<$Res>  {
   factory $AuthAccountStateCopyWith(AuthAccountState value, $Res Function(AuthAccountState) _then) = _$AuthAccountStateCopyWithImpl;
 @useResult
 $Res call({
- bool isSubmitting, String? errorMessage, String? successMessage, int? lastCooldownSeconds
+ bool isSubmitting, bool isSendingCode, String? errorMessage, String? successMessage, int? lastCooldownSeconds
 });
 
 
@@ -62,9 +62,10 @@ class _$AuthAccountStateCopyWithImpl<$Res>
 
 /// Create a copy of AuthAccountState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? isSubmitting = null,Object? errorMessage = freezed,Object? successMessage = freezed,Object? lastCooldownSeconds = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? isSubmitting = null,Object? isSendingCode = null,Object? errorMessage = freezed,Object? successMessage = freezed,Object? lastCooldownSeconds = freezed,}) {
   return _then(_self.copyWith(
 isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
+as bool,isSendingCode: null == isSendingCode ? _self.isSendingCode : isSendingCode // ignore: cast_nullable_to_non_nullable
 as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String?,successMessage: freezed == successMessage ? _self.successMessage : successMessage // ignore: cast_nullable_to_non_nullable
 as String?,lastCooldownSeconds: freezed == lastCooldownSeconds ? _self.lastCooldownSeconds : lastCooldownSeconds // ignore: cast_nullable_to_non_nullable
@@ -153,10 +154,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isSubmitting,  String? errorMessage,  String? successMessage,  int? lastCooldownSeconds)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isSubmitting,  bool isSendingCode,  String? errorMessage,  String? successMessage,  int? lastCooldownSeconds)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthAccountState() when $default != null:
-return $default(_that.isSubmitting,_that.errorMessage,_that.successMessage,_that.lastCooldownSeconds);case _:
+return $default(_that.isSubmitting,_that.isSendingCode,_that.errorMessage,_that.successMessage,_that.lastCooldownSeconds);case _:
   return orElse();
 
 }
@@ -174,10 +175,10 @@ return $default(_that.isSubmitting,_that.errorMessage,_that.successMessage,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isSubmitting,  String? errorMessage,  String? successMessage,  int? lastCooldownSeconds)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isSubmitting,  bool isSendingCode,  String? errorMessage,  String? successMessage,  int? lastCooldownSeconds)  $default,) {final _that = this;
 switch (_that) {
 case _AuthAccountState():
-return $default(_that.isSubmitting,_that.errorMessage,_that.successMessage,_that.lastCooldownSeconds);case _:
+return $default(_that.isSubmitting,_that.isSendingCode,_that.errorMessage,_that.successMessage,_that.lastCooldownSeconds);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -194,10 +195,10 @@ return $default(_that.isSubmitting,_that.errorMessage,_that.successMessage,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isSubmitting,  String? errorMessage,  String? successMessage,  int? lastCooldownSeconds)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isSubmitting,  bool isSendingCode,  String? errorMessage,  String? successMessage,  int? lastCooldownSeconds)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthAccountState() when $default != null:
-return $default(_that.isSubmitting,_that.errorMessage,_that.successMessage,_that.lastCooldownSeconds);case _:
+return $default(_that.isSubmitting,_that.isSendingCode,_that.errorMessage,_that.successMessage,_that.lastCooldownSeconds);case _:
   return null;
 
 }
@@ -209,10 +210,11 @@ return $default(_that.isSubmitting,_that.errorMessage,_that.successMessage,_that
 
 
 class _AuthAccountState implements AuthAccountState {
-  const _AuthAccountState({this.isSubmitting = false, this.errorMessage, this.successMessage, this.lastCooldownSeconds});
+  const _AuthAccountState({this.isSubmitting = false, this.isSendingCode = false, this.errorMessage, this.successMessage, this.lastCooldownSeconds});
   
 
 @override@JsonKey() final  bool isSubmitting;
+@override@JsonKey() final  bool isSendingCode;
 @override final  String? errorMessage;
 @override final  String? successMessage;
 @override final  int? lastCooldownSeconds;
@@ -227,16 +229,16 @@ _$AuthAccountStateCopyWith<_AuthAccountState> get copyWith => __$AuthAccountStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthAccountState&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.successMessage, successMessage) || other.successMessage == successMessage)&&(identical(other.lastCooldownSeconds, lastCooldownSeconds) || other.lastCooldownSeconds == lastCooldownSeconds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthAccountState&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.isSendingCode, isSendingCode) || other.isSendingCode == isSendingCode)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.successMessage, successMessage) || other.successMessage == successMessage)&&(identical(other.lastCooldownSeconds, lastCooldownSeconds) || other.lastCooldownSeconds == lastCooldownSeconds));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isSubmitting,errorMessage,successMessage,lastCooldownSeconds);
+int get hashCode => Object.hash(runtimeType,isSubmitting,isSendingCode,errorMessage,successMessage,lastCooldownSeconds);
 
 @override
 String toString() {
-  return 'AuthAccountState(isSubmitting: $isSubmitting, errorMessage: $errorMessage, successMessage: $successMessage, lastCooldownSeconds: $lastCooldownSeconds)';
+  return 'AuthAccountState(isSubmitting: $isSubmitting, isSendingCode: $isSendingCode, errorMessage: $errorMessage, successMessage: $successMessage, lastCooldownSeconds: $lastCooldownSeconds)';
 }
 
 
@@ -247,7 +249,7 @@ abstract mixin class _$AuthAccountStateCopyWith<$Res> implements $AuthAccountSta
   factory _$AuthAccountStateCopyWith(_AuthAccountState value, $Res Function(_AuthAccountState) _then) = __$AuthAccountStateCopyWithImpl;
 @override @useResult
 $Res call({
- bool isSubmitting, String? errorMessage, String? successMessage, int? lastCooldownSeconds
+ bool isSubmitting, bool isSendingCode, String? errorMessage, String? successMessage, int? lastCooldownSeconds
 });
 
 
@@ -264,9 +266,10 @@ class __$AuthAccountStateCopyWithImpl<$Res>
 
 /// Create a copy of AuthAccountState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? isSubmitting = null,Object? errorMessage = freezed,Object? successMessage = freezed,Object? lastCooldownSeconds = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? isSubmitting = null,Object? isSendingCode = null,Object? errorMessage = freezed,Object? successMessage = freezed,Object? lastCooldownSeconds = freezed,}) {
   return _then(_AuthAccountState(
 isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
+as bool,isSendingCode: null == isSendingCode ? _self.isSendingCode : isSendingCode // ignore: cast_nullable_to_non_nullable
 as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String?,successMessage: freezed == successMessage ? _self.successMessage : successMessage // ignore: cast_nullable_to_non_nullable
 as String?,lastCooldownSeconds: freezed == lastCooldownSeconds ? _self.lastCooldownSeconds : lastCooldownSeconds // ignore: cast_nullable_to_non_nullable

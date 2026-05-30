@@ -7,7 +7,6 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'delete_account_dto.g.dart';
 
-
 @JsonSerializable(
   checked: true,
   createToJson: true,
@@ -16,35 +15,22 @@ part 'delete_account_dto.g.dart';
 )
 class DeleteAccountDto {
   /// Returns a new [DeleteAccountDto] instance.
-  DeleteAccountDto({
+  DeleteAccountDto({required this.password});
 
-    required  this.password,
-  });
-
-      /// 当前密码（确认注销）
-  @JsonKey(
-    
-    name: r'password',
-    required: true,
-    includeIfNull: false,
-  )
-
-
+  /// 当前密码（确认注销）
+  @JsonKey(name: r'password', required: true, includeIfNull: false)
   final String password;
 
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DeleteAccountDto && other.password == password;
 
+  @override
+  int get hashCode => password.hashCode;
 
-
-
-    @override
-    bool operator ==(Object other) => identical(this, other) || other is DeleteAccountDto &&
-      other.password == password;
-
-    @override
-    int get hashCode =>
-        password.hashCode;
-
-  factory DeleteAccountDto.fromJson(Map<String, dynamic> json) => _$DeleteAccountDtoFromJson(json);
+  factory DeleteAccountDto.fromJson(Map<String, dynamic> json) =>
+      _$DeleteAccountDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$DeleteAccountDtoToJson(this);
 
@@ -52,6 +38,4 @@ class DeleteAccountDto {
   String toString() {
     return toJson().toString();
   }
-
 }
-

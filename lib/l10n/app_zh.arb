@@ -29,7 +29,7 @@
   "authWelcomeBack": "欢迎回来",
   "authCreateAccount": "创建账号",
   "authLoginLead": "先输入邮箱，再选择密码登录或验证码登录。",
-  "authRegisterLead": "先用邮箱和密码完成账号创建，昵称可选。",
+  "authRegisterLead": "先验证邮箱，再设置密码。昵称可选。",
   "authModePassword": "密码",
   "authModeCode": "验证码",
   "authEmailLabel": "邮箱",
@@ -39,9 +39,54 @@
   "authCodeLabel": "验证码",
   "authNicknameLabel": "昵称",
   "authNicknameHint": "可选",
+  "authEmailRequiredToast": "请先填写邮箱。",
+  "authCodeRequiredToast": "请先填写验证码。",
+  "authPasswordRequiredToast": "请先填写密码。",
+  "authConfirmPasswordRequiredToast": "请先确认密码。",
   "authSendCode": "发送验证码",
+  "authSendCodeAgain": "{seconds} 秒后重发",
+  "@authSendCodeAgain": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
   "authSignIn": "登录",
   "authCreateAccountAction": "创建账号",
+  "authForgotPasswordPrompt": "忘记密码？",
+  "authResetPasswordAction": "重置密码",
+  "authNeedAccountPrompt": "还没有账号？",
+  "authRegisterNowAction": "立即注册",
+  "authHaveAccountPrompt": "已经有账号？",
+  "authRememberPasswordPrompt": "想起密码了？",
+  "authForgotPasswordBadge": "认证 / 重置",
+  "authForgotPasswordTitle": "通过邮箱重置密码。",
+  "authForgotPasswordDescription": "发送验证码，设置新密码，然后回到登录页重新登录。",
+  "authResetPasswordTitle": "重置密码",
+  "authResetPasswordLead": "使用账号绑定的邮箱接收重置验证码。",
+  "authNewPasswordLabel": "新密码",
+  "authConfirmPasswordLabel": "确认密码",
+  "authPasswordsDoNotMatch": "两次输入的密码不一致。",
+  "authResetPasswordSubmit": "重置密码",
+  "authResetPasswordSuccess": "密码已更新，请重新登录。",
+  "authChangeEmailBadge": "认证 / 邮箱",
+  "authChangeEmailTitle": "谨慎更换账号邮箱。",
+  "authChangeEmailDescription": "先验证新邮箱，再把它设为账号登录邮箱。",
+  "authChangeEmailFormTitle": "更换邮箱",
+  "authChangeEmailLead": "当前邮箱：{email}",
+  "@authChangeEmailLead": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "authChangeEmailSignedOutLead": "请先登录，再更换账号邮箱。",
+  "authNewEmailLabel": "新邮箱",
+  "authChangeEmailSubmit": "更新邮箱",
+  "authChangeEmailSuccess": "邮箱已更新。",
+  "authBackHomePrompt": "返回首页？",
   "authSignedInAs": "当前已登录：{email}",
   "@authSignedInAs": {
     "placeholders": {

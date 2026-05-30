@@ -3,22 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:luminous/core/design/app_design.dart';
 import 'package:luminous/core/feedback/app_toast.dart';
-import 'package:luminous/features/auth/presentation/providers/register_form_provider.dart';
+import 'package:luminous/features/auth/presentation/providers/password_reset_provider.dart';
 import 'package:luminous/features/auth/presentation/widgets/auth_shell.dart';
 import 'package:luminous/l10n/app_localizations.dart';
 
-class RegisterPage extends ConsumerStatefulWidget {
-  const RegisterPage({super.key});
+class ForgotPasswordPage extends ConsumerStatefulWidget {
+  const ForgotPasswordPage({super.key});
 
   @override
-  ConsumerState<RegisterPage> createState() => _RegisterPageState();
+  ConsumerState<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
 }
 
-class _RegisterPageState extends ConsumerState<RegisterPage> {
+class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
   late final TextEditingController _emailController;
   late final TextEditingController _codeController;
   late final TextEditingController _passwordController;
-  late final TextEditingController _nicknameController;
+  late final TextEditingController _confirmPasswordController;
 
   @override
   void initState() {
@@ -26,7 +26,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     _emailController = TextEditingController();
     _codeController = TextEditingController();
     _passwordController = TextEditingController();
-    _nicknameController = TextEditingController();
+    _confirmPasswordController = TextEditingController();
   }
 
   @override
@@ -34,31 +34,34 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     _emailController.dispose();
     _codeController.dispose();
     _passwordController.dispose();
-    _nicknameController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(registerFormProvider);
-    final notifier = ref.read(registerFormProvider.notifier);
+    final state = ref.watch(passwordResetProvider);
+    final notifier = ref.read(passwordResetProvider.notifier);
     final l10n = AppLocalizations.of(context);
+    final success = state.successMessage?.isNotEmpty == true
+        ? state.successMessage
+        : null;
 
     return AuthShell(
-      badge: l10n?.authRegisterBadge ?? 'AUTH / REGISTER',
-      title: l10n?.authRegisterTitle ?? 'Create the clean version first.',
+      badge: l10n?.authForgotPasswordBadge ?? 'AUTH / RESET',
+      title: l10n?.authForgotPasswordTitle ?? 'Reset password from your email.',
       description:
-          l10n?.authRegisterDescription ??
-          'Register once, then grow medication plans, reminders, and multilingual health workflows on top of Lucent.',
+          l10n?.authForgotPasswordDescription ??
+          'Send a verification code, set a new password, then return to sign in.',
       form: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           AuthFormHeader(
-            title: l10n?.authCreateAccount ?? 'Create account',
+            title: l10n?.authResetPasswordTitle ?? 'Reset password',
             description:
-                l10n?.authRegisterLead ??
-                'Email and password are enough to start. Nickname is optional.',
+                l10n?.authResetPasswordLead ??
+                'Use the email attached to your account to receive a reset code.',
           ),
           const SizedBox(height: AppSpacingTokens.xl),
           AuthTextField(
@@ -85,13 +88,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 );
                 return;
               }
-              await notifier.sendCode();
+              await notifier.sendResetCode();
             },
           ),
           const SizedBox(height: AppSpacingTokens.md),
           AuthTextField(
             controller: _passwordController,
-            label: l10n?.authPasswordLabel ?? 'Password',
+            label: l10n?.authNewPasswordLabel ?? 'New password',
             hint:
                 l10n?.authPasswordHint ??
                 'At least 8 characters, ideally with mixed case and numbers',
@@ -99,36 +102,53 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
           ),
           const SizedBox(height: AppSpacingTokens.md),
           AuthTextField(
-            controller: _nicknameController,
-            label: l10n?.authNicknameLabel ?? 'Nickname',
-            hint: l10n?.authNicknameHint ?? 'Optional',
+            controller: _confirmPasswordController,
+            label: l10n?.authConfirmPasswordLabel ?? 'Confirm password',
+            hint:
+                l10n?.authPasswordHint ??
+                'At least 8 characters, ideally with mixed case and numbers',
+            obscureText: true,
           ),
-          if ((state.errorMessage?.isNotEmpty ?? false) ||
-              (state.successMessage?.isNotEmpty ?? false)) ...[
+          if ((state.errorMessage?.isNotEmpty ?? false) || success != null) ...[
             const SizedBox(height: AppSpacingTokens.md),
-            AuthStatusMessage(
-              error: state.errorMessage,
-              success: state.successMessage,
-            ),
+            AuthStatusMessage(error: state.errorMessage, success: success),
           ],
           const SizedBox(height: AppSpacingTokens.xl),
           AuthPrimaryButton(
-            label: l10n?.authCreateAccountAction ?? 'Create account',
+            label: l10n?.authResetPasswordAction ?? 'Reset password',
             isLoading: state.isSubmitting,
             onPressed: () async {
               notifier.updateEmail(_emailController.text);
               notifier.updateCode(_codeController.text);
               notifier.updatePassword(_passwordController.text);
-              notifier.updateNickname(_nicknameController.text);
+              notifier.updateConfirmPassword(_confirmPasswordController.text);
               if (!_validateSubmit(context, l10n)) {
                 return;
               }
-              await notifier.submit();
+              final passwordsMatch = notifier.validatePasswordMatch(
+                message:
+                    l10n?.authPasswordsDoNotMatch ?? 'Passwords do not match.',
+              );
+              if (!passwordsMatch) {
+                return;
+              }
+              final ok = await notifier.resetPassword();
+              if (ok && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      l10n?.authResetPasswordSuccess ??
+                          'Password updated. Please sign in again.',
+                    ),
+                  ),
+                );
+              }
             },
           ),
           const SizedBox(height: AppSpacingTokens.sm),
           AuthFooterAction(
-            prompt: l10n?.authHaveAccountPrompt ?? 'Already have an account?',
+            prompt:
+                l10n?.authRememberPasswordPrompt ?? 'Remember your password?',
             actionLabel: l10n?.authSignIn ?? 'Sign in',
             onPressed: () => context.push('/login'),
           ),
@@ -142,13 +162,17 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       _emailController.text.trim().isEmpty,
       _codeController.text.trim().isEmpty,
       _passwordController.text.trim().isEmpty,
+      _confirmPasswordController.text.trim().isEmpty,
     )) {
-      (true, _, _) =>
+      (true, _, _, _) =>
         l10n?.authEmailRequiredToast ?? 'Please enter your email.',
-      (_, true, _) =>
+      (_, true, _, _) =>
         l10n?.authCodeRequiredToast ?? 'Please enter the verification code.',
-      (_, _, true) =>
+      (_, _, true, _) =>
         l10n?.authPasswordRequiredToast ?? 'Please enter your password.',
+      (_, _, _, true) =>
+        l10n?.authConfirmPasswordRequiredToast ??
+            'Please confirm your password.',
       _ => null,
     };
     if (message == null) {

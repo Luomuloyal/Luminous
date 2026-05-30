@@ -10,9 +10,26 @@ Records changes after the full reset only. Pre-reset history: `MigrationLog_Arch
 
 - Regenerated `packages/lucent_openapi` after Lucent removed `currentEmail` from `ChangeEmailDto`.
 - `ChangeEmailDto` now sends only `newEmail` and `code`; new-email ownership is verified by Lucent.
+- `RegisterDto` now sends `email`, `password`, and register-scene `code`; Lucent verifies email before creating the account.
 - Added account/password-reset logic providers for profile update, email verification, email change, password change, password reset, and account deletion.
 - Fixed Lucent token injection to use the stored access token even when generated OpenAPI `secure` metadata is empty.
 - Migrated auth entities and form/account/session states to `freezed` generated `copyWith` / equality / JSON support where needed.
+
+### Auth UI Foundation
+
+- Added shared auth form components for headers, status messages, code rows, and footer actions.
+- Refactored Login/Register to reuse shared auth UI components.
+- Added Forgot Password page and wired `/forgot-password` from Login.
+- Added Change Email page and registered `/account/change-email` for the upcoming account settings flow.
+- Added zh/en localization strings for the new auth pages and actions.
+- Tuned Login footer links into a lightweight left/right action row and aligned code-send buttons with input height.
+- Used `flutter_animate` for restrained auth form entrance motion and login-mode field transitions.
+- Restored the compact Login narrative panel and replaced the code-send button with a custom input-matched control.
+- Added registration email-code UI and confirm-password validation on Forgot Password.
+- Split code-sending loading state from submit loading state so send-code requests no longer spin the submit button.
+- Added localized toast prompts for empty auth form submissions.
+- Rebuilt auth text fields and code-send buttons on one shared fixed-height control frame so height, border, and radius stay aligned.
+- Added auth widget regression tests for code-row height and independent loading indicators.
 
 ### Reset Baseline
 

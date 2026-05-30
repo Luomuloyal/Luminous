@@ -18,6 +18,7 @@ Last updated: 2026-05-30
 - `401002` triggers refresh and retry
 - Dio errors are unwrapped through `LucentErrorMapper`
 - `ChangeEmailDto` follows Lucent contract: `newEmail` + `code`
+- `RegisterDto` follows Lucent contract: `email` + `password` + register-scene `code`; successful registration returns a verified email.
 
 ## Regenerate
 
@@ -30,7 +31,9 @@ npx @openapitools/openapi-generator-cli generate ^
 
 cd packages\lucent_openapi
 dart pub get
-dart run build_runner build --delete-conflicting-outputs
+dart run build_runner build
 cd ..\..
 flutter pub get
 ```
+
+After generation, keep `packages/lucent_openapi/pubspec.yaml` aligned with the app SDK (`>=3.12.0 <4.0.0`) and `json_annotation: ^4.12.0`; the generator template may reset these values.

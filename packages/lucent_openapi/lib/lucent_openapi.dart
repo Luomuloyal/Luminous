@@ -8,7 +8,6 @@ export 'package:lucent_openapi/src/auth/basic_auth.dart';
 export 'package:lucent_openapi/src/auth/bearer_auth.dart';
 export 'package:lucent_openapi/src/auth/oauth.dart';
 
-
 export 'package:lucent_openapi/src/api/app_api.dart';
 export 'package:lucent_openapi/src/api/auth_api.dart';
 
@@ -41,4 +40,3 @@ export 'package:lucent_openapi/src/model/user_full_dto.dart';
 export 'package:lucent_openapi/src/model/verify_email_data_dto.dart';
 export 'package:lucent_openapi/src/model/verify_email_dto.dart';
 export 'package:lucent_openapi/src/model/verify_email_response_dto.dart';
-

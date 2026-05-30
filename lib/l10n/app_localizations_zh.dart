@@ -98,7 +98,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authLoginLead => '先输入邮箱，再选择密码登录或验证码登录。';
 
   @override
-  String get authRegisterLead => '先用邮箱和密码完成账号创建，昵称可选。';
+  String get authRegisterLead => '先验证邮箱，再设置密码。昵称可选。';
 
   @override
   String get authModePassword => '密码';
@@ -128,13 +128,110 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authNicknameHint => '可选';
 
   @override
+  String get authEmailRequiredToast => '请先填写邮箱。';
+
+  @override
+  String get authCodeRequiredToast => '请先填写验证码。';
+
+  @override
+  String get authPasswordRequiredToast => '请先填写密码。';
+
+  @override
+  String get authConfirmPasswordRequiredToast => '请先确认密码。';
+
+  @override
   String get authSendCode => '发送验证码';
+
+  @override
+  String authSendCodeAgain(int seconds) {
+    return '$seconds 秒后重发';
+  }
 
   @override
   String get authSignIn => '登录';
 
   @override
   String get authCreateAccountAction => '创建账号';
+
+  @override
+  String get authForgotPasswordPrompt => '忘记密码？';
+
+  @override
+  String get authResetPasswordAction => '重置密码';
+
+  @override
+  String get authNeedAccountPrompt => '还没有账号？';
+
+  @override
+  String get authRegisterNowAction => '立即注册';
+
+  @override
+  String get authHaveAccountPrompt => '已经有账号？';
+
+  @override
+  String get authRememberPasswordPrompt => '想起密码了？';
+
+  @override
+  String get authForgotPasswordBadge => '认证 / 重置';
+
+  @override
+  String get authForgotPasswordTitle => '通过邮箱重置密码。';
+
+  @override
+  String get authForgotPasswordDescription => '发送验证码，设置新密码，然后回到登录页重新登录。';
+
+  @override
+  String get authResetPasswordTitle => '重置密码';
+
+  @override
+  String get authResetPasswordLead => '使用账号绑定的邮箱接收重置验证码。';
+
+  @override
+  String get authNewPasswordLabel => '新密码';
+
+  @override
+  String get authConfirmPasswordLabel => '确认密码';
+
+  @override
+  String get authPasswordsDoNotMatch => '两次输入的密码不一致。';
+
+  @override
+  String get authResetPasswordSubmit => '重置密码';
+
+  @override
+  String get authResetPasswordSuccess => '密码已更新，请重新登录。';
+
+  @override
+  String get authChangeEmailBadge => '认证 / 邮箱';
+
+  @override
+  String get authChangeEmailTitle => '谨慎更换账号邮箱。';
+
+  @override
+  String get authChangeEmailDescription => '先验证新邮箱，再把它设为账号登录邮箱。';
+
+  @override
+  String get authChangeEmailFormTitle => '更换邮箱';
+
+  @override
+  String authChangeEmailLead(String email) {
+    return '当前邮箱：$email';
+  }
+
+  @override
+  String get authChangeEmailSignedOutLead => '请先登录，再更换账号邮箱。';
+
+  @override
+  String get authNewEmailLabel => '新邮箱';
+
+  @override
+  String get authChangeEmailSubmit => '更新邮箱';
+
+  @override
+  String get authChangeEmailSuccess => '邮箱已更新。';
+
+  @override
+  String get authBackHomePrompt => '返回首页？';
 
   @override
   String authSignedInAs(String email) {

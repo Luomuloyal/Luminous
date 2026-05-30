@@ -7,7 +7,6 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'user_full_dto.g.dart';
 
-
 @JsonSerializable(
   checked: true,
   createToJson: true,
@@ -17,136 +16,73 @@ part 'user_full_dto.g.dart';
 class UserFullDto {
   /// Returns a new [UserFullDto] instance.
   UserFullDto({
+    required this.id,
 
-    required  this.id,
+    required this.email,
 
-    required  this.email,
+    required this.nickname,
 
-    required  this.nickname,
+    required this.avatar,
 
-    required  this.avatar,
+    required this.emailVerified,
 
-    required  this.emailVerified,
+    required this.createdAt,
 
-    required  this.createdAt,
-
-    required  this.updatedAt,
+    required this.updatedAt,
   });
 
-      /// 用户 ID
-  @JsonKey(
-    
-    name: r'id',
-    required: true,
-    includeIfNull: false,
-  )
-
-
+  /// 用户 ID
+  @JsonKey(name: r'id', required: true, includeIfNull: false)
   final String id;
 
-
-
-      /// 邮箱地址
-  @JsonKey(
-    
-    name: r'email',
-    required: true,
-    includeIfNull: false,
-  )
-
-
+  /// 邮箱地址
+  @JsonKey(name: r'email', required: true, includeIfNull: false)
   final String email;
 
-
-
-      /// 昵称
-  @JsonKey(
-    
-    name: r'nickname',
-    required: true,
-    includeIfNull: true,
-  )
-
-
+  /// 昵称
+  @JsonKey(name: r'nickname', required: true, includeIfNull: true)
   final Object? nickname;
 
-
-
-      /// 头像 URL
-  @JsonKey(
-    
-    name: r'avatar',
-    required: true,
-    includeIfNull: true,
-  )
-
-
+  /// 头像 URL
+  @JsonKey(name: r'avatar', required: true, includeIfNull: true)
   final Object? avatar;
 
-
-
-      /// 邮箱是否已验证
-  @JsonKey(
-    
-    name: r'emailVerified',
-    required: true,
-    includeIfNull: false,
-  )
-
-
+  /// 邮箱是否已验证
+  @JsonKey(name: r'emailVerified', required: true, includeIfNull: false)
   final bool emailVerified;
 
-
-
-      /// 创建时间 (ISO 8601)
-  @JsonKey(
-    
-    name: r'createdAt',
-    required: true,
-    includeIfNull: false,
-  )
-
-
+  /// 创建时间 (ISO 8601)
+  @JsonKey(name: r'createdAt', required: true, includeIfNull: false)
   final String createdAt;
 
-
-
-      /// 更新时间 (ISO 8601)
-  @JsonKey(
-    
-    name: r'updatedAt',
-    required: true,
-    includeIfNull: false,
-  )
-
-
+  /// 更新时间 (ISO 8601)
+  @JsonKey(name: r'updatedAt', required: true, includeIfNull: false)
   final String updatedAt;
 
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is UserFullDto &&
+          other.id == id &&
+          other.email == email &&
+          other.nickname == nickname &&
+          other.avatar == avatar &&
+          other.emailVerified == emailVerified &&
+          other.createdAt == createdAt &&
+          other.updatedAt == updatedAt;
 
+  @override
+  int get hashCode =>
+      id.hashCode +
+      email.hashCode +
+      (nickname == null ? 0 : nickname.hashCode) +
+      (avatar == null ? 0 : avatar.hashCode) +
+      emailVerified.hashCode +
+      createdAt.hashCode +
+      updatedAt.hashCode;
 
-
-
-    @override
-    bool operator ==(Object other) => identical(this, other) || other is UserFullDto &&
-      other.id == id &&
-      other.email == email &&
-      other.nickname == nickname &&
-      other.avatar == avatar &&
-      other.emailVerified == emailVerified &&
-      other.createdAt == createdAt &&
-      other.updatedAt == updatedAt;
-
-    @override
-    int get hashCode =>
-        id.hashCode +
-        email.hashCode +
-        (nickname == null ? 0 : nickname.hashCode) +
-        (avatar == null ? 0 : avatar.hashCode) +
-        emailVerified.hashCode +
-        createdAt.hashCode +
-        updatedAt.hashCode;
-
-  factory UserFullDto.fromJson(Map<String, dynamic> json) => _$UserFullDtoFromJson(json);
+  factory UserFullDto.fromJson(Map<String, dynamic> json) =>
+      _$UserFullDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$UserFullDtoToJson(this);
 
@@ -154,6 +90,4 @@ class UserFullDto {
   String toString() {
     return toJson().toString();
   }
-
 }
-
